@@ -82,7 +82,7 @@
     <version.archunit.maven.plugin>4.0.2</version.archunit.maven.plugin>
     <version.artifact.transfer>0.9.1</version.artifact.transfer>
     <version.asciidoctor-maven-plugin>2.0.0-RC.1</version.asciidoctor-maven-plugin>
-    <version.at.yawk.lz4.java>1.10.1</version.at.yawk.lz4.java>
+    <version.at.yawk.lz4.java>1.11.1</version.at.yawk.lz4.java>
     <version.black.ninia>4.2.0</version.black.ninia>
     <version.build.helper.maven.plugin>3.4.0</version.build.helper.maven.plugin>
     <version.ch.obermuhlner>2.0.1</version.ch.obermuhlner>
