@@ -44,6 +44,7 @@ import org.kie.kogito.process.bpmn2.BpmnProcess;
 import org.kie.kogito.process.bpmn2.BpmnProcessInstance;
 import org.kie.kogito.process.bpmn2.BpmnVariables;
 import org.kie.kogito.process.bpmn2.StaticApplicationAssembler;
+import org.kie.kogito.process.impl.AbstractProcessInstance;
 import org.kie.kogito.process.impl.StaticProcessConfig;
 import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 
@@ -379,7 +380,7 @@ abstract class AbstractProcessInstancesIT {
         // Load the call-activity (no version) and its subprocess so that child rows are written with
         // root_process_id = "BPMN2_CallActivity" and root_process_version = null.
         Map<String, BpmnProcess> processes = createProcesses(getDataSource(), lock(),
-                "BPMN2-CallActivity.bpmn2", "BPMN2-UserTask.bpmn2");
+                "BPMN2-CallActivity.bpmn2", "BPMN2-CallActivity-v2.bpmn2", "BPMN2-UserTask.bpmn2");
         BpmnProcess callActivityProcess = processes.get("BPMN2_CallActivity");
         BpmnProcess userTaskProcess = processes.get("BPMN2_UserTask");
 
@@ -412,6 +413,20 @@ abstract class AbstractProcessInstancesIT {
             assertThat(rs.getString(1)).as("child root_process_id must be updated").isEqualTo("BPMN2_CallActivity_v2");
             assertThat(rs.getString(2)).as("child root_process_version must be updated").isEqualTo("2.0");
         }
+
+        // The in-memory unmarshalled instance must reflect the migrated root columns,
+        // not the stale values baked into the payload before migration.
+        AbstractProcessInstance<?> childInstance = (AbstractProcessInstance<?>) userTaskProcess.instances()
+                .findById(childId).get();
+        childInstance.executeInWorkflowProcessInstanceRead(pi -> {
+            assertThat(pi.getRootProcessId())
+                    .as("unmarshalled child rootProcessId must be overridden from DB column")
+                    .isEqualTo("BPMN2_CallActivity_v2");
+            assertThat(pi.getRootProcessVersion())
+                    .as("unmarshalled child rootProcessVersion must be overridden from DB column")
+                    .isEqualTo("2.0");
+            return null;
+        });
     }
 
     @Test
@@ -419,7 +434,7 @@ abstract class AbstractProcessInstancesIT {
         // Same as testMigrateRootCascade but uses the versioned call-activity (drools:version="1.0")
         // so that root_process_version is stored as "1.0" rather than null.
         Map<String, BpmnProcess> processes = createProcesses(getDataSource(), lock(),
-                "BPMN2-CallActivity-v1.bpmn2", "BPMN2-UserTask.bpmn2");
+                "BPMN2-CallActivity.bpmn2", "BPMN2-CallActivity-v2.bpmn2", "BPMN2-UserTask.bpmn2");
         BpmnProcess callActivityProcess = processes.get("BPMN2_CallActivity");
         BpmnProcess userTaskProcess = processes.get("BPMN2_UserTask");
 
@@ -447,13 +462,27 @@ abstract class AbstractProcessInstancesIT {
             assertThat(rs.getString(1)).as("child root_process_id must be updated").isEqualTo("BPMN2_CallActivity_v2");
             assertThat(rs.getString(2)).as("child root_process_version must be updated").isEqualTo("2.0");
         }
+
+        // The in-memory unmarshalled instance must reflect the migrated root columns,
+        // not the stale values baked into the payload before migration.
+        AbstractProcessInstance<?> childInstance = (AbstractProcessInstance<?>) userTaskProcess.instances()
+                .findById(childId).get();
+        childInstance.executeInWorkflowProcessInstanceRead(pi -> {
+            assertThat(pi.getRootProcessId())
+                    .as("unmarshalled child rootProcessId must be overridden from DB column")
+                    .isEqualTo("BPMN2_CallActivity_v2");
+            assertThat(pi.getRootProcessVersion())
+                    .as("unmarshalled child rootProcessVersion must be overridden from DB column")
+                    .isEqualTo("2.0");
+            return null;
+        });
     }
 
     @Test
     public void testMigrateRootCascadeWithExplicitList() throws Exception {
         // Uses the unversioned call-activity (root_process_version = null).
         Map<String, BpmnProcess> processes = createProcesses(getDataSource(), lock(),
-                "BPMN2-CallActivity.bpmn2", "BPMN2-UserTask.bpmn2");
+                "BPMN2-CallActivity.bpmn2", "BPMN2-CallActivity-v2.bpmn2", "BPMN2-UserTask.bpmn2");
         BpmnProcess callActivityProcess = processes.get("BPMN2_CallActivity");
         BpmnProcess userTaskProcess = processes.get("BPMN2_UserTask");
 
@@ -507,6 +536,19 @@ abstract class AbstractProcessInstancesIT {
             assertThat(rs.getString(2)).as("migrated child root_process_version must be updated").isEqualTo("2.0");
         }
 
+        // The migrated child's in-memory instance must reflect the updated root columns.
+        AbstractProcessInstance<?> migratedChild = (AbstractProcessInstance<?>) userTaskProcess.instances()
+                .findById(childId1).get();
+        migratedChild.executeInWorkflowProcessInstanceRead(pi -> {
+            assertThat(pi.getRootProcessId())
+                    .as("unmarshalled migrated child rootProcessId must be overridden from DB column")
+                    .isEqualTo("BPMN2_CallActivity_v2");
+            assertThat(pi.getRootProcessVersion())
+                    .as("unmarshalled migrated child rootProcessVersion must be overridden from DB column")
+                    .isEqualTo("2.0");
+            return null;
+        });
+
         // The child of the NOT-migrated parent must be left intact (root_process_version = null — process has no version).
         try (Connection connection = getDataSource().getConnection();
                 ResultSet rs = connection.createStatement().executeQuery(
@@ -522,7 +564,7 @@ abstract class AbstractProcessInstancesIT {
         // Same as testMigrateRootCascadeWithExplicitList but uses the versioned call-activity
         // (drools:version="1.0") so that root_process_version is "1.0" rather than null.
         Map<String, BpmnProcess> processes = createProcesses(getDataSource(), lock(),
-                "BPMN2-CallActivity-v1.bpmn2", "BPMN2-UserTask.bpmn2");
+                "BPMN2-CallActivity-v1.bpmn2", "BPMN2-CallActivity-v2.bpmn2", "BPMN2-UserTask.bpmn2");
         BpmnProcess callActivityProcess = processes.get("BPMN2_CallActivity");
         BpmnProcess userTaskProcess = processes.get("BPMN2_UserTask");
 
@@ -575,6 +617,19 @@ abstract class AbstractProcessInstancesIT {
             assertThat(rs.getString(1)).as("migrated child root_process_id must be updated").isEqualTo("BPMN2_CallActivity_v2");
             assertThat(rs.getString(2)).as("migrated child root_process_version must be updated").isEqualTo("2.0");
         }
+
+        // The migrated child's in-memory instance must reflect the updated root columns.
+        AbstractProcessInstance<?> migratedChild = (AbstractProcessInstance<?>) userTaskProcess.instances()
+                .findById(childId1).get();
+        migratedChild.executeInWorkflowProcessInstanceRead(pi -> {
+            assertThat(pi.getRootProcessId())
+                    .as("unmarshalled migrated child rootProcessId must be overridden from DB column")
+                    .isEqualTo("BPMN2_CallActivity_v2");
+            assertThat(pi.getRootProcessVersion())
+                    .as("unmarshalled migrated child rootProcessVersion must be overridden from DB column")
+                    .isEqualTo("2.0");
+            return null;
+        });
 
         // The child of the NOT-migrated parent must be left intact (root_process_version = "1.0").
         try (Connection connection = getDataSource().getConnection();

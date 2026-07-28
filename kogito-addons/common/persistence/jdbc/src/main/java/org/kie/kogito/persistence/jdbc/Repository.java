@@ -27,9 +27,10 @@ abstract class Repository {
     static final String INSERT =
             "INSERT INTO process_instances (id, payload, process_id, process_version, root_process_id, root_process_version, root_process_instance_id, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     static final String INSERT_BUSINESS_KEY = "INSERT INTO business_key_mapping (business_key,process_instance_id) VALUES (?,?)";
-    static final String FIND_ALL = "SELECT payload, version FROM process_instances WHERE process_id = ?";
-    static final String FIND_BY_ID = "SELECT payload, version FROM process_instances WHERE process_id = ? and id = ?";
-    static final String FIND_BY_BUSINESS_KEY = "SELECT payload, version FROM process_instances INNER JOIN business_key_mapping ON id = process_instance_id WHERE business_key = ? and process_id = ?";
+    static final String FIND_ALL = "SELECT id, payload, process_id, process_version, root_process_id, root_process_version, version FROM process_instances WHERE process_id = ?";
+    static final String FIND_BY_ID = "SELECT id, payload, process_id, process_version, root_process_id, root_process_version, version FROM process_instances WHERE process_id = ? and id = ?";
+    static final String FIND_BY_BUSINESS_KEY =
+            "SELECT id, payload, process_id, process_version, root_process_id, root_process_version, version FROM process_instances INNER JOIN business_key_mapping ON id = process_instance_id WHERE business_key = ? and process_id = ?";
     static final String UPDATE = "UPDATE process_instances SET payload = ? WHERE process_id = ? and id = ?";
     static final String UPDATE_WITH_LOCK = "UPDATE process_instances SET payload = ?, version = ? WHERE process_id = ? and id = ? and version = ?";
     static final String DELETE = "DELETE FROM process_instances WHERE process_id = ? and id = ?";
@@ -46,26 +47,18 @@ abstract class Repository {
     static final String ROOT_PROCESS_VERSION_EQUALS_TO = "and root_process_version = ?";
     static final String ROOT_PROCESS_VERSION_IS_NULL = "and root_process_version is null";
     static final String FIND_ALL_WAITING_FOR_EVENT_TYPE =
-            "SELECT payload, version FROM event_types, process_instances WHERE process_instances.id = event_types.process_instance_id AND process_id = ? AND event_type = ?";
+            "SELECT process_instances.id, payload, process_id, process_version, root_process_id, root_process_version, version FROM event_types, process_instances WHERE process_instances.id = event_types.process_instance_id AND process_id = ? AND event_type = ?";
     static final String DELETE_ALL_WAITING_FOR_EVENT_TYPE = "DELETE FROM event_types WHERE process_instance_id = ?";
     static final String INSERT_WAITING_FOR_EVENT_TYPE = "INSERT INTO event_types (process_instance_id, event_type) VALUES(?,?)";
 
-    static class Record {
-        private final byte[] payload;
-        private final long version;
-
-        public byte[] getPayload() {
-            return payload;
-        }
-
-        public long getVersion() {
-            return version;
-        }
-
-        public Record(byte[] payload, long version) {
-            this.payload = payload;
-            this.version = version;
-        }
+    record Record(
+            String id,
+            String processId,
+            String processVersion,
+            String rootProcessId,
+            String rootProcessVersion,
+            long version,
+            byte[] payload) {
     }
 
     abstract void insertInternal(String processId, String processVersion, String rootProcessId, String rootProcessVersion,

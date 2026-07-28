@@ -156,8 +156,8 @@ public class JDBCProcessInstances<T extends Model> implements MutableProcessInst
     }
 
     private ProcessInstance<T> unmarshall(Repository.Record record, ProcessInstanceReadMode mode) {
-        AbstractProcessInstance<T> instance = (AbstractProcessInstance<T>) marshaller.unmarshallProcessInstance(record.getPayload(), process, mode);
-        instance.setVersion(record.getVersion());
+        AbstractProcessInstance<T> instance = (AbstractProcessInstance<T>) marshaller.unmarshallProcessInstance(record.payload(), process, mode);
+        instance.setVersion(record.version());
         connectInstance(instance);
         return instance;
     }
@@ -168,10 +168,12 @@ public class JDBCProcessInstances<T extends Model> implements MutableProcessInst
     }
 
     private void connectInstance(ProcessInstance<?> instance) {
-        ((AbstractProcessInstance<?>) instance).internalSetReloadSupplier(marshaller.createdReloadFunction(() -> {
-            Repository.Record r = repository.findByIdInternal(process.id(), process.version(), UUID.fromString(instance.id())).orElseThrow();
-            ((AbstractProcessInstance<?>) instance).setVersion(r.getVersion());
-            return r.getPayload();
-        }));
+        ((AbstractProcessInstance<?>) instance).internalSetReloadSupplier(pi -> {
+            Repository.Record r = repository.findByIdInternal(process.id(), process.version(), UUID.fromString(pi.id())).orElseThrow();
+            pi.setVersion(r.version());
+            marshaller.createdReloadFunction(r::payload).accept(pi);
+            pi.internalGetProcessInstance().setRootProcessId(r.rootProcessId());
+            pi.internalGetProcessInstance().setRootProcessVersion(r.rootProcessVersion());
+        });
     }
 }

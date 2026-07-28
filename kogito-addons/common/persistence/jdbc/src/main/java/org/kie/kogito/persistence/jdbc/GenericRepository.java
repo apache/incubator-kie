@@ -38,6 +38,11 @@ import static java.util.Arrays.stream;
 public class GenericRepository extends Repository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRepository.class);
+    private static final String ID = "id";
+    private static final String PROCESS_ID = "process_id";
+    private static final String PROCESS_VERSION = "process_version";
+    private static final String ROOT_PROCESS_ID = "root_process_id";
+    private static final String ROOT_PROCESS_VERSION = "root_process_version";
     private static final String PAYLOAD = "payload";
     private static final String VERSION = "version";
 
@@ -261,7 +266,8 @@ public class GenericRepository extends Repository {
     }
 
     private Record from(ResultSet rs) throws SQLException {
-        return new Record(rs.getBytes(PAYLOAD), rs.getLong(VERSION));
+        return new Record(rs.getString(ID), rs.getString(PROCESS_ID), rs.getString(PROCESS_VERSION),
+                rs.getString(ROOT_PROCESS_ID), rs.getString(ROOT_PROCESS_VERSION), rs.getLong(VERSION), rs.getBytes(PAYLOAD));
     }
 
     @Override
