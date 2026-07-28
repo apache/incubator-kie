@@ -39,6 +39,8 @@ public class FireUntilHaltCommand
     ExecutableCommand<Void> {
     private static final long serialVersionUID = 510l;
 
+    // test
+
     @XmlJavaTypeAdapter(JaxbUnknownAdapter.class)
     @XmlAnyElement(lax = true)
     private AgendaFilter agendaFilter = null;
