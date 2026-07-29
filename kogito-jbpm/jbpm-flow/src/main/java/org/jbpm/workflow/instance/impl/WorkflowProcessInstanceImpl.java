@@ -595,9 +595,7 @@ public abstract class WorkflowProcessInstanceImpl extends ProcessInstanceImpl im
         }
 
         TimerInstance timerInstance = createDurationTimer(duration);
-        if (useTimerSLATracking()) {
-            registerTimer(timerInstance, nodeInstanceId);
-        }
+        registerTimer(timerInstance, nodeInstanceId);
         return timerInstance;
     }
 
@@ -1244,16 +1242,6 @@ public abstract class WorkflowProcessInstanceImpl extends ProcessInstanceImpl im
 
     protected boolean hasDeploymentId() {
         return this.deploymentId != null && !this.deploymentId.isEmpty();
-    }
-
-    protected boolean useTimerSLATracking() {
-
-        String mode = (String) getKnowledgeRuntime().getEnvironment().get("SLATimerMode");
-        if (mode == null) {
-            return true;
-        }
-
-        return Boolean.parseBoolean(mode);
     }
 
     @Override
