@@ -17,6 +17,6 @@
 -- under the License.
 --
 
-ALTER TABLE process_instances ADD COLUMN IF NOT EXISTS root_process_instance_id character varying(255);
+ALTER TABLE process_instances ADD COLUMN IF NOT EXISTS root_process_instance_id character varying(36);
 
 CREATE INDEX IF NOT EXISTS idx_process_instances_root_process_instance_id ON process_instances (root_process_instance_id);
