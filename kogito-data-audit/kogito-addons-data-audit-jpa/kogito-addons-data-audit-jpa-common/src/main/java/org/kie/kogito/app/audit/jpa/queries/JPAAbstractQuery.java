@@ -22,7 +22,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.kie.kogito.process.Processes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +34,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
 public abstract class JPAAbstractQuery<R> {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(JPAAbstractQuery.class);
+
+    record ProcessKey(String processId, String processVersion) {
+    }
 
     protected <T> List<T> executeWithNamedQueryEntityManager(EntityManager entityManager, String queryName, Class<T> clazz) {
         return executeWithNamedQueryEntityManager("META-INF/data-audit-orm.xml", entityManager, queryName);
@@ -84,5 +92,125 @@ public abstract class JPAAbstractQuery<R> {
         }
 
         return jpaQuery.getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> List<T> executeIsolated(
+            EntityManager entityManager,
+            String queryName,
+            Map<String, Object> arguments,
+            Optional<Processes> processesOpt,
+            String processIdColumn,
+            String processVersionColumn,
+            String rootProcessIdColumn,
+            String rootProcessVersionColumn) {
+
+        String baseQuery = MappingFile.findInFile("META-INF/data-audit-orm.xml", entityManager, queryName);
+        return executeIsolatedQuery(entityManager, baseQuery, arguments, processesOpt,
+                processIdColumn, processVersionColumn, rootProcessIdColumn, rootProcessVersionColumn);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> List<T> executeIsolatedQuery(
+            EntityManager entityManager,
+            String baseQuery,
+            Map<String, Object> arguments,
+            Optional<Processes> processesOpt,
+            String processIdColumn,
+            String processVersionColumn,
+            String rootProcessIdColumn,
+            String rootProcessVersionColumn) {
+
+        Map<String, Object> params = new HashMap<>(arguments);
+        Map<String, Object> pagination = (Map<String, Object>) params.remove("pagination");
+
+        List<ProcessKey> allowedKeys = resolveAllowedKeys(processesOpt);
+        String finalQuery = applyIsolationFilter(baseQuery, allowedKeys,
+                processIdColumn, processVersionColumn, rootProcessIdColumn, rootProcessVersionColumn);
+
+        LOGGER.debug("About to execute isolated native query {} with arguments {}", finalQuery, params);
+        Query jpaQuery = entityManager.createNativeQuery(finalQuery);
+
+        params.forEach(jpaQuery::setParameter);
+
+        bindIsolationParameters(jpaQuery, allowedKeys);
+
+        if (pagination != null) {
+            jpaQuery.setMaxResults(pagination.get("limit") != null ? (Integer) pagination.get("limit") : 10);
+            jpaQuery.setFirstResult(0);
+        } else {
+            jpaQuery.setFirstResult(0);
+            jpaQuery.setMaxResults(10);
+        }
+
+        return jpaQuery.getResultList();
+    }
+
+    private List<ProcessKey> resolveAllowedKeys(Optional<Processes> processesOpt) {
+        if (processesOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return processesOpt.get().processes().stream()
+                .map(p -> new ProcessKey(p.id(), p.version()))
+                .collect(Collectors.toList());
+    }
+
+    private String applyIsolationFilter(
+            String baseQuery,
+            List<ProcessKey> allowedKeys,
+            String processIdColumn,
+            String processVersionColumn,
+            String rootProcessIdColumn,
+            String rootProcessVersionColumn) {
+
+        if (allowedKeys.isEmpty()) {
+            return baseQuery;
+        }
+
+        String valueRows = IntStream.range(0, allowedKeys.size())
+                .mapToObj(i -> "(:processId" + i + ", :processVersion" + i + ")")
+                .collect(Collectors.joining(", "));
+
+        String cte = "WITH _allowed_processes (processId, processVersion) AS (VALUES " + valueRows + ") ";
+
+        String isolationPredicate;
+        if (rootProcessIdColumn != null) {
+            String preFilter = "("
+                    + processIdColumn + " IN (SELECT ap.processId FROM _allowed_processes ap)"
+                    + " OR " + rootProcessIdColumn + " IN (SELECT ap.processId FROM _allowed_processes ap)"
+                    + ")";
+            String versionCheck = "("
+                    + processVersionColumn + " IS NULL"
+                    + " OR EXISTS (SELECT 1 FROM _allowed_processes ap WHERE ap.processId = " + rootProcessIdColumn
+                    + " AND ap.processVersion = " + rootProcessVersionColumn + ")"
+                    + " OR (" + rootProcessIdColumn + " IS NULL"
+                    + " AND EXISTS (SELECT 1 FROM _allowed_processes ap WHERE ap.processId = " + processIdColumn
+                    + " AND ap.processVersion = " + processVersionColumn + "))"
+                    + ")";
+            isolationPredicate = preFilter + " AND " + versionCheck;
+        } else {
+            isolationPredicate = processIdColumn + " IN (SELECT ap.processId FROM _allowed_processes ap)"
+                    + " AND ("
+                    + processVersionColumn + " IS NULL"
+                    + " OR EXISTS (SELECT 1 FROM _allowed_processes ap WHERE ap.processId = " + processIdColumn
+                    + " AND ap.processVersion = " + processVersionColumn + ")"
+                    + ")";
+        }
+
+        String upperQuery = baseQuery.toUpperCase();
+        int orderByIdx = upperQuery.lastIndexOf("ORDER BY");
+        if (orderByIdx >= 0) {
+            return cte + baseQuery.substring(0, orderByIdx).stripTrailing()
+                    + " AND " + isolationPredicate + " "
+                    + baseQuery.substring(orderByIdx);
+        }
+        return cte + baseQuery.stripTrailing() + " AND " + isolationPredicate;
+    }
+
+    private void bindIsolationParameters(Query jpaQuery, List<ProcessKey> allowedKeys) {
+        for (int i = 0; i < allowedKeys.size(); i++) {
+            jpaQuery.setParameter("processId" + i, allowedKeys.get(i).processId());
+            jpaQuery.setParameter("processVersion" + i, allowedKeys.get(i).processVersion());
+        }
     }
 }

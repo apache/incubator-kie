@@ -39,6 +39,8 @@ public class ProcessInstanceVariableTO {
 
     private String rootProcessId;
 
+    private String rootProcessVersion;
+
     private String rootProcessInstanceId;
 
     private String processInstanceId;
@@ -54,7 +56,7 @@ public class ProcessInstanceVariableTO {
     private String eventUser;
 
     public ProcessInstanceVariableTO(String eventId, Date eventDate, String processType, String processId,
-            String processVersion, String parentProcessInstanceId, String rootProcessId, String rootProcessInstanceId, String processInstanceId,
+            String processVersion, String parentProcessInstanceId, String rootProcessId, String rootProcessVersion, String rootProcessInstanceId, String processInstanceId,
             String businessKey, String variableId, String variableName, String variableValue, String eventUser) {
         this.eventId = eventId;
         this.eventDate = OffsetDateTime.ofInstant(eventDate.toInstant(), ZoneId.of("UTC"));
@@ -63,6 +65,7 @@ public class ProcessInstanceVariableTO {
         this.processVersion = processVersion;
         this.parentProcessInstanceId = parentProcessInstanceId;
         this.rootProcessId = rootProcessId;
+        this.rootProcessVersion = rootProcessVersion;
         this.rootProcessInstanceId = rootProcessInstanceId;
         this.processInstanceId = processInstanceId;
         this.businessKey = businessKey;
@@ -126,6 +129,14 @@ public class ProcessInstanceVariableTO {
 
     public void setRootProcessId(String rootProcessId) {
         this.rootProcessId = rootProcessId;
+    }
+
+    public String getRootProcessVersion() {
+        return rootProcessVersion;
+    }
+
+    public void setRootProcessVersion(String rootProcessVersion) {
+        this.rootProcessVersion = rootProcessVersion;
     }
 
     public String getRootProcessInstanceId() {

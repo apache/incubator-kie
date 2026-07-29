@@ -223,6 +223,7 @@ public class JPADataAuditStore implements DataAuditStore {
         log.setProcessInstanceId(event.getKogitoProcessInstanceId());
         log.setParentProcessInstanceId(getOnlyIfFilled(event::getKogitoParentProcessInstanceId));
         log.setRootProcessId(getOnlyIfFilled(event::getKogitoRootProcessId));
+        log.setRootProcessVersion(getOnlyIfFilled(event::getKogitoRootProcessVersion));
         log.setRootProcessInstanceId(getOnlyIfFilled(event::getKogitoRootProcessInstanceId));
         log.setBusinessKey(event.getKogitoBusinessKey());
     }
@@ -372,6 +373,10 @@ public class JPADataAuditStore implements DataAuditStore {
         log.setRepeatLimit(job.getRepeatLimit());
         log.setScheduledId(job.getScheduledId());
         log.setRetries(job.getRetries());
+        log.setProcessId(jobDataEvent.getKogitoProcessId());
+        log.setProcessVersion(jobDataEvent.getKogitoProcessVersion());
+        log.setRootProcessId(getOnlyIfFilled(jobDataEvent::getKogitoRootProcessId));
+        log.setRootProcessVersion(getOnlyIfFilled(jobDataEvent::getKogitoRootProcessVersion));
 
         if (job.getStatus() != null) {
             log.setStatus(job.getStatus().name());
@@ -381,6 +386,7 @@ public class JPADataAuditStore implements DataAuditStore {
         log.setEventDate(Timestamp.from(Instant.now()));
         log.setExceptionMessage(job.getExceptionMessage());
         log.setExceptionDetails(job.getExceptionDetails());
+
         EntityManager entityManager = context.getContext();
         entityManager.persist(log);
     }

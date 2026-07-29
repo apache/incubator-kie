@@ -48,15 +48,16 @@ public class ProcessInstanceStateTOMapper implements DataMapper<ProcessInstanceS
             current.setProcessVersion((String) row[4]);
             current.setParentProcessInstanceId((String) row[5]);
             current.setRootProcessId((String) row[6]);
-            current.setRootProcessInstanceId((String) row[7]);
-            current.setProcessInstanceId((String) row[8]);
-            current.setBusinessKey((String) row[9]);
-            current.setEventType((String) row[10]);
-            current.setOutcome((String) row[11]);
-            current.setState((String) row[12]);
-            current.setSlaDueDate(toDateTime(row[13]));
-            current.addRole((String) data.get(idx)[14]);
-            current.setEventUser((String) data.get(idx)[15]);
+            current.setRootProcessVersion((String) row[7]);
+            current.setRootProcessInstanceId((String) row[8]);
+            current.setProcessInstanceId((String) row[9]);
+            current.setBusinessKey((String) row[10]);
+            current.setEventType((String) row[11]);
+            current.setOutcome((String) row[12]);
+            current.setState((String) row[13]);
+            current.setSlaDueDate(toDateTime(row[14]));
+            current.addRole((String) data.get(idx)[15]);
+            current.setEventUser((String) data.get(idx)[16]);
         }
 
         return transformedData;

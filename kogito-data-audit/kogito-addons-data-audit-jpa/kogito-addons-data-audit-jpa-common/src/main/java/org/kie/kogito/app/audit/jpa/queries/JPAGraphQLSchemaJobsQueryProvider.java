@@ -27,23 +27,36 @@ import org.kie.kogito.app.audit.spi.GraphQLSchemaQueryProvider;
 
 public class JPAGraphQLSchemaJobsQueryProvider implements GraphQLSchemaQueryProvider {
 
+    private static final String JOB_PROCESS_ID_COL = "o1.process_id";
+    private static final String JOB_PROCESS_VERSION_COL = "o1.process_version";
+    private static final String JOB_ROOT_PROCESS_ID_COL = "o1.root_process_id";
+    private static final String JOB_ROOT_PROCESS_VERSION_COL = "o1.root_process_version";
+
     @Override
     public List<GraphQLSchemaQuery> queries(DataAuditContext dataAuditContext) {
         return List.of(
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllScheduledJobs", JobExecutionTO.class),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllScheduledJobs", "GetAllScheduledJobs",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
                 new JPASimpleNamedQuery<JobExecutionTO>("GetJobById", JobExecutionTO.class),
                 new JPASimpleNamedQuery<JobExecutionTO>("GetJobHistoryById", JobExecutionTO.class),
                 new JPASimpleNamedQuery<JobExecutionTO>("GetJobHistoryByProcessInstanceId", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllPendingJobs", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllEligibleJobsForExecution", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllEligibleJobsForRetry", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllJobs", "GetAllJobs", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllCompletedJobs", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllInErrorJobs", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllCancelledJobs", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetAllJobsByStatus", JobExecutionTO.class),
-                new JPASimpleNamedQuery<JobExecutionTO>("GetJobByProcessInstanceId", JobExecutionTO.class));
-
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllPendingJobs", "GetAllPendingJobs",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllEligibleJobsForExecution", "GetAllEligibleJobsForExecution",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllEligibleJobsForRetry", "GetAllEligibleJobsForRetry",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllJobs", "GetAllJobs",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllCompletedJobs", "GetAllCompletedJobs",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllInErrorJobs", "GetAllInErrorJobs",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllCancelledJobs", "GetAllCancelledJobs",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetAllJobsByStatus", "GetAllJobsByStatus",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<JobExecutionTO>("GetJobByProcessInstanceId", "GetJobByProcessInstanceId",
+                        JobExecutionTO.class, JOB_PROCESS_ID_COL, JOB_PROCESS_VERSION_COL, JOB_ROOT_PROCESS_ID_COL, JOB_ROOT_PROCESS_VERSION_COL));
     }
-
 }

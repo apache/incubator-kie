@@ -33,20 +33,43 @@ import org.kie.kogito.app.audit.spi.GraphQLSchemaQueryProvider;
 
 public class JPAGraphQLSchemaProcessInstancesQueryProvider implements GraphQLSchemaQueryProvider {
 
+    private static final String PROC_PROCESS_ID_COL = "log.process_id";
+    private static final String PROC_PROCESS_VERSION_COL = "log.process_version";
+    private static final String PROC_ROOT_PROCESS_ID_COL = "log.root_process_id";
+    private static final String PROC_ROOT_PROCESS_VERSION_COL = "log.root_process_version";
+
     @Override
     public List<GraphQLSchemaQuery> queries(DataAuditContext dataAuditContext) {
         return List.<GraphQLSchemaQuery> of(
-                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetAllProcessInstancesState", new ProcessInstanceStateTOMapper()),
-                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetAllProcessInstancesStateByStatus", new ProcessInstanceStateTOMapper()),
-                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetAllProcessInstancesStateByProcessId", new ProcessInstanceStateTOMapper()),
-                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetProcessInstancesStateHistory", new ProcessInstanceStateTOMapper()),
-                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetProcessInstancesStateHistoryByBusinessKey", new ProcessInstanceStateTOMapper()),
-                new JPASimpleNamedQuery<ProcessInstanceNodeTO>("GetAllProcessInstancesNodeByProcessInstanceId", ProcessInstanceNodeTO.class),
-                new JPASimpleNamedQuery<ProcessInstanceErrorTO>("GetAllProcessInstancesErrorByProcessInstanceId", ProcessInstanceErrorTO.class),
-                new JPASimpleNamedQuery<ProcessInstanceVariableTO>("GetAllProcessInstancesVariableByProcessInstanceId", ProcessInstanceVariableTO.class),
+                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetAllProcessInstancesState",
+                        new ProcessInstanceStateTOMapper(),
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetAllProcessInstancesStateByStatus",
+                        new ProcessInstanceStateTOMapper(),
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetAllProcessInstancesStateByProcessId",
+                        new ProcessInstanceStateTOMapper(),
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetProcessInstancesStateHistory",
+                        new ProcessInstanceStateTOMapper(),
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPAComplexNamedQuery<ProcessInstanceStateTO, Object[]>("GetProcessInstancesStateHistoryByBusinessKey",
+                        new ProcessInstanceStateTOMapper(),
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<ProcessInstanceNodeTO>("GetAllProcessInstancesNodeByProcessInstanceId",
+                        "GetAllProcessInstancesNodeByProcessInstanceId",
+                        ProcessInstanceNodeTO.class,
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<ProcessInstanceErrorTO>("GetAllProcessInstancesErrorByProcessInstanceId",
+                        "GetAllProcessInstancesErrorByProcessInstanceId",
+                        ProcessInstanceErrorTO.class,
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
+                new JPASimpleNamedQuery<ProcessInstanceVariableTO>("GetAllProcessInstancesVariableByProcessInstanceId",
+                        "GetAllProcessInstancesVariableByProcessInstanceId",
+                        ProcessInstanceVariableTO.class,
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL),
                 new JPAComplexNamedQuery<ProcessInstanceVariableHistoryTO, Object[]>("GetAllProcessInstancesVariableHistoryByProcessInstanceId",
-                        new ProcessInstanceVariableHistoryTOMapper()));
-
+                        new ProcessInstanceVariableHistoryTOMapper(),
+                        PROC_PROCESS_ID_COL, PROC_PROCESS_VERSION_COL, PROC_ROOT_PROCESS_ID_COL, PROC_ROOT_PROCESS_VERSION_COL));
     }
-
 }

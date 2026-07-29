@@ -30,20 +30,34 @@ import jakarta.persistence.EntityManager;
 
 public class JPASimpleNamedQuery<T> extends JPAAbstractQuery<T> implements GraphQLSchemaQuery {
 
-    private String name;
-    private String namedQuery;
-    private Class<T> clazz;
-    private PojoMapper<T> mapper;
+    private final String name;
+    private final String namedQuery;
+    private final Class<T> clazz;
+    private final PojoMapper<T> mapper;
+    private final String processIdColumn;
+    private final String processVersionColumn;
+    private final String rootProcessIdColumn;
+    private final String rootProcessVersionColumn;
 
     public JPASimpleNamedQuery(String name, Class<T> clazz) {
-        this(name, name, clazz);
+        this(name, name, clazz, null, null, null, null);
     }
 
     public JPASimpleNamedQuery(String name, String namedQuery, Class<T> clazz) {
+        this(name, namedQuery, clazz, null, null, null, null);
+    }
+
+    public JPASimpleNamedQuery(String name, String namedQuery, Class<T> clazz,
+            String processIdColumn, String processVersionColumn,
+            String rootProcessIdColumn, String rootProcessVersionColumn) {
         this.name = name;
         this.namedQuery = namedQuery;
         this.clazz = clazz;
-        this.mapper = new PojoMapper<T>(this.clazz);
+        this.mapper = new PojoMapper<>(this.clazz);
+        this.processIdColumn = processIdColumn;
+        this.processVersionColumn = processVersionColumn;
+        this.rootProcessIdColumn = rootProcessIdColumn;
+        this.rootProcessVersionColumn = rootProcessVersionColumn;
     }
 
     @Override
@@ -57,11 +71,16 @@ public class JPASimpleNamedQuery<T> extends JPAAbstractQuery<T> implements Graph
         DataAuditContext context = dataFetchingEnvironment.getLocalContext();
         EntityManager entityManager = context.getContext();
 
+        if (processIdColumn != null && context.getProcesses().isPresent()) {
+            return mapper.produce(executeIsolated(
+                    entityManager, namedQuery, arguments,
+                    context.getProcesses(), processIdColumn, processVersionColumn, rootProcessIdColumn, rootProcessVersionColumn));
+        }
+
         if (arguments.isEmpty()) {
             return mapper.produce(executeWithNamedQueryEntityManager(entityManager, namedQuery));
         } else {
             return mapper.produce(executeWithNamedQueryEntityManagerAndArguments(entityManager, namedQuery, arguments));
         }
     }
-
 }

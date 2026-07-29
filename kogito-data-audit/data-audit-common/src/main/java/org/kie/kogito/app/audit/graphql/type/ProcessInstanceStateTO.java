@@ -40,6 +40,8 @@ public class ProcessInstanceStateTO {
 
     private String rootProcessId;
 
+    private String rootProcessVersion;
+
     private String rootProcessInstanceId;
 
     private String processInstanceId;
@@ -63,7 +65,7 @@ public class ProcessInstanceStateTO {
     }
 
     public ProcessInstanceStateTO(String eventId, Date eventDate, String processType, String processId,
-            String processVersion, String parentProcessInstanceId, String rootProcessId, String rootProcessInstanceId, String processInstanceId,
+            String processVersion, String parentProcessInstanceId, String rootProcessId, String rootProcessVersion, String rootProcessInstanceId, String processInstanceId,
             String businessKey, String eventType, String outcome, String state, Date slaDueDate, String eventUser) {
         this();
         this.eventId = eventId;
@@ -73,6 +75,7 @@ public class ProcessInstanceStateTO {
         this.processVersion = processVersion;
         this.parentProcessInstanceId = parentProcessInstanceId;
         this.rootProcessId = rootProcessId;
+        this.rootProcessVersion = rootProcessVersion;
         this.rootProcessInstanceId = rootProcessInstanceId;
         this.processInstanceId = processInstanceId;
         this.businessKey = businessKey;
@@ -139,6 +142,14 @@ public class ProcessInstanceStateTO {
 
     public void setRootProcessId(String rootProcessId) {
         this.rootProcessId = rootProcessId;
+    }
+
+    public String getRootProcessVersion() {
+        return rootProcessVersion;
+    }
+
+    public void setRootProcessVersion(String rootProcessVersion) {
+        this.rootProcessVersion = rootProcessVersion;
     }
 
     public String getRootProcessInstanceId() {

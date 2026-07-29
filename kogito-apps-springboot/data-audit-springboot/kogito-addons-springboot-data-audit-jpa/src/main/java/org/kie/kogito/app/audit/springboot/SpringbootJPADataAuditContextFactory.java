@@ -20,7 +20,9 @@ package org.kie.kogito.app.audit.springboot;
 
 import org.kie.kogito.app.audit.api.DataAuditContext;
 import org.kie.kogito.app.audit.spi.DataAuditContextFactory;
+import org.kie.kogito.process.Processes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.persistence.EntityManager;
@@ -31,9 +33,15 @@ public class SpringbootJPADataAuditContextFactory implements DataAuditContextFac
     @Autowired
     EntityManager entityManager;
 
+    @Autowired(required = false)
+    Processes processes;
+
+    @Value("${kogito.persistence.data-isolation.enabled:false}")
+    private boolean dataIsolationEnabled;
+
     @Override
     public DataAuditContext newDataAuditContext() {
-        return DataAuditContext.newDataAuditContext(entityManager);
+        return DataAuditContext.newDataAuditContext(entityManager, dataIsolationEnabled ? processes : null);
     }
 
 }

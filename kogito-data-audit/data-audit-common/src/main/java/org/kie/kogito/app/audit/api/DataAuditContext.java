@@ -18,21 +18,39 @@
  */
 package org.kie.kogito.app.audit.api;
 
+import java.util.Optional;
+
+import org.kie.kogito.process.Processes;
+
 public class DataAuditContext {
 
     private Object context;
+    private Optional<Processes> processes;
 
     public DataAuditContext(Object context) {
+        this(context, Optional.empty());
+    }
+
+    public DataAuditContext(Object context, Optional<Processes> processes) {
         this.context = context;
+        this.processes = processes;
     }
 
     public static DataAuditContext newDataAuditContext(Object context) {
         return new DataAuditContext(context);
     }
 
+    public static DataAuditContext newDataAuditContext(Object context, Processes processes) {
+        return new DataAuditContext(context, Optional.ofNullable(processes));
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T getContext() {
         return (T) context;
+    }
+
+    public Optional<Processes> getProcesses() {
+        return processes;
     }
 
 }

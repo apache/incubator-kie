@@ -63,6 +63,9 @@ public abstract class AbstractProcessInstanceLog {
     @Column(name = "root_process_id")
     private String rootProcessId;
 
+    @Column(name = "root_process_version")
+    private String rootProcessVersion;
+
     @Column(name = "root_process_instance_id")
     private String rootProcessInstanceId;
 
@@ -78,6 +81,14 @@ public abstract class AbstractProcessInstanceLog {
 
     public void setRootProcessId(String rootProcessId) {
         this.rootProcessId = rootProcessId;
+    }
+
+    public String getRootProcessVersion() {
+        return rootProcessVersion;
+    }
+
+    public void setRootProcessVersion(String rootProcessVersion) {
+        this.rootProcessVersion = rootProcessVersion;
     }
 
     public String getRootProcessInstanceId() {

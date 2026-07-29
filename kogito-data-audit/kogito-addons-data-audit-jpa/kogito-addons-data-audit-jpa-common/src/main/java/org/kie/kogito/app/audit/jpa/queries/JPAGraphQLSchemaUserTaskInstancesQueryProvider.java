@@ -40,16 +40,21 @@ public class JPAGraphQLSchemaUserTaskInstancesQueryProvider implements GraphQLSc
     @Override
     public List<GraphQLSchemaQuery> queries(DataAuditContext dataAuditContext) {
         return List.of(
-                new JPASimpleNamedQuery<UserTaskInstanceStateTO>("GetAllUserTaskInstanceState", UserTaskInstanceStateTO.class),
-                new JPASimpleNamedQuery<UserTaskInstanceAttachmentTO>("GetAllUserTaskInstanceAttachments", UserTaskInstanceAttachmentTO.class),
-                new JPASimpleNamedQuery<UserTaskInstanceCommentTO>("GetAllUserTaskInstanceComments", UserTaskInstanceCommentTO.class),
-                new JPASimpleNamedQuery<UserTaskInstanceVariableTO>("GetAllUserTaskInstanceVariables", UserTaskInstanceVariableTO.class),
-                new JPAComplexNamedQuery<UserTaskInstanceAssignmentTO, Object[]>("GetAllUserTaskInstanceAssignments", new UserTaskInstanceAssignmentTOMapper()),
-                new JPAComplexNamedQuery<UserTaskInstanceDeadlineTO, Object[]>("GetAllUserTaskInstanceDeadlines", new UserTaskInstanceDeadlineTOMapper()));
+                new JPASimpleNamedQuery<UserTaskInstanceStateTO>("GetAllUserTaskInstanceState",
+                        UserTaskInstanceStateTO.class),
+                new JPASimpleNamedQuery<UserTaskInstanceAttachmentTO>("GetAllUserTaskInstanceAttachments",
+                        UserTaskInstanceAttachmentTO.class),
+                new JPASimpleNamedQuery<UserTaskInstanceCommentTO>("GetAllUserTaskInstanceComments",
+                        UserTaskInstanceCommentTO.class),
+                new JPASimpleNamedQuery<UserTaskInstanceVariableTO>("GetAllUserTaskInstanceVariables",
+                        UserTaskInstanceVariableTO.class),
+                new JPAComplexNamedQuery<UserTaskInstanceAssignmentTO, Object[]>("GetAllUserTaskInstanceAssignments",
+                        new UserTaskInstanceAssignmentTOMapper()),
+                new JPAComplexNamedQuery<UserTaskInstanceDeadlineTO, Object[]>("GetAllUserTaskInstanceDeadlines",
+                        new UserTaskInstanceDeadlineTOMapper()));
     }
 
     public OffsetDateTime toDateTime(Date date) {
         return (date != null) ? OffsetDateTime.ofInstant(date.toInstant(), ZoneId.of("UTC")) : null;
     }
-
 }

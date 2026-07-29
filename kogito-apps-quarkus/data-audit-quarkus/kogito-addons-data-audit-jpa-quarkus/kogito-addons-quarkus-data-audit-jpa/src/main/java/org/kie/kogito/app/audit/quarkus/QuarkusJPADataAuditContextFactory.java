@@ -18,10 +18,14 @@
  */
 package org.kie.kogito.app.audit.quarkus;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kie.kogito.app.audit.api.DataAuditContext;
 import org.kie.kogito.app.audit.spi.DataAuditContextFactory;
+import org.kie.kogito.process.Processes;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -33,9 +37,18 @@ public class QuarkusJPADataAuditContextFactory implements DataAuditContextFactor
     @PersistenceContext
     EntityManager entityManager;
 
+    @Inject
+    Instance<Processes> processesInstance;
+
+    @ConfigProperty(name = "kogito.persistence.data-isolation.enabled", defaultValue = "false")
+    boolean dataIsolationEnabled;
+
     @Override
     public DataAuditContext newDataAuditContext() {
-        return DataAuditContext.newDataAuditContext(entityManager);
+        Processes processes = (dataIsolationEnabled && processesInstance.isResolvable())
+                ? processesInstance.get()
+                : null;
+        return DataAuditContext.newDataAuditContext(entityManager, processes);
     }
 
 }
