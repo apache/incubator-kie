@@ -73,23 +73,7 @@ public abstract class JPAAbstractQuery<R> {
         Query jpaQuery = entityManager.createNativeQuery(query);
 
         Map<String, Object> parameters = new HashMap<>(arguments);
-        Map<String, Object> pagination = (Map<String, Object>) parameters.remove("pagination");
-        parameters.forEach(jpaQuery::setParameter);
-        if (pagination != null) {
-            if (pagination.get("limit") != null) {
-                jpaQuery.setMaxResults((Integer) pagination.get("limit"));
-            } else {
-                jpaQuery.setMaxResults(10);
-            }
-            if (pagination.get("offset") != null) {
-                jpaQuery.setFirstResult((Integer) pagination.get("offset"));
-            } else {
-                jpaQuery.setFirstResult(0);
-            }
-        } else {
-            jpaQuery.setFirstResult(0);
-            jpaQuery.setMaxResults(10);
-        }
+        applyPagination(jpaQuery, parameters);
 
         return jpaQuery.getResultList();
     }
@@ -122,7 +106,6 @@ public abstract class JPAAbstractQuery<R> {
             String rootProcessVersionColumn) {
 
         Map<String, Object> params = new HashMap<>(arguments);
-        Map<String, Object> pagination = (Map<String, Object>) params.remove("pagination");
 
         List<ProcessKey> allowedKeys = resolveAllowedKeys(processesOpt);
         String finalQuery = applyIsolationFilter(baseQuery, allowedKeys,
@@ -131,19 +114,24 @@ public abstract class JPAAbstractQuery<R> {
         LOGGER.debug("About to execute isolated native query {} with arguments {}", finalQuery, params);
         Query jpaQuery = entityManager.createNativeQuery(finalQuery);
 
-        params.forEach(jpaQuery::setParameter);
+        applyPagination(jpaQuery, params);
 
         bindIsolationParameters(jpaQuery, allowedKeys);
 
+        return jpaQuery.getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void applyPagination(Query jpaQuery, Map<String, Object> params) {
+        Map<String, Object> pagination = (Map<String, Object>) params.remove("pagination");
+        params.forEach(jpaQuery::setParameter);
         if (pagination != null) {
             jpaQuery.setMaxResults(pagination.get("limit") != null ? (Integer) pagination.get("limit") : 10);
-            jpaQuery.setFirstResult(0);
+            jpaQuery.setFirstResult(pagination.get("offset") != null ? (Integer) pagination.get("offset") : 0);
         } else {
             jpaQuery.setFirstResult(0);
             jpaQuery.setMaxResults(10);
         }
-
-        return jpaQuery.getResultList();
     }
 
     private List<ProcessKey> resolveAllowedKeys(Optional<Processes> processesOpt) {
