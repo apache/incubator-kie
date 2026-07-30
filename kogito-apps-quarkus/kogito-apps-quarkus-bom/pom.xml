@@ -149,6 +149,11 @@
         <groupId>org.kie</groupId>
         <artifactId>kogito-addons-quarkus-data-index-jpa-deployment</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kogito-addons-quarkus-data-index-jpa-deployment</artifactId>
+        <version>${project.version}</version>
         <classifier>sources</classifier>
       </dependency>
       <dependency>
