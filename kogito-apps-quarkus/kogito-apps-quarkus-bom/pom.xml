@@ -672,6 +672,11 @@
         <artifactId>optaplanner-quarkus</artifactId>
         <version>${version.org.optaplanner}</version>
       </dependency>
+      <dependency>
+        <groupId>org.optaplanner</groupId>
+        <artifactId>optaplanner-quarkus-deployment</artifactId>
+        <version>${version.org.optaplanner}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>

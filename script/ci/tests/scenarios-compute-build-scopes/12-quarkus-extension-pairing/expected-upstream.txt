@@ -8,6 +8,7 @@ org.drools:drools-codegen-common
 org.drools:drools-commands
 org.drools:drools-compiler
 org.drools:drools-core
+org.drools:drools-decisions-spring-boot-starter
 org.drools:drools-decisiontables
 org.drools:drools-drl
 org.drools:drools-drl-ast
@@ -34,6 +35,7 @@ org.drools:drools-quarkus-extension
 org.drools:drools-quarkus-integration-test-multimodule
 org.drools:drools-quarkus-integration-test-multimodule-dep
 org.drools:drools-quarkus-rules-extension
+org.drools:drools-rules-spring-boot-starter
 org.drools:drools-ruleunits
 org.drools:drools-ruleunits-api
 org.drools:drools-ruleunits-dsl
@@ -53,10 +55,13 @@ org.jbpm:jbpm-addons-mail
 org.jbpm:jbpm-addons-quarkus-mail-parent
 org.jbpm:jbpm-addons-quarkus-task-management-parent
 org.jbpm:jbpm-addons-quarkus-task-notification-parent
+org.jbpm:jbpm-addons-springboot-task-management
 org.jbpm:jbpm-addons-task-management
 org.jbpm:jbpm-addons-usertask-storage-jpa
 org.jbpm:jbpm-quarkus-extension
+org.jbpm:jbpm-spring-boot-starter
 org.jbpm:jbpm-with-drools-quarkus-extension
+org.jbpm:jbpm-with-drools-spring-boot-starter
 org.kie.kogito:apps-integration-tests
 org.kie.kogito:data-audit
 org.kie.kogito:data-audit-common
@@ -134,6 +139,8 @@ org.kie.kogito:kogito-apps-bom
 org.kie.kogito:kogito-apps-build-parent
 org.kie.kogito:kogito-apps-quarkus
 org.kie.kogito:kogito-apps-quarkus-bom
+org.kie.kogito:kogito-apps-springboot
+org.kie.kogito:kogito-apps-springboot-bom
 org.kie.kogito:kogito-bom
 org.kie.kogito:kogito-build-no-bom-parent
 org.kie.kogito:kogito-build-parent
@@ -167,6 +174,8 @@ org.kie.kogito:kogito-quarkus-workflow-extension-common
 org.kie.kogito:kogito-rest-utils
 org.kie.kogito:kogito-rest-workitem
 org.kie.kogito:kogito-services
+org.kie.kogito:kogito-spring-boot-bom
+org.kie.kogito:kogito-spring-boot-test-utils
 org.kie.kogito:kogito-test-utils
 org.kie.kogito:kogito-timer
 org.kie.kogito:kogito-workitems
@@ -184,6 +193,7 @@ org.kie.kogito:persistence-commons-reporting-postgresql-base
 org.kie.kogito:process-serialization-protobuf
 org.kie.kogito:process-workitems
 org.kie.kogito:quarkus-extensions
+org.kie.kogito:spring-boot-starters
 org.kie.kogito:trusty
 org.kie.kogito:trusty-service
 org.kie.kogito:trusty-service-api
@@ -263,6 +273,14 @@ org.kie:kie-addons-quarkus-rest-exception-handler
 org.kie:kie-addons-quarkus-source-files-parent
 org.kie:kie-addons-rest-exception-handler
 org.kie:kie-addons-source-files
+org.kie:kie-addons-springboot-common-auth
+org.kie:kie-addons-springboot-events-parent
+org.kie:kie-addons-springboot-events-process-kafka
+org.kie:kie-addons-springboot-persistence-filesystem
+org.kie:kie-addons-springboot-persistence-parent
+org.kie:kie-addons-springboot-process-management
+org.kie:kie-addons-springboot-process-svg
+org.kie:kie-addons-springboot-rest-exception-handler
 org.kie:kie-addons-tracing-api
 org.kie:kie-addons-tracing-decision-common
 org.kie:kie-addons-tracing-parent
@@ -334,6 +352,7 @@ org.kie:kie-pmml-models-tree-compiler
 org.kie:kie-pmml-models-tree-evaluator
 org.kie:kie-pmml-models-tree-model
 org.kie:kie-pmml-trusty
+org.kie:kie-predictions-spring-boot-starter
 org.kie:kie-quarkus-build-parent
 org.kie:kie-quarkus-predictions-extension
 org.kie:kie-test-util
@@ -390,3 +409,5 @@ org.kie:kogito-addons-quarkus-knative-parent
 org.kie:kogito-addons-quarkus-marshallers-parent
 org.kie:kogito-addons-quarkus-parent
 org.kie:kogito-addons-quarkus-rest-callback
+org.kie:kogito-addons-springboot-common-parent
+org.kie:kogito-addons-springboot-parent

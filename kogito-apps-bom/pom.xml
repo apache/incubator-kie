@@ -156,6 +156,11 @@
         <groupId>org.kie.kogito</groupId>
         <artifactId>data-index-service-postgresql</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.kogito</groupId>
+        <artifactId>data-index-service-postgresql</artifactId>
+        <version>${project.version}</version>
         <classifier>sources</classifier>
       </dependency>
       <dependency>
