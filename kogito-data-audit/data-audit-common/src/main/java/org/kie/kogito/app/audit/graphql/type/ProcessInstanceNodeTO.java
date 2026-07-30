@@ -68,7 +68,7 @@ public class ProcessInstanceNodeTO {
     private Object outputArgs;
 
     public ProcessInstanceNodeTO(String eventId, Date eventDate, String processType, String processId,
-            String processVersion, String parentProcessInstanceId, String rootProcessId, String rootProcessVersion, String rootProcessInstanceId, String processInstanceId,
+            String processVersion, String parentProcessInstanceId, String rootProcessId, String rootProcessInstanceId, String processInstanceId,
             String businessKey, String eventType, String nodeType,
             String nodeName, String nodeInstanceId, String connection, String workItemId, Date slaDueDate, String eventData, String eventUser,
             String inputArgs, String outputArgs) {
@@ -79,7 +79,6 @@ public class ProcessInstanceNodeTO {
         this.processVersion = processVersion;
         this.parentProcessInstanceId = parentProcessInstanceId;
         this.rootProcessId = rootProcessId;
-        this.rootProcessVersion = rootProcessVersion;
         this.rootProcessInstanceId = rootProcessInstanceId;
         this.processInstanceId = processInstanceId;
         this.businessKey = businessKey;

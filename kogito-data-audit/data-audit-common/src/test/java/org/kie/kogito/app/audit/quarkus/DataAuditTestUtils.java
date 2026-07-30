@@ -437,6 +437,50 @@ public class DataAuditTestUtils {
                 .build();
     }
 
+    public static UserTaskInstanceStateDataEvent newUserTaskInstanceStateEventWithProcessId(
+            String processId, String processVersion, String eventUser, String userTaskDefinitionId,
+            String userTaskInstanceId, String userTaskName, String eventType, String state,
+            String actualOwner, String processInstanceId) {
+
+        String processType = "BPMN2";
+
+        UserTaskInstanceStateEventBody body = UserTaskInstanceStateEventBody.create()
+                .eventUser(eventUser)
+                .eventDate(new Date())
+                .userTaskDefinitionId(userTaskDefinitionId)
+                .userTaskInstanceId(userTaskInstanceId)
+                .userTaskName(userTaskName)
+                .eventType(eventType)
+                .state(state)
+                .actualOwner(actualOwner)
+                .processInstanceId(processInstanceId)
+                .build();
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put(ProcessInstanceEventMetadata.PROCESS_INSTANCE_ID_META_DATA, processInstanceId);
+        metadata.put(ProcessInstanceEventMetadata.PROCESS_VERSION_META_DATA, processVersion);
+        metadata.put(ProcessInstanceEventMetadata.PROCESS_ID_META_DATA, processId);
+        metadata.put(ProcessInstanceEventMetadata.PROCESS_INSTANCE_STATE_META_DATA, String.valueOf(ProcessInstance.STATE_ACTIVE));
+        metadata.put(ProcessInstanceEventMetadata.PROCESS_TYPE_META_DATA, processType);
+        metadata.put(ProcessInstanceEventMetadata.PARENT_PROCESS_INSTANCE_ID_META_DATA, null);
+        metadata.put(ProcessInstanceEventMetadata.ROOT_PROCESS_ID_META_DATA, null);
+        metadata.put(ProcessInstanceEventMetadata.ROOT_PROCESS_VERSION_META_DATA, null);
+        metadata.put(ProcessInstanceEventMetadata.ROOT_PROCESS_INSTANCE_ID_META_DATA, null);
+        metadata.put(UserTaskInstanceEventMetadata.USER_TASK_INSTANCE_ID_META_DATA, userTaskInstanceId);
+        metadata.put(UserTaskInstanceEventMetadata.USER_TASK_INSTANCE_STATE_META_DATA, state);
+
+        return UserTaskInstanceStateDataEvent.builder()
+                .source(toURIEndpoint(processId))
+                .kogitoAddons(ADDONS)
+                .kogitoIdentity(eventUser)
+                .kogitoProcessId(processId)
+                .kogitoProcessVersion(processVersion)
+                .metaData(metadata)
+                .data(body)
+                .kogitoBusinessKey(UUID.randomUUID().toString())
+                .build();
+    }
+
     public static UserTaskInstanceVariableDataEvent newUserTaskInstanceVariableEvent(UserTaskInstanceStateDataEvent pEvent,
             String eventUser, String variableId, String variableName, String variableType, Object variableValue) {
 

@@ -35,7 +35,11 @@ import jakarta.persistence.Table;
                 @Index(name = "ix_utsl_state", columnList = "state"),
                 @Index(name = "ix_utsl_pid", columnList = "process_instance_id"),
                 @Index(name = "ix_utsl_key", columnList = "business_key"),
-                @Index(name = "ix_utsl_event_date", columnList = "event_date")
+                @Index(name = "ix_utsl_event_date", columnList = "event_date"),
+                @Index(name = "ix_utsl_proc_id", columnList = "process_id"),
+                @Index(name = "ix_utsl_rproc_id", columnList = "root_process_id"),
+                @Index(name = "ix_utsl_proc_ver", columnList = "process_version"),
+                @Index(name = "ix_utsl_rproc_ver", columnList = "root_process_version")
         })
 @SequenceGenerator(name = "taskInstanceStateLogIdSeq", sequenceName = "TASK_INSTANCE_STATE_LOG_ID_SEQ")
 public class UserTaskInstanceStateLog extends AbstractUserTaskInstanceLog {
@@ -44,6 +48,19 @@ public class UserTaskInstanceStateLog extends AbstractUserTaskInstanceLog {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "taskInstanceStateLogIdSeq")
     @Column(name = "id")
     private Long id;
+
+    @Column(name = "process_id")
+    private String processId;
+
+    @Column(name = "process_version")
+    private String processVersion;
+
+    @Column(name = "root_process_id")
+    private String rootProcessId;
+
+    @Column(name = "root_process_version")
+    private String rootProcessVersion;
+
     @Column(name = "name")
     private String name;
 
@@ -105,6 +122,38 @@ public class UserTaskInstanceStateLog extends AbstractUserTaskInstanceLog {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getProcessId() {
+        return processId;
+    }
+
+    public void setProcessId(String processId) {
+        this.processId = processId;
+    }
+
+    public String getProcessVersion() {
+        return processVersion;
+    }
+
+    public void setProcessVersion(String processVersion) {
+        this.processVersion = processVersion;
+    }
+
+    public String getRootProcessId() {
+        return rootProcessId;
+    }
+
+    public void setRootProcessId(String rootProcessId) {
+        this.rootProcessId = rootProcessId;
+    }
+
+    public String getRootProcessVersion() {
+        return rootProcessVersion;
+    }
+
+    public void setRootProcessVersion(String rootProcessVersion) {
+        this.rootProcessVersion = rootProcessVersion;
     }
 
 }

@@ -63,7 +63,8 @@ public class DataAuditITTestProfile implements QuarkusTestProfile {
         public Collection<Process<? extends Model>> processes() {
             return List.of(
                     new StubProcess("itAllowedProcess", "1.0"),
-                    new StubProcess("itJobProcess", "1.0"));
+                    new StubProcess("itJobProcess", "1.0"),
+                    new StubProcess("itUserTaskProcess", "1.0"));
         }
 
         @Override
@@ -76,7 +77,7 @@ public class DataAuditITTestProfile implements QuarkusTestProfile {
 
         @Override
         public Collection<String> processIds() {
-            return List.of("itAllowedProcess", "itJobProcess");
+            return List.of("itAllowedProcess", "itJobProcess", "itUserTaskProcess");
         }
     }
 

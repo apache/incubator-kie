@@ -145,7 +145,7 @@ public class QuarkusAuditUserTaskInstanceServiceTest {
                 .and()
                 .extract().path("data.GetAllUserTaskInstanceState");
 
-        assertThat(data).hasSize(3);
+        assertThat(data).hasSize(2);
 
     }
 

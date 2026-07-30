@@ -45,10 +45,22 @@ import jakarta.persistence.TemporalType;
                 @Index(name = "ix_pisl_pid", columnList = "process_instance_id"),
                 @Index(name = "ix_pisl_state", columnList = "state"),
                 @Index(name = "ix_pisl_key", columnList = "business_key"),
-                @Index(name = "ix_pisl_event_date", columnList = "event_date")
+                @Index(name = "ix_pisl_event_date", columnList = "event_date"),
+                @Index(name = "ix_pisl_rpver", columnList = "root_process_version")
         })
 @SequenceGenerator(name = "processInstanceStateLogIdSeq", sequenceName = "PROCESS_INSTANCE_STATE_LOG_ID_SEQ")
 public class ProcessInstanceStateLog extends AbstractProcessInstanceLog {
+
+    @Column(name = "root_process_version")
+    private String rootProcessVersion;
+
+    public String getRootProcessVersion() {
+        return rootProcessVersion;
+    }
+
+    public void setRootProcessVersion(String rootProcessVersion) {
+        this.rootProcessVersion = rootProcessVersion;
+    }
 
     public enum ProcessStateLogType {
         ACTIVE,

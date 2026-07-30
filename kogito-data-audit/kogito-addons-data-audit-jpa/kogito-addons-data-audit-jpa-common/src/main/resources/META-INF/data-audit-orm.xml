@@ -476,7 +476,6 @@
                log.process_version,
                log.parent_process_instance_id,
                log.root_process_id,
-               log.root_process_version,
                log.root_process_instance_id,
                log.process_instance_id,
                log.business_key,
@@ -510,7 +509,6 @@
                log.process_version,
                log.parent_process_instance_id,
                log.root_process_id,
-               log.root_process_version,
                log.root_process_instance_id,
                log.process_instance_id,
                log.business_key,
@@ -535,7 +533,6 @@
 	               log.process_version,
 	               log.parent_process_instance_id,
 	               log.root_process_id,
-	               log.root_process_version,
 	               log.root_process_instance_id,
 	               log.process_instance_id,
 	               log.business_key,
@@ -563,7 +560,6 @@
                    log.process_version,
                    log.parent_process_instance_id,
                    log.root_process_id,
-                   log.root_process_version,
                    log.root_process_instance_id,
                    log.process_instance_id,
                    log.business_key,
@@ -584,7 +580,7 @@
 
 	<named-native-query name="GetAllUserTaskInstanceState" >
 	       <query>
-	        SELECT 
+	        SELECT
 	               log.event_id,
 	               log.event_date,
 	               log.user_task_definition_id,
@@ -597,8 +593,8 @@
 	               log.state,
 	               log.event_type
 	          FROM Task_Instance_State_Log log
-	     LEFT JOIN Task_Instance_State_Log log_newer ON log.user_task_instance_id = log_newer.user_task_instance_id 
-	                                             AND log_newer.event_date &lt; log_newer.event_date
+	     LEFT JOIN Task_Instance_State_Log log_newer ON log.user_task_instance_id = log_newer.user_task_instance_id
+	                                             AND log.event_date &lt; log_newer.event_date
 	         WHERE log_newer.event_id IS NULL
 	       </query>
 	</named-native-query>

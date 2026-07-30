@@ -37,11 +37,17 @@ import org.kie.kogito.app.audit.spi.GraphQLSchemaQueryProvider;
 
 public class JPAGraphQLSchemaUserTaskInstancesQueryProvider implements GraphQLSchemaQueryProvider {
 
+    private static final String UT_PROCESS_ID_COL = "log.process_id";
+    private static final String UT_PROCESS_VERSION_COL = "log.process_version";
+    private static final String UT_ROOT_PROCESS_ID_COL = "log.root_process_id";
+    private static final String UT_ROOT_PROCESS_VERSION_COL = "log.root_process_version";
+
     @Override
     public List<GraphQLSchemaQuery> queries(DataAuditContext dataAuditContext) {
         return List.of(
-                new JPASimpleNamedQuery<UserTaskInstanceStateTO>("GetAllUserTaskInstanceState",
-                        UserTaskInstanceStateTO.class),
+                new JPASimpleNamedQuery<UserTaskInstanceStateTO>("GetAllUserTaskInstanceState", "GetAllUserTaskInstanceState",
+                        UserTaskInstanceStateTO.class,
+                        UT_PROCESS_ID_COL, UT_PROCESS_VERSION_COL, UT_ROOT_PROCESS_ID_COL, UT_ROOT_PROCESS_VERSION_COL),
                 new JPASimpleNamedQuery<UserTaskInstanceAttachmentTO>("GetAllUserTaskInstanceAttachments",
                         UserTaskInstanceAttachmentTO.class),
                 new JPASimpleNamedQuery<UserTaskInstanceCommentTO>("GetAllUserTaskInstanceComments",

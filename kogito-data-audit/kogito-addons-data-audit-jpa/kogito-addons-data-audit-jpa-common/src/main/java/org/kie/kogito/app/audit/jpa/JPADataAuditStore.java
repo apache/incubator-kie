@@ -91,6 +91,7 @@ public class JPADataAuditStore implements DataAuditStore {
         ProcessInstanceStateLog log = new ProcessInstanceStateLog();
 
         setProcessCommonAttributes(log, event);
+        log.setRootProcessVersion(getOnlyIfFilled(event::getKogitoRootProcessVersion));
         log.setState(String.valueOf(event.getData().getState()));
         log.setRoles(event.getData().getRoles());
         log.setSlaDueDate(event.getData().getSlaDueDate());
@@ -223,7 +224,6 @@ public class JPADataAuditStore implements DataAuditStore {
         log.setProcessInstanceId(event.getKogitoProcessInstanceId());
         log.setParentProcessInstanceId(getOnlyIfFilled(event::getKogitoParentProcessInstanceId));
         log.setRootProcessId(getOnlyIfFilled(event::getKogitoRootProcessId));
-        log.setRootProcessVersion(getOnlyIfFilled(event::getKogitoRootProcessVersion));
         log.setRootProcessInstanceId(getOnlyIfFilled(event::getKogitoRootProcessInstanceId));
         log.setBusinessKey(event.getKogitoBusinessKey());
     }
@@ -314,9 +314,12 @@ public class JPADataAuditStore implements DataAuditStore {
         log.setName(event.getData().getUserTaskName());
         log.setDescription(event.getData().getUserTaskDescription());
         log.setState(event.getData().getState());
-
         log.setEventType(event.getData().getEventType());
         log.setEventUser(event.getData().getEventUser());
+        log.setProcessId(event.getKogitoProcessId());
+        log.setProcessVersion(event.getKogitoProcessVersion());
+        log.setRootProcessId(getOnlyIfFilled(event::getKogitoRootProcessId));
+        log.setRootProcessVersion(getOnlyIfFilled(event::getKogitoRootProcessVersion));
 
         EntityManager entityManager = context.getContext();
         entityManager.persist(log);
