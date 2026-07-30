@@ -42,7 +42,7 @@
     <version.org.drools>${project.version}</version.org.drools>
 
     <!-- Normal dependency versions -->
-    <version.ch.qos.logback>1.5.34</version.ch.qos.logback>
+    <version.ch.qos.logback>1.5.35</version.ch.qos.logback>
     <version.org.apache.logging.log4j>2.22.1</version.org.apache.logging.log4j>
     <version.com.thoughtworks.xstream>1.4.21</version.com.thoughtworks.xstream>
     <version.io.quarkiverse.operatorsdk>6.6.7</version.io.quarkiverse.operatorsdk>
