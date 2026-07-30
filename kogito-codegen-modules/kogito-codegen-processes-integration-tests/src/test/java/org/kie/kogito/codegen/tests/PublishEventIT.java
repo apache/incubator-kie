@@ -529,6 +529,56 @@ public class PublishEventIT extends AbstractCodegenIT {
                 .isNotNull().containsEntry("s", "Goodbye Hello john!!");
     }
 
+    @Test
+    public void testUserTaskNodeEnterEventContainsWorkItemId() throws Exception {
+        Application app = generateCodeProcessesOnly("usertask/UserTasksProcess.bpmn2");
+        assertThat(app).isNotNull();
+
+        Process<? extends Model> p = app.get(Processes.class).processById("UserTasksProcess");
+
+        Model model = p.createModel();
+        model.fromMap(Collections.emptyMap());
+
+        TestEventPublisher publisher = new TestEventPublisher();
+        app.unitOfWorkManager().eventManager().setService("http://myhost");
+        app.unitOfWorkManager().eventManager().addPublisher(publisher);
+
+        UnitOfWork uow = app.unitOfWorkManager().newUnitOfWork();
+        uow.start();
+
+        ProcessInstance<?> processInstance = p.createInstance(model);
+        processInstance.start();
+
+        uow.end();
+
+        assertThat(processInstance.status())
+                .isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        List<WorkItem> workItems = processInstance.workItems(securityPolicy);
+
+        assertThat(workItems).hasSize(1);
+        assertThat(workItems.get(0).getName()).isEqualTo("FirstTask");
+        assertThat(workItems.get(0).getId()).isNotNull();
+
+        List<DataEvent<?>> events = publisher.extract();
+
+        List<ProcessInstanceNodeEventBody> nodeEnterEvents = findNodeInstanceEvents(
+                events,
+                ProcessInstanceNodeEventBody.EVENT_TYPE_ENTER);
+
+        ProcessInstanceNodeEventBody humanTaskNodeEvent = nodeEnterEvents.stream()
+                .filter(event -> "HumanTaskNode".equals(event.getNodeType()))
+                .filter(event -> "First Task".equals(event.getNodeName()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        "HumanTaskNode ENTER event was not published"));
+
+        assertThat(humanTaskNodeEvent.getWorkItemId())
+                .as("HumanTaskNode ENTER event must contain the created work item ID")
+                .isNotNull()
+                .isEqualTo(workItems.get(0).getId());
+    }
+
     /*
      * Helper methods
      */

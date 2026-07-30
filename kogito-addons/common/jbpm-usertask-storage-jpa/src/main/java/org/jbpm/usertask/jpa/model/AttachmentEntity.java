@@ -28,10 +28,13 @@ import jakarta.persistence.*;
 public class AttachmentEntity {
 
     @Id
+    @Column(name = "id")
     private String id;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "url")
     private String url;
 
     @Column(name = "updated_by")

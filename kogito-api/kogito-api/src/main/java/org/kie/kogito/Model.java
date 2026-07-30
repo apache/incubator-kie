@@ -19,8 +19,7 @@
 package org.kie.kogito;
 
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
  * Represents data model type of objects that are usually descriptor of data holders.
@@ -33,8 +32,16 @@ public interface Model extends MapInput, MapOutput {
     }
 
     default Map<String, Object> updatePartially(Map<String, Object> params) {
-        params = params.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
         update(params);
         return params;
+    }
+
+    /**
+     * Returns the set of field names that were explicitly set (e.g. during a PATCH request).
+     * Returns null when tracking is not active — all fields are included in toMap().
+     * Returns a non-null set when tracking is active — only those fields are included.
+     */
+    default Set<String> getModifiedFields() {
+        return null;
     }
 }

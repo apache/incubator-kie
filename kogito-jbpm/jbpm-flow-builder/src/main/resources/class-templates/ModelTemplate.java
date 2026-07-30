@@ -24,20 +24,51 @@ import org.kie.kogito.MapOutput;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.kie.kogito.MappableToModel;
 import org.kie.kogito.Model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class XXXModel implements org.kie.kogito.Model, MapInput, MapInputId, MapOutput, MappableToModel<$modelClass$> {
 
     private String id;
 
+    @JsonIgnore
+    private transient Set<String> __modifiedFields;
+
     public void setId(String id) {
         this.id = id;
     }
-    
+
     public String getId() {
         return this.id;
+    }
+
+    @JsonIgnore
+    @Override
+    public Set<String> getModifiedFields() {
+        return __modifiedFields;
+    }
+
+    // Codegen-internal: carries the modified-fields set from a PATCH Input onto
+    // its toModel() target. Left null otherwise, so toMap() includes every field.
+    void addModifiedFields(Set<String> fields) {
+        if (fields == null) {
+            return;
+        }
+        if (__modifiedFields == null) {
+            __modifiedFields = new HashSet<>();
+        }
+        __modifiedFields.addAll(fields);
+    }
+
+    // Called by the generated PUT handler before a full-replace update, so every
+    // field counts as significant - unlike PATCH, which only touches tracked fields.
+    void clearModifiedFields() {
+        __modifiedFields = null;
     }
 
 }

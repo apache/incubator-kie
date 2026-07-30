@@ -24,11 +24,30 @@ import org.kie.kogito.MapOutput;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.kie.kogito.MappableToModel;
 import org.kie.kogito.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class XXXModel implements Model, MapInput, MapInputId, MapOutput,
                                  MappableToModel<$modelClass$> {
+
+    // Ephemeral REST request-body carrier - always tracks modifications from construction.
+    @JsonIgnore
+    private transient final Set<String> __modifiedFields = new HashSet<>();
+
+    @JsonIgnore
+    @Override
+    public Set<String> getModifiedFields() {
+        return __modifiedFields;
+    }
+
+    // Marks a field as explicitly set, so PATCH can tell a null apart from an omitted field.
+    void markModified(String field) {
+        __modifiedFields.add(field);
+    }
 
 }

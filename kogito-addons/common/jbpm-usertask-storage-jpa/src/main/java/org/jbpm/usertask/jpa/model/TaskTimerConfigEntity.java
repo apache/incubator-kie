@@ -21,6 +21,7 @@ package org.jbpm.usertask.jpa.model;
 
 import java.util.Objects;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +34,7 @@ public abstract class TaskTimerConfigEntity<T> extends AbstractTaskEntity<T> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     protected Integer id;
 
     @ManyToOne(optional = false)

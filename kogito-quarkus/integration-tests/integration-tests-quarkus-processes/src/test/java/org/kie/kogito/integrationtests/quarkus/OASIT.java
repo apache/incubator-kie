@@ -27,6 +27,7 @@ import io.quarkus.test.junit.QuarkusIntegrationTest;
 import io.restassured.RestAssured;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
@@ -58,6 +59,26 @@ class OASIT {
         assertThat(p1).isNotNull();
         assertThat(p1.getGet()).isNotNull();
         assertThat(p1.getPost()).isNotNull();
+    }
+
+    @Test
+    public void testApprovalsSchemaProperties() {
+        String url = rootUrl.toString() + "/q/openapi";
+        ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+        SwaggerParseResult result = new OpenAPIV3Parser().readLocation(url, null, parseOptions);
+
+        OpenAPI openAPI = result.getOpenAPI();
+        PathItem p1 = openAPI.getPaths().get("/approvals");
+        assertThat(p1).isNotNull();
+
+        Schema requestSchema = p1.getPost().getRequestBody().getContent().get("application/json").getSchema();
+        String schemaName = requestSchema.get$ref().substring(requestSchema.get$ref().lastIndexOf('/') + 1);
+        Schema resolvedSchema = openAPI.getComponents().getSchemas().get(schemaName);
+        assertThat(resolvedSchema).isNotNull();
+
+        assertThat(resolvedSchema.getProperties().keySet())
+                .containsExactlyInAnyOrder("approver", "traveller", "firstLineApproval", "secondLineApproval");
     }
 
 }

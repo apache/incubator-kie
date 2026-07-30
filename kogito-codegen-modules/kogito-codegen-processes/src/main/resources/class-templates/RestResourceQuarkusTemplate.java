@@ -160,7 +160,9 @@ public class $Type$Resource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(operationId = "updateProcessInstance_$name$", summary = "$documentation$", description = "$processInstanceDescription$")
     public $Type$Output updateModel_$name$(@PathParam("id") String id, $Type$Input resource) {
-        return processService.update(process, id, resource.toModel()).orElseThrow(NotFoundException::new);
+        $Type$ model = resource.toModel();
+        model.clearModifiedFields();
+        return processService.update(process, id, model).orElseThrow(NotFoundException::new);
     }
     
     @PATCH

@@ -112,7 +112,9 @@ public class $Type$Resource {
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(operationId = "updateProcessInstance_$name$", summary = "$documentation$", description = "$processInstanceDescription$")
     public $Type$Output updateModel_$name$(@PathVariable("id") String id, @RequestBody(required = false) $Type$Input resource) {
-        return processService.update(process, id, resource.toModel()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        $Type$ model = resource.toModel();
+        model.clearModifiedFields();
+        return processService.update(process, id, model).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
     
     @PatchMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE,

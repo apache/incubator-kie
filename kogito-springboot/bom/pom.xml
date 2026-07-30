@@ -41,7 +41,7 @@
     <!-- This is needed to override the default version inherited from kie-parent-drools -->
     <version.mongodb-driver-sync>5.6.4</version.mongodb-driver-sync>
     <version.org.springdoc>2.8.13</version.org.springdoc>
-    <version.org.springframework>7.0.7</version.org.springframework>
+    <version.org.springframework>7.0.8</version.org.springframework>
     <version.org.springframework.boot>4.0.7</version.org.springframework.boot>
     <!-- Spring Boot Cloud aligned with Spring Boot Framework version. See: https://spring.io/projects/spring-cloud -->
     <!-- 2025.1.x (Oakwood) is the first Spring Cloud train compatible with Spring Boot 4.0.x;

@@ -94,6 +94,8 @@ import org.jbpm.bpmn2.flow.MultiInstanceLoopCharacteristicsProcessWithOutputMode
 import org.jbpm.bpmn2.flow.MultiInstanceLoopCharacteristicsProcessWithOutputProcess;
 import org.jbpm.bpmn2.flow.MultiInstanceLoopNumberingModel;
 import org.jbpm.bpmn2.flow.MultiInstanceLoopNumberingProcess;
+import org.jbpm.bpmn2.flow.MultiInstanceProcessWithOutputOnTaskModel;
+import org.jbpm.bpmn2.flow.MultiInstanceProcessWithOutputOnTaskProcess;
 import org.jbpm.bpmn2.flow.MultipleGatewaysProcessModel;
 import org.jbpm.bpmn2.flow.MultipleGatewaysProcessProcess;
 import org.jbpm.bpmn2.loop.MultiInstanceLoopCharacteristicsProcessWithOutputAndScriptsModel;
@@ -1056,40 +1058,36 @@ public class FlowTest extends JbpmBpmn2TestCase {
 
     @Test
     public void testMultiInstanceLoopCharacteristicsProcess2() throws Exception {
-        kruntime = createKogitoProcessRuntime("org/jbpm/bpmn2/flow/BPMN2-MultiInstanceProcessWithOutputOnTask.bpmn2");
-
+        Application app = ProcessTestHelper.newApplication();
         TestWorkItemHandler handler = new TestWorkItemHandler();
-        kruntime.getKogitoWorkItemManager().registerWorkItemHandler("Human Task", handler);
-        Map<String, Object> params = new HashMap<>();
+        ProcessTestHelper.registerHandler(app, "Human Task", handler);
+        org.kie.kogito.process.Process<MultiInstanceProcessWithOutputOnTaskModel> processDefinition = MultiInstanceProcessWithOutputOnTaskProcess.newProcess(app);
+        MultiInstanceProcessWithOutputOnTaskModel model = processDefinition.createModel();
         List<String> myList = new ArrayList<>();
-        List<String> myOutList = null;
         myList.add("John");
         myList.add("Mary");
-        params.put("miinput", myList);
+        model.setMiinput(myList);
 
-        KogitoProcessInstance processInstance = kruntime.startProcess("MultiInstanceProcessWithOutputOnTask", params);
+        ProcessInstance<MultiInstanceProcessWithOutputOnTaskModel> processInstance = processDefinition.createInstance(model);
+        processInstance.start();
         List<KogitoWorkItem> workItems = handler.getWorkItems();
         assertThat(workItems).isNotNull().hasSize(2);
 
-        myOutList = (List<String>) kruntime.getKieSession().execute(new GetProcessVariableCommand(processInstance.getStringId(), "mioutput"));
-        assertThat(myOutList).isNull();
+        assertThat(processInstance.variables().getMioutput()).isNull();
 
         Map<String, Object> results = new HashMap<>();
         results.put("reply", "Hello John");
-        kruntime.getKogitoWorkItemManager().completeWorkItem(workItems.get(0).getStringId(), results);
-        myOutList = (List<String>) kruntime.getKieSession().execute(new GetProcessVariableCommand(processInstance.getStringId(), "mioutput"));
-        assertThat(myOutList).isNull();
+        processInstance.completeWorkItem(workItems.get(0).getStringId(), results);
+        assertThat(processInstance.variables().getMioutput()).isNull();
 
         results = new HashMap<>();
         results.put("reply", "Hello Mary");
-        kruntime.getKogitoWorkItemManager().completeWorkItem(workItems.get(1).getStringId(), results);
+        processInstance.completeWorkItem(workItems.get(1).getStringId(), results);
 
-        myOutList = (List<String>) kruntime.getKieSession().execute(new GetProcessVariableCommand(processInstance.getStringId(), "mioutput"));
-        assertThat(myOutList).isNotNull().hasSize(2).contains("Hello John", "Hello Mary");
+        assertThat(processInstance.variables().getMioutput()).isNotNull().hasSize(2).contains("Hello John", "Hello Mary");
 
-        kruntime.getKogitoWorkItemManager().completeWorkItem(handler.getWorkItem().getStringId(), null);
-        assertProcessInstanceFinished(processInstance, kruntime);
-
+        processInstance.completeWorkItem(handler.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
     }
 
     @Test

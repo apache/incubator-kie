@@ -68,12 +68,12 @@ public class UnitOfWorkProcessEventListener extends DefaultKogitoProcessEventLis
 
     @Override
     public void beforeNodeTriggered(ProcessNodeTriggeredEvent event) {
-        intercept(event);
+
     }
 
     @Override
     public void afterNodeTriggered(ProcessNodeTriggeredEvent event) {
-
+        intercept(event);
     }
 
     @Override

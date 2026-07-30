@@ -20,6 +20,7 @@ package org.kie.kogito.core.rules.incubation.quarkus.support;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.drools.ruleunits.api.RuleUnit;
@@ -35,6 +36,9 @@ import org.kie.kogito.incubation.rules.RuleUnitId;
 import org.kie.kogito.incubation.rules.services.RuleUnitService;
 
 class RuleUnitServiceImpl implements RuleUnitService {
+
+    // CWE-470: validate class name is a legal Java FQCN before passing to loadClass
+    private static final Pattern SAFE_CLASS_NAME = Pattern.compile("[\\w$]+(\\.[\\w$]+)*");
 
     private final RuleUnits ruleUnits;
 
@@ -64,12 +68,16 @@ class RuleUnitServiceImpl implements RuleUnitService {
     }
 
     private RuleUnitData convertValue(Map<String, Object> payload, RuleUnitId ruleUnitId) {
+        String className = ruleUnitId.ruleUnitId();
+        if (!SAFE_CLASS_NAME.matcher(className).matches()) {
+            throw new IllegalArgumentException("Invalid rule unit class name: " + className);
+        }
         try {
             // converts the identifier into a Class object for conversion
-            Class<RuleUnitData> type = (Class<RuleUnitData>) Thread.currentThread().getContextClassLoader().loadClass(ruleUnitId.ruleUnitId());
+            Class<RuleUnitData> type = (Class<RuleUnitData>) Thread.currentThread().getContextClassLoader().loadClass(className);
             return InternalObjectMapper.objectMapper().convertValue(payload, type);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Cannot load class " + ruleUnitId.ruleUnitId(), e);
+            throw new IllegalArgumentException("Cannot load class " + className, e);
         }
     }
 

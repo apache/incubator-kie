@@ -253,6 +253,92 @@ class BasicRestIT {
     }
 
     @Test
+    void testPatchWithNullValue() {
+        String id = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body(getParams())
+                .post("/AdHocFragments")
+                .then()
+                .statusCode(201)
+                .header("Location", not(emptyOrNullString()))
+                .body("id", not(emptyOrNullString()))
+                .body("var1", equalTo("Kermit"))
+                .body("var2", equalTo(34))
+                .extract()
+                .path("id");
+
+        // var1 set to null must be cleared, unlike an omitted field
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": null}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", nullValue())
+                .body("var2", is(34));
+
+        assertExpectedUnitOfWorkEvents(2);
+    }
+
+    @Test
+    void testPatchAndPutSequence() {
+        String id = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body(getParams())
+                .post("/AdHocFragments")
+                .then()
+                .statusCode(201)
+                .header("Location", not(emptyOrNullString()))
+                .body("id", not(emptyOrNullString()))
+                .body("var1", equalTo("Kermit"))
+                .body("var2", equalTo(34))
+                .extract()
+                .path("id");
+
+        // PATCH: var1 explicitly nulled, var2 untouched
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": null}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", nullValue())
+                .body("var2", is(34));
+
+        // PUT right after a PATCH on the same resource: var2 omitted -> must still be nulled out
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": \"Gonzo\"}")
+                .put("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", equalTo("Gonzo"))
+                .body("var2", nullValue());
+
+        // PATCH right after a PUT: empty body must leave both fields untouched
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", equalTo("Gonzo"))
+                .body("var2", nullValue());
+
+        assertExpectedUnitOfWorkEvents(4);
+    }
+
+    @Test
     void testDelete() {
         Map<String, String> params = new HashMap<>();
         params.put("var1", "Kermit");

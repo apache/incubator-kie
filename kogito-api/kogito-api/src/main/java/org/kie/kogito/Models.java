@@ -21,6 +21,7 @@ package org.kie.kogito;
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -30,12 +31,17 @@ public class Models {
     }
 
     @SuppressWarnings("squid:S3011")
-    public static Map<String, Object> toMap(Object m) {
+    public static Map<String, Object> toMap(MapOutput m) {
+        Set<String> modifiedFields = (m instanceof Model model) ? model.getModifiedFields() : null;
         Map<String, Object> map = new LinkedHashMap<>();
         for (Field field : m.getClass().getDeclaredFields()) {
             JsonProperty jsonAnnotation = field.getAnnotation(JsonProperty.class);
             if (jsonAnnotation != null) {
                 String name = jsonAnnotation.value();
+                // null = not tracking (include all); non-null = include only modified fields
+                if (modifiedFields != null && !modifiedFields.contains(name)) {
+                    continue;
+                }
                 field.setAccessible(true);
                 try {
                     map.put(name, field.get(m));

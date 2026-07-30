@@ -19,6 +19,7 @@
   -->
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_WL3jkCdwED2KYMa5towL6A" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_var1Item" structureRef="String"/>
+  <bpmn2:itemDefinition id="_var2Item" structureRef="Integer"/>
   <bpmn2:itemDefinition id="__731518E6-88A2-4CCC-A2C0-97C45189A7F3_ConditionInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__17762652-67B8-46FF-ADFE-D7AF3EA2ADAB_SkippableInputXItem" structureRef="Object"/>
   <bpmn2:itemDefinition id="__17762652-67B8-46FF-ADFE-D7AF3EA2ADAB_PriorityInputXItem" structureRef="Object"/>
@@ -64,6 +65,7 @@
   </bpmn2:collaboration>
   <bpmn2:process id="TestCase.AdHocFragments" drools:packageName="org.kie.kogito" drools:version="1.0" drools:adHoc="true" name="AdHocFragments" isExecutable="true" processType="Public">
     <bpmn2:property id="var1" itemSubjectRef="_var1Item" name="var1"/>
+    <bpmn2:property id="var2" itemSubjectRef="_var2Item" name="var2"/>
     <bpmn2:sequenceFlow id="_830D53F8-A344-45AE-A1A1-2173DD983A43" sourceRef="_89FFDFF9-8D8A-4B86-B48C-76F30299D8D3" targetRef="_319B612D-CD70-4FB0-8390-2F825115847E">
       <bpmn2:extensionElements>
         <drools:metaData name="isAutoConnection.source">

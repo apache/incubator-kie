@@ -38,6 +38,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = KogitoSpringbootApplication.class)
@@ -205,6 +206,164 @@ class BasicRestTest extends BaseRestTest {
                 .body("var1", equalTo("Gonzo"));
 
         assertExpectedUnitOfWorkEvents(2);
+    }
+
+    @Test
+    void testUpdateNullsOmittedField() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("var1", "Kermit");
+        params.put("var2", 34);
+
+        String id = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body(params)
+                .post("/AdHocFragments")
+                .then()
+                .statusCode(201)
+                .header("Location", not(emptyOrNullString()))
+                .body("id", not(emptyOrNullString()))
+                .body("var1", equalTo("Kermit"))
+                .body("var2", equalTo(34))
+                .extract()
+                .path("id");
+
+        // var2 omitted from PUT body -> full replace must null it
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": \"Gonzo\"}")
+                .put("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", equalTo("Gonzo"))
+                .body("var2", nullValue());
+
+        assertExpectedUnitOfWorkEvents(2);
+    }
+
+    @Test
+    void testPatch() {
+        Map<String, String> params = new HashMap<>();
+        params.put("var1", "Kermit");
+
+        String id = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body(params)
+                .post("/AdHocFragments")
+                .then()
+                .statusCode(201)
+                .header("Location", not(emptyOrNullString()))
+                .body("id", not(emptyOrNullString()))
+                .body("var1", equalTo("Kermit"))
+                .extract()
+                .path("id");
+
+        // An empty PATCH body must leave existing variables untouched.
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", equalTo("Kermit"));
+
+        assertExpectedUnitOfWorkEvents(2);
+    }
+
+    @Test
+    void testPatchWithNullValue() {
+        Map<String, String> params = new HashMap<>();
+        params.put("var1", "Kermit");
+
+        String id = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body(params)
+                .post("/AdHocFragments")
+                .then()
+                .statusCode(201)
+                .header("Location", not(emptyOrNullString()))
+                .body("id", not(emptyOrNullString()))
+                .body("var1", equalTo("Kermit"))
+                .extract()
+                .path("id");
+
+        // var1 set to null must be cleared, unlike an omitted field
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": null}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", nullValue());
+
+        assertExpectedUnitOfWorkEvents(2);
+    }
+
+    @Test
+    void testPatchAndPutSequence() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("var1", "Kermit");
+        params.put("var2", 34);
+
+        String id = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body(params)
+                .post("/AdHocFragments")
+                .then()
+                .statusCode(201)
+                .header("Location", not(emptyOrNullString()))
+                .body("id", not(emptyOrNullString()))
+                .body("var1", equalTo("Kermit"))
+                .body("var2", equalTo(34))
+                .extract()
+                .path("id");
+
+        // PATCH: var1 explicitly nulled, var2 untouched
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": null}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", nullValue())
+                .body("var2", equalTo(34));
+
+        // PUT right after a PATCH on the same resource: var2 omitted -> must still be nulled out
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{\"var1\": \"Gonzo\"}")
+                .put("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", equalTo("Gonzo"))
+                .body("var2", nullValue());
+
+        // PATCH right after a PUT: empty body must leave both fields untouched
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .body("{}")
+                .patch("/AdHocFragments/{customId}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(id))
+                .body("var1", equalTo("Gonzo"))
+                .body("var2", nullValue());
+
+        assertExpectedUnitOfWorkEvents(4);
     }
 
     @Test

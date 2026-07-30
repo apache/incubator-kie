@@ -21,6 +21,7 @@ package org.kie.kogito.core.rules.incubation.quarkus.support;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.drools.ruleunits.api.RuleUnit;
@@ -40,6 +41,9 @@ import org.kie.kogito.incubation.rules.RuleUnitInstanceId;
 import org.kie.kogito.incubation.rules.services.StatefulRuleUnitService;
 
 class StatefulRuleUnitServiceImpl implements StatefulRuleUnitService {
+
+    // CWE-470: validate class name is a legal Java FQCN before passing to loadClass
+    private static final Pattern SAFE_CLASS_NAME = Pattern.compile("[\\w$]+(\\.[\\w$]+)*");
 
     private final RuleUnits ruleUnits;
 
@@ -71,10 +75,14 @@ class StatefulRuleUnitServiceImpl implements StatefulRuleUnitService {
     }
 
     private Class<RuleUnitData> toClass(RuleUnitId ruleUnitId) {
+        String className = ruleUnitId.ruleUnitId();
+        if (!SAFE_CLASS_NAME.matcher(className).matches()) {
+            throw new IllegalArgumentException("Invalid rule unit class name: " + className);
+        }
         try {
-            return (Class<RuleUnitData>) Thread.currentThread().getContextClassLoader().loadClass(ruleUnitId.ruleUnitId());
+            return (Class<RuleUnitData>) Thread.currentThread().getContextClassLoader().loadClass(className);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException(e);
+            throw new IllegalArgumentException("Cannot load class " + className, e);
         }
     }
 

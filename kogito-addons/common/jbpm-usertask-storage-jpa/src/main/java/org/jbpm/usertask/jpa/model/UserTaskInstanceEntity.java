@@ -54,6 +54,7 @@ public class UserTaskInstanceEntity {
     public static final String STATUS_FILTER_CLAUSE = " and userTask.status in (:statusFilter)";
 
     @Id
+    @Column(name = "id")
     private String id;
 
     @Column(name = "user_task_id")
@@ -68,6 +69,7 @@ public class UserTaskInstanceEntity {
     @Column(name = "task_priority")
     private String taskPriority;
 
+    @Column(name = "status")
     private String status;
 
     @Column(name = "termination_type")

@@ -190,6 +190,18 @@ public class ModelMetaData {
         }
         modelClass.setName(modelClassSimpleName);
 
+        // The modified-fields tracking field/getter must stay out of the generated OpenAPI
+        if (supportsOpenApiGeneration) {
+            NormalAnnotationExpr hiddenSchema = new NormalAnnotationExpr(new Name(Schema.class.getCanonicalName()),
+                    NodeList.nodeList(new MemberValuePair("hidden", new BooleanLiteralExpr(true))));
+            modelClass.findFirst(FieldDeclaration.class,
+                    fd -> fd.getVariables().stream().anyMatch(v -> v.getNameAsString().equals("__modifiedFields")))
+                    .ifPresent(fd -> fd.addAnnotation(hiddenSchema.clone()));
+            modelClass.findFirst(MethodDeclaration.class, md -> md.getNameAsString().equals("getModifiedFields"))
+                    .ifPresent(md -> md.addAnnotation(hiddenSchema.clone()));
+            compilationUnit.addImport(Schema.class.getCanonicalName());
+        }
+
         // setup of the toMap method body
         BlockStmt toMapBody = new BlockStmt();
         ClassOrInterfaceType toMap = new ClassOrInterfaceType(null, new SimpleName(Map.class.getSimpleName()),
@@ -225,7 +237,14 @@ public class ModelMetaData {
             applyOpenApiSchemaAnnotation(fd);
 
             fd.createGetter();
-            fd.createSetter();
+            MethodDeclaration setter = fd.createSetter();
+            if (isInputModel()) {
+                // Only Input setters run from request deserialization - Model/Output setters
+                // are also called by generated copy loops, which would wrongly count as "set".
+                setter.getBody().ifPresent(setterBody -> setterBody.addStatement(
+                        new MethodCallExpr(null, "markModified",
+                                NodeList.nodeList(new StringLiteralExpr(varName)))));
+            }
 
         }
 
@@ -263,6 +282,10 @@ public class ModelMetaData {
                         .setType(type)
                         .setName(name))
                 .addModifier(Modifier.Keyword.PRIVATE);
+    }
+
+    private boolean isInputModel() {
+        return "/class-templates/ModelNoIDTemplate.java".equals(templateName);
     }
 
     public String getModelClassSimpleName() {

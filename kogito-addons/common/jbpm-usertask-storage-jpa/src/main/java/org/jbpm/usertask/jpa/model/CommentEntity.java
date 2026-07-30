@@ -28,8 +28,10 @@ import jakarta.persistence.*;
 public class CommentEntity {
 
     @Id
+    @Column(name = "id")
     private String id;
 
+    @Column(name = "comment")
     private String comment;
 
     @Column(name = "updated_by")
