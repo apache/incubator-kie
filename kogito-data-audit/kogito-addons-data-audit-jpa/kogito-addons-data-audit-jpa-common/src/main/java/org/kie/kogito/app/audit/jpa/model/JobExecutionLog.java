@@ -37,7 +37,10 @@ import jakarta.persistence.TemporalType;
         indexes = {
                 @Index(name = "ix_jel_pid", columnList = "process_instance_id"),
                 @Index(name = "ix_jel_jid", columnList = "job_id"),
-                @Index(name = "ix_jel_status", columnList = "status")
+                @Index(name = "ix_jel_status", columnList = "status"),
+                @Index(name = "ix_jel_procid", columnList = "process_id"),
+                @Index(name = "ix_jel_pid_pver", columnList = "process_id, process_version"),
+                @Index(name = "ix_jel_rpid_rpver", columnList = "root_process_id, root_process_version")
         })
 @SequenceGenerator(name = "jobExecutionHistoryIdSeq", sequenceName = "JOB_EXECUTION_HISTORY_ID_SEQ")
 public class JobExecutionLog {

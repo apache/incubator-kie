@@ -37,9 +37,8 @@ import jakarta.persistence.Table;
                 @Index(name = "ix_utsl_key", columnList = "business_key"),
                 @Index(name = "ix_utsl_event_date", columnList = "event_date"),
                 @Index(name = "ix_utsl_proc_id", columnList = "process_id"),
-                @Index(name = "ix_utsl_rproc_id", columnList = "root_process_id"),
-                @Index(name = "ix_utsl_proc_ver", columnList = "process_version"),
-                @Index(name = "ix_utsl_rproc_ver", columnList = "root_process_version")
+                @Index(name = "ix_utsl_pid_pver", columnList = "process_id, process_version"),
+                @Index(name = "ix_utsl_rpid_rpver", columnList = "root_process_id, root_process_version")
         })
 @SequenceGenerator(name = "taskInstanceStateLogIdSeq", sequenceName = "TASK_INSTANCE_STATE_LOG_ID_SEQ")
 public class UserTaskInstanceStateLog extends AbstractUserTaskInstanceLog {
