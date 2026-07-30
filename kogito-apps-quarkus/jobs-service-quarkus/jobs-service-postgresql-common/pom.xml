@@ -105,5 +105,29 @@
             <artifactId>wiremock-jetty12</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-addons-quarkus-flyway-deployment</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kogito-addons-quarkus-common-deployment</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 </project>

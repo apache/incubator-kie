@@ -67,6 +67,18 @@
       <groupId>org.optaplanner</groupId>
       <artifactId>optaplanner-quarkus</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.optaplanner</groupId>
+      <artifactId>optaplanner-quarkus-deployment</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
