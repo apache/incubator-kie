@@ -320,7 +320,7 @@
     <version.simple-jndi>0.11.4.1</version.simple-jndi>
     <version.sisu.inject>1.4.2</version.sisu.inject>
     <version.sonar-maven-plugin>3.6.0.1398</version.sonar-maven-plugin>
-    <version.tomcat.embed.core>11.0.22</version.tomcat.embed.core>
+    <version.tomcat.embed.core>11.0.24</version.tomcat.embed.core>
     <version.versions-maven-plugin>2.10.0</version.versions-maven-plugin>
     <version.wildfly-maven-plugin>1.2.0.Final</version.wildfly-maven-plugin>
     <version.xerces>2.12.2</version.xerces>
