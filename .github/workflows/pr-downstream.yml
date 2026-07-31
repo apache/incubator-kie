@@ -17,7 +17,7 @@
 # under the License.
 #
 
-name: 'CI :: Downstream (kogito-examples)'
+name: 'CI :: Examples'
 
 on:
   pull_request:
@@ -102,7 +102,7 @@ jobs:
           mvn --batch-mode --no-transfer-progress -fae -f kogito-examples/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
 
       - name: 'REPORT :: Surefire'
-        uses: ScaCap/action-surefire-report@v1.2.0
+        uses: ScaCap/action-surefire-report@522da118999b5d3df7daefa75833943280172773 # v1.2.0
         if: always()
         with:
           fail_on_test_failures: true
@@ -110,6 +110,8 @@ jobs:
           create_check: false
           skip_publishing: true
           report_paths: '**/*-reports/TEST-*.xml'
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
       - name: 'REPORT :: Upload dependency trees'
         uses: actions/upload-artifact@v7
         if: always()
