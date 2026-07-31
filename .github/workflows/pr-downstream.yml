@@ -17,11 +17,12 @@
 # under the License.
 #
 
-name: Kogito Downstream
+name: 'CI :: Downstream (kogito-examples)'
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
     paths-ignore:
       - 'LICENSE'
       - '**/.gitignore'
@@ -32,66 +33,86 @@ on:
       - '.ci/jenkins/**'
 
 jobs:
-  kogito-downstream-build:
+  kogito-examples:
+    name: '${{ matrix.examples-subfolder }}'
+    runs-on: ubuntu-latest
     concurrency:
-      group: pr-${{ matrix.job_name }}_${{ matrix.os }}_${{ matrix.java-version }}_${{ matrix.maven-version }}_${{ github.head_ref }}
+      group: pr-downstream-${{ matrix.examples-subfolder }}-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     timeout-minutes: 180
     strategy:
-      max-parallel: 20
-      matrix:
-        job_name: [ kogito-quarkus-examples, kogito-springboot-examples, kogito-gradle-examples ]
-        os: [ubuntu-latest]
-        java-version: [17]
-        maven-version: ['3.9.11']
-        include:
-          - job_name: kogito-quarkus-examples
-            repository: incubator-kie-kogito-examples
-            env_KOGITO_EXAMPLES_SUBFOLDER_POM: kogito-quarkus-examples/
-          - job_name: kogito-springboot-examples
-            repository: incubator-kie-kogito-examples
-            env_KOGITO_EXAMPLES_SUBFOLDER_POM: kogito-springboot-examples/
-          - job_name: kogito-gradle-examples
-            repository: incubator-kie-kogito-examples
-            env_KOGITO_EXAMPLES_SUBFOLDER_POM: gradle-examples/
-          # - job_name: kie-jpmml-integration
-          #   repository: kie-jpmml-integration
+      max-parallel: 3
       fail-fast: false
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.job_name }} (${{ matrix.os }} / Java-${{ matrix.java-version }} / Maven-${{ matrix.maven-version }})
-    env:
-      DEPENDENCY_TREE_FILE: 'mvn_dependency_tree_${{ matrix.job_name }}_${{ matrix.os }}.txt'
+      matrix:
+        examples-subfolder:
+          - kogito-quarkus-examples
+          - kogito-springboot-examples
+          - gradle-examples
+
     steps:
-      - name: Clean Disk Space
-        uses: apache/incubator-kie-kogito-pipelines/.ci/actions/ubuntu-disk-space@main
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-      - name: Support long paths
-        if: ${{ matrix.os == 'windows-latest' }}
-        uses: apache/incubator-kie-kogito-pipelines/.ci/actions/long-paths@main
-      - name: Java and Maven Setup
-        uses: apache/incubator-kie-kogito-pipelines/.ci/actions/maven@main
+      - name: 'SETUP :: Free disk space'
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: 'SETUP :: Checkout incubator-kie-drools'
+        uses: actions/checkout@v7
+
+      - name: 'SETUP :: Java 17'
+        uses: actions/setup-java@v5
         with:
-          java-version: ${{ matrix.java-version }}
-          maven-version: ${{ matrix.maven-version }}
-          cache-key-prefix: ${{ runner.os }}-${{ matrix.java-version }}-maven${{ matrix.maven-version }}
-      - name: Build Chain
-        uses: apache/incubator-kie-kogito-pipelines/.ci/actions/build-chain@main
+          java-version: 17
+          distribution: temurin
+          cache: maven
+
+      - name: 'SETUP :: Block apache.snapshots Maven repository'
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.m2"
+          cat > "$HOME/.m2/settings.xml" <<'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+            <mirrors>
+              <mirror>
+                <id>block-apache-snapshots</id>
+                <mirrorOf>apache.snapshots,apache-snapshot-repository</mirrorOf>
+                <url>https://repository.apache.org/snapshots/</url>
+                <blocked>true</blocked>
+              </mirror>
+            </mirrors>
+          </settings>
+          EOF
+
+      - name: 'BUILD :: Install incubator-kie-drools snapshot'
+        shell: bash
+        run: mvn --batch-mode --no-transfer-progress -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true install
+
+      - name: 'SETUP :: Checkout incubator-kie-kogito-examples'
+        uses: actions/checkout@v7
         with:
-          definition-file: https://raw.githubusercontent.com/${GROUP:apache}/incubator-kie-kogito-pipelines/${BRANCH:main}/.ci/pull-request-config.yaml
-          annotations-prefix: ${{ runner.os }}-${{ matrix.java-version }}/${{ matrix.maven-version }}
-          starting-project: apache/${{ matrix.repository }}
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-        env: 
-          BUILD_MVN_OPTS: ${{ matrix.env_BUILD_MVN_OPTS }}
-          KOGITO_EXAMPLES_SUBFOLDER_POM: ${{ matrix.env_KOGITO_EXAMPLES_SUBFOLDER_POM }}
-      - name: Surefire Report
-        uses: apache/incubator-kie-kogito-pipelines/.ci/actions/surefire-report@main
-        if: ${{ always() }}
+          repository: apache/incubator-kie-kogito-examples
+          path: kogito-examples
+
+      - name: 'BUILD :: ${{ matrix.examples-subfolder }}'
+        shell: bash
+        run: |
+          mvn --batch-mode --no-transfer-progress -fae -pl :kogito-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f kogito-examples/pom.xml
+          mvn --batch-mode --no-transfer-progress -fae -f kogito-examples/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
+
+      - name: 'REPORT :: Surefire'
+        uses: ScaCap/action-surefire-report@v1.2.0
+        if: always()
         with:
+          fail_on_test_failures: true
+          fail_if_no_tests: false
+          create_check: false
+          skip_publishing: true
           report_paths: '**/*-reports/TEST-*.xml'
-      - name: Upload Dependency Trees
+      - name: 'REPORT :: Upload dependency trees'
         uses: actions/upload-artifact@v7
-        if: ${{ always() }}
+        if: always()
         with:
-          name: dependency-trees-logs_${{ matrix.job_name }}_${{ matrix.os }}
-          path: '**/${{ env.DEPENDENCY_TREE_FILE }}'
+          name: dependency-trees-logs_${{ matrix.examples-subfolder }}_ubuntu-latest
+          path: 'kogito-examples/${{ matrix.examples-subfolder }}/**/mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt'
