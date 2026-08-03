@@ -29,6 +29,10 @@ on:
   # Optional: Run manually from the Actions tab
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check-split-packages:
     runs-on: ubuntu-latest
