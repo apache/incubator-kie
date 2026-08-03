@@ -192,7 +192,7 @@ jobs:
         run: |
           pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
           [ -z "$pl" ] && echo "No affected modules. Skipping." && exit 0
-          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dreproducible -pl "$pl" install
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
 
       - name: "CI :: BUILD :: Full${{ github.event_name == 'pull_request' && ' (skipped)' || '' }}"
         if: github.event_name == 'push'
