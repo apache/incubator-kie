@@ -28,6 +28,8 @@ This is the main repository for [Apache KIE](https://kie.apache.org) (incubating
 - [**jBPM**](https://kie.apache.org/components/jbpm/) — a workflow engine, and BPMN engine for Java.
 - [**Kogito**](https://kie.apache.org/components/kogito/) — a cloud-native runtime for highly scalable business automation solutions based on Drools and jBPM. Available for [Quarkus](https://quarkus.io), and [Spring Boot](https://spring.io/projects/spring-boot).
 
+---
+
 ## Drools
 
 <p align="center"><img src="./docsimg/drools-logo.svg" alt="Drools logo" width="70"></p>
