@@ -126,7 +126,7 @@ Documentation about this repository itself — its structure, build, and convent
 ```bash
 git clone https://github.com/apache/incubator-kie.git
 cd incubator-kie
-./mvnw clean install -DskipTests
+mvn clean install -DskipTests
 ```
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution guide, and [docs/BUILDING.md](./docs/BUILDING.md) for build flags, test profiles, and troubleshooting.

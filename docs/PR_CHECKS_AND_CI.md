@@ -114,5 +114,5 @@ Defined in
 [split-package-detection.yml](../.github/workflows/split-package-detection.yml).
 Detects Java packages split across multiple modules. The explicitly allowed
 exceptions live in
-[check-split-packages-allowed.txt](../check-split-packages-allowed.txt);
+[check-split-packages-allowed.txt](../script/split-packages/check-split-packages-allowed.txt);
 introducing a new split package fails the check.

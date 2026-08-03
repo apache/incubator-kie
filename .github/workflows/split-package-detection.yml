@@ -47,10 +47,10 @@ jobs:
         run: mvn package -Dquickly
 
       - name: Make script executable
-        run: chmod +x ./check-split-packages.sh
+        run: chmod +x ./script/split-packages/check-split-packages.sh
 
       - name: Run split package detection
-        run: ./check-split-packages.sh
+        run: ./script/split-packages/check-split-packages.sh
 
       - name: Upload results as artifact if failure
         if: failure()
@@ -58,5 +58,5 @@ jobs:
         with:
           name: split-package-report
           path: |
-            check-split-packages.sh
+            script/split-packages/check-split-packages.sh
             # You could save the output to a file and include that too

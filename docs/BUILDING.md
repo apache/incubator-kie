@@ -21,18 +21,19 @@
 
 ## Prerequisites
 
-- Java SDK (OpenJDK recommended) and Git
+- Java SDK 17 or 21 (OpenJDK recommended) — CI builds with both — and Git
 - Docker — not strictly required, but needed by some integration tests
   (Testcontainers-based); those tests can be skipped
-- For GraalVM native image builds on macOS, see
-  [DEVELOP_ON_MACOS.md](./DEVELOP_ON_MACOS.md)
+- For GraalVM native image builds, follow the
+  [Quarkus guide](https://quarkus.io/guides/building-native-image); on macOS,
+  see [DEVELOP_ON_MACOS.md](./DEVELOP_ON_MACOS.md)
 
 ## Basic build
 
-The repository ships the Maven wrapper; build from the root:
+Build with Maven from the root:
 
 ```bash
-./mvnw clean install
+mvn clean install
 ```
 
 A full build with all tests takes a long time. Common ways to shorten the

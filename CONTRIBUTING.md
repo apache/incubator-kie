@@ -118,6 +118,7 @@ Any dependency used in any KIE project should fulfill these soft requirements:
     - Dependencies in subprojects should avoid overwriting the dependency versions of their build parent if there is no special case or need for that.
 
 - Only use dependencies with **an active community**.
+    - Check for activity in the last year through [Open Hub](https://www.openhub.net).
 
 - Less is more: **less dependencies is better**. Bloat is bad.
     - Try to use existing dependencies if the functionality is available in those dependencies
@@ -129,7 +130,7 @@ Any dependency used in any KIE project should fulfill these soft requirements:
     - Both are bad because they cause dependency tree trouble. Use the non-fat jar instead, for example: `weld-se-core.jar`
 
 There are currently a few dependencies which violate some of these rules. They should be properly commented with a
-warning and explaining why are needed.
+warning and an explanation as to why they are needed.
 If you want to add a dependency that violates any of the rules above, get approval from the project leads.
 
 ### Tests and Documentation
@@ -163,7 +164,7 @@ If you have not done so on this machine, you need to:
 * On macOS, check [Developing on macOS](./docs/DEVELOP_ON_MACOS.md) for further instructions.
 
 Docker is not strictly necessary, but it is required to run some of the integration tests.
-These tests can be skipped, but we recommend to install it to run these tests locally.
+These tests can be skipped, but we recommend installing it to run these tests locally.
 
 * Check [the installation guide](https://docs.docker.com/install/), and [the MacOS installation guide](https://docs.docker.com/docker-for-mac/install/)
 * If you just install docker, be sure that your current user can run a container (no root required).
@@ -174,16 +175,16 @@ On Linux, check [the post-installation guide](https://docs.docker.com/install/li
 Clone the repository, navigate to the directory, and build with the Maven wrapper:
 
 ```bash
-git clone https://github.com/apache/incubator-kie-drools.git
-cd incubator-kie-drools
-./mvnw clean install -DskipTests
+git clone https://github.com/apache/incubator-kie.git
+cd incubator-kie
+mvn clean install -DskipTests
 # Wait... success!
 ```
 
 By removing the `-DskipTests` flag, you will run the unit and integration tests.
 It will take much longer to build but will give you more guarantees on your code.
 
-Alternatively, you can invoke `./mvnw clean install -DquickTests` from the root directory.
+Alternatively, you can invoke `mvn clean install -DquickTests` from the root directory.
 It will perform the basic formatting validation and will run all the unit tests.
 Use this command for quick checks.
 
