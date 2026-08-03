@@ -32,6 +32,8 @@ structure, its build, and its conventions. User documentation for Drools, OptaPl
 | [CONVENTIONS.md](./CONVENTIONS.md) | Code style, licensing, dependency rules, testing and codegen conventions |
 | [PR_CHECKS_AND_CI.md](./PR_CHECKS_AND_CI.md) | The checks that run on pull requests, and how CI builds the repo |
 | [DEVELOP_ON_MACOS.md](./DEVELOP_ON_MACOS.md) | Setting up macOS for GraalVM native image builds |
+| [OTHER_COMPONENTS.md](./OTHER_COMPONENTS.md) | Apache KIE components beyond the four main projects: the PMML engine and KIE Tools |
+| [HISTORY.md](./HISTORY.md) | How KIE started, its initiatives over the years, and the move to Apache |
 
 ## At the repository root
 
