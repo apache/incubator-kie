@@ -19,7 +19,7 @@
 
 # Apache KIE
 
-<p align="center"><img src="./docsimg/kie-logo.svg" alt="Apache KIE logo" width="70"></p>
+<p align="left"><img src="./docsimg/kie-logo.svg" alt="Apache KIE logo" width="140"></p>
 
 This is the main repository for [Apache KIE](https://kie.apache.org) (incubating). It contains the source code for:
 
@@ -32,7 +32,7 @@ This is the main repository for [Apache KIE](https://kie.apache.org) (incubating
 
 ## Drools
 
-<p align="center"><img src="./docsimg/drools-logo.svg" alt="Drools logo" width="70"></p>
+<p align="left"><img src="./docsimg/drools-logo.svg" alt="Drools logo" width="70"></p>
 
 The rule engine in Drools is a business rule management system with a forward-chaining and backward-chaining inference, allowing fast and reliable evaluation of business rules and complex event processing. A rule engine is also a fundamental building block to create an expert system which, in artificial intelligence, is a computer system that emulates the decision-making ability of a human expert.
 
@@ -48,7 +48,7 @@ Event processing rules are defined in the DRL language too, with facts declared 
 
 ## OptaPlanner
 
-<p align="center"><img src="./docsimg/optaplanner-logo.svg" alt="OptaPlanner logo" width="70"></p>
+<p align="left"><img src="./docsimg/optaplanner-logo.svg" alt="OptaPlanner logo" width="70"></p>
 
 The constraint solver in OptaPlanner optimizes planning and scheduling problems, such as vehicle routing, employee rostering, task assignment, and school timetabling. It combines optimization heuristics and metaheuristics — such as tabu search, simulated annealing, and late acceptance — with very efficient incremental score calculation to find good solutions to NP-hard problems in reasonable time.
 
@@ -56,7 +56,7 @@ Planning problems and their constraints are defined in plain Java, with domain c
 
 ## jBPM
 
-<p align="center"><img src="./docsimg/jbpm-logo.svg" alt="jBPM logo" width="70"></p>
+<p align="left"><img src="./docsimg/jbpm-logo.svg" alt="jBPM logo" width="70"></p>
 
 The workflow engine in jBPM allows the definition and execution of business processes, bridging the gap between business analysts and developers by describing process logic in a notation both can understand. It supports long-running, stateful processes with human tasks, timers, events, and compensation, making it a fundamental building block to automate and monitor end-to-end business workflows.
 
@@ -64,7 +64,7 @@ Processes are defined in the [BPMN 2.0](https://www.omg.org/spec/BPMN/2.0/) nota
 
 ## Kogito
 
-<p align="center"><img src="./docsimg/kogito-logo.svg" alt="Kogito logo" width="70"></p>
+<p align="left"><img src="./docsimg/kogito-logo.svg" alt="Kogito logo" width="70"></p>
 
 The runtime in Kogito executes business automation solutions as cloud-native microservices, building on [Quarkus](https://quarkus.io) and [Spring Boot](https://spring.io/projects/spring-boot) to deliver fast startup, low footprint, and native compilation with GraalVM. It turns business assets into runnable microservices through build-time code generation, making it a fundamental building block to deploy rules, decisions, and processes as highly scalable microservices.
 
