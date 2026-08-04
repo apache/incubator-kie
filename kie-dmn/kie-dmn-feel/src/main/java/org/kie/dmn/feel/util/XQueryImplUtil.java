@@ -81,7 +81,7 @@ public class XQueryImplUtil {
 
     /**
      * Escapes the five XML special characters (&amp; &quot; &apos; &lt; &gt;) in a single
-     * pass over the string, so they are safe to embed as XQuery string literals.
+     * pass over the string, so they are safe to embed as XPath string literals.
      * Returns {@code null} unchanged; returns the original reference when no escaping is needed.
      *
      * @param input A string parameter of a managed XQuery function
