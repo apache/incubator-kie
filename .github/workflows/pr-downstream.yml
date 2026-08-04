@@ -33,7 +33,7 @@ on:
       - '.ci/jenkins/**'
 
 jobs:
-  kogito-examples:
+  kie-examples:
     name: '${{ matrix.examples-subfolder }}'
     runs-on: ubuntu-latest
     concurrency:
@@ -56,7 +56,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           df -h
 
-      - name: 'SETUP :: Checkout incubator-kie-drools'
+      - name: 'SETUP :: Checkout incubator-kie'
         uses: actions/checkout@v7
 
       - name: 'SETUP :: Java 17'
@@ -85,25 +85,25 @@ jobs:
           </settings>
           EOF
 
-      - name: 'BUILD :: Install incubator-kie-drools snapshot'
+      - name: 'BUILD :: Install incubator-kie snapshot'
         shell: bash
         run: mvn --batch-mode --no-transfer-progress -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true install
 
-      - name: 'SETUP :: Checkout incubator-kie-kogito-examples'
+      - name: 'SETUP :: Checkout incubator-kie-examples'
         uses: actions/checkout@v7
         with:
-          repository: apache/incubator-kie-kogito-examples
-          path: kogito-examples
+          repository: apache/incubator-kie-examples
+          path: kie-examples
 
       - name: 'BUILD :: ${{ matrix.examples-subfolder }}'
         shell: bash
         run: |
-          mvn --batch-mode --no-transfer-progress -fae -pl :kogito-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f kogito-examples/pom.xml
-          mvn --batch-mode --no-transfer-progress -fae -f kogito-examples/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
+          mvn --batch-mode --no-transfer-progress -fae -pl :kie-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f kie-examples/pom.xml
+          mvn --batch-mode --no-transfer-progress -fae -f kie-examples/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
 
       - name: 'REPORT :: Upload dependency trees'
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dependency-trees-logs_${{ matrix.examples-subfolder }}_ubuntu-latest
-          path: 'kogito-examples/${{ matrix.examples-subfolder }}/**/mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt'
+          path: 'kie-examples/${{ matrix.examples-subfolder }}/**/mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt'
