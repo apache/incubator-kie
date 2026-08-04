@@ -84,11 +84,6 @@ jobs:
         env: 
           BUILD_MVN_OPTS: ${{ matrix.env_BUILD_MVN_OPTS }}
           KOGITO_EXAMPLES_SUBFOLDER_POM: ${{ matrix.env_KOGITO_EXAMPLES_SUBFOLDER_POM }}
-      - name: Surefire Report
-        uses: scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
-        if: ${{ always() }}
-        with:
-          report_paths: '**/*-reports/TEST-*.xml'
       - name: Upload Dependency Trees
         uses: actions/upload-artifact@v7
         if: ${{ always() }}

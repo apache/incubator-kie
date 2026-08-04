@@ -69,11 +69,6 @@ jobs:
           definition-file: https://raw.githubusercontent.com/${GROUP:apache}/incubator-kie-kogito-pipelines/${BRANCH:main}/.ci/pull-request-config.yaml
           annotations-prefix: ${{ runner.os }}-${{ matrix.java-version }}/${{ matrix.maven-version }}
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Surefire Report
-        uses: scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
-        if: ${{ always() }}
-        with:
-          report_paths: '**/*-reports/TEST-*.xml'
       - name: Upload Dependency Trees
         uses: actions/upload-artifact@v7
         if: ${{ always() }}
