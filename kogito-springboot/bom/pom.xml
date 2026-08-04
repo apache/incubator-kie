@@ -48,9 +48,32 @@
          2025.1.1 specifically targets Spring Boot 4.0.1+. -->
     <!-- https://github.com/spring-cloud/spring-cloud-release/wiki/Spring-Cloud-2025.1-Release-Notes -->
     <version.org.springframework.cloud>2025.1.1</version.org.springframework.cloud>
+    <!-- CVE-2026-49844: override log4j2.version used by spring-boot-dependencies BOM (log4j-bom import).
+         Spring Boot 4.0.7 sets log4j2.version=2.25.4 which is vulnerable; upgrade to 2.26.1 (minimum 2.25.5).
+         https://logging.apache.org/security.html#CVE-2026-49844 -->
+    <log4j2.version>2.26.1</log4j2.version>
   </properties>
   <dependencyManagement>
     <dependencies>
+      <!-- CVE-2026-49844: Explicit log4j version overrides BEFORE spring-boot-dependencies and spring-cloud-dependencies
+           imports. Maven's first-declaration-wins rule means these entries take precedence over the hardcoded
+           log4j-api/log4j-to-slf4j/log4j-jul:2.25.4 versions inside spring-boot-dependencies-4.0.7.pom.
+           https://logging.apache.org/security.html#CVE-2026-49844 -->
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-to-slf4j</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-jul</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
