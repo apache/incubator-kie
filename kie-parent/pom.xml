@@ -223,6 +223,11 @@
     <version.org.apache.groovy>4.0.29</version.org.apache.groovy>
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
     <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
+    <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
+         quarkus-bom:3.27.4.1 promotes it to 2.25.1. Both are below the minimum safe version 2.25.5.
+         This managed entry forces 2.26.1 across all modules inheriting kie-parent.
+         https://logging.apache.org/security.html#CVE-2026-49844 -->
+    <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
     <version.org.apache.maven>3.9.11</version.org.apache.maven>
     <version.org.apache.maven.resolver>1.7.3</version.org.apache.maven.resolver>
     <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
@@ -1336,6 +1341,14 @@
             <artifactId>lz4-java</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
+             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.27.4.1 (to 2.25.1).
+             Both are vulnerable; this pins the version to 2.26.1 for all inheriting modules. -->
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${version.org.apache.logging.log4j}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
