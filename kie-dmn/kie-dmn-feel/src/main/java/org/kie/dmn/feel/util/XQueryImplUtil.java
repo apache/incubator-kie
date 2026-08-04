@@ -84,7 +84,7 @@ public class XQueryImplUtil {
      * pass over the string, so they are safe to embed as XPath string literals.
      * Returns {@code null} unchanged; returns the original reference when no escaping is needed.
      *
-     * @param input A string parameter of a managed XQuery function
+     * @param input A string parameter of a managed XPath function
      * @return The escaped string, or the original if no special characters were present
      */
     static String escapeXmlCharactersReferencesForXPath(String input) {
