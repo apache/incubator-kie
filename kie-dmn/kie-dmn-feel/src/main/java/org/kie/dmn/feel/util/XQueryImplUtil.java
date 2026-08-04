@@ -36,7 +36,12 @@ public class XQueryImplUtil {
     private static final Processor PROCESSOR = new Processor(false);
 
     /**
-     * Single XQueryCompiler instance. XQueryCompiler is thread-safe and reusable.
+     * Single XQueryCompiler instance. XQueryCompiler is reusable and may in principle
+     * be used concurrently in multiple threads. In practice, concurrent compilations share
+     * the same ErrorReporter, making it difficult to associate error messages with specific
+     * compilations. Since errors here are immediately wrapped and re-thrown as
+     * {@link IllegalArgumentException}, this is not a concern.
+     * See Saxon s9api Javadoc for {@code XQueryCompiler}.
      */
     private static final XQueryCompiler COMPILER = PROCESSOR.newXQueryCompiler();
 
