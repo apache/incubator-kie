@@ -282,7 +282,7 @@ public class ProcessFactoryTest extends JbpmBpmn2TestCase {
 
     @Test
     @Timeout(10)
-    public void testSignalEvent() throws Exception {
+    public void testSignalEvent() {
         RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("org.jbpm.process");
         factory
                 .name("Event Process")
@@ -313,21 +313,20 @@ public class ProcessFactoryTest extends JbpmBpmn2TestCase {
 
         assertThat(process).isNotNull();
 
-        Resource res = ResourceFactory.newByteArrayResource(XmlBPMNProcessDumper.INSTANCE.dump(process).getBytes());
-        res.setSourcePath("/tmp/processFactory.bpmn2"); // source path or target path must be set to be added into kbase
-        kruntime = createKogitoProcessRuntime(res);
+        Application application = StaticApplicationAssembler.instance()
+                .newStaticApplication(new InMemoryProcessInstancesFactory(), StaticProcessConfig.newStaticProcessConfigBuilder().build(), process);
 
-        KogitoProcessInstance pi = kruntime.startProcess("org.jbpm.process");
+        org.kie.kogito.process.Process<? extends Model> processDefinition =
+                application.get(org.kie.kogito.process.Processes.class).processById("org.jbpm.process");
+        org.kie.kogito.process.ProcessInstance<? extends Model> processInstance =
+                processDefinition.createInstance(processDefinition.createModel());
+        processInstance.start();
 
-        assertThat(pi).isNotNull();
+        assertThat(processInstance.status()).isEqualTo(KogitoProcessInstance.STATE_ACTIVE);
 
-        assertThat(pi.getState()).isEqualTo(KogitoProcessInstance.STATE_ACTIVE);
+        processInstance.send(org.kie.kogito.process.SignalFactory.of("testEvent", null));
 
-        pi.signalEvent("testEvent",
-                null);
-
-        assertThat(pi.getState()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
-
+        assertThat(processInstance.status()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
     }
 
     @Test
