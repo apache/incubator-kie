@@ -45,7 +45,7 @@ cycle:
 | `-DquickTests` | Formatting validation and unit tests only (skips invoker and archetype tests) |
 | `-DskipITs` | Skip integration tests only (failsafe) |
 | `-Dinvoker.skip=true` | Skip maven-invoker-based integration tests (e.g. in `kie-maven-plugin`) |
-| `-Dquickly` | Kogito-apps modules only: skip most plugins and tests |
+| `-Dquickly` | Skip most plugins and tests |
 | `-Dfull` | Also build distribution modules (`fullProfile`) |
 
 You can also build only the module you work on, plus what depends on it, with
