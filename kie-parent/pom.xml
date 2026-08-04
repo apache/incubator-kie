@@ -205,7 +205,7 @@
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
     <version.net.java.dev.glazedlists>1.8.0</version.net.java.dev.glazedlists>
     <version.net.minidev.jsonsmart>2.4.10</version.net.minidev.jsonsmart>
-    <version.net.sf.saxon.Saxon-HE>12.7</version.net.sf.saxon.Saxon-HE>
+    <version.net.sf.saxon.Saxon-HE>12.10</version.net.sf.saxon.Saxon-HE>
     <version.net.thisptr.jackson-jq>1.0.0-preview.20240207</version.net.thisptr.jackson-jq>
     <version.org.antlr>3.5.2</version.org.antlr>
     <version.org.antlr.ST4>4.0.7</version.org.antlr.ST4>

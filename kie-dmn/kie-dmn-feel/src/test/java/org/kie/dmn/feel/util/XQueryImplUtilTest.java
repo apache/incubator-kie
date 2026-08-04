@@ -37,6 +37,18 @@ class XQueryImplUtilTest {
                 { "test", "^test", "i", true },
                 { "fo\nbar", "o.b", null, false },
                 { "TEST", "test", "i", true },
+                // flags
+                { "test", "^test", "", true },                          // flags = "" explicitly
+                { "FO\nBAR", "fo.bar", "si", true },                   // dotall + case-insensitive
+                { "hello\nworld", "^WORLD", "mi", true },              // multiline + case-insensitive
+                // XML special characters in input — exercises the escape→embed→evaluate pipeline
+                { "it's", "it.s", "", true },                          // single quote in input
+                { "say \"hi\"", "say .hi.", "", true },                // double quote in input
+                { "a&b", "a.b", "", true },                            // ampersand in input
+                { "a<b", "a.b", "", true },                            // less-than in input
+                { "a>b", "a.b", "", true },                            // greater-than in input
+                // XML special characters in pattern
+                { "<tag>", "<tag>", "", true },                        // angle brackets in pattern
         };
     }
 
@@ -66,6 +78,16 @@ class XQueryImplUtilTest {
         return new Object[][] {
                 { "testString", "^test", "ttt", "", "tttString" },
                 { "fo\nbar", "o.b", "ttt", "s", "ftttar" },
+                // flags
+                { "FO\nBAR", "fo.bar", "X", "si", "X" },              // dotall + case-insensitive
+                // XML special characters in input — exercises the escape→embed→evaluate pipeline
+                { "a&b", "a.b", "X", "", "X" },                       // ampersand in input
+                { "it's", "it.s", "X", "", "X" },                     // single quote in input
+                // XML special characters in replacement
+                { "hello", "hello", "a&b", "", "a&b" },               // ampersand in replacement
+                { "hello", "hello", "it's", "", "it's" },             // single quote in replacement
+                // backreference in replacement
+                { "hello", "(h)", "$1$1", "", "hhello" },             // $1 backreference
         };
     }
 

@@ -32,6 +32,18 @@ public class XQueryImplUtil {
 
     private static final Pattern XML_CHARACTER_REFERENCES_PATTERN = Pattern.compile("['\"&<>]");
 
+    /**
+     * Single Saxon Processor instance. Processor is thread-safe and expensive to construct
+     * (it initialises the Saxon Configuration and performs a license check). One instance
+     * per JVM is the Saxon-recommended pattern.
+     */
+    private static final Processor PROCESSOR = new Processor(false);
+
+    /**
+     * Single XQueryCompiler instance. XQueryCompiler is thread-safe and reusable.
+     */
+    private static final XQueryCompiler COMPILER = PROCESSOR.newXQueryCompiler();
+
     private XQueryImplUtil() {
         // Util class with static methods only.
     }
@@ -50,9 +62,7 @@ public class XQueryImplUtil {
 
      static <T> T evaluateXQueryExpression(String expression, Class<T> expectedTypeResult) {
          try {
-             Processor processor = new Processor(false);
-             XQueryCompiler compiler = processor.newXQueryCompiler();
-             XQueryExecutable executable = compiler.compile(expression);
+             XQueryExecutable executable = COMPILER.compile(expression);
              XQueryEvaluator queryEvaluator = executable.load();
              XdmItem resultItem = queryEvaluator.evaluateSingle();
 
@@ -66,7 +76,7 @@ public class XQueryImplUtil {
          } catch (SaxonApiException e) {
              throw new IllegalArgumentException(e);
          }
-    }
+     }
 
     /**
      * It replaces all the XML Character References (&, ", ', <, >) in a given input string with their "escaping" characters.
