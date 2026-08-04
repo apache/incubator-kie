@@ -132,13 +132,6 @@
       <artifactId>kie-test-util</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.drools.testcoverage</groupId>
-      <artifactId>drools-test-coverage-jars</artifactId>
-      <type>pom</type>
-      <scope>test</scope>
-    </dependency>
-
     <!-- External dependencies -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -169,39 +162,6 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <!-- Ensures kie-maven-plugin is built before this module in the Maven reactor -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.kie</groupId>
-            <artifactId>kie-maven-plugin</artifactId>
-            <version>${project.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      <!-- The tests in this module use generated KJARs stored under src/test/resources/kjar.
-           They are produced by the drools-test-coverage-jars setup/profile when missing, and
-           must be removed by clean to avoid reusing stale artifacts between builds. -->
-      <plugin>
-        <artifactId>maven-clean-plugin</artifactId>
-        <configuration>
-          <filesets>
-            <fileset>
-              <directory>src/test/resources/kjar</directory>
-              <includes>
-                <include>*.jar</include>
-              </includes>
-            </fileset>
-          </filesets>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
     <profile>
       <id>runTurtleTests</id>
@@ -215,42 +175,6 @@
       </properties>
     </profile>
 
-    <!-- drools-test-suite requires test jars built by drools-test-coverage-jars -->
-    <!-- This profile makes sure that drools-test-coverage-jars is executed if not-->
-    <!-- See: https://github.com/apache/incubator-kie-drools/pull/6144 -->
-    <profile>
-      <id>missing-test-jar-file</id>
-      <activation>
-        <file>
-          <missing>src/test/resources/kjar/kjar-module-before.jar</missing>
-        </file>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-invoker-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>build-drools-test-coverage-jars</id>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <phase>generate-test-resources</phase>
-                <configuration>
-                  <projectsDirectory>${basedir}/../drools-test-coverage-jars</projectsDirectory>
-                  <logDirectory>${path.to.buildlog.directory}</logDirectory>
-                  <goals>
-                    <goal>clean</goal>
-                    <goal>install</goal>
-                  </goals>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 
 </project>

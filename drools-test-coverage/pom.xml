@@ -39,13 +39,13 @@
 
   <modules>
     <module>standalone</module>
-    <module>drools-test-coverage-jars</module>
     <module>test-suite</module>
     <module>test-compiler-integration</module>
     <module>test-integration-nomvel</module>
     <module>test-integration-notms</module>
     <module>test-integration-noxml</module>
     <module>test-integration-ruleunits</module>
+    <module>test-integration-prebuilt</module>
   </modules>
 
 </project>

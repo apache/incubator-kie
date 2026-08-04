@@ -1,2 +1,2 @@
-drools-test-coverage/test-suite/pom.xml
-drools-test-coverage/test-suite/src/test/java/org/drools/testcoverage/SomeTest.java
+drools-test-coverage/test-integration-prebuilt/test-integration-prebuilt-tests/pom.xml
+drools-test-coverage/test-integration-prebuilt/test-integration-prebuilt-tests/src/test/java/org/drools/testcoverage/integrationtests/prebuilt/SomeTest.java

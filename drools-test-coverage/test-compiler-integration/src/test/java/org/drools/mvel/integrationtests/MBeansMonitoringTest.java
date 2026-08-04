@@ -20,8 +20,6 @@ package org.drools.mvel.integrationtests;
 
 import java.io.StringReader;
 import java.lang.management.ManagementFactory;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.stream.Stream;
 
 import javax.management.JMX;
@@ -519,44 +517,4 @@ public class MBeansMonitoringTest {
         assertThat(mb.getTotalMatchesFired()).isEqualTo(mFired);
     }
     
-    /**
-     * Copied from KieRepositoryTest to test JMX monitoring
-     */
-    @ParameterizedTest(name = "KieBase type={0}")
-    @MethodSource("parameters")
-    public void testLoadKjarFromClasspath(KieBaseTestConfiguration kieBaseTestConfiguration) {
-        // DROOLS-1335
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-
-        URL simpleKjar = this.getClass().getResource("/kie-project-simple-1.0.0.jar");
-        assertThat(simpleKjar).as("Make sure to build drools-test-coverage-jars first")
-                .isNotNull();
-        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{simpleKjar} );
-        Thread.currentThread().setContextClassLoader( urlClassLoader );
-        
-        MBeanServer mbserver = ManagementFactory.getPlatformMBeanServer();
-    
-        try {
-            KieServices ks = KieServices.Factory.get();
-            KieRepository kieRepository = ks.getRepository();
-            ReleaseId releaseId = ks.newReleaseId( "org.drools.testcoverage", "kie-project-simple", "1.0.0" );
-            KieModule kieModule = kieRepository.getKieModule( releaseId );
-            assertThat(kieModule).isNotNull();
-            assertThat(kieModule.getReleaseId()).isEqualTo(releaseId);
-            
-            KieContainer kc = ks.newKieContainer("myID", releaseId);
-            
-            KieContainerMonitorMXBean c1Monitor = JMX.newMXBeanProxy(
-                    mbserver,
-                    DroolsManagementAgent.createObjectNameBy("myID"),
-                    KieContainerMonitorMXBean.class);
-
-            assertThat(c1Monitor.getConfiguredReleaseId().sameGAVof(releaseId)).isTrue();
-            assertThat(c1Monitor.getResolvedReleaseId().sameGAVof(releaseId)).isTrue();
-
-            kc.dispose();
-        } finally {
-            Thread.currentThread().setContextClassLoader( cl );
-        }
-    }
 }

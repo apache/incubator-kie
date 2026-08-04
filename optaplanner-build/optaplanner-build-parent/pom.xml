@@ -969,6 +969,7 @@
         <skipITs>true</skipITs>
         <formatter.skip>true</formatter.skip>
         <animal.sniffer.skip>true</animal.sniffer.skip>
+        <exec.skip>true</exec.skip>
       </properties>
     </profile>
 

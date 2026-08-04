@@ -1,1 +1,1 @@
-org.drools.testcoverage:drools-test-suite
+org.drools.testcoverage:test-integration-prebuilt-tests

@@ -2,8 +2,9 @@ org.drools.testcoverage:drools-kie-ci-with-domain-parent
 org.drools.testcoverage:drools-kie-ci-with-domain-test-domain
 org.drools.testcoverage:drools-kie-ci-without-domain-parent
 org.drools.testcoverage:drools-standalone-parent
-org.drools.testcoverage:drools-test-coverage-jars
 org.drools.testcoverage:drools-test-coverage-parent
+org.drools.testcoverage:test-integration-prebuilt
+org.drools.testcoverage:test-integration-prebuilt-jars
 org.drools.testcoverage:test-integration-ruleunits
 org.drools:drools-addons-quarkus-events-rules-parent
 org.drools:drools-base

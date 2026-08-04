@@ -7064,47 +7064,6 @@ public class Misc2Test {
 
     @ParameterizedTest(name = "KieBase type={0}")
     @MethodSource("parameters")
-    public void testKieBuilderWithClassLoader(KieBaseTestConfiguration kieBaseTestConfiguration) {
-        // DROOLS-763
-        String drl =
-                "import org.example.surf.Person\n" +
-                "\n" +
-                "global java.util.List list\n" +
-                "\n" +
-                "rule R1 when\n" +
-                "    $i : Integer()\n" +
-                "then\n" +
-                "    Person p = new Person();\n" +
-                "    p.setAge($i);\n" +
-                "    insert(p);\n" +
-                "end\n" +
-                "\n" +
-                "rule R2 when\n" +
-                "    $p : Person()\n" +
-                "then\n" +
-                "    list.add($p.getAge());\n" +
-                "end\n";
-
-        URL simplejar = this.getClass().getResource("/surf.jar");
-        assertThat(simplejar).as("Make sure to build drools-test-coverage-jars first")
-                .isNotNull();
-        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{simplejar} );
-
-        InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromDrlWithClassLoaderForKieBuilder("test", urlClassLoader, kieBaseTestConfiguration, drl);
-        KieSession ksession = kbase.newKieSession();
-
-        List<Integer> list = new ArrayList<>();
-        ksession.setGlobal( "list", list );
-
-        ksession.insert( 18 );
-        ksession.fireAllRules();
-
-        assertThat(list.size()).isEqualTo(1);
-        assertThat((int) list.get(0)).isEqualTo(18);
-    }
-
-    @ParameterizedTest(name = "KieBase type={0}")
-    @MethodSource("parameters")
     public void testInsertAndDelete(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "global java.util.List list\n" +

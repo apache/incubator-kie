@@ -1,4 +1,6 @@
-org.drools.testcoverage:drools-test-coverage-jars
+org.drools.testcoverage:test-integration-prebuilt
+org.drools.testcoverage:test-integration-prebuilt-jars
+org.drools.testcoverage:drools-test-suite
 org.drools.testcoverage:drools-test-coverage-parent
 org.drools:drools-alphanetwork-compiler
 org.drools:drools-base

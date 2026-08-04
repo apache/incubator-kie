@@ -38,6 +38,11 @@ import static java.util.Arrays.stream;
 public class GenericRepository extends Repository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRepository.class);
+    private static final String ID = "id";
+    private static final String PROCESS_ID = "process_id";
+    private static final String PROCESS_VERSION = "process_version";
+    private static final String ROOT_PROCESS_ID = "root_process_id";
+    private static final String ROOT_PROCESS_VERSION = "root_process_version";
     private static final String PAYLOAD = "payload";
     private static final String VERSION = "version";
 
@@ -142,7 +147,8 @@ public class GenericRepository extends Repository {
     }
 
     @Override
-    void insertInternal(String processId, String processVersion, String rootProcessId, String rootProcessVersion, UUID id, byte[] payload, String businessKey, String[] eventTypes) {
+    void insertInternal(String processId, String processVersion, String rootProcessId, String rootProcessVersion,
+            String rootProcessInstanceId, UUID id, byte[] payload, String businessKey, String[] eventTypes) {
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(INSERT);
                 PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE);
@@ -164,7 +170,8 @@ public class GenericRepository extends Repository {
             statement.setString(4, processVersion);
             statement.setString(5, rootProcessId);
             statement.setString(6, rootProcessVersion);
-            statement.setLong(7, 0L);
+            statement.setString(7, rootProcessInstanceId);
+            statement.setLong(8, 0L);
             statement.executeUpdate();
             if (businessKey != null) {
                 try (PreparedStatement businessKeyStmt = connection.prepareStatement(INSERT_BUSINESS_KEY)) {
@@ -259,7 +266,8 @@ public class GenericRepository extends Repository {
     }
 
     private Record from(ResultSet rs) throws SQLException {
-        return new Record(rs.getBytes(PAYLOAD), rs.getLong(VERSION));
+        return new Record(rs.getString(ID), rs.getString(PROCESS_ID), rs.getString(PROCESS_VERSION),
+                rs.getString(ROOT_PROCESS_ID), rs.getString(ROOT_PROCESS_VERSION), rs.getLong(VERSION), rs.getBytes(PAYLOAD));
     }
 
     @Override
@@ -422,6 +430,40 @@ public class GenericRepository extends Repository {
         return statement + " " + (processVersion == null ? PROCESS_VERSION_IS_NULL : PROCESS_VERSION_EQUALS_TO);
     }
 
+    private static String sqlIncludingRootVersion(String statement, String rootProcessVersion) {
+        return statement + (rootProcessVersion == null ? ROOT_PROCESS_VERSION_IS_NULL : ROOT_PROCESS_VERSION_EQUALS_TO);
+    }
+
+    private void migrateRootCascade(Connection connection,
+            String processId, String processVersion,
+            String targetProcessId, String targetProcessVersion,
+            String[] processInstanceIds) throws SQLException {
+        final String cascadeSql;
+        if (processInstanceIds == null) {
+            cascadeSql = sqlIncludingRootVersion(MIGRATE_ROOT_BULK, processVersion);
+        } else {
+            String placeholders = stream(processInstanceIds).map(x -> "?").collect(Collectors.joining(", "));
+            cascadeSql = MIGRATE_ROOT_INSTANCES_SQL_TEMPLATE.formatted(placeholders);
+        }
+
+        try (PreparedStatement cascadeStmt = connection.prepareStatement(cascadeSql)) {
+            cascadeStmt.setString(1, targetProcessId);
+            cascadeStmt.setString(2, targetProcessVersion);
+            if (processInstanceIds == null) {
+                cascadeStmt.setString(3, processId);
+                if (processVersion != null) {
+                    cascadeStmt.setString(4, processVersion);
+                }
+            } else {
+                int i = 3;
+                for (String id : processInstanceIds) {
+                    cascadeStmt.setString(i++, id);
+                }
+            }
+            cascadeStmt.executeUpdate();
+        }
+    }
+
     @Override
     long migrate(String processId, String processVersion, String targetProcessId, String targetProcessVersion) {
         try (Connection connection = dataSource.getConnection();
@@ -432,7 +474,9 @@ public class GenericRepository extends Repository {
             if (processVersion != null) {
                 statement.setString(4, processVersion);
             }
-            return statement.executeUpdate();
+            long count = statement.executeUpdate();
+            migrateRootCascade(connection, processId, processVersion, targetProcessId, targetProcessVersion, null);
+            return count;
         } catch (Exception e) {
             throw uncheckedException(e, "Error updating process instance %s-%s", processId, processVersion);
         }
@@ -461,6 +505,7 @@ public class GenericRepository extends Repository {
                 statement.setString(i, processVersion);
             }
             statement.executeUpdate();
+            migrateRootCascade(connection, processId, processVersion, targetProcessId, targetProcessVersion, processInstanceIds);
         } catch (Exception e) {
             throw uncheckedException(e, "Error updating process instance %s-%s", processId, processVersion);
         }

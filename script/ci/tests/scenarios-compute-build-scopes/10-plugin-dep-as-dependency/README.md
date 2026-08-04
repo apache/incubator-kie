@@ -20,7 +20,7 @@
 # 10 — Plugin `<dependency>` counts as a reactor dependency
 
 **Input:** any change inside
-`drools-test-coverage/test-suite` (`org.drools.testcoverage:drools-test-suite`).
+`drools-test-coverage/test-integration-prebuilt/test-integration-prebuilt-tests` (`org.drools.testcoverage:test-integration-prebuilt-tests`).
 
 **What this tests:** that a `<dependency>` declared *inside a build
 plugin* (`maven-surefire-plugin` → `<dependencies>` → `org.kie:kie-maven-plugin`)
@@ -29,8 +29,8 @@ shows up in `upstream` for the consuming module exactly as a regular
 `<dependency>` would.
 
 **Expected structure:**
-- `changed`  = `{org.drools.testcoverage:drools-test-suite}`
-- `affected` = `drools-test-suite` + its reactor downstreams
+- `changed`  = `{org.drools.testcoverage:test-integration-prebuilt-tests}`
+- `affected` = `test-integration-prebuilt-tests` + its reactor downstreams
 - `upstream` MUST contain `org.kie:kie-maven-plugin` (and its transitive
   reactor deps), proving the plugin-level dependency was followed
 
