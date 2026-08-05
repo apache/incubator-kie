@@ -58,6 +58,8 @@ jobs:
 
       - name: 'SETUP :: Checkout incubator-kie'
         uses: actions/checkout@v7
+        with:
+          path: incubator-kie
 
       - name: 'SETUP :: Java 17'
         uses: actions/setup-java@v5
@@ -87,7 +89,7 @@ jobs:
 
       - name: 'BUILD :: Install incubator-kie snapshot'
         shell: bash
-        run: mvn --batch-mode --no-transfer-progress -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true install
+        run: mvn --batch-mode --no-transfer-progress -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true install -f incubator-kie/pom.xml
 
       - name: 'SETUP :: Checkout incubator-kie-examples'
         uses: actions/checkout@v7
