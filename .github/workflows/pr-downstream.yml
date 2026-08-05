@@ -93,17 +93,17 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: apache/incubator-kie-examples
-          path: ../kie-examples
+          path: kie-examples-repo
 
       - name: 'BUILD :: ${{ matrix.examples-subfolder }}'
         shell: bash
         run: |
-          mvn --batch-mode --no-transfer-progress -fae -pl :kogito-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f ../kie-examples/pom.xml
-          mvn --batch-mode --no-transfer-progress -fae -f ../kie-examples/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
+          mvn --batch-mode --no-transfer-progress -fae -pl :kogito-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f kie-examples-repo/pom.xml
+          mvn --batch-mode --no-transfer-progress -fae -f kie-examples-repo/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
 
       - name: 'REPORT :: Upload dependency trees'
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dependency-trees-logs_${{ matrix.examples-subfolder }}_ubuntu-latest
-          path: '../kie-examples/${{ matrix.examples-subfolder }}/**/mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt'
+          path: 'kie-examples-repo/${{ matrix.examples-subfolder }}/**/mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt'
