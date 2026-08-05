@@ -16,9 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Usage: ./check-split-packages.sh /path/to/your/root/dir
-ROOT_DIR="${1:-.}"  # default to current dir if no argument passed
-ALLOWED_SPLITS_FILE="${2:-check-split-packages-allowed.txt}"  # optional: path to file listing allowed split packages (one per line)
+# Usage: ./script/split-packages/check-split-packages.sh /path/to/your/root/dir
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${1:-$SCRIPT_DIR/../..}"  # default to the repository root if no argument passed
+ALLOWED_SPLITS_FILE="${2:-$SCRIPT_DIR/check-split-packages-allowed.txt}"  # optional: path to file listing allowed split packages (one per line)
 
 # Use process substitution instead of pipes to avoid subshell issues
 declare -A package_map

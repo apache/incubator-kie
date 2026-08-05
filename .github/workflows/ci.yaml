@@ -23,12 +23,20 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [main]
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'docsimg/**'
+      - '.ci/jenkins/**'
   push:
     branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
 
@@ -67,6 +75,13 @@ jobs:
           touch "${{ runner.temp }}/maven-pl-affected.txt"
           touch "${{ runner.temp }}/maven-pl-upstream.txt"
           touch "${{ runner.temp }}/maven-pl-changed.txt"
+
+      - name: 'SETUP :: Free disk space (Ubuntu)'
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          df -h
 
       - name: 'SETUP :: Enable long file paths (Windows)'
         if: runner.os == 'Windows'
@@ -177,12 +192,12 @@ jobs:
         run: |
           pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
           [ -z "$pl" ] && echo "No affected modules. Skipping." && exit 0
-          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
 
       - name: "CI :: BUILD :: Full${{ github.event_name == 'pull_request' && ' (skipped)' || '' }}"
         if: github.event_name == 'push'
         shell: bash
-        run: mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true install
+        run: mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible install
 
       - name: 'SUMMARY :: Publish'
         if: always()
@@ -196,3 +211,19 @@ jobs:
           MAVEN_PL_UPSTREAM=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE" 2>/dev/null || true) \
           MAVEN_PL_CHANGED=$(paste -sd, "$MAVEN_PL_CHANGED_FILE" 2>/dev/null || true) \
           jbang script/ci/CiSummary.java
+
+      - name: Upload Build logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-logs_${{ matrix.os }}_java-${{ matrix.java }}
+          path: '**/build.log'
+
+      - name: Upload Build Compare
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-compare_${{ matrix.os }}_java-${{ matrix.java }}
+          path: |
+            **/*.buildcompare
+            **/*.buildinfo

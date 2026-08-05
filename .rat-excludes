@@ -1,6 +1,11 @@
 .git-blame-ignore-revs
 .rat-excludes
 devbox.lock
+docsimg/drools-logo.svg
+docsimg/jbpm-logo.svg
+docsimg/kie-logo.svg
+docsimg/kogito-logo.svg
+docsimg/optaplanner-logo.svg
 script/ci/tests/scenarios-compute-build-scopes/01-leaf-module-source/changed-files.txt
 script/ci/tests/scenarios-compute-build-scopes/01-leaf-module-source/expected-affected.txt
 script/ci/tests/scenarios-compute-build-scopes/01-leaf-module-source/expected-changed.txt
