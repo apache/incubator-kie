@@ -144,13 +144,40 @@ class XQueryImplUtilTest {
 
     private static Object[][] escapeXmlCharactersReferencesForXPathTestData() {
         return new Object[][] {
+                // null / empty
                 { null, null },
                 { "", "" },
+                // no special chars — original reference must be returned unchanged
                 { "lolASD", "lolASD" },
+                // each of the five special characters in isolation (single-char string)
+                { "&", "&amp;" },
+                { "\"", "&quot;" },
+                { "'", "&apos;" },
+                { "<", "&lt;" },
+                { ">", "&gt;" },
+                // mixed: < and > (no &, no quotes)
                 { "List<String>", "List&lt;String&gt;" },
+                // mixed: " only
                 { "\"Mr.Y\"", "&quot;Mr.Y&quot;" },
+                // mixed: all five present — ' < & > ' (missing " in a multi-char mix)
                 { "'<&>'", "&apos;&lt;&amp;&gt;&apos;" },
+                // mixed: all five chars including " alongside others
+                { "a&b\"c'<d>", "a&amp;b&quot;c&apos;&lt;d&gt;" },
+                // special char first, last, and in the middle
+                { "&start", "&amp;start" },
+                { "end&", "end&amp;" },
+                { "mid&dle", "mid&amp;dle" },
         };
+    }
+
+    /**
+     * Verifies the Javadoc guarantee: when no special characters are present,
+     * the original String reference is returned (no allocation).
+     */
+    @org.junit.jupiter.api.Test
+    void escapeXmlCharactersReferencesForXPathReturnsSameReferenceWhenNoEscapingNeeded() {
+        String input = "no special chars here 1234";
+        assertThat(XQueryImplUtil.escapeXmlCharactersReferencesForXPath(input)).isSameAs(input);
     }
 
 }
