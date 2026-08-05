@@ -29,9 +29,12 @@ import net.sf.saxon.s9api.SaxonApiException;
 public class XQueryImplUtil {
 
     /**
-     * Single Saxon Processor instance. Processor is thread-safe and expensive to construct
-     * (it initialises the Saxon Configuration and performs a license check). One instance
-     * per JVM is the Saxon-recommended pattern.
+     * Single Saxon Processor instance shared across all calls. A {@code Processor} is thread-safe
+     * and expensive to construct: it initialises the Saxon {@code Configuration} and owns shared
+     * resources such as the Saxon NamePool. Saxon recommends creating it once and reusing it;
+     * nothing can be shared between separate {@code Processor} instances.
+     * Note: {@code new Processor(false)} does not perform a license check — it unconditionally
+     * creates a plain Home Edition configuration.
      */
     private static final Processor PROCESSOR = new Processor(false);
 

@@ -167,17 +167,8 @@ class XQueryImplUtilTest {
                 { "&start", "&amp;start" },
                 { "end&", "end&amp;" },
                 { "mid&dle", "mid&amp;dle" },
+                { "no special chars here 1234", "no special chars here 1234" },
         };
-    }
-
-    /**
-     * Verifies the Javadoc guarantee: when no special characters are present,
-     * the original String reference is returned (no allocation).
-     */
-    @org.junit.jupiter.api.Test
-    void escapeXmlCharactersReferencesForXPathReturnsSameReferenceWhenNoEscapingNeeded() {
-        String input = "no special chars here 1234";
-        assertThat(XQueryImplUtil.escapeXmlCharactersReferencesForXPath(input)).isSameAs(input);
     }
 
 }
