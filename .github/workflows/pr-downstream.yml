@@ -98,7 +98,7 @@ jobs:
       - name: 'BUILD :: ${{ matrix.examples-subfolder }}'
         shell: bash
         run: |
-          mvn --batch-mode --no-transfer-progress -fae -pl :kie-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f kie-examples/pom.xml
+          mvn --batch-mode --no-transfer-progress -fae -pl :kogito-examples -am install -DskipTests -DskipITs -Denforcer.skip=true -f kie-examples/pom.xml
           mvn --batch-mode --no-transfer-progress -fae -f kie-examples/${{ matrix.examples-subfolder }}/pom.xml install dependency:tree -DoutputFile=mvn_dependency_tree_${{ matrix.examples-subfolder }}_ubuntu-latest.txt
 
       - name: 'REPORT :: Upload dependency trees'
