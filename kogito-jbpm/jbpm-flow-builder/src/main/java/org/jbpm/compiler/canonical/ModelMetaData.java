@@ -86,11 +86,13 @@ public class ModelMetaData {
         this(processId, packageName, modelClassSimpleName, visibility, variableScope, hidden, "/class-templates/ModelTemplate.java");
     }
 
+    @SuppressWarnings("unchecked")
     public ModelMetaData(String processId, String packageName, String modelClassSimpleName, String visibility, VariableDeclarations variableScope, boolean hidden, String templateName) {
         this(processId, packageName, modelClassSimpleName, visibility, variableScope, hidden, templateName, c -> {
         });
     }
 
+    @SafeVarargs
     public ModelMetaData(String processId, String packageName, String modelClassSimpleName, String visibility, VariableDeclarations variableScope, boolean hidden, String templateName,
             Consumer<CompilationUnit>... customGenerator) {
         this.processId = processId;
