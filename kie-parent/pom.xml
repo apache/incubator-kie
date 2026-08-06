@@ -314,7 +314,7 @@
     <!-- OpenRewrite plugin -->
     <version.rewrite.maven.plugin>4.42.0</version.rewrite.maven.plugin>
     <version.rewrite.testing.frameworks>1.22.0</version.rewrite.testing.frameworks>
-    <version.shade.plugin>3.3.0</version.shade.plugin>
+    <version.maven-shade-plugin>3.5.3</version.maven-shade-plugin>
     <version.shared.utils>3.4.2</version.shared.utils>
     <!-- simple-jndi is a small library that helps us avoid JNDI error messages during testing -->
     <version.simple-jndi>0.11.4.1</version.simple-jndi>
@@ -2873,6 +2873,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
+          <version>${version.maven-shade-plugin}</version>
         </plugin>
         <!-- This plugin's configuration is used to store Eclipse m2e settings only.
              It has no influence on the Maven build itself. -->

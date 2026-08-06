@@ -109,7 +109,7 @@
     <version.rpkgtests.maven.plugin>1.0.0</version.rpkgtests.maven.plugin>
     <version.resources.plugin>3.1.0</version.resources.plugin>
     <version.site.plugin>3.7.1</version.site.plugin>
-    <version.shade.plugin>3.3.0</version.shade.plugin>
+    <version.maven-shade-plugin>3.5.3</version.maven-shade-plugin>
     <version.sonar.plugin>3.6.1.1688</version.sonar.plugin>
     <version.source.plugin>3.2.1</version.source.plugin>
     <version.surefire.plugin>3.3.1</version.surefire.plugin> <!-- minimum required by JUnit 5 -->
