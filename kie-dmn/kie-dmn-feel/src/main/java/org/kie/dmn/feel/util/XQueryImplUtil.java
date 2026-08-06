@@ -28,23 +28,14 @@ import net.sf.saxon.s9api.SaxonApiException;
 
 public class XQueryImplUtil {
 
-    /**
-     * Single Saxon Processor instance shared across all calls. A {@code Processor} is thread-safe
-     * and expensive to construct: it initialises the Saxon {@code Configuration} and owns shared
-     * resources such as the Saxon NamePool. Saxon recommends creating it once and reusing it;
-     * nothing can be shared between separate {@code Processor} instances.
-     * Note: {@code new Processor(false)} does not perform a license check — it unconditionally
-     * creates a plain Home Edition configuration.
-     */
+    /** Shared across all calls. Thread-safe; expensive to construct. One instance per JVM is sufficient.
+     * See Saxon s9api {@link net.sf.saxon.s9api.Processor} Javadoc. */
     private static final Processor PROCESSOR = new Processor(false);
 
     /**
-     * Single XQueryCompiler instance. XQueryCompiler is reusable and may in principle
-     * be used concurrently in multiple threads. In practice, concurrent compilations share
-     * the same ErrorReporter, making it difficult to associate error messages with specific
-     * compilations. Since errors here are immediately wrapped and re-thrown as
-     * {@link IllegalArgumentException}, this is not a concern.
-     * See Saxon s9api Javadoc for {@code XQueryCompiler}.
+     * Shared across all calls. Concurrent use is permitted, but error messages may not be
+     * attributed to the correct thread under concurrent error conditions.
+     * See Saxon s9api {@link net.sf.saxon.s9api.XQueryCompiler} Javadoc.
      */
     private static final XQueryCompiler COMPILER = PROCESSOR.newXQueryCompiler();
 
@@ -83,12 +74,9 @@ public class XQueryImplUtil {
      }
 
     /**
-     * Escapes the five XML special characters (&amp; &quot; &apos; &lt; &gt;) in a single
-     * pass over the string, so they are safe to embed as XPath string literals.
-     * Returns {@code null} unchanged; returns the original reference when no escaping is needed.
-     *
-     * @param input A string parameter of a managed XPath function
-     * @return The escaped string, or the original if no special characters were present
+     * Escapes XML special characters ({@code & " ' < >}) so the value is safe to embed
+     * as an XPath string literal. Returns {@code null} unchanged; returns the original
+     * reference if no escaping is needed.
      */
     static String escapeXmlCharactersReferencesForXPath(String input) {
         if (input == null) {
