@@ -114,7 +114,7 @@
 
   <properties>
     <project.build.outputTimestamp>2024-01-12T00:00:00Z</project.build.outputTimestamp>
-    <version.maven.artifact.plugin>3.5.1</version.maven.artifact.plugin>
+    <version.maven.artifact.plugin>3.5.2</version.maven.artifact.plugin>
   </properties>
 
   <!-- Block apache.snapshots inherited from org.apache:apache parent -->
