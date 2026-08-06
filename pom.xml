@@ -114,7 +114,8 @@
 
   <properties>
     <project.build.outputTimestamp>2024-01-12T00:00:00Z</project.build.outputTimestamp>
-    <version.maven.artifact.plugin>3.5.2</version.maven.artifact.plugin>
+    <version.maven-remote-resources-plugin>3.3.0</version.maven-remote-resources-plugin>
+    <version.maven.artifact.plugin>3.6.1</version.maven.artifact.plugin>
   </properties>
 
   <!-- Block apache.snapshots inherited from org.apache:apache parent -->
@@ -292,15 +293,6 @@
                 <!-- The execution's configuration is part of the pluginManagement. This piece here only makes sure the
                      execution is enabled (by specifying a phase) for full profile builds. -->
                 <phase>validate</phase>
-              </execution>
-              <execution>
-                <id>compare</id>
-                <goals>
-                  <goal>compare</goal>
-                </goals>
-                <!-- The execution's configuration is part of the pluginManagement. This piece here only makes sure the
-                     execution is enabled (by specifying a phase) for full profile builds. -->
-                <phase>install</phase>
               </execution>
             </executions>
           </plugin>
