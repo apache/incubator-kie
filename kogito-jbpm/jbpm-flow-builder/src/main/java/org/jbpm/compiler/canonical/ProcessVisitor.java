@@ -53,7 +53,9 @@ import org.kie.api.definition.process.Process;
 import org.kie.api.definition.process.WorkflowProcess;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -65,6 +67,7 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.VoidType;
 
 import static org.jbpm.ruleflow.core.Metadata.ASSOCIATION;
 import static org.jbpm.ruleflow.core.RuleFlowNodeContainerFactory.METHOD_ASSOCIATION;
@@ -91,6 +94,32 @@ public class ProcessVisitor extends AbstractVisitor {
     public ProcessVisitor(ClassLoader contextClassLoader) {
         nodeVisitorService = new NodeVisitorBuilderService(contextClassLoader);
         returnValueEvaluatorBuilderService = ReturnValueEvaluatorBuilderService.instance(contextClassLoader);
+    }
+
+    /**
+     * Name of the factory parameter used in every per-node and per-connection helper method.
+     * Using a constant avoids repeated string literals and keeps signatures consistent.
+     */
+    private static final String FACTORY_PARAM_NAME = "factory";
+
+    /**
+     * Builds a {@code private void} helper method that accepts a single
+     * {@link RuleFlowProcessFactory} parameter and executes the given body statements.
+     *
+     * <p>
+     * The method is intentionally <em>not</em> {@code static} so that lambda bodies
+     * inside node initialisations (e.g. {@code () -> producer_X}) can capture instance
+     * fields of the generated {@code XxxProcess} class without a compile error.
+     */
+    private static MethodDeclaration buildHelperMethod(String name, BlockStmt helperBody) {
+        return new MethodDeclaration()
+                .setModifiers(Modifier.Keyword.PRIVATE)
+                .setType(new VoidType())
+                .setName(name)
+                .addParameter(new Parameter(
+                        new ClassOrInterfaceType(null, RuleFlowProcessFactory.class.getSimpleName()),
+                        FACTORY_PARAM_NAME))
+                .setBody(helperBody);
     }
 
     public void visitProcess(WorkflowProcess process, MethodDeclaration processMethod, ProcessMetaData metadata) {
@@ -152,7 +181,7 @@ public class ProcessVisitor extends AbstractVisitor {
         visitNodes(processNodes, body, variableScope, metadata);
         //exception scope
         visitExceptionScope(process, body);
-        visitConnections(process.getNodes(), body);
+        visitConnections(process.getNodes(), body, metadata);
 
         body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_VALIDATE));
 
@@ -230,7 +259,30 @@ public class ProcessVisitor extends AbstractVisitor {
             if (visitor == null) {
                 throw new IllegalStateException("No visitor found for node " + node.getClass().getName());
             }
-            visitor.visitNodeEntryPoint(null, node, body, variableScope, metadata);
+
+            // Collect all statements for this node into a dedicated helper method so
+            // that process() never grows large enough to exceed the JVM 64KB method limit.
+            BlockStmt nodeBody = new BlockStmt();
+            visitor.visitNodeEntryPoint(null, node, nodeBody, variableScope, metadata);
+
+            // Exception scope statements for sub-process nodes reference a local variable
+            // (e.g. compositeContextNodeSubProcess_1) that is declared inside this nodeBody.
+            // They must therefore be appended here, before the helper method is closed,
+            // not written into process() where that variable is out of scope.
+            if (node instanceof ContextContainer) {
+                Context exceptionContext = ((ContextContainer) node).getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
+                visitContextExceptionScope(exceptionContext, nodeBody);
+            }
+            if (node instanceof NodeContainer) {
+                visitSubExceptionScope(((NodeContainer) node).getNodes(), nodeBody);
+            }
+
+            String helperName = "initNode_" + node.getId().toSanitizeString();
+            metadata.addProcessHelperMethod(buildHelperMethod(helperName, nodeBody));
+
+            // process() just calls the helper, passing the factory local variable
+            body.addStatement(new MethodCallExpr(null, helperName)
+                    .addArgument(new NameExpr(FACTORY_FIELD_NAME)));
         }
     }
 
@@ -243,7 +295,9 @@ public class ProcessVisitor extends AbstractVisitor {
         return visitor != null ? visitor.getNodeId(((Node) contextContainer)) : FACTORY_FIELD_NAME;
     }
 
-    private void visitConnections(org.kie.api.definition.process.Node[] nodes, BlockStmt body) {
+    private static final String INIT_CONNECTIONS_METHOD = "initConnections";
+
+    private void visitConnections(org.kie.api.definition.process.Node[] nodes, BlockStmt body, ProcessMetaData metadata) {
 
         List<Connection> connections = new ArrayList<>();
         for (org.kie.api.definition.process.Node node : nodes) {
@@ -251,9 +305,23 @@ public class ProcessVisitor extends AbstractVisitor {
                 connections.addAll(connectionList);
             }
         }
-        for (Connection connection : connections) {
-            visitConnection(connection, body);
+
+        if (connections.isEmpty()) {
+            return;
         }
+
+        // All connection statements are one-liners (one factory.connection() call each),
+        // so they all fit safely in a single helper method — even for large BPMNs.
+        // 755 connections × ~40 bytecode bytes = ~28 KB, well within the 64 KB limit.
+        BlockStmt connectionsBody = new BlockStmt();
+        for (Connection connection : connections) {
+            visitConnection(connection, connectionsBody);
+        }
+
+        metadata.addProcessHelperMethod(buildHelperMethod(INIT_CONNECTIONS_METHOD, connectionsBody));
+
+        body.addStatement(new MethodCallExpr(null, INIT_CONNECTIONS_METHOD)
+                .addArgument(new NameExpr(FACTORY_FIELD_NAME)));
     }
 
     // KOGITO-1882 Finish implementation or delete completely
@@ -292,10 +360,9 @@ public class ProcessVisitor extends AbstractVisitor {
         }
         org.jbpm.workflow.core.WorkflowProcess workflowProcess = (org.jbpm.workflow.core.WorkflowProcess) process;
         Context context = workflowProcess.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
-        //root process
+        // Root process exception scope only — sub-process node exception scopes are
+        // handled inside visitNodes() where the node variable is still in scope.
         visitContextExceptionScope(context, body);
-        //visit sub-processes
-        visitSubExceptionScope(workflowProcess.getNodes(), body);
     }
 
     private void visitContextExceptionScope(Context context, BlockStmt body) {
