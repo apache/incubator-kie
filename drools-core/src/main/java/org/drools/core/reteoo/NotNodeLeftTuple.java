@@ -28,7 +28,7 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.MemoryFactory;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 
 public class NotNodeLeftTuple extends LeftTuple {
     private static final long serialVersionUID = 540l;

@@ -47,7 +47,7 @@ import org.drools.core.phreak.DetachedTuple;
 import org.drools.core.phreak.RuleNetworkEvaluatorImpl;
 import org.drools.core.reteoo.builder.BuildContext;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 import org.drools.util.bitmask.AllSetBitMask;
 import org.drools.util.bitmask.BitMask;
 import org.kie.api.definition.rule.Rule;

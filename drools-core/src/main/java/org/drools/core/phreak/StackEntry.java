@@ -24,7 +24,7 @@ import org.drools.core.common.TupleSets;
 import org.drools.core.reteoo.LeftTupleSinkNode;
 import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.SegmentMemory;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 
 /**
 * Created with IntelliJ IDEA.

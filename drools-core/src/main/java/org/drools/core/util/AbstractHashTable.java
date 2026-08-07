@@ -25,6 +25,7 @@ import java.io.ObjectOutput;
 import java.util.Objects;
 
 import org.drools.base.util.IndexedValueReader;
+import org.drools.base.util.Iterator;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.util.index.TupleList;
 

@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import org.drools.serialization.protobuf.iterators.TerminalNodeIterator;
 import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.util.Iterator;
+import org.drools.base.util.Iterator;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;

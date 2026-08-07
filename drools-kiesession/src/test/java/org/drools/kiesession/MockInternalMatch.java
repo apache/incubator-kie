@@ -34,7 +34,7 @@ import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.base.rule.consequence.Consequence;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 import org.kie.api.runtime.rule.FactHandle;
 
 public class MockInternalMatch implements InternalMatch {

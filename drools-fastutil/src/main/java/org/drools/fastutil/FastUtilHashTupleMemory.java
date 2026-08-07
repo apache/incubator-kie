@@ -25,9 +25,9 @@ import org.drools.core.reteoo.Tuple;
 import org.drools.core.reteoo.TupleMemory;
 import org.drools.core.util.AbstractHashTable.HashEntry;
 import org.drools.core.util.AbstractHashTable.Index;
-import org.drools.core.util.FastIterator;
-import org.drools.core.util.Iterator;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.FastIterator;
+import org.drools.base.util.Iterator;
+import org.drools.base.util.LinkedList;
 import org.drools.core.util.index.TupleList;
 
 public class FastUtilHashTupleMemory implements TupleMemory {

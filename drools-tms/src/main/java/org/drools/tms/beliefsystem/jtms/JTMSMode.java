@@ -21,7 +21,7 @@ package org.drools.tms.beliefsystem.jtms;
 import org.drools.tms.beliefsystem.BeliefSystem;
 import org.drools.tms.beliefsystem.ModedAssertion;
 import org.drools.tms.LogicalDependency;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 import org.drools.base.beliefsystem.Mode;
 
 public class JTMSMode<M extends JTMSMode<M>> extends AbstractLinkedListNode<M> implements ModedAssertion<M> {

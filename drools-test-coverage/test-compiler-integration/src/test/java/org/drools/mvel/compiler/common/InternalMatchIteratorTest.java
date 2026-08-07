@@ -28,7 +28,7 @@ import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.event.TrackingAgendaEventListener;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.Iterator;
+import org.drools.base.util.Iterator;
 import org.drools.serialization.protobuf.iterators.ActivationIterator;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;

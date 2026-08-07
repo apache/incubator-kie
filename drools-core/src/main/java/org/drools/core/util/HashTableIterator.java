@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.drools.base.util.Iterator;
+import org.drools.base.util.SingleLinkedEntry;
+
 /**
  * Fast re-usable iterator
  */

@@ -29,7 +29,7 @@ import org.drools.base.rule.Declaration;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.constraint.BetaConstraint;
-import org.drools.core.util.SingleLinkedEntry;
+import org.drools.base.util.SingleLinkedEntry;
 import org.drools.core.util.index.IndexMemory;
 import org.drools.core.util.index.TupleIndexHashTable;
 import org.drools.drl.parser.impl.Operator;

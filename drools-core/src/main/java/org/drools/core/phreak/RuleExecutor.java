@@ -37,7 +37,7 @@ import org.drools.core.reteoo.Tuple;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 import org.drools.core.util.Queue;
 import org.drools.core.util.QueueFactory;
 import org.drools.core.util.index.TupleList;

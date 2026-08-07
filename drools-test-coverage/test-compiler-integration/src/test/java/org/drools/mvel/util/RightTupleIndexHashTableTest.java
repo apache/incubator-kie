@@ -45,7 +45,7 @@ import org.drools.core.reteoo.Tuple;
 import org.drools.core.test.model.Cheese;
 import org.drools.core.util.AbstractHashTable;
 import org.drools.base.util.IndexedValueReader;
-import org.drools.core.util.SingleLinkedEntry;
+import org.drools.base.util.SingleLinkedEntry;
 import org.drools.core.util.index.TupleIndexHashTable;
 import org.drools.core.util.index.TupleList;
 

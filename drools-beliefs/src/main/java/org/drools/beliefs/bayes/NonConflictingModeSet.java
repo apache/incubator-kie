@@ -24,7 +24,7 @@ import org.drools.tms.beliefsystem.ModedAssertion;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 
 public class NonConflictingModeSet<M extends ModedAssertion<M>> extends LinkedList<M> implements BeliefSet<M> {
     BayesBeliefSystem<? extends ModedAssertion> beliefSystem;

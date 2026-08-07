@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.util;
 
 public interface FastIterator<T> {
     public class NullFastIterator<T> implements FastIterator<T> {

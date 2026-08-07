@@ -20,7 +20,7 @@ package org.drools.traits.core.factmodel;
 
 import java.io.Serializable;
 
-import org.drools.core.util.SingleLinkedEntry;
+import org.drools.base.util.SingleLinkedEntry;
 
 public interface Triple extends SingleLinkedEntry, Serializable {
 

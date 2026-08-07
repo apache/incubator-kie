@@ -18,7 +18,7 @@
  */
 package org.drools.tms;
 
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.DoubleLinkedEntry;
 import org.drools.tms.agenda.TruthMaintenanceSystemInternalMatch;
 import org.drools.tms.beliefsystem.ModedAssertion;
 

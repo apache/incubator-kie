@@ -20,6 +20,7 @@ package org.drools.core.util;
 
 import java.util.Random;
 
+import org.drools.base.util.Iterator;
 import org.drools.core.util.TupleRBTree.Node;
 import org.junit.jupiter.api.Test;
 

@@ -23,9 +23,9 @@ import java.io.Serializable;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.TupleMemory;
-import org.drools.core.util.SingleLinkedEntry;
-import org.drools.core.util.FastIterator;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.SingleLinkedEntry;
+import org.drools.base.util.FastIterator;
+import org.drools.base.util.LinkedList;
 
 public class TupleList extends LinkedList<TupleImpl> implements TupleMemory, SingleLinkedEntry<TupleList>, Serializable {
 

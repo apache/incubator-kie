@@ -19,7 +19,7 @@
 package org.drools.tms.beliefsystem.simple;
 
 import org.drools.tms.beliefsystem.ModedAssertion;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 import org.drools.tms.LogicalDependency;
 import org.drools.tms.agenda.TruthMaintenanceSystemInternalMatch;
 

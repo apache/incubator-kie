@@ -19,7 +19,7 @@
 package org.drools.core.reteoo;
 
 import org.drools.core.util.AbstractHashTable.Index;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 
 public interface TupleMemory {
 

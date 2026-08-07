@@ -18,6 +18,9 @@
  */
 package org.drools.core.util;
 
+import org.drools.base.util.AbstractLinkedListNode;
+import org.drools.base.util.DoubleLinkedEntry;
+import org.drools.base.util.LinkedList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

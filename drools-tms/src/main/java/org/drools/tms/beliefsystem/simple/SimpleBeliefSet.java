@@ -25,8 +25,8 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.tms.LogicalDependency;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.util.LinkedList;
-import org.drools.core.util.LinkedListEntry;
+import org.drools.base.util.LinkedList;
+import org.drools.base.util.LinkedListEntry;
 
 public class SimpleBeliefSet extends LinkedList<SimpleMode> implements BeliefSet<SimpleMode> {
     protected BeliefSystem beliefSystem;

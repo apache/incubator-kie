@@ -23,8 +23,8 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.common.InternalAgendaGroup;
 import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.util.LinkedList;
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.LinkedList;
+import org.drools.base.util.DoubleLinkedEntry;
 import org.drools.core.util.Queue.QueueEntry;
 
 public class RuleAgendaItem implements DoubleLinkedEntry<RuleAgendaItem>, QueueEntry {

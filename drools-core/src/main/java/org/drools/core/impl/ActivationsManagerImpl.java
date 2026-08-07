@@ -77,7 +77,7 @@ public class ActivationsManagerImpl implements ActivationsManager {
 
     private boolean firing = false;
 
-    private final org.drools.core.util.LinkedList<RuleAgendaItem> eager = new org.drools.core.util.LinkedList<>();
+    private final org.drools.base.util.LinkedList<RuleAgendaItem> eager = new org.drools.base.util.LinkedList<>();
 
     private final Map<QueryImpl, RuleAgendaItem> queries = new ConcurrentHashMap<>();
 

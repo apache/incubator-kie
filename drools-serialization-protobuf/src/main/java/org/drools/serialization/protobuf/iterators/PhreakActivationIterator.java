@@ -28,7 +28,7 @@ import org.drools.core.phreak.RuleExecutor;
 import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.Iterator;
+import org.drools.base.util.Iterator;
 
 public class PhreakActivationIterator implements Iterator<InternalMatch> {
 

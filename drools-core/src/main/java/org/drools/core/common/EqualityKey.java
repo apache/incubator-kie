@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 
 /**
  * Upon instantiation the EqualityKey caches the first Object's hashCode

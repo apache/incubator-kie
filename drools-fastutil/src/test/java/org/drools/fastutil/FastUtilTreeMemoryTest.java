@@ -30,7 +30,7 @@ import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.Tuple;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 import org.drools.base.util.IndexedValueReader;
 import org.drools.fastutil.FastUtilTreeMemory.TreeFastIterator;
 import org.junit.jupiter.api.Test;

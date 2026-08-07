@@ -20,7 +20,7 @@ package org.drools.core.common;
 
 import org.drools.core.reteoo.LeftTupleSource;
 import org.drools.core.reteoo.SegmentMemory;
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.DoubleLinkedEntry;
 
 /**
  * A super interface for node memories

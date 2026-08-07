@@ -18,7 +18,7 @@
  */
 package org.drools.traits.core.factmodel;
 
-import org.drools.core.util.SingleLinkedEntry;
+import org.drools.base.util.SingleLinkedEntry;
 
 public class TripleImpl extends AbstractTriple {
     private SingleLinkedEntry next;

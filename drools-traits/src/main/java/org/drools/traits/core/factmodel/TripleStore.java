@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.drools.core.util.SingleLinkedEntry;
+import org.drools.base.util.SingleLinkedEntry;
 import org.kie.api.runtime.rule.Variable;
 
 public class TripleStore implements Externalizable {

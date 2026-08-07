@@ -24,7 +24,7 @@ import org.drools.core.reteoo.AccumulateNode.AccumulateContext;
 import org.drools.core.reteoo.AccumulateNode.AccumulateMemory;
 import org.drools.core.reteoo.BetaNode;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 
 import java.util.Collection;
 

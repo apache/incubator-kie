@@ -22,7 +22,7 @@ import org.drools.base.common.NetworkNode;
 import org.drools.core.reteoo.FromNode;
 import org.drools.core.reteoo.FromNode.FromMemory;
 import org.drools.core.reteoo.TupleImpl;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 
 import java.util.Collection;
 

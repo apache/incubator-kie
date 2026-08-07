@@ -41,7 +41,7 @@ import org.drools.core.reteoo.TupleFactory;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.TupleMemory;
 import org.drools.core.util.AbstractHashTable;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.drools.core.phreak.PhreakNodeOperations.doUpdatesReorderLeftMemory;

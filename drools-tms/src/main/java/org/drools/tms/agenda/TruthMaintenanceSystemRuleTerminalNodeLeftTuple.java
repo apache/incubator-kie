@@ -24,7 +24,7 @@ import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
 import org.drools.core.reteoo.Sink;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.reteoo.TupleImpl;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 import org.drools.tms.LogicalDependency;
 import org.drools.tms.SimpleMode;
 import org.drools.tms.TruthMaintenanceSystemImpl;
