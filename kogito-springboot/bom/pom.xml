@@ -48,6 +48,10 @@
          2025.1.1 specifically targets Spring Boot 4.0.1+. -->
     <!-- https://github.com/spring-cloud/spring-cloud-release/wiki/Spring-Cloud-2025.1-Release-Notes -->
     <version.org.springframework.cloud>2025.1.1</version.org.springframework.cloud>
+    <!-- CVE-2026-49844: Spring Boot 4.0.7 sets log4j2.version=2.25.4 which is vulnerable.
+         Override the version property inherited from kie-parent to 2.26.1 (minimum 2.25.5).
+         https://logging.apache.org/security.html#CVE-2026-49844 -->
+    <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
   </properties>
   <dependencyManagement>
     <dependencies>
