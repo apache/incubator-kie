@@ -27,14 +27,15 @@ import org.drools.core.common.WorkingMemoryAction;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.marshalling.MarshallerReaderContext;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.Tuple;
 
 public class WorkingMemoryReteAssertAction
-        extends PropagationEntry.AbstractPropagationEntry
+        extends AbstractPropagationEntry<ReteEvaluator>
         implements WorkingMemoryAction {
     protected InternalFactHandle factHandle;
 

@@ -20,6 +20,7 @@ package org.drools.core.phreak;
 
 import java.util.Iterator;
 
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.common.ReteEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,8 @@ public class SynchronizedPropagationList implements PropagationList {
 
     protected ReteEvaluator reteEvaluator;
 
-    protected volatile PropagationEntry head;
-    protected volatile PropagationEntry tail;
+    protected volatile PropagationEntry<ReteEvaluator> head;
+    protected volatile PropagationEntry<ReteEvaluator> tail;
 
     protected volatile boolean disposed = false;
 
@@ -46,10 +47,11 @@ public class SynchronizedPropagationList implements PropagationList {
     public SynchronizedPropagationList(){}
 
     @Override
-    public void addEntry(final PropagationEntry entry) {
+    public void addEntry(final PropagationEntry<ReteEvaluator> entry) {
         if (entry.requiresImmediateFlushing()) {
             if (entry.isCalledFromRHS()) {
                 entry.execute(reteEvaluator);
+                reteEvaluator.onWorkingMemoryAction(entry);
             } else {
                 reteEvaluator.getActivationsManager().executeTask( new ExecutableEntry() {
                     @Override
@@ -59,6 +61,7 @@ public class SynchronizedPropagationList implements PropagationList {
                         } else {
                             entry.execute( reteEvaluator );
                         }
+                        reteEvaluator.onWorkingMemoryAction(entry);
                     }
 
                     @Override
@@ -72,7 +75,7 @@ public class SynchronizedPropagationList implements PropagationList {
         }
     }
 
-    synchronized void internalAddEntry( PropagationEntry entry ) {
+    synchronized void internalAddEntry( PropagationEntry<ReteEvaluator> entry ) {
         if ( head == null ) {
             head = entry;
             if (firingUntilHalt) {
@@ -96,13 +99,14 @@ public class SynchronizedPropagationList implements PropagationList {
     }
 
     @Override
-    public void flush(PropagationEntry currentHead) {
+    public void flush(PropagationEntry<ReteEvaluator> currentHead) {
         flush( reteEvaluator, currentHead );
     }
 
-    private void flush( ReteEvaluator reteEvaluator, PropagationEntry currentHead ) {
-        for (PropagationEntry entry = currentHead; !disposed && entry != null; entry = entry.getNext()) {
+    private void flush( ReteEvaluator reteEvaluator, PropagationEntry<ReteEvaluator> currentHead ) {
+        for (PropagationEntry<ReteEvaluator> entry = currentHead; !disposed && entry != null; entry = entry.getNext()) {
             entry.execute(reteEvaluator);
+            reteEvaluator.onWorkingMemoryAction(entry);
         }
     }
 
@@ -111,8 +115,8 @@ public class SynchronizedPropagationList implements PropagationList {
     }
 
     @Override
-    public synchronized PropagationEntry takeAll() {
-        PropagationEntry currentHead = head;
+    public synchronized PropagationEntry<ReteEvaluator> takeAll() {
+        PropagationEntry<ReteEvaluator> currentHead = head;
         head = null;
         tail = null;
         hasEntriesDeferringExpiration = false;
@@ -146,15 +150,15 @@ public class SynchronizedPropagationList implements PropagationList {
     }
 
     @Override
-    public synchronized Iterator<PropagationEntry> iterator() {
+    public synchronized Iterator<PropagationEntry<ReteEvaluator>> iterator() {
         return new PropagationEntryIterator(head);
     }
 
-    public static class PropagationEntryIterator implements Iterator<PropagationEntry> {
+    public static class PropagationEntryIterator implements Iterator<PropagationEntry<ReteEvaluator>> {
 
-        private PropagationEntry next;
+        private PropagationEntry<ReteEvaluator> next;
 
-        public PropagationEntryIterator(PropagationEntry head) {
+        public PropagationEntryIterator(PropagationEntry<ReteEvaluator> head) {
             this.next = head;
         }
 
@@ -164,8 +168,8 @@ public class SynchronizedPropagationList implements PropagationList {
         }
 
         @Override
-        public PropagationEntry next() {
-            PropagationEntry current = next;
+        public PropagationEntry<ReteEvaluator> next() {
+            PropagationEntry<ReteEvaluator> current = next;
             next = current.getNext();
             return current;
         }

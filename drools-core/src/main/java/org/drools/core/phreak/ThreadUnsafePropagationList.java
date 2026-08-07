@@ -21,6 +21,7 @@ package org.drools.core.phreak;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.common.ReteEvaluator;
 
 public class ThreadUnsafePropagationList implements PropagationList {
@@ -32,12 +33,13 @@ public class ThreadUnsafePropagationList implements PropagationList {
     }
 
     @Override
-    public void addEntry( PropagationEntry propagationEntry ) {
+    public void addEntry( PropagationEntry<ReteEvaluator> propagationEntry ) {
         propagationEntry.execute( reteEvaluator );
+        reteEvaluator.onWorkingMemoryAction( propagationEntry );
     }
 
     @Override
-    public PropagationEntry takeAll() {
+    public PropagationEntry<ReteEvaluator> takeAll() {
         return null;
     }
 
@@ -46,7 +48,7 @@ public class ThreadUnsafePropagationList implements PropagationList {
     }
 
     @Override
-    public void flush( PropagationEntry currentHead ) {
+    public void flush( PropagationEntry<ReteEvaluator> currentHead ) {
     }
 
     @Override
@@ -64,7 +66,7 @@ public class ThreadUnsafePropagationList implements PropagationList {
     }
 
     @Override
-    public Iterator<PropagationEntry> iterator() {
+    public Iterator<PropagationEntry<ReteEvaluator>> iterator() {
         return Collections.emptyIterator();
     }
 

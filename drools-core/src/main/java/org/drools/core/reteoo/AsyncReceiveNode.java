@@ -34,7 +34,8 @@ import org.drools.core.common.Memory;
 import org.drools.core.common.MemoryFactory;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.UpdateContext;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.reteoo.builder.BuildContext;
 import org.drools.core.util.AbstractLinkedListNode;
 import org.drools.core.util.index.TupleList;
@@ -110,7 +111,7 @@ public class AsyncReceiveNode extends LeftTupleSource
         return objectTypeConf;
     }
 
-    public static class AsyncReceiveAction extends PropagationEntry.AbstractPropagationEntry {
+    public static class AsyncReceiveAction extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final AsyncReceiveNode asyncReceiveNode;
         private final Object object;

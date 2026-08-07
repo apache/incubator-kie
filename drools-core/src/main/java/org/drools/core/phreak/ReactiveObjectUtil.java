@@ -21,6 +21,7 @@ package org.drools.core.phreak;
 import java.util.Collection;
 
 import org.drools.base.phreak.ReactiveObject;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.common.BetaConstraints;
 import org.drools.core.common.InternalFactHandle;
@@ -64,7 +65,7 @@ public class ReactiveObjectUtil {
         }
     }
 
-    static class ReactivePropagation extends PropagationEntry.AbstractPropagationEntry {
+    static class ReactivePropagation extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final Object object;
         private final ReactiveFromNodeLeftTuple leftTuple;

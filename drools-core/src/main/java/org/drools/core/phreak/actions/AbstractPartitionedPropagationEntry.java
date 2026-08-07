@@ -16,17 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.common;
+package org.drools.core.phreak.actions;
 
-import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 
-public interface WorkingMemoryAction extends PropagationEntry<ReteEvaluator> {
-    short WorkingMemoryReteAssertAction  = 1;
-    short DeactivateCallback             = 2;
-    short PropagateAction                = 3;
-    short LogicalRetractCallback         = 4;
-    short WorkingMemoryReteExpireAction  = 5;
-    short SignalProcessInstanceAction    = 6;
-    short SignalAction                   = 7;
-    short WorkingMemoryBehahviourRetract = 8;
+public abstract class AbstractPartitionedPropagationEntry<T extends ValueResolver> extends AbstractPropagationEntry<T> {
+    protected final int partition;
+
+    protected AbstractPartitionedPropagationEntry(int partition) {
+        this.partition = partition;
+    }
+
+    protected boolean isMainPartition() {
+        return partition == 0;
+    }
 }

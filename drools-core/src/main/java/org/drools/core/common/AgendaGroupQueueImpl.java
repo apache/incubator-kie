@@ -27,7 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.drools.core.conflict.RuleAgendaConflictResolver;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.marshalling.MarshallerReaderContext;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.util.ArrayQueue;
 import org.drools.core.util.Queue;
@@ -112,7 +113,7 @@ public class AgendaGroupQueueImpl
         reteEvaluator.addPropagation( new ClearAction( this.name ) );
     }
 
-    public class ClearAction extends PropagationEntry.AbstractPropagationEntry {
+    public class ClearAction extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final String name;
 
@@ -130,7 +131,7 @@ public class AgendaGroupQueueImpl
         reteEvaluator.addPropagation( new SetFocusAction( this.name ) );
     }
 
-    public class SetFocusAction extends PropagationEntry.AbstractPropagationEntry {
+    public class SetFocusAction extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final String name;
 
@@ -267,7 +268,7 @@ public class AgendaGroupQueueImpl
     }
 
     public static class DeactivateCallback
-            extends PropagationEntry.AbstractPropagationEntry
+            extends AbstractPropagationEntry<ReteEvaluator>
             implements WorkingMemoryAction {
 
         private static final long     serialVersionUID = 510l;

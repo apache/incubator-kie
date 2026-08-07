@@ -30,7 +30,8 @@ import org.drools.base.common.RuleBasePartitionId;
 import org.drools.core.common.TruthMaintenanceSystem;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
 import org.drools.core.common.WorkingMemoryAction;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.Rete;
 import org.drools.core.reteoo.builder.NodeFactory;
@@ -201,7 +202,7 @@ public class ReteooWorkingMemoryTest {
     }
 
     private static class ReentrantAction
-            extends PropagationEntry.AbstractPropagationEntry
+            extends AbstractPropagationEntry<ReteEvaluator>
             implements WorkingMemoryAction {
         // I am using AtomicInteger just as an int wrapper... nothing to do with concurrency here
         public AtomicInteger counter = new AtomicInteger(0);

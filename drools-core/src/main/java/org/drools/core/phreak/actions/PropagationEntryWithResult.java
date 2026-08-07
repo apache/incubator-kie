@@ -16,17 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.common;
+package org.drools.core.phreak.actions;
 
-import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 
-public interface WorkingMemoryAction extends PropagationEntry<ReteEvaluator> {
-    short WorkingMemoryReteAssertAction  = 1;
-    short DeactivateCallback             = 2;
-    short PropagateAction                = 3;
-    short LogicalRetractCallback         = 4;
-    short WorkingMemoryReteExpireAction  = 5;
-    short SignalProcessInstanceAction    = 6;
-    short SignalAction                   = 7;
-    short WorkingMemoryBehahviourRetract = 8;
+import java.util.concurrent.CountDownLatch;
+
+public abstract class PropagationEntryWithResult<T extends ValueResolver, R> extends AbstractPropagationEntry<T> {
+    private final CountDownLatch done = new CountDownLatch(1);
+
+    private R result;
+
+    public final R getResult() {
+        try {
+            done.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
+
+    protected void done(R result) {
+        this.result = result;
+        done.countDown();
+    }
+
+    @Override
+    public boolean requiresImmediateFlushing() {
+        return true;
+    }
 }

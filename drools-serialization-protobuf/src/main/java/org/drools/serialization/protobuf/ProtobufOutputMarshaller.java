@@ -42,7 +42,7 @@ import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.common.TruthMaintenanceSystem;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
 import org.drools.core.marshalling.MarshallerWriteContext;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.process.WorkItem;
 import org.drools.core.reteoo.TupleImpl;
@@ -419,14 +419,14 @@ public class ProtobufOutputMarshaller {
     public static void writeActionQueue( MarshallerWriteContext context,
                                          ProtobufMessages.RuleData.Builder _session) throws IOException {
 
-        Iterator<? extends PropagationEntry> i = context.getWorkingMemory().getActionsIterator();
+        Iterator<? extends PropagationEntry<?>> i = context.getWorkingMemory().getActionsIterator();
         if ( !i.hasNext() ) {
             return;
         }
 
         ProtobufMessages.ActionQueue.Builder _queue = ProtobufMessages.ActionQueue.newBuilder();
         while ( i.hasNext() ) {
-            PropagationEntry entry = i.next();
+            PropagationEntry<?> entry = i.next();
             if (entry instanceof ProtobufWorkingMemoryAction) {
                 _queue.addAction(((ProtobufWorkingMemoryAction) entry).serialize(context));
             }

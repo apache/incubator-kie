@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,17 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.common;
+package org.drools.base.phreak;
 
-import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.base.ValueResolver;
 
-public interface WorkingMemoryAction extends PropagationEntry<ReteEvaluator> {
-    short WorkingMemoryReteAssertAction  = 1;
-    short DeactivateCallback             = 2;
-    short PropagateAction                = 3;
-    short LogicalRetractCallback         = 4;
-    short WorkingMemoryReteExpireAction  = 5;
-    short SignalProcessInstanceAction    = 6;
-    short SignalAction                   = 7;
-    short WorkingMemoryBehahviourRetract = 8;
+public interface PropagationEntry<T extends ValueResolver> {
+
+    default void execute(T t) {
+        internalExecute(t);
+    }
+
+    void internalExecute(T t);
+
+    PropagationEntry<T> getNext();
+
+    void setNext(PropagationEntry<T> next);
+
+    boolean requiresImmediateFlushing();
+
+    boolean isCalledFromRHS();
+
+    boolean isPartitionSplittable();
+
+    PropagationEntry<T> getSplitForPartition(int partitionNr);
+
+    boolean defersExpiration();
+
 }

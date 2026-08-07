@@ -27,7 +27,7 @@ import org.drools.core.WorkingMemory;
 import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.event.RuleRuntimeEventSupport;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.runtime.process.InternalProcessRuntime;
 import org.kie.api.runtime.Channel;
@@ -110,7 +110,7 @@ public interface InternalWorkingMemory
     void deactivate();
     boolean tryDeactivate();
 
-    Iterator<? extends PropagationEntry> getActionsIterator();
+    Iterator<? extends PropagationEntry<ReteEvaluator>> getActionsIterator();
 
     void removeGlobal(String identifier);
 

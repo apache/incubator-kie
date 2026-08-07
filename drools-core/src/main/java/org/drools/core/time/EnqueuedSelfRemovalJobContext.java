@@ -21,7 +21,7 @@ package org.drools.core.time;
 import java.util.Map;
 
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.time.impl.TimerJobInstance;
 
 public class EnqueuedSelfRemovalJobContext extends SelfRemovalJobContext {
@@ -31,7 +31,7 @@ public class EnqueuedSelfRemovalJobContext extends SelfRemovalJobContext {
 
     @Override
     public void remove() {
-        getReteEvaluator().addPropagation( new PropagationEntry.AbstractPropagationEntry() {
+        getReteEvaluator().addPropagation( new AbstractPropagationEntry<ReteEvaluator>() {
             @Override
             public void internalExecute(ReteEvaluator reteEvaluator) {
                 timerInstances.remove( jobContext.getJobHandle().getId() );
