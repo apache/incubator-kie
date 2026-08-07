@@ -170,7 +170,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
         final String y = element.getAttribute("y");
         if (y != null && y.length() != 0) {
             try {
-                node.setMetaData("y", new Integer(y));
+                node.setMetaData("y", Integer.valueOf(y));
             } catch (NumberFormatException exc) {
                 throw new SAXParseException("<" + localName + "> requires an Integer 'y' attribute", parser.getLocator());
             }
@@ -178,7 +178,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
         final String width = element.getAttribute("width");
         if (width != null && width.length() != 0) {
             try {
-                node.setMetaData("width", new Integer(width));
+                node.setMetaData("width", Integer.valueOf(width));
             } catch (NumberFormatException exc) {
                 throw new SAXParseException("<" + localName + "> requires an Integer 'width' attribute", parser.getLocator());
             }
@@ -186,7 +186,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
         final String height = element.getAttribute("height");
         if (height != null && height.length() != 0) {
             try {
-                node.setMetaData("height", new Integer(height));
+                node.setMetaData("height", Integer.valueOf(height));
             } catch (NumberFormatException exc) {
                 throw new SAXParseException("<" + localName + "> requires an Integer 'height' attribute", parser.getLocator());
             }
@@ -258,9 +258,9 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
     }
 
     public static DroolsAction extractScript(Element xmlNode) {
-        String dialect = "mvel";
-        if ("http://www.java.com/java".equals(xmlNode.getAttribute("scriptFormat"))) {
-            dialect = "java";
+        String dialect = "java";
+        if ("http://www.mvel.org/2.0".equals(xmlNode.getAttribute("scriptFormat"))) {
+            dialect = "mvel";
         }
         NodeList subNodeList = xmlNode.getChildNodes();
         for (int j = 0; j < subNodeList.getLength(); j++) {
@@ -272,7 +272,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
                 }
             }
         }
-        return new DroolsConsequenceAction("mvel", "");
+        return new DroolsConsequenceAction(dialect, "");
     }
 
     protected void writeMetaData(final Node node, final StringBuilder xmlDump) {
@@ -414,6 +414,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
         return new DataDefinition(variable.getId(), variable.getName(), variable);
     }
 
+    @SuppressWarnings("unchecked")
     protected ItemDefinition getStructureRef(Parser parser, String id) {
         ProcessBuildData buildData = (ProcessBuildData) parser.getData();
         Map<String, ItemDefinition> itemDefinitions = (Map<String, ItemDefinition>) buildData.getMetaData("ItemDefinitions");
@@ -1019,6 +1020,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
         return signalName;
     }
 
+    @SuppressWarnings("unchecked")
     protected Signal findSignalByName(Parser parser, String signalName) {
         ProcessBuildData buildData = ((ProcessBuildData) parser.getData());
 
@@ -1037,6 +1039,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     protected String retrieveDataType(String itemSubjectRef, String dtype, Parser parser) {
         if (dtype != null && !dtype.isEmpty()) {
             return dtype;
