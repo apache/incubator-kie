@@ -232,7 +232,7 @@
     <version.org.apache.maven.resolver>1.7.3</version.org.apache.maven.resolver>
     <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
     <version.org.apache.openjpa>4.0.0</version.org.apache.openjpa>
-    <version.org.apache.opennlp>2.5.9</version.org.apache.opennlp>
+    <version.org.apache.opennlp>2.5.11</version.org.apache.opennlp>
     <version.org.apache.pdfbox>2.0.28</version.org.apache.pdfbox>
     <version.org.apache.poi>5.4.1</version.org.apache.poi>
     <version.org.apache.tomcat>6.0.53</version.org.apache.tomcat>
