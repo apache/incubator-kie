@@ -242,7 +242,7 @@
     <version.org.asciidoctor.asciidoctorj-pdf>1.5.0</version.org.asciidoctor.asciidoctorj-pdf>
     <version.org.assertj>3.27.7</version.org.assertj>
     <version.org.awaitility>4.3.0</version.org.awaitility>
-    <version.org.bouncycastle.bc.jdk18on>1.84</version.org.bouncycastle.bc.jdk18on>
+    <version.org.bouncycastle.bc.jdk18on>1.85</version.org.bouncycastle.bc.jdk18on>
     <version.org.codehaus.plexus.plexus-utils>3.6.1</version.org.codehaus.plexus.plexus-utils>
     <version.org.eclipse.jdt>3.44.0</version.org.eclipse.jdt>
     <version.org.eclipse.jetty>12.0.36</version.org.eclipse.jetty>
