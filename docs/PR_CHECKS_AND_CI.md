@@ -99,6 +99,22 @@ for the CI scripts themselves: the scenarios under
 and summary generation behave as expected. If you change anything in
 `script/ci/`, this is the check that guards it.
 
+## `Dev :: Tests`
+
+Defined in [dev-tests.yaml](../.github/workflows/dev-tests.yaml). Tests for the
+local partial build — [`script/dev/`](../script/dev/) and the `dev` target
+in the [Makefile](../Makefile). See [DEV.md](./DEV.md).
+
+Two jobs. `Dev scripts` runs the two unit suites, which build throwaway git
+repositories and dependency graphs in temp directories and never invoke Maven,
+so it takes seconds. `make dev in a fresh clone` then runs `make dev` for real
+on a checkout that has never been built, with the Maven cache deliberately
+disabled — that is the case where the upstream pass has to notice nothing is
+installed, so it does build, and takes minutes.
+
+If you change anything under `script/dev/` or the Makefile, this is the check
+that guards it.
+
 ## License header check
 
 Defined in

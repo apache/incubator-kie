@@ -23,7 +23,10 @@ Used by [.github/workflows/ci.yaml](../../.github/workflows/ci.yaml).
 
 - [CiComputeBuildScopes.java](CiComputeBuildScopes.java) — figures out which modules a PR actually touches, so CI only builds and tests what's needed instead of the whole reactor.
 - [CiSummary.java](CiSummary.java) — turns the build's test results into the human-readable summary you see at the top of a CI run on GitHub.
-- [dep-graph-extractor/](dep-graph-extractor/) — Maven extension that writes the the reactor dependency graph. Required by `CiComputeBuildScopes` (and exercised transitively by its tests).
+- [DepGraph.java](DepGraph.java) — reads the dependency graph TSV. Shared with [script/dev/](../dev/), so CI and local builds cannot disagree about the reactor.
+- [dep-graph-extractor/](dep-graph-extractor/) — Maven extension that writes the reactor dependency graph. Required by `CiComputeBuildScopes` (and exercised transitively by its tests). Its output is a TSV of one-letter record types; consumers ignore types they do not know, so new ones can be added without breaking them.
+
+These are also used outside CI: [script/dev/Dev.java](../dev/Dev.java) reuses `CiComputeBuildScopes` and the dependency graph for partial builds. See [docs/DEV.md](../../docs/DEV.md).
 
 ## Developing these scripts
 

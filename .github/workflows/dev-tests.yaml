@@ -1,0 +1,162 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: 'Dev :: Tests'
+
+# Tests for the partial build: `make dev` and the scripts behind it.
+# See docs/DEV.md.
+#
+# Two jobs: the unit suites, which build throwaway git repositories and
+# dependency graphs in temp directories and so never invoke Maven; and a smoke
+# check that runs `make dev` for real in a fresh clone, which does.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dev-tests:
+    if: github.event.action != 'closed'
+    name: 'Dev scripts'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - name: "SETUP :: Checkout @ Simulated squashed-merge if PR, else checkout current commit"
+        id: checkout_pr
+        uses: ./.github/actions/checkout-pr
+        with:
+          ref: ${{ github.base_ref }}
+
+      - uses: actions/setup-java@v5
+        name: 'SETUP :: Java 21'
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      # Temporary workaround while jbangdev/setup-jbang action doesn't include checksum verification.
+      # See https://github.com/apache/infrastructure-actions/pull/806
+      - name: 'SETUP :: Install JBang'
+        shell: bash
+        run: |
+          curl -sL https://github.com/jbangdev/jbang/releases/download/v0.138.0/jbang-0.138.0.zip -o jbang.zip
+          echo "3c9fb9ac5823ae5ab9d136dec08b896e2a0f6f6b313689b21f43c511b7c34b85  jbang.zip" | sha256sum -c -
+          unzip -q jbang.zip
+          echo "${{ github.workspace }}/jbang-0.138.0/bin" >> $GITHUB_PATH
+
+      # These two suites build their own throwaway git repositories and dependency
+      # graphs, so unlike the CI script tests they never invoke Maven.
+      - name: 'TEST :: Run DevTest'
+        shell: bash
+        run: jbang script/dev/tests/DevTest.java
+
+      - name: 'TEST :: Run MakefileTest'
+        shell: bash
+        run: jbang script/dev/tests/MakefileTest.java
+
+  fresh-clone:
+    if: github.event.action != 'closed'
+    name: 'make dev in a fresh clone'
+    runs-on: ubuntu-latest
+    steps:
+      # A plain checkout on purpose: this job is about what a contributor gets when
+      # they clone the repository and run `make dev` for the first time.
+      - name: 'SETUP :: Checkout'
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        name: 'SETUP :: Java 21'
+        with:
+          java-version: 21
+          distribution: temurin
+          # No Maven cache, deliberately. The point of this job is a machine that has
+          # never built this repository, which is exactly the case where the upstream
+          # pass has to notice that nothing is installed and build it first. Caching
+          # ~/.m2 would hide the one thing worth checking.
+
+      # Temporary workaround while jbangdev/setup-jbang action doesn't include checksum verification.
+      # See https://github.com/apache/infrastructure-actions/pull/806
+      - name: 'SETUP :: Install JBang'
+        shell: bash
+        run: |
+          curl -sL https://github.com/jbangdev/jbang/releases/download/v0.138.0/jbang-0.138.0.zip -o jbang.zip
+          echo "3c9fb9ac5823ae5ab9d136dec08b896e2a0f6f6b313689b21f43c511b7c34b85  jbang.zip" | sha256sum -c -
+          unzip -q jbang.zip
+          echo "${{ github.workspace }}/jbang-0.138.0/bin" >> $GITHUB_PATH
+
+      - name: 'SETUP :: Block apache.snapshots Maven repository'
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.m2"
+          cat > "$HOME/.m2/settings.xml" <<'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+            <mirrors>
+              <mirror>
+                <id>block-apache-snapshots</id>
+                <mirrorOf>apache.snapshots,apache-snapshot-repository</mirrorOf>
+                <url>https://repository.apache.org/snapshots/</url>
+                <blocked>true</blocked>
+              </mirror>
+            </mirrors>
+          </settings>
+          EOF
+
+      # `since=head` needs no history, so a shallow checkout is enough, and it makes
+      # the scope depend on the change made below rather than on whatever the pull
+      # request happens to touch — otherwise this job's runtime would vary with it.
+      - name: 'CHECK :: A clean working copy has nothing to build'
+        shell: bash
+        run: |
+          set -o pipefail
+          make dev scope since=head breadth=changed | tee scope-clean.log
+          grep -q 'Nothing has changed' scope-clean.log
+
+      - name: 'CHECK :: A change is traced back to the module that contains it'
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p drools-util/src/main/resources
+          echo 'Dev :: Tests smoke check' > drools-util/src/main/resources/dev-smoke-test.txt
+          make dev scope since=head breadth=changed | tee scope-changed.log
+          grep -q 'org.drools:drools-util' scope-changed.log
+
+      # The everyday command, unqualified: it has to build the module and, before it,
+      # every upstream module that a fresh clone has not installed yet.
+      - name: 'CHECK :: And `make dev` builds it'
+        shell: bash
+        run: make dev since=head breadth=changed
+
+      - name: 'CHECK :: It recorded what it did'
+        shell: bash
+        run: |
+          set -o pipefail
+          test -s .kie-dev/modules-to-build.txt
+          test -s .kie-dev/last-maven-command.txt
+          grep -q 'org.drools:drools-util' .kie-dev/modules-to-build.txt

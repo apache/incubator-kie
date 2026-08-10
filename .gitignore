@@ -18,6 +18,16 @@
 target/
 local/
 
+# Local state for `make dev` (see docs/DEV.md). Already covered by
+# the `.*` rule below, but listed explicitly because it is a deliberate artifact.
+.kie-dev/
+
+# Build output that lands under src/: the modules in test-integration-prebuilt-jars/
+# copy their jars here during the build (see <destinationFile> in their poms), so a
+# working copy that has been built otherwise shows them as untracked files.
+/drools-test-coverage/test-integration-prebuilt/test-integration-prebuilt-tests/src/test/resources/*.jar
+/drools-test-coverage/test-integration-prebuilt/test-integration-prebuilt-tests/src/test/resources/kjar/*.jar
+
 # Eclipse, Netbeans and IntelliJ files
 .*
 !.gitignore
@@ -37,8 +47,6 @@ dependency-reduced-pom.xml
 #CI
 !.ci
 
-# Claude Code project documentation
-CLAUDE.md
 # --- merged from optaplanner .gitignore ---
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file

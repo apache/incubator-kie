@@ -63,11 +63,31 @@ public class DepGraphExtractorParticipant extends AbstractMavenLifecycleParticip
             // P<TAB>groupId:artifactId<TAB>/abs/basedir
             // D<TAB>groupId:artifactId<TAB>upstream-groupId:artifactId
             // (one "D" line per direct upstream edge; downstream is the inverse)
+            // V<TAB>groupId:artifactId<TAB>version<TAB>packaging
+            // L<TAB>/abs/path/to/local/maven/repository
+            // Consumers ignore record types they do not know, so new types are additive.
             for (MavenProject p : projects) {
                 w.write("P\t");
                 w.write(ga(p));
                 w.write("\t");
                 w.write(p.getBasedir().getAbsolutePath());
+                w.newLine();
+            }
+            // Version and packaging let local tooling (script/dev/Dev.java) locate a
+            // module's installed artifact in the local repository, to tell whether it is
+            // present and up to date.
+            for (MavenProject p : projects) {
+                w.write("V\t");
+                w.write(ga(p));
+                w.write("\t");
+                w.write(p.getVersion());
+                w.write("\t");
+                w.write(p.getPackaging());
+                w.newLine();
+            }
+            if (session.getRequest().getLocalRepository() != null) {
+                w.write("L\t");
+                w.write(session.getRequest().getLocalRepository().getBasedir());
                 w.newLine();
             }
             for (MavenProject p : projects) {

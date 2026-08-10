@@ -5,6 +5,54 @@
       "last_modified": "2026-04-15T12:22:54Z",
       "resolved": "github:NixOS/nixpkgs/566acc07c54dc807f91625bb286cb9b321b5f42a?lastModified=1776255774"
     },
+    "jbang@0.136.0": {
+      "last_modified": "2026-08-01T16:34:20Z",
+      "resolved": "github:NixOS/nixpkgs/a5cbcfe954791221bfffe2307f7d1a1bf61a871e#jbang",
+      "source": "devbox-search",
+      "version": "0.136.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z08h17far301awj4jhcpw39i3mjdc6rd-jbang-0.136.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/z08h17far301awj4jhcpw39i3mjdc6rd-jbang-0.136.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/w3lgwsqxf8ydl3iry126rrps8pfd2ylm-jbang-0.136.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/w3lgwsqxf8ydl3iry126rrps8pfd2ylm-jbang-0.136.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5a4chw2zps71jg26jbpjwj3xd3n7w7c3-jbang-0.136.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/5a4chw2zps71jg26jbpjwj3xd3n7w7c3-jbang-0.136.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/in7gwradphpsz9g0grs18rrqxkadrq64-jbang-0.136.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/in7gwradphpsz9g0grs18rrqxkadrq64-jbang-0.136.0"
+        }
+      }
+    },
     "jdk@21": {
       "last_modified": "2025-10-22T20:59:19Z",
       "resolved": "github:NixOS/nixpkgs/01b6809f7f9d1183a2b3e081f0a1e6f8f415cb09#jdk",

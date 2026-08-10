@@ -29,6 +29,7 @@ structure, its build, and its conventions. User documentation for Drools, OptaPl
 | --- | --- |
 | [STRUCTURE.md](./STRUCTURE.md) | The module prefix structure, the BOM/parent-pom hierarchies, and architectural notes |
 | [BUILDING.md](./BUILDING.md) | How to build the repo, useful Maven flags and profiles, and troubleshooting |
+| [DEV.md](./DEV.md) | Building only the modules your changes affect, with `make dev` |
 | [CONVENTIONS.md](./CONVENTIONS.md) | Code style, licensing, dependency rules, testing and codegen conventions |
 | [PR_CHECKS_AND_CI.md](./PR_CHECKS_AND_CI.md) | The checks that run on pull requests, and how CI builds the repo |
 | [DEVELOP_ON_MACOS.md](./DEVELOP_ON_MACOS.md) | Setting up macOS for GraalVM native image builds |

@@ -19,6 +19,7 @@
 
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //JAVA 21
+//SOURCES DepGraph.java
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,12 +38,13 @@ public class CiComputeBuildScopes {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 4) {
-            System.err.println("usage: jbang CiComputeBuildScopes.java <changed-out> <upstream-out> <affected-out> <changed-out>");
+            System.err.println("usage: jbang CiComputeBuildScopes.java <changed-files-in> <upstream-out> <affected-out> <changed-out>");
             System.err.println();
-            System.err.println("env:");
+            System.err.println("env (each also readable as a system property of the same name):");
             System.err.println("  DEP_GRAPH_EXTRACTOR__JAR               path to dep-graph-extractor jar (default: build from script/ci/dep-graph-extractor)");
             System.err.println("  DEP_GRAPH_EXTRACTOR__OUTPUT_FILE       path where the dependency graph TSV is written (default: temp file)");
             System.err.println("  DEP_GRAPH_EXTRACTOR__EXTRA_MAVEN_ARGS  whitespace-separated args forwarded to the 'mvn validate' dep-graph-extractor run (e.g. \"-Pfoo -Dbar=baz\")");
+            System.err.println("  DEP_GRAPH_EXTRACTOR__REUSE_IF_FRESH    'true' to reuse the graph at OUTPUT_FILE while no pom.xml has changed (default: false)");
             System.err.println("  MVN                                    mvn binary (default: mvn)");
             System.exit(2);
         }
@@ -60,7 +62,7 @@ public class CiComputeBuildScopes {
 
         Path extractorJarPath = ensureDepGraphExtractorJar(cwd);
 
-        String extraMavenArgsEnv = Optional.ofNullable(System.getenv("DEP_GRAPH_EXTRACTOR__EXTRA_MAVEN_ARGS")).orElse("").strip();
+        String extraMavenArgsEnv = Optional.ofNullable(cfg("DEP_GRAPH_EXTRACTOR__EXTRA_MAVEN_ARGS")).orElse("").strip();
         List<String> extraMavenArgs = extraMavenArgsEnv.isEmpty()
                 ? List.of()
                 : Arrays.asList(extraMavenArgsEnv.split("\\s+"));
@@ -93,53 +95,32 @@ public class CiComputeBuildScopes {
         // 2. run dep-graph-extractor, writing dependency graph to file.
         // Persist the graph to DEP_GRAPH_EXTRACTOR__OUTPUT_FILE when set so downstream
         // tools (CiSummary) can reuse it without re-invoking Maven.
-        String graphFileEnv = System.getenv("DEP_GRAPH_EXTRACTOR__OUTPUT_FILE");
+        String graphFileEnv = cfg("DEP_GRAPH_EXTRACTOR__OUTPUT_FILE");
         Path graphFile = (graphFileEnv != null && !graphFileEnv.isBlank())
                 ? Paths.get(graphFileEnv).toAbsolutePath()
                 : Files.createTempFile("dep-graph-", ".tsv");
-        int rc = runMavenWithDepGraphExtractor(cwd, extractorJarPath, graphFile, extraMavenArgs);
-        if (!Files.isRegularFile(graphFile) || Files.size(graphFile) == 0) {
-            System.err.println("dep-graph-extractor failed (mvn rc=" + rc + ")");
-            System.exit(1);
-        }
 
-        // 3. parse graph
-        Map<String, Path> gaToDir = new HashMap<>();
-        Map<String, Set<String>> upstreamOf = new HashMap<>();   // ga -> direct upstreams
-        Map<String, Set<String>> downstreamOf = new HashMap<>(); // ga -> direct downstreams
-
-        try (BufferedReader r = Files.newBufferedReader(graphFile)) {
-            String line;
-            while ((line = r.readLine()) != null) {
-                String[] parts = line.split("\t", -1);
-                if (parts.length < 3) continue;
-                switch (parts[0]) {
-                    case "P" -> {
-                        gaToDir.put(parts[1], Paths.get(parts[2]).toAbsolutePath().normalize());
-                        upstreamOf.computeIfAbsent(parts[1], k -> new HashSet<>());
-                        downstreamOf.computeIfAbsent(parts[1], k -> new HashSet<>());
-                    }
-                    case "D" -> {
-                        upstreamOf.computeIfAbsent(parts[1], k -> new HashSet<>()).add(parts[2]);
-                        downstreamOf.computeIfAbsent(parts[2], k -> new HashSet<>()).add(parts[1]);
-                    }
-                }
+        // Reading the reactor costs a full pass over every pom.xml, which is a steep
+        // price to pay on every invocation of a local dev loop. When
+        // DEP_GRAPH_EXTRACTOR__REUSE_IF_FRESH is set, keep a stamp of the reactor's
+        // poms next to the graph and re-extract only once one of them changes.
+        // Off by default, so CI always extracts from scratch.
+        Path stampFile = Paths.get(graphFile + ".stamp");
+        String stamp = reactorPomStamp(cwd, extraMavenArgs, extractorJarPath);
+        if (reuseIfFresh() && graphIsFresh(graphFile, stampFile, stamp)) {
+            System.err.println("[CiComputeBuildScopes] Reusing cached dependency graph (no pom.xml changed): " + relative(cwd, graphFile));
+        } else {
+            int rc = runMavenWithDepGraphExtractor(cwd, extractorJarPath, graphFile, extraMavenArgs);
+            if (!Files.isRegularFile(graphFile) || Files.size(graphFile) == 0) {
+                System.err.println("dep-graph-extractor failed (mvn rc=" + rc + ")");
+                System.exit(1);
             }
+            Files.writeString(stampFile, stamp);
         }
 
-        // 3b. Quarkus extension pairing: the extension-descriptor goal on a
-        //     runtime module resolves its -deployment counterpart at build time.
-        //     Inject a synthetic edge so both land in the same build set.
-        //     This matches any <ga> / <ga>-deployment pair, not just Quarkus
-        //     extensions — that is safe: the worst case is a non-extension pair
-        //     gets pulled into the same set, which is conservative, not wrong.
-        for (String ga : List.copyOf(gaToDir.keySet())) {
-            String deploymentGa = ga + "-deployment";
-            if (gaToDir.containsKey(deploymentGa)) {
-                upstreamOf.computeIfAbsent(ga, k -> new HashSet<>()).add(deploymentGa);
-                downstreamOf.computeIfAbsent(deploymentGa, k -> new HashSet<>()).add(ga);
-            }
-        }
+        // 3. parse graph (shared with script/dev/Dev.java, so both agree on its shape)
+        DepGraph graph = DepGraph.parse(graphFile);
+        Map<String, Path> gaToDir = graph.gaToDir;
 
         // 4. resolve changed dirs -> GA
         Map<Path, String> dirToGa = gaToDir.entrySet().stream()
@@ -149,17 +130,17 @@ public class CiComputeBuildScopes {
         for (Path d : changedModuleDirs) {
             String ga = dirToGa.get(d);
             if (ga == null) {
-                System.err.println("warn: no maven project at " + d);
+                System.err.println("note: ignoring " + relative(cwd, d) + " — it has a pom.xml but is not a module of this reactor");
                 continue;
             }
             changed.add(ga);
         }
 
         // 5. affected = changed + transitive downstream
-        Set<String> affected = traverse(changed, downstreamOf);
+        Set<String> affected = DepGraph.traverse(changed, graph.downstreamOf);
 
         // 6. upstream = transitive upstream of affected, minus affected
-        Set<String> upstreamAll = traverse(affected, upstreamOf);
+        Set<String> upstreamAll = DepGraph.traverse(affected, graph.upstreamOf);
         upstreamAll.removeAll(affected);
 
         writeLines(upstreamOut, upstreamAll);
@@ -175,25 +156,83 @@ public class CiComputeBuildScopes {
                 + " ignored=" + ignored);
     }
 
+    /**
+     * Reads a setting from a system property first, then from the environment. The
+     * property form lets an in-process caller (script/dev/Dev.java pulls this
+     * class in via jbang //SOURCES) configure a run without spawning a subprocess.
+     */
+    private static String cfg(String name) {
+        return Optional.ofNullable(System.getProperty(name)).orElseGet(() -> System.getenv(name));
+    }
+
+    private static boolean reuseIfFresh() {
+        return "true".equalsIgnoreCase(Optional.ofNullable(cfg("DEP_GRAPH_EXTRACTOR__REUSE_IF_FRESH")).orElse("").strip());
+    }
+
+    private static boolean graphIsFresh(Path graphFile, Path stampFile, String stamp) throws IOException {
+        return Files.isRegularFile(graphFile)
+                && Files.size(graphFile) > 0
+                && Files.isRegularFile(stampFile)
+                && stamp.equals(Files.readString(stampFile).strip());
+    }
+
+    /**
+     * Fingerprints every pom.xml under {@code cwd} (path + size + mtime). Any added,
+     * removed or edited pom changes the digest, and so does a change to the Maven args
+     * used for the extraction, since profiles can change the shape of the reactor, or
+     * to the extractor itself, since that changes what the graph file contains.
+     */
+    private static String reactorPomStamp(Path cwd, List<String> extraMavenArgs, Path extractorJar) throws IOException {
+        List<String> entries = new ArrayList<>();
+        Files.walkFileTree(cwd, new java.nio.file.SimpleFileVisitor<Path>() {
+            @Override
+            public java.nio.file.FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+                if (dir.equals(cwd)) return java.nio.file.FileVisitResult.CONTINUE;
+                String name = dir.getFileName().toString();
+                // target/ holds build output, node_modules/ vendored deps, and dot-dirs
+                // hold tool state (including .kie-dev, where this stamp lives).
+                boolean prune = name.equals("target") || name.equals("node_modules") || name.startsWith(".");
+                return prune ? java.nio.file.FileVisitResult.SKIP_SUBTREE : java.nio.file.FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public java.nio.file.FileVisitResult visitFile(Path file, java.nio.file.attribute.BasicFileAttributes attrs) {
+                if (file.getFileName().toString().equals("pom.xml")) {
+                    entries.add(cwd.relativize(file) + ":" + attrs.size() + ":" + attrs.lastModifiedTime().toMillis());
+                }
+                return java.nio.file.FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public java.nio.file.FileVisitResult visitFileFailed(Path file, IOException exc) {
+                return java.nio.file.FileVisitResult.CONTINUE;
+            }
+        });
+        Collections.sort(entries);
+        entries.add("args:" + String.join(" ", extraMavenArgs));
+        entries.add("extractor:" + Files.size(extractorJar) + ":" + Files.getLastModifiedTime(extractorJar).toMillis());
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(String.join("\n", entries).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(digest.length * 2);
+            for (byte b : digest) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        }
+    }
+
+    /** Paths read better relative to the repository than as absolute ones. */
+    private static String relative(Path cwd, Path path) {
+        return path.startsWith(cwd) ? cwd.relativize(path).toString() : path.toString();
+    }
+
     private static boolean isUnderSrcDir(Path cwd, Path dir) {
         Path rel = cwd.relativize(dir.toAbsolutePath().normalize());
         for (Path part : rel) {
             if ("src".equals(part.toString())) return true;
         }
         return false;
-    }
-
-    private static Set<String> traverse(Set<String> seeds, Map<String, Set<String>> edges) {
-        Set<String> visited = new LinkedHashSet<>();
-        Deque<String> stack = new ArrayDeque<>(seeds);
-        while (!stack.isEmpty()) {
-            String cur = stack.pop();
-            if (visited.add(cur)) {
-                Set<String> next = edges.get(cur);
-                if (next != null) stack.addAll(next);
-            }
-        }
-        return visited;
     }
 
     private static void writeLines(Path out, Collection<String> lines) throws IOException {
@@ -231,7 +270,7 @@ public class CiComputeBuildScopes {
     }
 
     private static Path ensureDepGraphExtractorJar(Path cwd) throws IOException, InterruptedException {
-        String override = System.getenv("DEP_GRAPH_EXTRACTOR__JAR");
+        String override = cfg("DEP_GRAPH_EXTRACTOR__JAR");
         if (override != null && !override.isBlank()) {
             Path p = Paths.get(override).toAbsolutePath();
             if (!Files.isRegularFile(p)) {
@@ -298,7 +337,7 @@ public class CiComputeBuildScopes {
         // Windows ships `mvn.cmd`, not `mvn.exe` — ProcessBuilder doesn't go through
         // cmd.exe, so the bare name "mvn" fails to resolve.
         boolean windows = System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
-        return Optional.ofNullable(System.getenv("MVN"))
+        return Optional.ofNullable(cfg("MVN"))
                 .orElse(windows ? "mvn.cmd" : "mvn");
     }
 }
