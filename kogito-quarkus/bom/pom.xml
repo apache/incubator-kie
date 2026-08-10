@@ -39,8 +39,6 @@
     <version.io.quarkiverse.reactivemessaging.http>2.5.0-lts</version.io.quarkiverse.reactivemessaging.http>
     <version.io.quarkiverse.embedded.postgresql>0.8.0</version.io.quarkiverse.embedded.postgresql>
     <version.io.quarkus.camel>3.27.4.1</version.io.quarkus.camel>
-    <!-- CVE-2026-56624: Apache MINA SSHD fixed version -->
-    <version.org.apache.sshd>2.19.0</version.org.apache.sshd>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -105,17 +103,6 @@
         <version>${version.io.quarkus}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <!-- CVE-2026-56624: override sshd-common and sshd-core pinned at 2.12.1 by quarkus-bom -->
-      <dependency>
-        <groupId>org.apache.sshd</groupId>
-        <artifactId>sshd-common</artifactId>
-        <version>${version.org.apache.sshd}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.sshd</groupId>
-        <artifactId>sshd-core</artifactId>
-        <version>${version.org.apache.sshd}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
