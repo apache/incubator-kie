@@ -228,6 +228,8 @@
          This managed entry forces 2.26.1 across all modules inheriting kie-parent.
          https://logging.apache.org/security.html#CVE-2026-49844 -->
     <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
+    <!-- CVE-2026-56624: Apache MINA SSHD fixed version -->
+    <version.org.apache.sshd>2.19.0</version.org.apache.sshd>
     <version.org.apache.maven>3.9.11</version.org.apache.maven>
     <version.org.apache.maven.resolver>1.7.3</version.org.apache.maven.resolver>
     <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
@@ -1847,6 +1849,16 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-server-testdriver-core</artifactId>
         <version>${version.org.infinispan}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-common</artifactId>
+        <version>${version.org.apache.sshd}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-core</artifactId>
+        <version>${version.org.apache.sshd}</version>
       </dependency>
       <dependency>
         <groupId>org.infinispan.protostream</groupId>
