@@ -32,29 +32,12 @@ import org.kie.kogito.codegen.core.io.CollectedResourceProducer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-/**
- * Regression test for https://github.com/apache/incubator-kie-issues/issues/2229
- *
- * <p>
- * Verifies that a BPMN process with many nodes (754 script tasks) can be compiled by
- * the Kogito code generator without hitting the JVM 64KB method-bytecode limit.
- *
- * <p>
- * Previously, all node-initialisation statements were emitted inline into the single
- * {@code process()} method, which overflowed the 64KB limit at roughly 754 nodes.
- * After the fix each node's initialisation is moved into its own private static helper
- * method, so {@code process()} remains small regardless of BPMN size.
- */
-class ProcessGeneratorCodeSizeTest {
+public class ProcessGeneratorCodeSizeTest {
 
     private static final Path BASE_PATH = Paths.get("src/test/resources/").toAbsolutePath();
 
-    /**
-     * The reproducer BPMN has 754 script tasks + 755 sequence flows + start/end events.
-     * It must generate Java code that compiles successfully — no KieMemoryCompilerException.
-     */
     @Test
-    void largeBpmnWith754ScriptTasksCompilesSuccessfully() {
+    void largeBpmnCompilesSuccessfully() {
         Path bpmnFile = BASE_PATH.resolve("codetoolarge/repro-fails.bpmn");
 
         KogitoBuildContext context = JavaKogitoBuildContext.builder()
@@ -68,15 +51,10 @@ class ProcessGeneratorCodeSizeTest {
         assertThatCode(() -> {
             Collection<GeneratedFile> generatedFiles = codegen.generate();
             assertThat(generatedFiles).isNotEmpty();
-        }).as("Code generation of a 754-node BPMN must not throw a 'code too large' error")
+        }).as("Code generation of a large BPMN with so many nodes must not throw a 'code too large' error")
                 .doesNotThrowAnyException();
     }
 
-    /**
-     * Verifies that ProcessMetaData carries per-node and per-connection helper methods,
-     * and that the process() template body only contains helper call statements —
-     * confirming the fix structure is correct.
-     */
     @Test
     void processMetaDataCarriesHelperMethodsForEachNodeAndConnection() {
         List<ProcessExecutableModelGenerator> generators =
@@ -86,15 +64,11 @@ class ProcessGeneratorCodeSizeTest {
 
         org.jbpm.compiler.canonical.ProcessMetaData metadata = generators.get(0).generate();
 
-        // 754 script tasks + 2 events (start/end) = 756 node helpers
-        // + 1 single initConnections helper for all 755 sequence flows
-        // Total helpers must be > 750 for this large BPMN
         assertThat(metadata.getProcessHelperMethods())
                 .as("Each node must have its own helper method, plus one initConnections helper")
                 .hasSizeGreaterThan(750);
 
         // Every helper must be private void with a RuleFlowProcessFactory parameter.
-        // Not static — node lambdas may capture instance fields (e.g. producer_X).
         metadata.getProcessHelperMethods().forEach(m -> {
             assertThat(m.getNameAsString())
                     .matches("initNode_.*|initConnections");
@@ -103,7 +77,7 @@ class ProcessGeneratorCodeSizeTest {
             assertThat(m.getParameters()).hasSize(1);
         });
 
-        // Exactly one initConnections helper — not one per connection
+        // Exactly one initConnections helper
         long connectionsHelperCount = metadata.getProcessHelperMethods().stream()
                 .filter(m -> m.getNameAsString().equals("initConnections"))
                 .count();
@@ -111,8 +85,7 @@ class ProcessGeneratorCodeSizeTest {
                 .as("All connections must be grouped into exactly one initConnections helper")
                 .isEqualTo(1);
 
-        // The process() template body must contain only helper call statements, not
-        // inline node-factory assignments
+        // The process() template body must contain only helper call statements
         String processBody = metadata.getGeneratedClassModel()
                 .findFirst(com.github.javaparser.ast.body.MethodDeclaration.class)
                 .map(com.github.javaparser.ast.body.MethodDeclaration::toString)

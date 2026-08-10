@@ -65,7 +65,6 @@ public class ProcessMetaData {
     private Map<String, CompilationUnit> generatedHandlers = new HashMap<>();
     private Set<CompilationUnit> generatedListeners = new HashSet<>();
 
-    /** Extra private-static helper methods to be added to the generated XxxProcess class. */
     private List<MethodDeclaration> processHelperMethods = new ArrayList<>();
 
     public ProcessMetaData(String processId, String extractedProcessId, String processName, String processVersion, String processPackageName, String processClassName) {

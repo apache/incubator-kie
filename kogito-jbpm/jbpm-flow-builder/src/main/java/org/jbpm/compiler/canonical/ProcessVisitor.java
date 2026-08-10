@@ -96,21 +96,8 @@ public class ProcessVisitor extends AbstractVisitor {
         returnValueEvaluatorBuilderService = ReturnValueEvaluatorBuilderService.instance(contextClassLoader);
     }
 
-    /**
-     * Name of the factory parameter used in every per-node and per-connection helper method.
-     * Using a constant avoids repeated string literals and keeps signatures consistent.
-     */
     private static final String FACTORY_PARAM_NAME = "factory";
 
-    /**
-     * Builds a {@code private void} helper method that accepts a single
-     * {@link RuleFlowProcessFactory} parameter and executes the given body statements.
-     *
-     * <p>
-     * The method is intentionally <em>not</em> {@code static} so that lambda bodies
-     * inside node initialisations (e.g. {@code () -> producer_X}) can capture instance
-     * fields of the generated {@code XxxProcess} class without a compile error.
-     */
     private static MethodDeclaration buildHelperMethod(String name, BlockStmt helperBody) {
         return new MethodDeclaration()
                 .setModifiers(Modifier.Keyword.PRIVATE)
@@ -260,15 +247,9 @@ public class ProcessVisitor extends AbstractVisitor {
                 throw new IllegalStateException("No visitor found for node " + node.getClass().getName());
             }
 
-            // Collect all statements for this node into a dedicated helper method so
-            // that process() never grows large enough to exceed the JVM 64KB method limit.
             BlockStmt nodeBody = new BlockStmt();
             visitor.visitNodeEntryPoint(null, node, nodeBody, variableScope, metadata);
 
-            // Exception scope statements for sub-process nodes reference a local variable
-            // (e.g. compositeContextNodeSubProcess_1) that is declared inside this nodeBody.
-            // They must therefore be appended here, before the helper method is closed,
-            // not written into process() where that variable is out of scope.
             if (node instanceof ContextContainer) {
                 Context exceptionContext = ((ContextContainer) node).getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
                 visitContextExceptionScope(exceptionContext, nodeBody);
@@ -280,7 +261,6 @@ public class ProcessVisitor extends AbstractVisitor {
             String helperName = "initNode_" + node.getId().toSanitizeString();
             metadata.addProcessHelperMethod(buildHelperMethod(helperName, nodeBody));
 
-            // process() just calls the helper, passing the factory local variable
             body.addStatement(new MethodCallExpr(null, helperName)
                     .addArgument(new NameExpr(FACTORY_FIELD_NAME)));
         }
@@ -310,9 +290,6 @@ public class ProcessVisitor extends AbstractVisitor {
             return;
         }
 
-        // All connection statements are one-liners (one factory.connection() call each),
-        // so they all fit safely in a single helper method — even for large BPMNs.
-        // 755 connections × ~40 bytecode bytes = ~28 KB, well within the 64 KB limit.
         BlockStmt connectionsBody = new BlockStmt();
         for (Connection connection : connections) {
             visitConnection(connection, connectionsBody);
