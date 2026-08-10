@@ -371,6 +371,7 @@ public class ProcessGenerator {
                 .setName(targetTypeName)
                 .setModifiers(Modifier.Keyword.PUBLIC);
         ProcessMetaData processMetaData = processExecutable.generate();
+        additionalClasses.addAll(processMetaData.getNodeBuilderClasses());
 
         ConstructorDeclaration constructor = getConstructorDeclaration()
                 .addParameter(appCanonicalName, APPLICATION)

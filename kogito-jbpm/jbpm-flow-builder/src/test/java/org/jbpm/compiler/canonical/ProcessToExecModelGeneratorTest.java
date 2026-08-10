@@ -19,6 +19,7 @@
 package org.jbpm.compiler.canonical;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.jbpm.process.core.datatype.impl.type.IntegerDataType;
 import org.jbpm.process.core.datatype.impl.type.ObjectDataType;
@@ -31,6 +32,11 @@ import org.kie.api.definition.process.WorkflowElementIdentifier;
 import org.kie.api.definition.process.WorkflowProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -198,5 +204,63 @@ public class ProcessToExecModelGeneratorTest {
 
         ProcessMetaData processMetadata = ProcessToExecModelGenerator.INSTANCE.generate(process);
         assertThat(processMetadata).as("Dumper should return non null class for process").isNotNull();
+    }
+
+    @Test
+    public void testLargeProcessDoesNotOverflowMethodSize() {
+        int nodeCount = 200;
+
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("com.example.largeProcess");
+        factory.name("largeProcess")
+                .packageName("com.example")
+                .dynamic(false)
+                .version("1.0");
+
+        WorkflowElementIdentifier startId = WorkflowElementIdentifierFactory.fromExternalFormat("start");
+        factory.startNode(startId).name("start").done();
+
+        WorkflowElementIdentifier prevId = startId;
+        for (int i = 0; i < nodeCount; i++) {
+            WorkflowElementIdentifier actionId = WorkflowElementIdentifierFactory.fromExternalFormat("action_" + i);
+            factory.actionNode(actionId)
+                    .name("Action " + i)
+                    .action("java", "System.out.println(\"step " + i + "\");")
+                    .done();
+            factory.connection(prevId, actionId);
+            prevId = actionId;
+        }
+
+        WorkflowElementIdentifier endId = WorkflowElementIdentifierFactory.fromExternalFormat("end");
+        factory.endNode(endId).name("end").terminate(false).done();
+        factory.connection(prevId, endId);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        ProcessMetaData processMetadata = ProcessToExecModelGenerator.INSTANCE.generate(process);
+        assertThat(processMetadata).isNotNull();
+
+        // 200 node builder classes + 1 connections class
+        List<CompilationUnit> nodeBuilderClasses = processMetadata.getNodeBuilderClasses();
+        assertThat(nodeBuilderClasses).as("Expected one builder class per node (200 action + 1 start + 1 end) plus 1 connections class")
+                .hasSize(nodeCount + 2 + 1); // start + 200 actions + end = 202 nodes + 1 connections = 203
+
+        // The main process() method should dispatch via new XxxNode().build(factory) calls
+        MethodDeclaration processMethod = processMetadata.getGeneratedClassModel()
+                .findFirst(MethodDeclaration.class, m -> m.getNameAsString().equals("process"))
+                .orElseThrow(() -> new AssertionError("process() method not found"));
+
+        long dispatchCallCount = processMethod.getBody().orElseThrow()
+                .getStatements().stream()
+                .filter(stmt -> stmt instanceof ExpressionStmt)
+                .map(stmt -> ((ExpressionStmt) stmt).getExpression())
+                .filter(expr -> expr instanceof com.github.javaparser.ast.expr.MethodCallExpr)
+                .map(expr -> (com.github.javaparser.ast.expr.MethodCallExpr) expr)
+                .filter(call -> call.getScope().isPresent() && call.getScope().get() instanceof ObjectCreationExpr)
+                .count();
+
+        // 200 action nodes + 1 start + 1 end + 1 connections class = 203 dispatch calls
+        assertThat(dispatchCallCount)
+                .as("process() body should contain one new XxxNode().build(factory) call per node class plus one for connections")
+                .isEqualTo(nodeCount + 2 + 1);
     }
 }

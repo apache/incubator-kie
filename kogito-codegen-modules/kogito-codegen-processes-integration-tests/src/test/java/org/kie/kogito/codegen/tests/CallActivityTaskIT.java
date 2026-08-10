@@ -217,7 +217,7 @@ public class CallActivityTaskIT extends AbstractCodegenIT {
     }
 
     /**
-     * Verifies that a subprocess whose process id contains hyphens 
+     * Verifies that a subprocess whose process id contains hyphens
      */
     @Test
     public void testCallActivityWithHyphenatedSubProcessId() throws Exception {

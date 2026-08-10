@@ -225,6 +225,9 @@ public class ProcessCodeGenerationSupport {
         for (CompilationUnit handler : metadata.getGeneratedHandlers().values()) {
             writeCompilationUnit(handler);
         }
+        for (CompilationUnit nodeBuilder : metadata.getNodeBuilderClasses()) {
+            writeCompilationUnit(nodeBuilder);
+        }
     }
 
     private void writeCompilationUnit(CompilationUnit unit) throws IOException {
