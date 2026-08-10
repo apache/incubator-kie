@@ -156,12 +156,12 @@
     <version.io.smallrye.mutiny>2.9.5</version.io.smallrye.mutiny>
     <version.io.smallrye.openapi.core>4.0.12</version.io.smallrye.openapi.core>
     <version.io.smallrye.reactive.messaging.in.memory>4.28.0</version.io.smallrye.reactive.messaging.in.memory>
-    <version.io.smallrye.reactive.mutiny-vertx-web-client>3.21.3</version.io.smallrye.reactive.mutiny-vertx-web-client>
+    <version.io.smallrye.reactive.mutiny-vertx-web-client>3.21.6</version.io.smallrye.reactive.mutiny-vertx-web-client>
     <!-- Mutiny Zero Flow Adapters -->
     <version.io.smallrye.reactive.mutiny-zero>1.1.1</version.io.smallrye.reactive.mutiny-zero>
     <version.io.swagger.core.v3>2.2.38</version.io.swagger.core.v3>
     <version.io.swagger.parser.v3>2.1.34</version.io.swagger.parser.v3>
-    <version.io.vertx>4.5.27</version.io.vertx>
+    <version.io.vertx>4.5.31</version.io.vertx>
     <version.it.unimi.dsi.fastutil>8.5.11</version.it.unimi.dsi.fastutil>
     <version.jacoco.plugin>0.8.11</version.jacoco.plugin>
     <version.jakarta.activation>2.0.3</version.jakarta.activation>
@@ -205,7 +205,7 @@
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
     <version.net.java.dev.glazedlists>1.8.0</version.net.java.dev.glazedlists>
     <version.net.minidev.jsonsmart>2.4.10</version.net.minidev.jsonsmart>
-    <version.net.sf.saxon.Saxon-HE>12.7</version.net.sf.saxon.Saxon-HE>
+    <version.net.sf.saxon.Saxon-HE>12.10</version.net.sf.saxon.Saxon-HE>
     <version.net.thisptr.jackson-jq>1.0.0-preview.20240207</version.net.thisptr.jackson-jq>
     <version.org.antlr>3.5.2</version.org.antlr>
     <version.org.antlr.ST4>4.0.7</version.org.antlr.ST4>
@@ -223,6 +223,11 @@
     <version.org.apache.groovy>4.0.29</version.org.apache.groovy>
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
     <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
+    <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
+         quarkus-bom:3.27.4.1 promotes it to 2.25.1. Both are below the minimum safe version 2.25.5.
+         This managed entry forces 2.26.1 across all modules inheriting kie-parent.
+         https://logging.apache.org/security.html#CVE-2026-49844 -->
+    <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
     <version.org.apache.maven>3.9.11</version.org.apache.maven>
     <version.org.apache.maven.resolver>1.7.3</version.org.apache.maven.resolver>
     <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
@@ -314,7 +319,7 @@
     <!-- OpenRewrite plugin -->
     <version.rewrite.maven.plugin>4.42.0</version.rewrite.maven.plugin>
     <version.rewrite.testing.frameworks>1.22.0</version.rewrite.testing.frameworks>
-    <version.shade.plugin>3.3.0</version.shade.plugin>
+    <version.maven-shade-plugin>3.5.3</version.maven-shade-plugin>
     <version.shared.utils>3.4.2</version.shared.utils>
     <!-- simple-jndi is a small library that helps us avoid JNDI error messages during testing -->
     <version.simple-jndi>0.11.4.1</version.simple-jndi>
@@ -1336,6 +1341,14 @@
             <artifactId>lz4-java</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
+             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.27.4.1 (to 2.25.1).
+             Both are vulnerable; this pins the version to 2.26.1 for all inheriting modules. -->
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${version.org.apache.logging.log4j}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
@@ -2873,6 +2886,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
+          <version>${version.maven-shade-plugin}</version>
         </plugin>
         <!-- This plugin's configuration is used to store Eclipse m2e settings only.
              It has no influence on the Maven build itself. -->

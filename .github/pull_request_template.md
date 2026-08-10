@@ -20,7 +20,7 @@
 **Thank you for submitting this pull request**
 
 **NOTE!:** Double-check the target branch for this PR.
-The default is `main` so it will target Drools 8 / Kogito.
+The default is `main`.
 
 **Ports** If a forward-port or a backport is needed, paste the forward port PR here
 
@@ -30,7 +30,7 @@ The default is `main` so it will target Drools 8 / Kogito.
 
 * [link](https://www.example.com)
 
-**referenced Pull Requests**: _(please edit the URLs of referenced pullrequests if they exist)_
+**Referenced Pull Requests**: _(please edit the URLs of referenced pull requests if they exist)_
 
 * paste the link(s) from GitHub here
 * link 2
@@ -38,25 +38,61 @@ The default is `main` so it will target Drools 8 / Kogito.
 
 <details>
 <summary>
-How to replicate CI configuration locally?
+How to replicate the CI locally
 </summary>
 
-Build Chain tool does "simple" maven build(s), the builds are just Maven commands, but because the repositories relates and depends on each other and any change in API or class method could affect several of those repositories there is a need to use [build-chain tool](https://github.com/kiegroup/github-action-build-chain) to handle cross repository builds and be sure that we always use latest version of the code for each repository.
- 
-[build-chain tool](https://github.com/kiegroup/github-action-build-chain) is a build tool which can be used on command line locally or in Github Actions workflow(s), in case you need to change multiple repositories and send multiple dependent pull requests related with a change you can easily reproduce the same build by executing it on Github hosted environment or locally in your development environment. See [local execution](https://github.com/kiegroup/github-action-build-chain#local-execution) details to get more information about it.
+The CI does "simple" maven build(s). All commands can be run from the repository root.
+
+**Quick build of just your changed modules and their dependents** (mirrors what CI does on a PR):
+
+```shell
+# 1. Build upstream dependencies of your changes (skip tests for speed)
+mvn -T 1C --batch-mode -fae -DskipTests -DskipITs \
+    -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true \
+    -pl <upstream-modules> install
+
+# 2. Build your changed modules and their transitive dependents (with tests)
+mvn --batch-mode -fae -Dreproducible \
+    -pl <affected-modules> install
+```
+
+To compute `<upstream-modules>` and `<affected-modules>` automatically (requires [JBang](https://www.jbang.dev/)):
+
+```shell
+jbang script/ci/CiComputeBuildScopes.java \
+    <changed-files.txt> \
+    <upstream-modules.txt> \
+    <affected-modules.txt> \
+    <changed-modules.txt>
+```
+
+**Full build** (equivalent to what runs on every push to `main`):
+
+```shell
+mvn --batch-mode -fae -Dfull -Dreproducible install
+```
+
+`-Dfull` additionally builds the distribution modules and generates Javadoc JARs.
+
+**Useful flags:**
+
+| Flag | Effect |
+|---|---|
+| `-Dquickly` | Skip tests, Checkstyle, formatter, Enforcer, ArchUnit |
+| `-DskipTests` | Skip unit tests |
+| `-DskipITs` | Skip integration tests |
+| `-Denforcer.skip=true` | Skip Enforcer plugin |
+| `-Dcheckstyle.skip=true` | Skip Checkstyle |
+| `-Dformatter.skip=true` | Skip formatter |
+| `-Darchunit.skip=true` | Skip ArchUnit |
+
 </details>
 
 <details>
 <summary>
-How to retest this PR or trigger a specific build:
+How to retest this PR or trigger a specific build
 </summary>
 
-- for <b>pull request and downstream checks</b>  
-  - Push a new commit to the PR. An empty commit would be enough.
+- To **re-run CI**: push a new commit to the PR (an empty commit is enough: `git commit --allow-empty -m "re-trigger CI"`).
 
-- for a <b>full downstream build</b>
-  - for <b>github actions</b> job: add the label `run_fdb`
-
-- for <b>Jenkins PR check only</b>
-  - If you are an ASF committer for KIE podling, login to Jenkins (https://ci-builds.apache.org/job/KIE/job/drools/), go to the specific PR job, and click on `Build Now` button.
 </details>

@@ -43,10 +43,13 @@
 
     <!-- Normal dependency versions -->
     <version.ch.qos.logback>1.5.35</version.ch.qos.logback>
-    <version.org.apache.logging.log4j>2.22.1</version.org.apache.logging.log4j>
+    <!-- CVE-2026-49844: log4j-api versions below 2.25.5 are vulnerable. Upgrade log4j to 2.26.1.
+         This covers log4j-to-slf4j (explicitly managed) and log4j-api (promoted by quarkus-bom to 2.25.1).
+         https://logging.apache.org/security.html#CVE-2026-49844 -->
+    <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
     <version.com.thoughtworks.xstream>1.4.21</version.com.thoughtworks.xstream>
     <version.io.quarkiverse.operatorsdk>6.6.7</version.io.quarkiverse.operatorsdk>
-    <version.io.quarkus>3.27.4.1</version.io.quarkus>
+    <version.io.quarkus>3.27.5.1</version.io.quarkus>
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
     <version.org.apache.commons.text>1.14.0</version.org.apache.commons.text>
     <version.org.apache.openjpa>4.0.0</version.org.apache.openjpa>
@@ -176,6 +179,11 @@
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>${version.ch.qos.logback}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${version.org.apache.logging.log4j}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>

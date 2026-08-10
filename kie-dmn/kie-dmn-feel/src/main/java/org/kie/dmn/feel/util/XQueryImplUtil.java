@@ -26,11 +26,18 @@ import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.SaxonApiException;
 
-import java.util.regex.Pattern;
-
 public class XQueryImplUtil {
 
-    private static final Pattern XML_CHARACTER_REFERENCES_PATTERN = Pattern.compile("['\"&<>]");
+    /** Shared across all calls. Thread-safe; expensive to construct. One instance per JVM is sufficient.
+     * See Saxon s9api {@link net.sf.saxon.s9api.Processor} Javadoc. */
+    private static final Processor PROCESSOR = new Processor(false);
+
+    /**
+     * Shared across all calls. Concurrent use is permitted, but error messages may not be
+     * attributed to the correct thread under concurrent error conditions.
+     * See Saxon s9api {@link net.sf.saxon.s9api.XQueryCompiler} Javadoc.
+     */
+    private static final XQueryCompiler COMPILER = PROCESSOR.newXQueryCompiler();
 
     private XQueryImplUtil() {
         // Util class with static methods only.
@@ -50,9 +57,7 @@ public class XQueryImplUtil {
 
      static <T> T evaluateXQueryExpression(String expression, Class<T> expectedTypeResult) {
          try {
-             Processor processor = new Processor(false);
-             XQueryCompiler compiler = processor.newXQueryCompiler();
-             XQueryExecutable executable = compiler.compile(expression);
+             XQueryExecutable executable = COMPILER.compile(expression);
              XQueryEvaluator queryEvaluator = executable.load();
              XdmItem resultItem = queryEvaluator.evaluateSingle();
 
@@ -66,22 +71,38 @@ public class XQueryImplUtil {
          } catch (SaxonApiException e) {
              throw new IllegalArgumentException(e);
          }
-    }
+     }
 
     /**
-     * It replaces all the XML Character References (&, ", ', <, >) in a given input string with their "escaping" characters.
-     * This is required to run XPath functions containing XML Character References.
-     * @param input A string input representing one of the parameter of managed functions
-     * @return A sanitized string
+     * Escapes XML special characters ({@code & " ' < >}) so the value is safe to embed
+     * as an XPath string literal. Returns {@code null} unchanged; returns the original
+     * reference if no escaping is needed.
      */
     static String escapeXmlCharactersReferencesForXPath(String input) {
-        if (input != null && XML_CHARACTER_REFERENCES_PATTERN.matcher(input).find()) {
-            input = input.contains("&") ? input.replace("&", "&amp;") : input;
-            input = input.contains("\"") ? input.replace("\"",  "&quot;") : input;
-            input = input.contains("'") ? input.replace("'",  "&apos;") : input;
-            input = input.contains("<") ? input.replace("<",  "&lt;") : input;
-            input = input.contains(">") ? input.replace(">",  "&gt;") : input;
+        if (input == null) {
+            return null;
         }
-        return input;
+        StringBuilder sb = null;
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+            String replacement = switch (ch) {
+                case '&'  -> "&amp;";
+                case '"'  -> "&quot;";
+                case '\'' -> "&apos;";
+                case '<'  -> "&lt;";
+                case '>'  -> "&gt;";
+                default   -> null;
+            };
+            if (replacement != null) {
+                if (sb == null) {
+                    sb = new StringBuilder(input.length() + 16);
+                    sb.append(input, 0, i);
+                }
+                sb.append(replacement);
+            } else if (sb != null) {
+                sb.append(ch);
+            }
+        }
+        return sb != null ? sb.toString() : input;
     }
 }

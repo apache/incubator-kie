@@ -36,7 +36,7 @@
     <allowedPomsList>org.kie.kogito:kogito-spring-boot-bom</allowedPomsList>
     <!-- Aligned with Spring Boot Cloud (spring-cloud-kubernetes-fabric8 5.0.1 declares fabric8 7.4.0) -->
     <version.io.fabric8>7.4.0</version.io.fabric8>
-    <version.io.netty>4.2.15.Final</version.io.netty>
+    <version.io.netty>4.2.16.Final</version.io.netty>
     <version.jakarta.servlet>6.0.0</version.jakarta.servlet>
     <!-- This is needed to override the default version inherited from kie-parent-drools -->
     <version.mongodb-driver-sync>5.6.4</version.mongodb-driver-sync>
@@ -48,6 +48,10 @@
          2025.1.1 specifically targets Spring Boot 4.0.1+. -->
     <!-- https://github.com/spring-cloud/spring-cloud-release/wiki/Spring-Cloud-2025.1-Release-Notes -->
     <version.org.springframework.cloud>2025.1.1</version.org.springframework.cloud>
+    <!-- CVE-2026-49844: Spring Boot 4.0.7 sets log4j2.version=2.25.4 which is vulnerable.
+         Override the version property inherited from kie-parent to 2.26.1 (minimum 2.25.5).
+         https://logging.apache.org/security.html#CVE-2026-49844 -->
+    <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
   </properties>
   <dependencyManagement>
     <dependencies>

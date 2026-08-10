@@ -31,14 +31,14 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
-    <version.io.quarkus>3.27.4.1</version.io.quarkus>
+    <version.io.quarkus>3.27.5.1</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
     <version.io.quarkiverse.openapi.generator>2.16.0-lts</version.io.quarkiverse.openapi.generator>
     <version.io.quarkiverse.asyncapi>1.0.5</version.io.quarkiverse.asyncapi>
     <version.io.quarkiverse.reactivemessaging.http>2.5.0-lts</version.io.quarkiverse.reactivemessaging.http>
     <version.io.quarkiverse.embedded.postgresql>0.8.0</version.io.quarkiverse.embedded.postgresql>
-    <version.io.quarkus.camel>3.27.4.1</version.io.quarkus.camel>
+    <version.io.quarkus.camel>3.27.5.1</version.io.quarkus.camel>
   </properties>
   <dependencyManagement>
     <dependencies>
