@@ -310,20 +310,40 @@ public class ProcessVisitor extends AbstractVisitor {
                 }
             }
 
-            // Build a lookup of producer field name -> fully-qualified type.
+            // Build a lookup of producer field name -> fully-qualified Supplier type.
             // This must be done AFTER visitNodeEntryPoint because triggers are registered
             // inside the visitor via metadata.addTrigger().
-            // Use MessageProducer<?> as the parameter type so the node builder class is
-            // compatible with both the Quarkus path (generates <ProcessName>MessageProducer_<id>)
-            // and the Maven plugin path (uses MessageProducer<DataType> directly).
+            //
+            // IMPORTANT — CDI late injection: in the Quarkus path the producer field on the
+            // outer process class is @Inject-ed after construction, so its value is null when
+            // process() runs (triggered by activate() in the constructor).  We therefore store
+            // the producer as a Supplier so the lambda reads the field lazily at execution time.
+            //   node builder field : Supplier<MessageProducer<T>> producer__xyz
+            //   build() lambda     : () -> producer__xyz.get()     ← evaluated late
+            //   dispatch call      : new NodeClass(() -> producer__xyz).build(factory)
+            //                        ↑ closes over `this` in the outer class; evaluated late
+            Set<String> producerFieldNames = new java.util.HashSet<>();
             Map<String, String> producerFieldTypes = new java.util.HashMap<>();
             for (TriggerMetaData trigger : metadata.getTriggers()) {
                 if (trigger.getType() == TriggerMetaData.TriggerType.ProduceMessage) {
                     String fieldName = "producer_" + trigger.getOwnerId();
                     String dataType = trigger.getDataType() != null ? trigger.getDataType() : "java.lang.Object";
-                    String typeName = org.kie.kogito.event.impl.MessageProducer.class.getCanonicalName() + "<" + dataType + ">";
-                    producerFieldTypes.put(fieldName, typeName);
+                    // Supplier<MessageProducer<DataType>>
+                    String supplierType = java.util.function.Supplier.class.getCanonicalName()
+                            + "<" + org.kie.kogito.event.impl.MessageProducer.class.getCanonicalName()
+                            + "<" + dataType + ">>";
+                    producerFieldNames.add(fieldName);
+                    producerFieldTypes.put(fieldName, supplierType);
                 }
+            }
+
+            // For every bare NameExpr in the body that references a producer field, rewrite
+            // it to a .get() call so the supplier is dereferenced at execution time, not at
+            // build time.  E.g.  () -> producer__xyz  →  () -> producer__xyz.get()
+            if (!producerFieldNames.isEmpty()) {
+                helperBody.findAll(com.github.javaparser.ast.expr.NameExpr.class).stream()
+                        .filter(ne -> producerFieldNames.contains(ne.getNameAsString()))
+                        .forEach(ne -> ne.replace(new MethodCallExpr(ne.clone(), "get")));
             }
 
             // Collect all bare NameExprs in the body that refer to outer-class fields.
@@ -332,16 +352,21 @@ public class ProcessVisitor extends AbstractVisitor {
             //   "producer_*" - MessageProducer fields (AbstractNodeVisitor: ProduceMessage actions)
             // We use a LinkedHashMap to preserve insertion order and store fieldName -> type.
             java.util.LinkedHashMap<String, String> outerFields = new java.util.LinkedHashMap<>();
+            // Scan after the producer rewrite so NameExprs are gone and MethodCallExprs remain
+            helperBody.findAll(com.github.javaparser.ast.expr.MethodCallExpr.class).stream()
+                    .filter(mc -> mc.getScope().filter(s -> s instanceof NameExpr).isPresent()
+                            && "get".equals(mc.getNameAsString())
+                            && mc.getArguments().isEmpty())
+                    .map(mc -> ((NameExpr) mc.getScope().get()).getNameAsString())
+                    .filter(producerFieldTypes::containsKey)
+                    .distinct()
+                    .forEach(name -> outerFields.put(name, producerFieldTypes.get(name)));
+            // Also detect "app" (plain NameExpr, not rewritten)
             helperBody.findAll(com.github.javaparser.ast.expr.NameExpr.class).stream()
                     .map(com.github.javaparser.ast.expr.NameExpr::getNameAsString)
-                    .distinct()
-                    .forEach(name -> {
-                        if ("app".equals(name)) {
-                            outerFields.put("app", org.kie.kogito.Application.class.getCanonicalName());
-                        } else if (name.startsWith("producer_") && producerFieldTypes.containsKey(name)) {
-                            outerFields.put(name, producerFieldTypes.get(name));
-                        }
-                    });
+                    .filter("app"::equals)
+                    .findFirst()
+                    .ifPresent(name -> outerFields.put(name, org.kie.kogito.Application.class.getCanonicalName()));
 
             if (!outerFields.isEmpty()) {
                 // Add a private final field for each outer reference
@@ -362,9 +387,21 @@ public class ProcessVisitor extends AbstractVisitor {
 
             metadata.addNodeBuilderClass(cu);
 
-            // Emit the dispatch call into process() — pass outer fields as constructor args
+            // Emit the dispatch call into process().
+            // For producer fields: wrap in a lambda () -> producer__xyz so the supplier
+            // closes over `this` (the outer process instance) and reads the CDI-injected
+            // field lazily at execution time rather than capturing null at build time.
             com.github.javaparser.ast.NodeList<com.github.javaparser.ast.expr.Expression> ctorArgs = new com.github.javaparser.ast.NodeList<>();
-            outerFields.keySet().forEach(fieldName -> ctorArgs.add(new NameExpr(fieldName)));
+            outerFields.forEach((fieldName, fieldType) -> {
+                if (producerFieldNames.contains(fieldName)) {
+                    // Wrap producer in a no-arg lambda: () -> producer__xyz
+                    ctorArgs.add(new com.github.javaparser.ast.expr.LambdaExpr(
+                            new com.github.javaparser.ast.NodeList<>(),
+                            new NameExpr(fieldName)));
+                } else {
+                    ctorArgs.add(new NameExpr(fieldName));
+                }
+            });
             body.addStatement(new ExpressionStmt(
                     new MethodCallExpr(
                             new ObjectCreationExpr(null, new ClassOrInterfaceType(null, nodeClassName), ctorArgs),
