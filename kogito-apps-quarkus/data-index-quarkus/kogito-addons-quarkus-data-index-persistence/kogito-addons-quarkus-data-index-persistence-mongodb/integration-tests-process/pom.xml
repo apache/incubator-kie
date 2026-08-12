@@ -84,6 +84,22 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- Ensure data-index-service-mongodb binary is built before running integration tests.
+         Build-ordering sentinel only: type=pom + full exclusions adds nothing to classpath.
+         Without this edge the partial CI build skips the service module and the
+         DataIndexMongoDBContainer image is missing at runtime. -->
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>data-index-service-mongodb</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
   <profiles>
     <profile>
