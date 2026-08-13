@@ -141,6 +141,46 @@
       <artifactId>mockito-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Ensure data-index service binaries are built before running integration tests.
+         These are build-ordering sentinels only: type=pom + full exclusions means nothing
+         is added to the classpath. Without these edges the partial CI build skips the
+         service modules and the Testcontainer images are missing at runtime. -->
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>data-index-service-inmemory</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>data-index-service-mongodb</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>data-index-service-postgresql</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>

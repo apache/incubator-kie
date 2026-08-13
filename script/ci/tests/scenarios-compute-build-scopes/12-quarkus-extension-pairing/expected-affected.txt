@@ -45,6 +45,7 @@ org.kie.kogito:data-index-storage-jpa-quarkus
 org.kie.kogito:data-index-storage-postgresql
 org.kie.kogito:data-index-storage-postgresql-reporting
 org.kie.kogito:integration-tests-data-index-service-quarkus
+org.kie.kogito:integration-tests-data-index-service-springboot
 org.kie.kogito:integration-tests-jobs
 org.kie.kogito:integration-tests-jobs-service-common-quarkus
 org.kie.kogito:integration-tests-jobs-service-quarkus
