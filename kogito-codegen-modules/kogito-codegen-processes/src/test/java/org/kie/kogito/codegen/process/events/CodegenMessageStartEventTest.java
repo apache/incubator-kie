@@ -172,10 +172,21 @@ public class CodegenMessageStartEventTest {
                 .collect(Collectors.toList());
         assertThat(processes).hasSize(1);
 
-        CompilationUnit parsedProcess = StaticJavaParser.parse(new String(processes.get(0).contents()));
+        // ProduceEventAction is generated into a node builder class (MessageEndEventNoMappingProcess_node__*.java),
+        // not the process class itself, so we search all files belonging to this process.
+        List<GeneratedFile> processAndNodeBuilders = generatedFiles.stream()
+                .filter(generatedFile -> {
+                    String path = generatedFile.relativePath();
+                    return path.contains("org/kie/kogito/test/MessageEndEventNoMappingProcess");
+                })
+                .collect(Collectors.toList());
 
-        List<ObjectCreationExpr> producerActions = parsedProcess.findAll(ObjectCreationExpr.class,
-                objectCreation -> objectCreation.getType().getNameAsString().equals("ProduceEventAction"));
+        List<ObjectCreationExpr> producerActions = processAndNodeBuilders.stream()
+                .flatMap(f -> StaticJavaParser.parse(new String(f.contents()))
+                        .findAll(ObjectCreationExpr.class,
+                                objectCreation -> objectCreation.getType().getNameAsString().equals("ProduceEventAction"))
+                        .stream())
+                .collect(Collectors.toList());
         assertThat(producerActions).hasSize(1);
         assertThat(producerActions.get(0).getArgument(1))
                 .withFailMessage("A message end event without data mapping has no variable to send, so no variable name must be passed")
