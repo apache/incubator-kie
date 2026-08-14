@@ -300,14 +300,18 @@ public class ProcessVisitor extends AbstractVisitor {
             visitor.visitNodeEntryPoint(null, node, helperBody, variableScope, metadata);
 
             // If this node is a composite context container (e.g. sub-process), inline its
-            // exception scope handling into the same build() body so the local factory variable
-            // is still in scope.  visitSubExceptionScope() in the main process() body skips these.
+            // exception scope handling (and all nested sub-process scopes) into the same
+            // build() body so the local factory variable is still in scope.
+            // visitSubExceptionScope() in the main process() body skips these.
             if (node instanceof ContextContainer contextContainer) {
                 org.jbpm.process.core.Context exScope =
                         contextContainer.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
                 if (exScope != null) {
                     visitContextExceptionScope(exScope, helperBody);
                 }
+            }
+            if (node instanceof NodeContainer nodeContainer) {
+                visitAllSubExceptionScopes(nodeContainer.getNodes(), helperBody);
             }
 
             // Build a lookup of producer field name -> fully-qualified Supplier type.
@@ -553,6 +557,25 @@ public class ProcessVisitor extends AbstractVisitor {
                 // composite node factory variable is still in scope.
                 .filter(container -> !(container instanceof CompositeNode))
                 .map(container -> container.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE))
+                .forEach(context -> visitContextExceptionScope(context, body));
+    }
+
+    /**
+     * Like visitSubExceptionScope but does NOT skip CompositeNode instances.
+     * Used from within a node builder class body, where nested sub-process exception
+     * scopes must be inlined (they are not processed by the main process() body).
+     */
+    private void visitAllSubExceptionScopes(org.kie.api.definition.process.Node[] nodes, BlockStmt body) {
+        Stream.of(nodes)
+                .peek(node -> {
+                    if (node instanceof NodeContainer) {
+                        visitAllSubExceptionScopes(((NodeContainer) node).getNodes(), body);
+                    }
+                })
+                .filter(ContextContainer.class::isInstance)
+                .map(ContextContainer.class::cast)
+                .map(container -> container.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE))
+                .filter(java.util.Objects::nonNull)
                 .forEach(context -> visitContextExceptionScope(context, body));
     }
 }
