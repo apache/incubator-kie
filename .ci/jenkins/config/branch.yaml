@@ -105,5 +105,5 @@ jenkins:
         args: --privileged --group-add docker
   default_tools:
     jdk: jdk_17_latest
-    maven: maven_3.9.11
+    maven: maven_3.9.16
     sonar_jdk: jdk_17_latest
