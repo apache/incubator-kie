@@ -61,7 +61,7 @@ public class DepGraphExtractorParticipant extends AbstractMavenLifecycleParticip
         try (BufferedWriter w = Files.newBufferedWriter(out)) {
             // format:
             // P<TAB>groupId:artifactId<TAB>/abs/basedir
-            // D<TAB>groupId:artifactId<TAB>upstream-groupId:artifactId
+            // D<TAB>groupId:artifactId<TAB>upstream-groupId:artifactId<TAB>scope
             // (one "D" line per direct upstream edge; downstream is the inverse)
             // V<TAB>groupId:artifactId<TAB>version<TAB>packaging
             // L<TAB>/abs/path/to/local/maven/repository
@@ -90,12 +90,17 @@ public class DepGraphExtractorParticipant extends AbstractMavenLifecycleParticip
                 w.write(session.getRequest().getLocalRepository().getBasedir());
                 w.newLine();
             }
+            // The edge set is exactly ProjectDependencyGraph's, unchanged. The 4th field
+            // says *why* the edge exists, which lets consumers tell a module that ships
+            // against an upstream from one that only compiles its tests against it.
             for (MavenProject p : projects) {
                 for (MavenProject up : graph.getUpstreamProjects(p, false)) {
                     w.write("D\t");
                     w.write(ga(p));
                     w.write("\t");
                     w.write(ga(up));
+                    w.write("\t");
+                    w.write(edgeScope(p, ga(up)));
                     w.newLine();
                 }
             }
@@ -121,6 +126,7 @@ public class DepGraphExtractorParticipant extends AbstractMavenLifecycleParticip
                     w.write(ga(p));
                     w.write("\t");
                     w.write(bomGa);
+                    w.write("\timport");
                     w.newLine();
                     bomGas.add(bomGa);
                 }
@@ -141,5 +147,29 @@ public class DepGraphExtractorParticipant extends AbstractMavenLifecycleParticip
 
     private static String ga(MavenProject p) {
         return p.getGroupId() + ":" + p.getArtifactId();
+    }
+
+    /**
+     * Why {@code p} depends on {@code upstreamGa}, as one of:
+     * a Maven dependency scope ({@code compile}, {@code test}, {@code provided},
+     * {@code runtime}, {@code system}), {@code parent} when the edge is only the parent
+     * chain, or {@code plugin} when it comes from a plugin or extension. A declared
+     * dependency wins over the parent chain, because that is the stronger statement.
+     *
+     * <p>Only the reason is new; the edge itself is still whatever
+     * {@link ProjectDependencyGraph} reported, so build scoping is unaffected.
+     */
+    private static String edgeScope(MavenProject p, String upstreamGa) {
+        for (Dependency d : p.getDependencies()) {
+            if (upstreamGa.equals(d.getGroupId() + ":" + d.getArtifactId())) {
+                String scope = d.getScope();
+                return (scope == null || scope.isEmpty()) ? "compile" : scope;
+            }
+        }
+        MavenProject parent = p.getParent();
+        if (parent != null && upstreamGa.equals(ga(parent))) {
+            return "parent";
+        }
+        return "plugin";
     }
 }

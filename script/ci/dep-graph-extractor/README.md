@@ -31,9 +31,9 @@ One file at the path given by `-DdepGraphExtractor.out=<path>` (default `dep-gra
 with three record kinds:
 
 ```
-P    groupId:artifactId    /abs/path/to/module            # one per reactor module
-D    groupId:artifactId    upstream-groupId:artifactId    # one per direct dep edge
-B    groupId:artifactId                                   # marks an in-reactor BOM
+P    groupId:artifactId    /abs/path/to/module                   # one per reactor module
+D    groupId:artifactId    upstream-groupId:artifactId    scope  # one per direct dep edge
+B    groupId:artifactId                                          # marks an in-reactor BOM
 ```
 
 > Separators in the TSV are \<TAB> entries.
@@ -46,6 +46,14 @@ attributed to the module they live under.
 and `<scope>import</scope>` BOM edges from `<dependencyManagement>` — the latter are
 invisible to the standard graph but matter for change propagation, so we read them off
 the original POM model and emit them too.
+
+- The 4th field on a `D` record says **why** the edge exists: a Maven dependency scope
+(`compile`, `test`, `provided`, `runtime`, `system`), or `parent` when the only link is
+the parent chain, or `plugin` when it comes from a plugin or extension, or `import` for a
+BOM import. A declared dependency wins over the parent chain. This does not change which
+edges are emitted, and build scoping ignores it — a test-scope edge still forces a
+rebuild. It exists so tooling can tell what a module *ships* against from what it only
+*tests* against (for example, to separate test-only modules from production ones).
 
 - `B` records call out which of the modules listed in `P` are in-reactor BOMs (a module
 that other modules import via `<scope>import</scope>`). Downstream tooling like

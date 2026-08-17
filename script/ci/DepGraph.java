@@ -43,7 +43,7 @@ import java.util.Set;
  * <p>The file is a TSV of one-letter record types:
  * <pre>
  *   P  groupId:artifactId  /abs/basedir
- *   D  groupId:artifactId  upstream-groupId:artifactId
+ *   D  groupId:artifactId  upstream-groupId:artifactId  scope
  *   V  groupId:artifactId  version                      packaging
  *   L  /abs/path/to/local/maven/repository
  *   B  groupId:artifactId                               (an in-reactor BOM)
@@ -67,6 +67,16 @@ public final class DepGraph {
     public final Set<Path> moduleDirs = new HashSet<>();
     /** The modules that are BOMs. */
     public final Set<String> boms = new LinkedHashSet<>();
+    /**
+     * Why each edge exists, keyed by {@code "dependent|dependency"} — a Maven scope, or
+     * {@code parent} / {@code plugin} / {@code import}. Empty when the graph was written
+     * by an extractor that predates the 4th {@code D} field.
+     *
+     * <p>Build scoping deliberately ignores this: a test-scope edge still means the
+     * downstream module must be rebuilt. It is here for tooling that needs to tell what
+     * ships from what is only tested, such as separating test-only modules.
+     */
+    public final Map<String, String> edgeScopes = new LinkedHashMap<>();
     /** The local Maven repository this graph was read with, or null if not recorded. */
     public Path localRepo;
 
@@ -90,6 +100,9 @@ public final class DepGraph {
                 case "D" -> {
                     if (parts.length < 3) break;
                     graph.addEdge(parts[1], parts[2]);
+                    if (parts.length >= 4 && !parts[3].isEmpty()) {
+                        graph.edgeScopes.put(parts[1] + "|" + parts[2], parts[3]);
+                    }
                 }
                 case "V" -> {
                     if (parts.length < 4) break;
@@ -109,6 +122,17 @@ public final class DepGraph {
     private void addEdge(String dependent, String dependency) {
         upstreamOf.computeIfAbsent(dependent, k -> new LinkedHashSet<>()).add(dependency);
         downstreamOf.computeIfAbsent(dependency, k -> new LinkedHashSet<>()).add(dependent);
+    }
+
+
+    /** Scope of {@code dependent -> dependency}, or null if the graph recorded none. */
+    public String scopeOf(String dependent, String dependency) {
+        return edgeScopes.get(dependent + "|" + dependency);
+    }
+
+    /** True when the only reason {@code dependent} needs {@code dependency} is its tests. */
+    public boolean isTestOnlyEdge(String dependent, String dependency) {
+        return "test".equals(scopeOf(dependent, dependency));
     }
 
     /**
