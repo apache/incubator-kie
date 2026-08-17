@@ -128,14 +128,14 @@ jobs:
           </settings>
           EOF
 
-      # `since=head` needs no history, so a shallow checkout is enough, and it makes
+      # `since=HEAD` needs no history, so a shallow checkout is enough, and it makes
       # the scope depend on the change made below rather than on whatever the pull
       # request happens to touch — otherwise this job's runtime would vary with it.
       - name: 'CHECK :: A clean working copy has nothing to build'
         shell: bash
         run: |
           set -o pipefail
-          make dev scope since=head breadth=changed | tee scope-clean.log
+          make dev scope since=HEAD breadth=changed | tee scope-clean.log
           grep -q 'Nothing has changed' scope-clean.log
 
       - name: 'CHECK :: A change is traced back to the module that contains it'
@@ -144,14 +144,14 @@ jobs:
           set -o pipefail
           mkdir -p drools-util/src/main/resources
           echo 'Dev :: Tests smoke check' > drools-util/src/main/resources/dev-smoke-test.txt
-          make dev scope since=head breadth=changed | tee scope-changed.log
+          make dev scope since=HEAD breadth=changed | tee scope-changed.log
           grep -q 'org.drools:drools-util' scope-changed.log
 
       # The everyday command, unqualified: it has to build the module and, before it,
       # every upstream module that a fresh clone has not installed yet.
       - name: 'CHECK :: And `make dev` builds it'
         shell: bash
-        run: make dev since=head breadth=changed
+        run: make dev since=HEAD breadth=changed
 
       - name: 'CHECK :: It recorded what it did'
         shell: bash

@@ -94,10 +94,10 @@ public class MakefileTest {
 
     @Test
     void overridesArePassedAsEnvironmentVariables() throws Exception {
-        Result r = make("-n", "dev", "since=head", "breadth=changed");
+        Result r = make("-n", "dev", "since=HEAD", "breadth=changed");
 
         assertThat(r.rc).isZero();
-        assertThat(r.output).contains("KIE_DEV_SINCE=head").contains("KIE_DEV_BREADTH=changed");
+        assertThat(r.output).contains("KIE_DEV_SINCE=HEAD").contains("KIE_DEV_BREADTH=changed");
     }
 
     @Test
