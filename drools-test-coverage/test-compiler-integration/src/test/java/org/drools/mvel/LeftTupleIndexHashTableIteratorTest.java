@@ -35,7 +35,7 @@ import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.core.reteoo.MockLeftTupleSink;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 import org.drools.core.util.index.TupleIndexHashTable;
 import org.drools.core.util.index.TupleIndexHashTable.FieldIndexHashTableFullIterator;
 import org.drools.core.util.index.TupleList;

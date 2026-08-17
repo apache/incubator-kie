@@ -21,7 +21,7 @@ package org.drools.tms;
 import org.drools.core.common.ActivationsManager;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 import org.drools.kiesession.MockInternalMatch;
 import org.drools.tms.agenda.TruthMaintenanceSystemInternalMatch;
 

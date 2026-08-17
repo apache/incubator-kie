@@ -24,7 +24,8 @@ import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.SuperCacheFixer;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.marshalling.MarshallerReaderContext;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.kiesession.entrypoints.NamedEntryPoint;
@@ -35,7 +36,7 @@ import java.io.IOException;
 
 import static org.drools.base.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
 
-public class BeliefSystemLogicalCallback extends PropagationEntry.AbstractPropagationEntry implements WorkingMemoryAction {
+public class BeliefSystemLogicalCallback extends AbstractPropagationEntry<ReteEvaluator> implements WorkingMemoryAction {
 
     protected InternalFactHandle handle;
     protected PropagationContext context;

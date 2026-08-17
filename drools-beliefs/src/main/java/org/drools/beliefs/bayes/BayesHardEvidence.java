@@ -23,7 +23,7 @@ import java.util.Arrays;
 import org.drools.tms.beliefsystem.BeliefSystem;
 import org.drools.tms.beliefsystem.ModedAssertion;
 import org.drools.tms.LogicalDependency;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 import org.drools.base.beliefsystem.Mode;
 
 public class BayesHardEvidence<M extends BayesHardEvidence<M>> extends AbstractLinkedListNode<M> implements ModedAssertion<M> {

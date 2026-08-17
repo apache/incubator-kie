@@ -37,8 +37,8 @@ import org.drools.core.reteoo.FromNode.FromMemory;
 import org.drools.core.reteoo.LeftTupleSink;
 import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.TupleMemory;
-import org.drools.core.util.FastIterator;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.FastIterator;
+import org.drools.base.util.LinkedList;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.drools.core.phreak.PhreakJoinNode.updateChildLeftTuple;

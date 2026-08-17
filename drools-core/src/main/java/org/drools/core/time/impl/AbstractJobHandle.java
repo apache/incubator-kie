@@ -19,8 +19,8 @@
 package org.drools.core.time.impl;
 
 import org.drools.base.time.JobHandle;
-import org.drools.core.util.AbstractLinkedListNode;
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.AbstractLinkedListNode;
+import org.drools.base.util.DoubleLinkedEntry;
 
 public abstract class AbstractJobHandle<T extends AbstractJobHandle<T>> extends AbstractLinkedListNode<T> implements JobHandle,
                                                                                                                      DoubleLinkedEntry<T> {

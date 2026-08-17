@@ -4055,6 +4055,104 @@ class MiscDRLParserTest {
     }
 
     @Test
+    void functionWithLambdaExpression() {
+        // incubator-kie-issues#6891 : expression-bodied lambda as a method argument
+        final String text = "function void applyToAll(java.util.List xs, java.util.List out) {\n" +
+                "    xs.forEach(e -> out.add(e));\n" +
+                "}";
+        PackageDescr packageDescr = parseAndGetPackageDescr(text);
+
+        FunctionDescr function = packageDescr.getFunctions().get(0);
+
+        assertThat(function.getName()).isEqualTo("applyToAll");
+        assertThat(function.getParameterTypes()).containsExactly("java.util.List", "java.util.List");
+        assertThat(function.getParameterNames()).containsExactly("xs", "out");
+        assertThat(function.getBody()).isEqualToIgnoringWhitespace("xs.forEach(e -> out.add(e));");
+    }
+
+    @Test
+    void functionWithBlockBodiedLambda() {
+        // incubator-kie-issues#6891 : block-bodied lambda as a method argument
+        final String text = "function void applyToAll(java.util.List xs, java.util.List out) {\n" +
+                "    xs.forEach(e -> { out.add(e); });\n" +
+                "}";
+        PackageDescr packageDescr = parseAndGetPackageDescr(text);
+
+        FunctionDescr function = packageDescr.getFunctions().get(0);
+
+        assertThat(function.getName()).isEqualTo("applyToAll");
+        assertThat(function.getParameterTypes()).containsExactly("java.util.List", "java.util.List");
+        assertThat(function.getParameterNames()).containsExactly("xs", "out");
+        assertThat(function.getBody()).isEqualToIgnoringWhitespace("xs.forEach(e -> { out.add(e); });");
+    }
+
+    @Test
+    void functionWithTypedLambdaParameter() {
+        // incubator-kie-issues#6891 : lambda with an explicitly typed parameter as a method argument
+        final String text = "function void applyToAll(java.util.List xs, java.util.List out) {\n" +
+                "    xs.forEach((Object e) -> out.add(e));\n" +
+                "}";
+        PackageDescr packageDescr = parseAndGetPackageDescr(text);
+
+        FunctionDescr function = packageDescr.getFunctions().get(0);
+
+        assertThat(function.getName()).isEqualTo("applyToAll");
+        assertThat(function.getParameterTypes()).containsExactly("java.util.List", "java.util.List");
+        assertThat(function.getParameterNames()).containsExactly("xs", "out");
+        assertThat(function.getBody()).isEqualToIgnoringWhitespace("xs.forEach((Object e) -> out.add(e));");
+    }
+
+    @Test
+    void functionWithInstanceMethodReference() {
+        // incubator-kie-issues#6891 : instance method reference (obj::m) as a method argument
+        final String text = "function void applyToAll(java.util.List xs, java.util.List out) {\n" +
+                "    xs.forEach(out::add);\n" +
+                "}";
+        PackageDescr packageDescr = parseAndGetPackageDescr(text);
+
+        FunctionDescr function = packageDescr.getFunctions().get(0);
+
+        assertThat(function.getName()).isEqualTo("applyToAll");
+        assertThat(function.getParameterTypes()).containsExactly("java.util.List", "java.util.List");
+        assertThat(function.getParameterNames()).containsExactly("xs", "out");
+        assertThat(function.getBody()).isEqualToIgnoringWhitespace("xs.forEach(out::add);");
+    }
+
+    @Test
+    void functionWithTypeMethodReference() {
+        // incubator-kie-issues#6891 : type method reference (Type::m) inside a stream chain
+        final String text = "function java.util.List toUpperCase(java.util.List<String> xs) {\n" +
+                "    return xs.stream().map(String::toUpperCase).collect(java.util.stream.Collectors.toList());\n" +
+                "}";
+        PackageDescr packageDescr = parseAndGetPackageDescr(text);
+
+        FunctionDescr function = packageDescr.getFunctions().get(0);
+
+        assertThat(function.getName()).isEqualTo("toUpperCase");
+        assertThat(function.getReturnType()).isEqualToIgnoringWhitespace("java.util.List");
+        assertThat(function.getParameterTypes().get(0)).isEqualToIgnoringWhitespace("java.util.List<String>");
+        assertThat(function.getParameterNames().get(0)).isEqualTo("xs");
+        assertThat(function.getBody()).isEqualToIgnoringWhitespace("return xs.stream().map(String::toUpperCase).collect(java.util.stream.Collectors.toList());");
+    }
+
+    @Test
+    void functionWithStreamChainContainingLambda() {
+        // incubator-kie-issues#6891 : stream chain containing a lambda
+        final String text = "function long countLongNames(java.util.List<String> names) {\n" +
+                "    return names.stream().filter(n -> n.length() > 3).count();\n" +
+                "}";
+        PackageDescr packageDescr = parseAndGetPackageDescr(text);
+
+        FunctionDescr function = packageDescr.getFunctions().get(0);
+
+        assertThat(function.getName()).isEqualTo("countLongNames");
+        assertThat(function.getReturnType()).isEqualToIgnoringWhitespace("long");
+        assertThat(function.getParameterTypes().get(0)).isEqualToIgnoringWhitespace("java.util.List<String>");
+        assertThat(function.getParameterNames().get(0)).isEqualTo("names");
+        assertThat(function.getBody()).isEqualToIgnoringWhitespace("return names.stream().filter(n -> n.length() > 3).count();");
+    }
+
+    @Test
     void lhsPatternAnnotation() {
         final String text = "package org.drools\n" +
                 "rule R1\n" +

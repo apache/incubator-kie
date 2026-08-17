@@ -18,6 +18,7 @@
  */
 package org.drools.model.codegen.execmodel;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -290,5 +291,67 @@ public class FunctionsTest extends BaseModelTest {
         Collection<Result> results = getObjectsIntoList(ksession, Result.class );
         assertThat(results.size()).isEqualTo(2);
         assertThat(results.iterator().next().getValue()).isEqualTo("whatever");
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFunctionWithLambda(RUN_TYPE runType) {
+        // incubator-kie-issues#6891 : a lambda in a function body
+        String str =
+                "package com.sample\n" +
+                "import " + Person.class.getName() + ";\n" +
+                "global java.util.List results;\n" +
+                "function String upperCaseNames(java.util.List names) {\n" +
+                "    java.util.List out = new java.util.ArrayList();\n" +
+                "    names.forEach(n -> out.add(((String) n).toUpperCase()));\n" +
+                "    return out.toString();\n" +
+                "}\n" +
+                "rule R\n" +
+                "    when\n" +
+                "        $p : Person()\n" +
+                "    then\n" +
+                "        results.add(upperCaseNames(java.util.Arrays.asList($p.getName())));\n" +
+                "end";
+
+        KieSession ksession = getKieSession(runType, str);
+        List<String> results = new ArrayList<>();
+        ksession.setGlobal("results", results);
+
+        ksession.insert(new Person("Mario", 40));
+        int rulesFired = ksession.fireAllRules();
+
+        assertThat(rulesFired).isEqualTo(1);
+        assertThat(results).containsExactly("[MARIO]");
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFunctionWithMethodReference(RUN_TYPE runType) {
+        // incubator-kie-issues#6891 : a method reference (obj::m) in a function body
+        String str =
+                "package com.sample\n" +
+                "import " + Person.class.getName() + ";\n" +
+                "global java.util.List results;\n" +
+                "function String collectNames(java.util.List names) {\n" +
+                "    java.util.List out = new java.util.ArrayList();\n" +
+                "    names.forEach(out::add);\n" +
+                "    return out.toString();\n" +
+                "}\n" +
+                "rule R\n" +
+                "    when\n" +
+                "        $p : Person()\n" +
+                "    then\n" +
+                "        results.add(collectNames(java.util.Arrays.asList($p.getName())));\n" +
+                "end";
+
+        KieSession ksession = getKieSession(runType, str);
+        List<String> results = new ArrayList<>();
+        ksession.setGlobal("results", results);
+
+        ksession.insert(new Person("Mario", 40));
+        int rulesFired = ksession.fireAllRules();
+
+        assertThat(rulesFired).isEqualTo(1);
+        assertThat(results).containsExactly("[Mario]");
     }
 }

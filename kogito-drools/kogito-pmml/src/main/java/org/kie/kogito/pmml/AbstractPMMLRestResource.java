@@ -45,7 +45,13 @@ public abstract class AbstractPMMLRestResource {
         String errorMessage = String.format("%s: %s",
                 e.getClass().getName(), sanitizedMessage);
 
-        Logger.getLogger(ErrorHandler.class.getName()).log(Level.SEVERE, errorMessage, e);
+        // Build a sanitized exception with no cause chain and no reference to the
+        // original object. The stack trace frames (class/method/file/line metadata
+        // only — no message text) are copied for debugging. The original exception e
+        // is never passed to the log sink in any form.
+        Exception sanitized = new Exception(errorMessage);
+        sanitized.setStackTrace(e.getStackTrace());
+        Logger.getLogger(ErrorHandler.class.getName()).log(Level.SEVERE, errorMessage, sanitized);
 
         return String.format("{\"exception\": \"%s\"}", e.getClass().getSimpleName());
     }

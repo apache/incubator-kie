@@ -31,7 +31,7 @@ import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.event.RuleEventListenerSupport;
 import org.drools.core.event.RuleRuntimeEventSupport;
 import org.drools.core.impl.InternalRuleBase;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.phreak.RuleNetworkEvaluator;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.reteoo.RuntimeComponentFactory;
@@ -97,7 +97,7 @@ public interface ReteEvaluator extends ValueResolver {
         return timerService != null ? timerService.getTimerJobInstances(id) : Collections.emptyList();
     }
 
-    void addPropagation(PropagationEntry propagationEntry);
+    void addPropagation(PropagationEntry<ReteEvaluator> propagationEntry);
 
     long getNextPropagationIdCounter();
 
@@ -142,16 +142,16 @@ public interface ReteEvaluator extends ValueResolver {
     int fireAllRules(AgendaFilter agendaFilter);
     int fireAllRules(AgendaFilter agendaFilter, int max);
 
-    default void setWorkingMemoryActionListener(Consumer<PropagationEntry> listener) {
+    default void setWorkingMemoryActionListener(Consumer<PropagationEntry<ReteEvaluator>> listener) {
         throw new UnsupportedOperationException();
     }
 
-    default Consumer<PropagationEntry> getWorkingMemoryActionListener() {
+    default Consumer<PropagationEntry<ReteEvaluator>> getWorkingMemoryActionListener() {
         return null;
     }
 
-    default void onWorkingMemoryAction(PropagationEntry entry) {
-        Consumer<PropagationEntry> listener = getWorkingMemoryActionListener();
+    default void onWorkingMemoryAction(PropagationEntry<ReteEvaluator> entry) {
+        Consumer<PropagationEntry<ReteEvaluator>> listener = getWorkingMemoryActionListener();
         if (listener != null) {
             listener.accept(entry);
         }

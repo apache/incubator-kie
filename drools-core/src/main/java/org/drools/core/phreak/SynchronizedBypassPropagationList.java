@@ -20,6 +20,7 @@ package org.drools.core.phreak;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.common.ReteEvaluator;
 
 public class SynchronizedBypassPropagationList extends SynchronizedPropagationList {
@@ -31,13 +32,14 @@ public class SynchronizedBypassPropagationList extends SynchronizedPropagationLi
     }
 
     @Override
-    public void addEntry(final PropagationEntry propagationEntry) {
+    public void addEntry(final PropagationEntry<ReteEvaluator> propagationEntry) {
         reteEvaluator.getActivationsManager().executeTask( new ExecutableEntry() {
            @Override
            public void execute() {
                if (executing.compareAndSet( false, true )) {
                    try {
                        propagationEntry.execute( reteEvaluator );
+                       reteEvaluator.onWorkingMemoryAction( propagationEntry );
                    } finally {
                        executing.set( false );
                        flush();
@@ -62,7 +64,7 @@ public class SynchronizedBypassPropagationList extends SynchronizedPropagationLi
     @Override
     public void flush() {
         if (!executing.get()) {
-            PropagationEntry head = takeAll();
+            PropagationEntry<ReteEvaluator> head = takeAll();
             while (head != null) {
                 flush( head );
                 head = takeAll();

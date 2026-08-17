@@ -42,7 +42,7 @@ import org.drools.core.concurrent.GroupEvaluator;
 import org.drools.core.concurrent.SequentialGroupEvaluator;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.phreak.ExecutableEntry;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.phreak.PropagationList;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.phreak.RuleExecutor;
@@ -77,7 +77,7 @@ public class ActivationsManagerImpl implements ActivationsManager {
 
     private boolean firing = false;
 
-    private final org.drools.core.util.LinkedList<RuleAgendaItem> eager = new org.drools.core.util.LinkedList<>();
+    private final org.drools.base.util.LinkedList<RuleAgendaItem> eager = new org.drools.base.util.LinkedList<>();
 
     private final Map<QueryImpl, RuleAgendaItem> queries = new ConcurrentHashMap<>();
 
@@ -274,7 +274,7 @@ public class ActivationsManagerImpl implements ActivationsManager {
     }
 
     @Override
-    public void addPropagation(PropagationEntry propagationEntry) {
+    public void addPropagation(PropagationEntry<ReteEvaluator> propagationEntry) {
         propagationList.addEntry( propagationEntry );
     }
 
@@ -286,7 +286,7 @@ public class ActivationsManagerImpl implements ActivationsManager {
     private int fireLoop(AgendaFilter agendaFilter, int fireLimit) {
         firing = true;
         int fireCount = 0;
-        PropagationEntry head = propagationList.takeAll();
+        PropagationEntry<ReteEvaluator> head = propagationList.takeAll();
         int returnedFireCount;
 
         boolean limitReached = fireLimit == 0; // -1 or > 0 will return false. No reason for user to give 0, just handled for completeness.
@@ -345,8 +345,8 @@ public class ActivationsManagerImpl implements ActivationsManager {
         }
     }
 
-    private PropagationEntry handleRest() {
-        PropagationEntry head = propagationList.takeAll();
+    private PropagationEntry<ReteEvaluator> handleRest() {
+        PropagationEntry<ReteEvaluator> head = propagationList.takeAll();
         if (head == null) {
             firing = false;
         }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.util;
 
 import java.io.Externalizable;
 import java.io.IOException;

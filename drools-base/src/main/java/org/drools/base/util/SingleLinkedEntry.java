@@ -16,12 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.util;
 
-import java.io.Serializable;
 
-public interface Iterator<T>
-    extends
-    Serializable {
-    public T next();
+public interface SingleLinkedEntry<T extends SingleLinkedEntry<T>>{
+    void setNext(T next);
+
+    T getNext();
 }

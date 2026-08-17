@@ -19,7 +19,7 @@
 package org.drools.core.common;
 
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 
 public class ActivationGroupImpl
     implements

@@ -27,8 +27,11 @@ import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.InternalWorkingMemoryEntryPoint;
+import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.Storage;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.core.phreak.actions.Insert;
+import org.drools.core.phreak.actions.Update;
 import org.drools.reliability.core.util.ReliabilityUtils;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
@@ -84,9 +87,9 @@ public class ReliableSessionInitializer {
             return session;
         }
 
-        private void onWorkingMemoryAction(InternalWorkingMemory session, PropagationEntry entry) {
-            if (entry instanceof PropagationEntry.Insert || entry instanceof PropagationEntry.Update) {
-                InternalFactHandle fh = ((PropagationEntry.AbstractPropagationEntry) entry).getHandle();
+        private void onWorkingMemoryAction(InternalWorkingMemory session, PropagationEntry<ReteEvaluator> entry) {
+            if (entry instanceof Insert || entry instanceof Update) {
+                InternalFactHandle fh = entry instanceof Insert ? ((Insert) entry).getHandle() : ((Update) entry).getHandle();
                 if (fh.isValid()) {
                     WorkingMemoryEntryPoint ep = fh.getEntryPoint(session);
                     ((SimpleReliableObjectStore) ep.getObjectStore()).putIntoPersistedStorage(fh, true);

@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.WorkingMemoryAction;
-import org.drools.core.phreak.PropagationEntry;
 import org.jbpm.process.core.event.EventFilter;
 import org.jbpm.process.core.event.EventTypeFilter;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
@@ -393,7 +393,7 @@ public class LightProcessRuntime extends AbstractProcessRuntime {
         this.processInstanceManager.clearProcessInstancesState();
     }
 
-    public class SignalManagerSignalAction extends PropagationEntry.AbstractPropagationEntry implements WorkingMemoryAction {
+    public class SignalManagerSignalAction extends AbstractPropagationEntry<ReteEvaluator> implements WorkingMemoryAction {
 
         private String type;
         private Object event;

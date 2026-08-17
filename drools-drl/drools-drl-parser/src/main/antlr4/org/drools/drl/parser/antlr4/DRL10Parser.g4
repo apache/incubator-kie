@@ -269,11 +269,16 @@ backReferenceExpression : (DOT DOT DIV)+  drlExpression ;
 
 
 /* extending JavaParser methodCall in order to accept drl keywords as method name */
-drlMethodCall
-    : drlIdentifier LPAREN expressionList? RPAREN
-    | THIS LPAREN expressionList? RPAREN
-    | SUPER LPAREN expressionList? RPAREN
-    ;
+  drlMethodCall
+      : drlIdentifier LPAREN drlExpressionList? RPAREN
+      | THIS LPAREN drlExpressionList? RPAREN
+      | SUPER LPAREN drlExpressionList? RPAREN
+      ;
+
+  drlExpressionList
+      : drlExpression (COMMA drlExpression)*
+      ;
+
 
 temporalOperator : DRL_NOT? bop=(DRL_AFTER | DRL_BEFORE | DRL_COINCIDES | DRL_DURING | DRL_INCLUDES | DRL_FINISHES | DRL_FINISHED_BY | DRL_MEETS | DRL_MET_BY | DRL_OVERLAPS | DRL_OVERLAPPED_BY | DRL_STARTS | DRL_STARTED_BY) timeAmount? ;
 

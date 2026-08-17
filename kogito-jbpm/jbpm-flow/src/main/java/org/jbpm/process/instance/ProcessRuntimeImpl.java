@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.WorkingMemoryAction;
-import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.time.TimerService;
 import org.drools.core.time.impl.CommandServiceTimerJobFactoryManager;
 import org.drools.core.time.impl.ThreadSafeTrackableTimeJobFactoryManager;
@@ -465,7 +465,7 @@ public class ProcessRuntimeImpl extends AbstractProcessRuntime {
         }
     }
 
-    public class SignalManagerSignalAction extends PropagationEntry.AbstractPropagationEntry implements WorkingMemoryAction {
+    public class SignalManagerSignalAction extends AbstractPropagationEntry<ReteEvaluator> implements WorkingMemoryAction {
 
         private String type;
         private Object event;

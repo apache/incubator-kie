@@ -16,11 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.util;
 
+/**
+ * Items placed in a <code>LinkedList<code> must implement this interface .
+ *
+ * @see LinkedList
+ */
+public interface DoubleLinkedEntry<T extends DoubleLinkedEntry<T>> extends SingleLinkedEntry<T> {
 
-public interface SingleLinkedEntry<T extends SingleLinkedEntry<T>>{
-    void setNext(T next);
+    /**
+     * Returns the previous node
+     * @return
+     *      The previous LinkedListNode
+     */
+    T getPrevious();
 
-    T getNext();
+    /**
+     * Sets the previous node
+     * @param previous
+     *      The previous LinkedListNode
+     */
+    void setPrevious(T previous);
+
+    void clear();
 }

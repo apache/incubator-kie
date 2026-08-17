@@ -18,9 +18,9 @@
  */
 package org.drools.core.common;
 
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 
-public interface WorkingMemoryAction extends PropagationEntry {
+public interface WorkingMemoryAction extends PropagationEntry<ReteEvaluator> {
     short WorkingMemoryReteAssertAction  = 1;
     short DeactivateCallback             = 2;
     short PropagateAction                = 3;

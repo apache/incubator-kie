@@ -53,7 +53,8 @@ import org.drools.core.event.RuleEventListenerSupport;
 import org.drools.core.event.RuleRuntimeEventSupport;
 import org.drools.core.impl.ActivationsManagerImpl;
 import org.drools.core.impl.InternalRuleBase;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.core.phreak.actions.ExecuteQuery;
 import org.drools.core.phreak.RuleNetworkEvaluator;
 import org.drools.core.phreak.RuleNetworkEvaluatorImpl;
 import org.drools.core.phreak.SegmentMemorySupportImpl;
@@ -231,7 +232,7 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
     }
 
     @Override
-    public void addPropagation(PropagationEntry propagationEntry) {
+    public void addPropagation(PropagationEntry<ReteEvaluator> propagationEntry) {
         activationsManager.addPropagation( propagationEntry );
     }
 
@@ -337,7 +338,7 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
 
         final PropagationContext pCtx = new PhreakPropagationContext(getNextPropagationIdCounter(), PropagationContext.Type.INSERTION, null, null, handle, getDefaultEntryPointId());
 
-        PropagationEntry.ExecuteQuery executeQuery = new PropagationEntry.ExecuteQuery( ruleBase, queryName, queryObject, handle, pCtx, false);
+        ExecuteQuery executeQuery = new ExecuteQuery( queryName, queryObject, handle, pCtx, false);
         addPropagation( executeQuery );
         TerminalNode[] terminalNodes = executeQuery.getResult();
 

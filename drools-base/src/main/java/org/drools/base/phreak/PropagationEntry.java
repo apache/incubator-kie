@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,28 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.phreak;
 
-/**
- * Items placed in a <code>LinkedList<code> must implement this interface .
- *
- * @see LinkedList
- */
-public interface DoubleLinkedEntry<T extends DoubleLinkedEntry<T>> extends SingleLinkedEntry<T> {
+import org.drools.base.base.ValueResolver;
 
-    /**
-     * Returns the previous node
-     * @return
-     *      The previous LinkedListNode
-     */
-    T getPrevious();
+public interface PropagationEntry<T extends ValueResolver> {
 
-    /**
-     * Sets the previous node
-     * @param previous
-     *      The previous LinkedListNode
-     */
-    void setPrevious(T previous);
+    default void execute(T t) {
+        internalExecute(t);
+    }
 
-    void clear();
+    void internalExecute(T t);
+
+    PropagationEntry<T> getNext();
+
+    void setNext(PropagationEntry<T> next);
+
+    boolean requiresImmediateFlushing();
+
+    boolean isCalledFromRHS();
+
+    boolean isPartitionSplittable();
+
+    PropagationEntry<T> getSplitForPartition(int partitionNr);
+
+    boolean defersExpiration();
+
 }

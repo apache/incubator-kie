@@ -26,13 +26,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.marshalling.MarshallerReaderContext;
 import org.drools.core.marshalling.MarshallerWriteContext;
-import org.drools.core.phreak.PropagationEntry;
 import org.jbpm.process.instance.InternalProcessRuntime;
 import org.kie.api.runtime.process.EventListener;
 import org.kie.api.runtime.process.ProcessInstance;
@@ -96,7 +96,7 @@ public class DefaultSignalManager implements SignalManager {
         }
     }
 
-    public static class SignalProcessInstanceAction extends PropagationEntry.AbstractPropagationEntry implements WorkingMemoryAction {
+    public static class SignalProcessInstanceAction extends AbstractPropagationEntry<ReteEvaluator> implements WorkingMemoryAction {
 
         private String processInstanceId;
         private String type;
@@ -160,7 +160,7 @@ public class DefaultSignalManager implements SignalManager {
 
     }
 
-    public static class SignalAction extends PropagationEntry.AbstractPropagationEntry implements WorkingMemoryAction {
+    public static class SignalAction extends AbstractPropagationEntry<ReteEvaluator> implements WorkingMemoryAction {
 
         private String type;
         private Object event;

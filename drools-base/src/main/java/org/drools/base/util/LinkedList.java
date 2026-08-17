@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.util;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -25,7 +25,6 @@ import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-import org.drools.core.reteoo.TupleImpl;
 
 /**
  * This is a simple linked implementation. Each node must implement </code>LinkedListNode<code> so that it references
@@ -391,15 +390,15 @@ public class LinkedList<T extends DoubleLinkedEntry<T>>
     }
 
     // All the tuples except for TMS are AbstractTuple
-    public static class LinkedListFastIterator implements FastIterator<TupleImpl> {
+    public static class LinkedListFastIterator<K extends DoubleLinkedEntry<K>> implements FastIterator<K> {
 
-        public TupleImpl next(TupleImpl object) {
+        public K next(K object) {
             return object.getNext();
         }
         
         public boolean isFullIterator() {
             return false;
-        }        
+        }
     }
 
     // Special case of iterator that uses K extends Entry<K> to support TMS custom objects

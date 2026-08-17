@@ -20,13 +20,16 @@ package org.drools.core.phreak;
 
 import java.util.Iterator;
 
-public interface PropagationList {
-    void addEntry(PropagationEntry propagationEntry);
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.core.common.ReteEvaluator;
 
-    PropagationEntry takeAll();
+public interface PropagationList {
+    void addEntry(PropagationEntry<ReteEvaluator> propagationEntry);
+
+    PropagationEntry<ReteEvaluator> takeAll();
 
     void flush();
-    void flush( PropagationEntry currentHead );
+    void flush( PropagationEntry<ReteEvaluator> currentHead );
 
     void reset();
 
@@ -34,7 +37,7 @@ public interface PropagationList {
 
     boolean hasEntriesDeferringExpiration();
 
-    Iterator<PropagationEntry> iterator();
+    Iterator<PropagationEntry<ReteEvaluator>> iterator();
 
     void waitOnRest();
 

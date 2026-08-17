@@ -23,7 +23,7 @@ import java.io.Serializable;
 import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.DoubleLinkedEntry;
 import org.drools.core.util.index.TupleList;
 import org.kie.api.runtime.rule.FactHandle;
 

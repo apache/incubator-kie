@@ -39,7 +39,7 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.enforcer.api>3.6.2</version.enforcer.api>
-    <version.org.apache.maven>3.9.11</version.org.apache.maven>
+    <version.org.apache.maven>3.9.16</version.org.apache.maven>
     <version.org.assertj>3.27.7</version.org.assertj>
     <version.org.mockito>5.18.0</version.org.mockito>
     <version.sisu.maven.plugin>1.0.0</version.sisu.maven.plugin>

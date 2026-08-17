@@ -36,8 +36,8 @@ import org.drools.core.reteoo.AsyncReceiveNode.AsyncReceiveMemory;
 import org.drools.core.reteoo.QueryElementNode.QueryElementNodeMemory;
 import org.drools.core.reteoo.TupleToObjectNode.SubnetworkPathMemory;
 import org.drools.core.reteoo.TimerNode.TimerNodeMemory;
-import org.drools.core.util.LinkedList;
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.LinkedList;
+import org.drools.base.util.DoubleLinkedEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

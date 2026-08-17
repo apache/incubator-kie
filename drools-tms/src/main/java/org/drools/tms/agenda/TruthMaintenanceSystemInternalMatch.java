@@ -23,7 +23,7 @@ import org.drools.tms.beliefsystem.ModedAssertion;
 import org.drools.tms.SimpleMode;
 import org.drools.tms.LogicalDependency;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 
 public interface TruthMaintenanceSystemInternalMatch<T extends ModedAssertion<T>> extends InternalMatch {
 

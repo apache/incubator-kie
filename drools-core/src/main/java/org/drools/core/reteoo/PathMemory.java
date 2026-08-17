@@ -28,7 +28,7 @@ import org.drools.core.common.InternalAgendaGroup;
 import org.drools.core.common.Memory;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.phreak.RuleAgendaItem;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -30,7 +30,7 @@ import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.TupleFactory;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.TupleMemory;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 
 import static org.drools.core.phreak.PhreakJoinNode.updateChildLeftTuple;
 import static org.drools.core.phreak.PhreakNodeOperations.doUpdatesExistentialReorderLeftMemory;

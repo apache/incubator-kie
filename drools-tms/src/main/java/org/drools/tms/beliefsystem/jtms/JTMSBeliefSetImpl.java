@@ -23,7 +23,7 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.tms.LogicalDependency;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 
 public class JTMSBeliefSetImpl<M extends JTMSMode<M>> extends LinkedList<M> implements JTMSBeliefSet<M> {
 

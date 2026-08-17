@@ -18,7 +18,7 @@
  */
 package org.drools.tms.beliefsystem;
 
-import org.drools.core.util.DoubleLinkedEntry;
+import org.drools.base.util.DoubleLinkedEntry;
 
 public interface ModedAssertion<M extends ModedAssertion<M>> extends BeliefSystemMode, DoubleLinkedEntry<M> {
 

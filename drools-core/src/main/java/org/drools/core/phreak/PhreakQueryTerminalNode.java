@@ -29,7 +29,7 @@ import org.drools.core.reteoo.QueryElementNode.QueryElementNodeMemory;
 import org.drools.core.reteoo.QueryTerminalNode;
 import org.drools.core.reteoo.Tuple;
 import org.drools.core.reteoo.TupleImpl;
-import org.drools.core.util.LinkedList;
+import org.drools.base.util.LinkedList;
 
 /**
 * Created with IntelliJ IDEA.

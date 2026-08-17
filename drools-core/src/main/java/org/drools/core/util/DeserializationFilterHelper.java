@@ -35,7 +35,7 @@ public class DeserializationFilterHelper {
 
     private static final Set<String> DEFAULT_ALLOWED_CLASSES = Set.of(
             "org.drools.base.reteoo.InitialFactImpl",
-            "org.drools.core.util.LinkedListEntry",
+            "org.drools.base.util.LinkedListEntry",
             "org.drools.tms.SimpleMode",
             "org.drools.tms.DefeasibleMode",
             "org.drools.traits.core.factmodel.AbstractTriple",

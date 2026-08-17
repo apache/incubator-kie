@@ -32,7 +32,7 @@ import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.ExecutableEntry;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.phreak.PropagationList;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.reteoo.PathMemory;
@@ -242,7 +242,7 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     }
 
     @Override
-    public void addPropagation( PropagationEntry propagationEntry ) {
+    public void addPropagation( PropagationEntry<ReteEvaluator> propagationEntry ) {
         if (propagationEntry.isPartitionSplittable()) {
             for ( int i = 0; i < agendas.length; i++ ) {
                 agendas[i].addPropagation( propagationEntry.getSplitForPartition( i ) );
@@ -274,7 +274,7 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     }
 
     @Override
-    public Iterator<PropagationEntry> getActionsIterator() {
+    public Iterator<PropagationEntry<ReteEvaluator>> getActionsIterator() {
         return new CompositeIterator<>( Stream.of( agendas ).map( DefaultAgenda::getActionsIterator ).toArray(Iterator[]::new) );
     }
 

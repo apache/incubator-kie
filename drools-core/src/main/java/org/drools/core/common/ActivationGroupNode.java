@@ -19,7 +19,7 @@
 package org.drools.core.common;
 
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 
 public class ActivationGroupNode extends AbstractLinkedListNode<ActivationGroupNode> {
 

@@ -21,7 +21,7 @@ package org.drools.core.common;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.kie.api.runtime.rule.Agenda;
 import org.kie.api.runtime.rule.AgendaFilter;
 
@@ -147,7 +147,7 @@ public interface InternalAgenda extends Agenda, ActivationsManager {
     boolean isRuleActiveInRuleFlowGroup(String ruleflowGroupName, String ruleName, String processInstanceId);
 
     void notifyWaitOnRest();
-    Iterator<PropagationEntry> getActionsIterator();
+    Iterator<PropagationEntry<ReteEvaluator>> getActionsIterator();
     boolean hasPendingPropagations();
 
     boolean isParallelAgenda();

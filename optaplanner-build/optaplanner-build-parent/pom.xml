@@ -62,6 +62,8 @@
     <version.org.openrewrite.recipe>1.19.3</version.org.openrewrite.recipe>
     <version.org.slf4j>2.0.17</version.org.slf4j><!-- TODO keep in sync with quarkus-bom -->
     <version.org.eclipse.parsson>1.1.8</version.org.eclipse.parsson>
+    <!-- CVE-2026-56624: Apache MINA SSHD fixed version -->
+    <version.org.apache.sshd>2.19.0</version.org.apache.sshd>
     <version.org.springframework>7.0.8</version.org.springframework>
     <version.org.springframework.boot>4.0.7</version.org.springframework.boot>
     <version.com.fasterxml.jackson.databind>2.22.1</version.com.fasterxml.jackson.databind>
@@ -141,6 +143,17 @@
         <scope>import</scope>
       </dependency>
       <!-- Normal dependencies versions-->
+      <!-- CVE-2026-56624: override sshd-common and sshd-core pinned at 2.12.1 by quarkus-bom -->
+      <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-common</artifactId>
+        <version>${version.org.apache.sshd}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.sshd</groupId>
+        <artifactId>sshd-core</artifactId>
+        <version>${version.org.apache.sshd}</version>
+      </dependency>
       <!-- CVE fix: override micrometer version brought in by quarkus-bom 3.27.4 (1.14.7) to 1.16.6 -->
       <dependency>
         <groupId>io.micrometer</groupId>

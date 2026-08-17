@@ -49,7 +49,8 @@ import org.drools.core.concurrent.SequentialGroupEvaluator;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.ExecutableEntry;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.phreak.PropagationList;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.phreak.RuleExecutor;
@@ -99,7 +100,7 @@ public class DefaultAgenda implements InternalAgenda {
 
     private final Map<String, InternalActivationGroup> activationGroups;
 
-    private final org.drools.core.util.LinkedList<RuleAgendaItem> eager = new org.drools.core.util.LinkedList<>();
+    private final org.drools.base.util.LinkedList<RuleAgendaItem> eager = new org.drools.base.util.LinkedList<>();
 
     private final Map<QueryImpl, RuleAgendaItem> queries = new ConcurrentHashMap<>();
 
@@ -572,7 +573,7 @@ public class DefaultAgenda implements InternalAgenda {
     private int fireLoop(AgendaFilter agendaFilter, int fireLimit, RestHandler restHandler, boolean isInternalFire) {
         int fireCount = 0;
         try {
-            PropagationEntry head = takePropagationHead();
+            PropagationEntry<ReteEvaluator> head = takePropagationHead();
             int returnedFireCount;
 
             boolean limitReached = fireLimit == 0; // -1 or > 0 will return false. No reason for user to give 0, just handled for completeness.
@@ -643,7 +644,7 @@ public class DefaultAgenda implements InternalAgenda {
         return fireCount;
     }
 
-    private PropagationEntry takePropagationHead() {
+    private PropagationEntry<ReteEvaluator> takePropagationHead() {
         if (executionStateMachine.getCurrentState().isHalting()) {
             return null;
         }
@@ -654,13 +655,13 @@ public class DefaultAgenda implements InternalAgenda {
         RestHandler FIRE_ALL_RULES = new FireAllRulesRestHandler();
         RestHandler FIRE_UNTIL_HALT = new FireUntilHaltRestHandler();
 
-        PropagationEntry handleRest(DefaultAgenda agenda, boolean isInternalFire);
+        PropagationEntry<ReteEvaluator> handleRest(DefaultAgenda agenda, boolean isInternalFire);
 
         class FireAllRulesRestHandler implements RestHandler {
             @Override
-            public PropagationEntry handleRest(DefaultAgenda agenda, boolean isInternalFire) {
+            public PropagationEntry<ReteEvaluator> handleRest(DefaultAgenda agenda, boolean isInternalFire) {
                 synchronized (agenda.executionStateMachine.getStateMachineLock()) {
-                    PropagationEntry head = agenda.propagationList.takeAll();
+                    PropagationEntry<ReteEvaluator> head = agenda.propagationList.takeAll();
                     if (isInternalFire && head == null) {
                         agenda.internalHalt();
                     }
@@ -671,14 +672,14 @@ public class DefaultAgenda implements InternalAgenda {
 
         class FireUntilHaltRestHandler implements RestHandler {
             @Override
-            public PropagationEntry handleRest(DefaultAgenda agenda, boolean isInternalFire) {
+            public PropagationEntry<ReteEvaluator> handleRest(DefaultAgenda agenda, boolean isInternalFire) {
                 boolean deactivated = false;
                 if (isInternalFire && agenda.executionStateMachine.getCurrentState() == ExecutionStateMachine.ExecutionState.FIRING_UNTIL_HALT) {
                     agenda.executionStateMachine.inactiveOnFireUntilHalt();
                     deactivated = true;
                 }
 
-                PropagationEntry head;
+                PropagationEntry<ReteEvaluator> head;
                 // this must use the same sync target as takeAllPropagations, to ensure this entire block is atomic, up to the point of wait
                 synchronized (agenda.propagationList) {
                     head = agenda.takePropagationHead();
@@ -748,7 +749,7 @@ public class DefaultAgenda implements InternalAgenda {
         return executionStateMachine.tryDeactivate();
     }
 
-    static class Halt extends PropagationEntry.AbstractPropagationEntry {
+    static class Halt extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final ExecutionStateMachine executionStateMachine;
 
@@ -768,7 +769,7 @@ public class DefaultAgenda implements InternalAgenda {
         }
     }
 
-    static class ImmediateHalt extends PropagationEntry.AbstractPropagationEntry {
+    static class ImmediateHalt extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final ExecutionStateMachine executionStateMachine;
         private final PropagationList propagationList;
@@ -796,7 +797,7 @@ public class DefaultAgenda implements InternalAgenda {
         // This will place a halt command on the propagation queue
         // that will allow the engine to halt safely
         if ( isFiring() ) {
-            PropagationEntry halt = executionStateMachine.getCurrentState() == ExecutionStateMachine.ExecutionState.FIRING_ALL_RULES ?
+            PropagationEntry<ReteEvaluator> halt = executionStateMachine.getCurrentState() == ExecutionStateMachine.ExecutionState.FIRING_ALL_RULES ?
                     new ImmediateHalt(executionStateMachine, propagationList) :
                     new Halt(executionStateMachine);
             propagationList.addEntry(halt);
@@ -855,7 +856,7 @@ public class DefaultAgenda implements InternalAgenda {
     }
 
     @Override
-    public void addPropagation(PropagationEntry propagationEntry) {
+    public void addPropagation(PropagationEntry<ReteEvaluator> propagationEntry) {
         propagationList.addEntry( propagationEntry );
     }
 
@@ -870,7 +871,7 @@ public class DefaultAgenda implements InternalAgenda {
     }
 
     @Override
-    public Iterator<PropagationEntry> getActionsIterator() {
+    public Iterator<PropagationEntry<ReteEvaluator>> getActionsIterator() {
         return propagationList.iterator();
     }
 

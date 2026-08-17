@@ -31,7 +31,7 @@ import org.drools.core.common.MemoryFactory;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.UpdateContext;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.base.util.AbstractLinkedListNode;
 
 /**
  * Node which allows to follow different paths in the Rete-OO network,

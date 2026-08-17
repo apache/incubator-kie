@@ -41,6 +41,8 @@ import org.drools.core.reteoo.TupleFactory;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.time.Job;
 import org.drools.core.time.JobContext;
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.time.TimerService;
 import org.drools.core.time.impl.DefaultJobHandle;
 import org.drools.core.util.index.TupleList;
@@ -367,7 +369,7 @@ public class PhreakTimerNode {
     }
 
     public static class TimerAction
-            extends PropagationEntry.AbstractPropagationEntry
+            extends AbstractPropagationEntry<ReteEvaluator>
             implements WorkingMemoryAction {
 
         private final TimerNodeJobContext timerJobCtx;

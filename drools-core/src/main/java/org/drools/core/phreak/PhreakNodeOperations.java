@@ -32,7 +32,7 @@ import org.drools.core.reteoo.SubnetworkTuple;
 import org.drools.core.reteoo.Tuple;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.TupleMemory;
-import org.drools.core.util.FastIterator;
+import org.drools.base.util.FastIterator;
 
 import static org.drools.core.phreak.PhreakNotNode.updateBlockersAndPropagate;
 import static org.drools.core.reteoo.BetaNode.getBetaMemory;

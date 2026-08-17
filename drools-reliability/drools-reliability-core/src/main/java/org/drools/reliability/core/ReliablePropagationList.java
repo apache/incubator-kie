@@ -20,7 +20,7 @@ package org.drools.reliability.core;
 
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.Storage;
-import org.drools.core.phreak.PropagationEntry;
+import org.drools.base.phreak.PropagationEntry;
 import org.drools.core.phreak.SynchronizedPropagationList;
 
 import java.io.Externalizable;
@@ -47,8 +47,8 @@ public class ReliablePropagationList extends SynchronizedPropagationList impleme
     }
 
     @Override
-    public synchronized PropagationEntry takeAll() {
-        PropagationEntry p = super.takeAll();
+    public synchronized PropagationEntry<ReteEvaluator> takeAll() {
+        PropagationEntry<ReteEvaluator> p = super.takeAll();
         Storage<String, Object> componentsStorage = StorageManagerFactory.get().getStorageManager().getOrCreateStorageForSession(this.reteEvaluator, "components");
         componentsStorage.put(PROPAGATION_LIST, this);
         return p;
@@ -63,9 +63,10 @@ public class ReliablePropagationList extends SynchronizedPropagationList impleme
         out.writeBoolean(firingUntilHalt);
    }
     @Override
+    @SuppressWarnings("unchecked")
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.head = (PropagationEntry) in.readObject();
-        this.tail = (PropagationEntry) in.readObject();
+        this.head = (PropagationEntry<ReteEvaluator>) in.readObject();
+        this.tail = (PropagationEntry<ReteEvaluator>) in.readObject();
         this.disposed = in.readBoolean();
         this.hasEntriesDeferringExpiration = in.readBoolean();
         this.firingUntilHalt = in.readBoolean();
