@@ -24,6 +24,8 @@ import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDescs;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -100,8 +102,13 @@ import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 import io.quarkus.gizmo.ClassOutput;
-import io.quarkus.gizmo.MethodDescriptor;
-import io.quarkus.gizmo.ResultHandle;
+import io.quarkus.gizmo2.Const;
+import io.quarkus.gizmo2.Expr;
+import io.quarkus.gizmo2.LocalVar;
+import io.quarkus.gizmo2.creator.BlockCreator;
+import io.quarkus.gizmo2.desc.ConstructorDesc;
+import io.quarkus.gizmo2.desc.InterfaceMethodDesc;
+import io.quarkus.gizmo2.desc.MethodDesc;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 class OptaPlannerProcessor {
@@ -357,52 +364,47 @@ class OptaPlannerProcessor {
                     solverConfig.getScoreDirectorFactoryConfig().isDroolsAlphaNetworkCompilationEnabled();
             syntheticBeanBuildItemBuildProducer.produce(SyntheticBeanBuildItem.configure(DotNames.CONSTRAINT_VERIFIER)
                     .scope(Singleton.class)
-                    .creator(methodCreator -> {
-                        ResultHandle constraintProviderResultHandle =
-                                methodCreator.newInstance(MethodDescriptor.ofConstructor(constraintProviderClass));
-                        ResultHandle planningSolutionClassResultHandle = methodCreator.loadClass(planningSolutionClass);
+                    .creator(cg -> {
+                        BlockCreator bc = cg.createMethod();
+                        ClassDesc constraintVerifierDesc = ClassDesc.of(constraintVerifierClassName);
+                        Expr constraintProvider = bc.new_(ConstructorDesc.of(constraintProviderClass));
 
-                        ResultHandle planningEntityClassesResultHandle =
-                                methodCreator.newArray(Class.class, planningEntityClasses.size());
-                        for (int i = 0; i < planningEntityClasses.size(); i++) {
-                            ResultHandle planningEntityClassResultHandle =
-                                    methodCreator.loadClass(planningEntityClasses.get(i));
-                            methodCreator.writeArrayValue(planningEntityClassesResultHandle, i,
-                                    planningEntityClassResultHandle);
-                        }
+                        Expr planningEntityClassesArray = bc.newArray(Class.class, planningEntityClasses, Const::of);
 
                         // Got incompatible class change error when trying to invoke static method on
                         // ConstraintVerifier.build(ConstraintProvider, Class, Class...)
-                        ResultHandle solutionDescriptorResultHandle = methodCreator.invokeStaticMethod(
-                                MethodDescriptor.ofMethod(SolutionDescriptor.class, "buildSolutionDescriptor",
+                        Expr solutionDescriptor = bc.invokeStatic(
+                                MethodDesc.of(SolutionDescriptor.class, "buildSolutionDescriptor",
                                         SolutionDescriptor.class, Class.class, Class[].class),
-                                planningSolutionClassResultHandle, planningEntityClassesResultHandle);
-                        ResultHandle constraintVerifierResultHandle = methodCreator.newInstance(
-                                MethodDescriptor.ofConstructor(
-                                        "org.optaplanner.test.impl.score.stream.DefaultConstraintVerifier",
+                                Const.of(planningSolutionClass), planningEntityClassesArray);
+                        LocalVar constraintVerifier = bc.localVar("constraintVerifier", bc.new_(
+                                ConstructorDesc.of(
+                                        ClassDesc.of("org.optaplanner.test.impl.score.stream.DefaultConstraintVerifier"),
                                         ConstraintProvider.class, SolutionDescriptor.class),
-                                constraintProviderResultHandle, solutionDescriptorResultHandle);
+                                constraintProvider, solutionDescriptor));
 
                         if (constraintStreamImplType != null) { // Use the default if not specified.
-                            constraintVerifierResultHandle = methodCreator.invokeInterfaceMethod(
-                                    MethodDescriptor.ofMethod(constraintVerifierClassName,
+                            bc.set(constraintVerifier, bc.invokeInterface(
+                                    InterfaceMethodDesc.of(constraintVerifierDesc,
                                             "withConstraintStreamImplType",
-                                            constraintVerifierClassName,
-                                            ConstraintStreamImplType.class),
-                                    constraintVerifierResultHandle,
-                                    methodCreator.load(constraintStreamImplType));
+                                            constraintVerifierDesc,
+                                            ClassDesc.of(ConstraintStreamImplType.class.getName())),
+                                    constraintVerifier,
+                                    Const.of(Enum.EnumDesc.of(
+                                            ClassDesc.of(ConstraintStreamImplType.class.getName()),
+                                            constraintStreamImplType.name()))));
                         }
 
                         if (droolsAlphaNetworkCompilationEnabled != null) { // Use the default if not specified.
-                            constraintVerifierResultHandle = methodCreator.invokeInterfaceMethod(
-                                    MethodDescriptor.ofMethod(constraintVerifierClassName,
+                            bc.set(constraintVerifier, bc.invokeInterface(
+                                    InterfaceMethodDesc.of(constraintVerifierDesc,
                                             "withDroolsAlphaNetworkCompilationEnabled",
-                                            constraintVerifierClassName,
-                                            boolean.class),
-                                    constraintVerifierResultHandle,
-                                    methodCreator.load(droolsAlphaNetworkCompilationEnabled));
+                                            constraintVerifierDesc,
+                                            ConstantDescs.CD_boolean),
+                                    constraintVerifier,
+                                    Const.of(droolsAlphaNetworkCompilationEnabled)));
                         }
-                        methodCreator.returnValue(constraintVerifierResultHandle);
+                        bc.return_(constraintVerifier);
                     })
                     .addType(ParameterizedType.create(DotNames.CONSTRAINT_VERIFIER,
                             new Type[] {

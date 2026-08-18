@@ -27,7 +27,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import io.quarkus.deployment.pkg.steps.JarResultBuildStep;
 import org.drools.codegen.common.AppPaths;
 
 /**
@@ -52,7 +51,8 @@ public class QuarkusAppPaths extends AppPaths {
     }
 
     protected QuarkusAppPaths(List<Path> projectPaths, Collection<Path> classesPaths, boolean isJar) {
-        super(projectPaths, classesPaths, isJar, AppPaths.BT, JarResultBuildStep.MAIN, false);
+        // "main" = quarkus-app output subdir (formerly JarResultBuildStep.MAIN, removed in Quarkus 3.33)
+        super(projectPaths, classesPaths, isJar, AppPaths.BT, "main", false);
     }
 
     public static AppPaths from(Iterable<Path> paths) {
