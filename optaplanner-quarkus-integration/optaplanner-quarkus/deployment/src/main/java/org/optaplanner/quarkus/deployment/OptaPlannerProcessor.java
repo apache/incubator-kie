@@ -236,7 +236,6 @@ class OptaPlannerProcessor {
     @Record(RUNTIME_INIT)
     SolverConfigBuildItem recordAndRegisterBeans(OptaPlannerRecorder recorder, RecorderContext recorderContext,
             DetermineIfNativeBuildItem determineIfNative, CombinedIndexBuildItem combinedIndex,
-            OptaPlannerRuntimeConfig optaplannerRuntimeConfig,
             BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyClass,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanBuildItemBuildProducer,
             BuildProducer<AdditionalBeanBuildItem> additionalBeans,
