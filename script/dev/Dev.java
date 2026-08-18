@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -100,12 +101,16 @@ public class Dev {
      * <p>A {@link LinkedHashMap} rather than {@code Map.of} so that the config file and
      * the line printed on first run come out in a sensible order.
      */
-    private static final Map<String, String> DEFAULTS = new LinkedHashMap<>(Map.of()) {{
-        put(KEY_SINCE, SINCE_DEFAULT);
-        put(KEY_UNCOMMITTED, "true");
-        put(KEY_BREADTH, BREADTH_AFFECTED);
-        put(KEY_UPSTREAM, UPSTREAM_AUTO);
-    }};
+    private static final Map<String, String> DEFAULTS = defaults();
+
+    private static Map<String, String> defaults() {
+        Map<String, String> defaults = new LinkedHashMap<>();
+        defaults.put(KEY_SINCE, SINCE_DEFAULT);
+        defaults.put(KEY_UNCOMMITTED, "true");
+        defaults.put(KEY_BREADTH, BREADTH_AFFECTED);
+        defaults.put(KEY_UPSTREAM, UPSTREAM_AUTO);
+        return Collections.unmodifiableMap(defaults);
+    }
 
     /**
      * Flags that make a build fast rather than thorough: parallel, quiet about downloads,

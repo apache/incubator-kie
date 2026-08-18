@@ -105,7 +105,7 @@ public class CiComputeBuildScopes {
         // DEP_GRAPH_EXTRACTOR__REUSE_IF_FRESH is set, keep a stamp of the reactor's
         // poms next to the graph and re-extract only once one of them changes.
         // Off by default, so CI always extracts from scratch.
-        Path stampFile = Paths.get(graphFile + ".stamp");
+        Path stampFile = graphFile.resolveSibling(graphFile.getFileName() + ".stamp");
         String stamp = reactorPomStamp(cwd, extraMavenArgs, extractorJarPath);
         if (reuseIfFresh() && graphIsFresh(graphFile, stampFile, stamp)) {
             System.err.println("[CiComputeBuildScopes] Reusing cached dependency graph (no pom.xml changed): " + relative(cwd, graphFile));

@@ -161,8 +161,14 @@ public class MakefileTest {
         return new Result(p.waitFor(), output);
     }
 
+    /**
+     * An ANSI SGR escape sequence: {@code ESC [ … m}. Spelled with {@code \e} rather than
+     * a literal escape character so the source stays plain ASCII and readable.
+     */
+    private static final String ANSI_COLOUR_CODE = "\\e\\[[0-9;]*m";
+
     /** Drops the ANSI colour codes `make help` emits, so assertions can match plain text. */
     private static String strippedOf(String output) {
-        return output.replaceAll("\\[[0-9;]*m", "");
+        return output.replaceAll(ANSI_COLOUR_CODE, "");
     }
 }

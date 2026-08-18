@@ -236,8 +236,8 @@ Upstream modules to rebuild first: 82  (.kie-dev/upstream-modules.txt)
     5 older than their sources, 77 downstream of those
 ```
 
-This is controlled by `upstream`, which defaults to `auto` because that is
-`auto` is almost always what you want:
+This is controlled by `upstream`, which defaults to `auto` because `auto` is
+almost always what you want:
 
 | `upstream` | Behaviour                                                              |
 | ---------- | ---------------------------------------------------------------------- |
@@ -258,8 +258,8 @@ to you to have the right versions installed.
 
 ## How it works
 
-1. `make dev` runs [`script/dev/Dev.java`](../script/dev/Dev.java) (with
-   `DevConfig`, `DevGit` and `DevIoUtil` alongside it).
+1. `make dev` runs [`script/dev/Dev.java`](../script/dev/Dev.java), a single
+   JBang script.
 2. It turns `since` and `uncommitted` into a list of changed files, using
    `git diff` and `git ls-files`.
 3. It hands that list to

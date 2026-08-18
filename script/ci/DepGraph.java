@@ -19,6 +19,7 @@
 
 //JAVA 21
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -85,37 +86,44 @@ public final class DepGraph {
         if (!Files.isRegularFile(file)) {
             return graph;
         }
-        for (String line : Files.readAllLines(file)) {
-            String[] parts = line.split("\t", -1);
-            if (parts.length < 2) continue;
-            switch (parts[0]) {
-                case "P" -> {
-                    if (parts.length < 3) break;
-                    Path dir = Paths.get(parts[2]).toAbsolutePath().normalize();
-                    graph.gaToDir.put(parts[1], dir);
-                    graph.moduleDirs.add(dir);
-                    graph.upstreamOf.computeIfAbsent(parts[1], k -> new LinkedHashSet<>());
-                    graph.downstreamOf.computeIfAbsent(parts[1], k -> new LinkedHashSet<>());
-                }
-                case "D" -> {
-                    if (parts.length < 3) break;
-                    graph.addEdge(parts[1], parts[2]);
-                    if (parts.length >= 4 && !parts[3].isEmpty()) {
-                        graph.edgeScopes.put(parts[1] + "|" + parts[2], parts[3]);
-                    }
-                }
-                case "V" -> {
-                    if (parts.length < 4) break;
-                    graph.gaToVersion.put(parts[1], parts[2]);
-                    graph.gaToPackaging.put(parts[1], parts[3]);
-                }
-                case "L" -> graph.localRepo = Paths.get(parts[1]).toAbsolutePath().normalize();
-                case "B" -> graph.boms.add(parts[1]);
-                default -> { /* ignore unknown record types */ }
+        try (BufferedReader reader = Files.newBufferedReader(file)) {
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                graph.parseLine(line);
             }
         }
         graph.pairQuarkusExtensions();
         return graph;
+    }
+
+    /** Reads one TSV record into this graph, ignoring anything it does not recognise. */
+    private void parseLine(String line) {
+        String[] parts = line.split("\t", -1);
+        if (parts.length < 2) return;
+        switch (parts[0]) {
+            case "P" -> {
+                if (parts.length < 3) break;
+                Path dir = Paths.get(parts[2]).toAbsolutePath().normalize();
+                gaToDir.put(parts[1], dir);
+                moduleDirs.add(dir);
+                upstreamOf.computeIfAbsent(parts[1], k -> new LinkedHashSet<>());
+                downstreamOf.computeIfAbsent(parts[1], k -> new LinkedHashSet<>());
+            }
+            case "D" -> {
+                if (parts.length < 3) break;
+                addEdge(parts[1], parts[2]);
+                if (parts.length >= 4 && !parts[3].isEmpty()) {
+                    edgeScopes.put(parts[1] + "|" + parts[2], parts[3]);
+                }
+            }
+            case "V" -> {
+                if (parts.length < 4) break;
+                gaToVersion.put(parts[1], parts[2]);
+                gaToPackaging.put(parts[1], parts[3]);
+            }
+            case "L" -> localRepo = Paths.get(parts[1]).toAbsolutePath().normalize();
+            case "B" -> boms.add(parts[1]);
+            default -> { /* ignore unknown record types */ }
+        }
     }
 
     /** Records that {@code dependent} depends on {@code dependency}. */
