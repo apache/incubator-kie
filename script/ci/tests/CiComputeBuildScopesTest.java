@@ -61,6 +61,7 @@ public class CiComputeBuildScopesTest {
     static final Path REPO_ROOT = Paths.get("").toAbsolutePath();
     static final Path SCENARIOS_DIR = REPO_ROOT.resolve("script/ci/tests/scenarios-compute-build-scopes");
     static final Path SCRIPT = REPO_ROOT.resolve("script/ci/CiComputeBuildScopes.java");
+    static final List<String> CATEGORIES = List.of("drools", "optaplanner", "kogito-runtimes", "kogito-apps");
 
     public static void main(String[] args) throws Exception {
         if ("1".equals(System.getenv("CI_UPDATE_GOLDEN"))) {
@@ -104,6 +105,13 @@ public class CiComputeBuildScopesTest {
         assertMatchesGolden(scenario, "upstream", actualUpstream);
         assertMatchesGolden(scenario, "affected", actualAffected);
         assertMatchesGolden(scenario, "changed",  actualChanged);
+
+        for (String cat : CATEGORIES) {
+            Path catAffected = tmp.resolve("affected-" + cat + ".txt");
+            if (Files.isRegularFile(scenario.resolve("expected-affected-" + cat + ".txt"))) {
+                assertMatchesGolden(scenario, "affected-" + cat, catAffected);
+            }
+        }
     }
 
     private static void assertMatchesGolden(Path scenario, String label, Path actual) throws IOException {
@@ -140,6 +148,13 @@ public class CiComputeBuildScopesTest {
             Files.copy(actualUpstream, scenario.resolve("expected-upstream.txt"), StandardCopyOption.REPLACE_EXISTING);
             Files.copy(actualAffected, scenario.resolve("expected-affected.txt"), StandardCopyOption.REPLACE_EXISTING);
             Files.copy(actualChanged,  scenario.resolve("expected-changed.txt"),  StandardCopyOption.REPLACE_EXISTING);
+            for (String cat : CATEGORIES) {
+                Path catAffected = tmp.resolve("affected-" + cat + ".txt");
+                if (Files.isRegularFile(catAffected)) {
+                    Files.copy(catAffected, scenario.resolve("expected-affected-" + cat + ".txt"),
+                            StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
             System.err.println("[" + name + "] UPDATED goldens");
         }
     }

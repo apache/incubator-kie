@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -147,13 +148,30 @@ public class CiComputeBuildScopes {
         writeLines(affectedOut, affected);
         writeLines(changedOut, changed);
 
+        Map<String, Set<Path>> categories = parseModuleCategories(cwd.resolve("pom.xml"), cwd);
+
+        for (String cat : categories.keySet()) {
+            Set<String> catAffected = affected.stream()
+                    .filter(ga -> categorizeGa(ga, gaToDir, categories).equals(cat))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            writeLines(partitionedPath(affectedOut, cat), catAffected);
+        }
+
         int total = gaToDir.size();
         int ignored = total - affected.size() - upstreamAll.size();
-        System.out.println("total=" + total
-                + " changed=" + changed.size()
-                + " affected=" + affected.size()
-                + " upstream=" + upstreamAll.size()
-                + " ignored=" + ignored);
+        StringBuilder sb = new StringBuilder();
+        sb.append("total=").append(total)
+          .append(" changed=").append(changed.size())
+          .append(" affected=").append(affected.size())
+          .append(" upstream=").append(upstreamAll.size())
+          .append(" ignored=").append(ignored);
+        for (String cat : categories.keySet()) {
+            long catCount = affected.stream()
+                    .filter(ga -> categorizeGa(ga, gaToDir, categories).equals(cat))
+                    .count();
+            sb.append(" affected-").append(cat).append("=").append(catCount);
+        }
+        System.out.println(sb);
     }
 
     /**
@@ -239,6 +257,102 @@ public class CiComputeBuildScopes {
         List<String> sorted = new ArrayList<>(lines);
         Collections.sort(sorted);
         Files.write(out, sorted);
+    }
+
+    private static final List<String> EXPECTED_CATEGORIES = List.of("optaplanner", "kogito-runtimes", "kogito-apps");
+
+    static Map<String, Set<Path>> parseModuleCategories(Path rootPom, Path cwd) throws IOException {
+        Map<String, Set<Path>> categories = new LinkedHashMap<>();
+        categories.put("drools", new LinkedHashSet<>());
+        for (String cat : EXPECTED_CATEGORIES) {
+            categories.put(cat, new LinkedHashSet<>());
+        }
+
+        String currentCategory = "drools";
+        boolean inModules = false;
+        Set<String> seenBegins = new HashSet<>();
+        Set<String> seenEnds = new HashSet<>();
+
+        Pattern beginPattern = Pattern.compile("<!--\\s*BEGIN\\s+(\\S+)\\s+modules\\s+\\(auto\\)\\s*-->");
+        Pattern endPattern = Pattern.compile("<!--\\s*END\\s+(\\S+)\\s+modules\\s+\\(auto\\)\\s*-->");
+        Pattern modulePattern = Pattern.compile("<module>(.+)</module>");
+
+        for (String line : Files.readAllLines(rootPom)) {
+            String trimmed = line.trim();
+
+            if (trimmed.equals("<modules>")) {
+                inModules = true;
+                continue;
+            }
+            if (trimmed.equals("</modules>")) {
+                break;
+            }
+            if (!inModules) continue;
+
+            Matcher beginMatcher = beginPattern.matcher(trimmed);
+            if (beginMatcher.matches()) {
+                currentCategory = beginMatcher.group(1);
+                if (!categories.containsKey(currentCategory)) {
+                    System.err.println("ERROR: unknown module category '" + currentCategory
+                            + "' in pom.xml marker. Expected one of: " + EXPECTED_CATEGORIES);
+                    System.exit(1);
+                }
+                seenBegins.add(currentCategory);
+                continue;
+            }
+
+            Matcher endMatcher = endPattern.matcher(trimmed);
+            if (endMatcher.matches()) {
+                seenEnds.add(endMatcher.group(1));
+                currentCategory = "drools";
+                continue;
+            }
+
+            Matcher moduleMatcher = modulePattern.matcher(trimmed);
+            if (moduleMatcher.matches()) {
+                String modulePath = moduleMatcher.group(1);
+                categories.get(currentCategory).add(cwd.resolve(modulePath).toAbsolutePath().normalize());
+            }
+        }
+
+        for (String cat : EXPECTED_CATEGORIES) {
+            if (!seenBegins.contains(cat)) {
+                System.err.println("ERROR: missing '<!-- BEGIN " + cat
+                        + " modules (auto) -->' marker in pom.xml");
+                System.exit(1);
+            }
+            if (!seenEnds.contains(cat)) {
+                System.err.println("ERROR: missing '<!-- END " + cat
+                        + " modules (auto) -->' marker in pom.xml");
+                System.exit(1);
+            }
+        }
+
+        return categories;
+    }
+
+    private static String categorizeGa(String ga, Map<String, Path> gaToDir,
+                                        Map<String, Set<Path>> categories) {
+        Path dir = gaToDir.get(ga);
+        if (dir == null) return "drools";
+        dir = dir.toAbsolutePath().normalize();
+        for (var entry : categories.entrySet()) {
+            for (Path catPath : entry.getValue()) {
+                if (dir.equals(catPath) || dir.startsWith(catPath + "/")) {
+                    return entry.getKey();
+                }
+            }
+        }
+        return "drools";
+    }
+
+    private static Path partitionedPath(Path basePath, String category) {
+        String name = basePath.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        String newName = (dot >= 0)
+                ? name.substring(0, dot) + "-" + category + name.substring(dot)
+                : name + "-" + category;
+        return basePath.resolveSibling(newName);
     }
 
     private static int runMavenWithDepGraphExtractor(Path cwd, Path extractorJar, Path graphOut,

@@ -152,6 +152,9 @@
   </build>
 
   <modules>
+    <!-- DO NOT remove the BEGIN/END comments. They are used by CiComputeBuildScopes for parallel CI job split
+         When you add a new module, put it in one of the 4 categories (drools, optaplanner, kogito-runtimes, kogito-apps) -->
+    <!-- BEGIN drools modules (auto) -->
     <module>kie-no-dependency-management-enforcer-rule</module>
     <module>kie-no-external-managed-dependency-enforcer-rule</module>
     <module>kie-parent</module>
@@ -208,6 +211,7 @@
     <module>drools-quarkus-extension</module>
     <module>drools-reliability</module>
     <module>drools-drlonyaml-parent</module>
+    <!-- END drools modules (auto) -->
     <!-- BEGIN optaplanner modules (auto) -->
     <module>optaplanner-parent</module>
     <module>optaplanner-build/optaplanner-bom</module>

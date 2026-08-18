@@ -41,8 +41,8 @@ concurrency:
 jobs:
 
   build:
-    if: github.event.action != 'closed'
-    name: '${{ matrix.os }}, Java ${{ matrix.java }}'
+    if: github.event_name == 'push'
+    name: 'Full :: ${{ matrix.os }}, Java ${{ matrix.java }}'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -52,6 +52,8 @@ jobs:
         # macos and windows temporarily excluded
         # due to Docker-dependent tests introduced by the kogito-runtimes merge
         # failing on non-Linux runners. Re-enable once resolved.
+        # when resolved, make sure to fix other jobs that have the same reduced matrix
+        # (test-drools, test-optaplanner, test-kogito-runtimes, test-kogito-apps)
         exclude:
           - os: windows-latest
             java: 17
@@ -61,141 +63,16 @@ jobs:
             java: 17
           - os: macos-latest
             java: 21
-
     steps:
-      - name: 'SETUP :: Set paths for temporary files'
-        shell: bash
-        run: |
-          echo "CHANGED_FILES_FILE=${{ runner.temp }}/changed-files.txt" >> "$GITHUB_ENV"
-          echo "MAVEN_PL_AFFECTED_FILE=${{ runner.temp }}/maven-pl-affected.txt" >> "$GITHUB_ENV"
-          echo "MAVEN_PL_UPSTREAM_FILE=${{ runner.temp }}/maven-pl-upstream.txt" >> "$GITHUB_ENV"
-          echo "MAVEN_PL_CHANGED_FILE=${{ runner.temp }}/maven-pl-changed.txt" >> "$GITHUB_ENV"
-          echo "DEP_GRAPH_EXTRACTOR__OUTPUT_FILE=${{ runner.temp }}/dep-graph.tsv" >> "$GITHUB_ENV"
-          touch "${{ runner.temp }}/changed-files.txt"
-          touch "${{ runner.temp }}/maven-pl-affected.txt"
-          touch "${{ runner.temp }}/maven-pl-upstream.txt"
-          touch "${{ runner.temp }}/maven-pl-changed.txt"
-
-      - name: 'SETUP :: Free disk space (Ubuntu)'
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
-          df -h
-
-      - name: 'SETUP :: Enable long file paths (Windows)'
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          git config --system core.longpaths true
-          reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
-
       - name: "SETUP :: Checkout to load local actions"
         uses: actions/checkout@v7
 
-      - name: "SETUP :: Checkout @ Simulated squashed-merge if PR, else checkout current commit"
-        id: checkout_pr
-        uses: ./.github/actions/checkout-pr
+      - uses: ./.github/actions/ci-setup
         with:
-          ref: ${{ github.base_ref }}
-
-      - uses: actions/setup-java@v5
-        name: 'SETUP :: Java ${{ matrix.java }}'
-        with:
+          ref: ${{ github.ref }}
           java-version: ${{ matrix.java }}
-          distribution: temurin
-          cache: maven
 
-      # Temporary workaround while jbangdev/setup-jbang action doesn't include checksum verification.
-      # See https://github.com/apache/infrastructure-actions/pull/806
-      - name: 'SETUP :: Install JBang'
-        shell: bash
-        run: |
-          curl -sL https://github.com/jbangdev/jbang/releases/download/v0.138.0/jbang-0.138.0.zip -o jbang.zip
-          echo "3c9fb9ac5823ae5ab9d136dec08b896e2a0f6f6b313689b21f43c511b7c34b85  jbang.zip" | sha256sum -c -
-          unzip -q jbang.zip
-          echo "${{ github.workspace }}/jbang-0.138.0/bin" >> $GITHUB_PATH
-
-      - name: 'SETUP :: Block apache.snapshots Maven repository'
-        shell: bash
-        run: |
-          mkdir -p "$HOME/.m2"
-          cat > "$HOME/.m2/settings.xml" <<'EOF'
-          <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
-            <mirrors>
-              <mirror>
-                <id>block-apache-snapshots</id>
-                <mirrorOf>apache.snapshots,apache-snapshot-repository</mirrorOf>
-                <url>https://repository.apache.org/snapshots/</url>
-                <blocked>true</blocked>
-              </mirror>
-            </mirrors>
-          </settings>
-          EOF
-
-      # Three-dot diff (A...B = diff B against the merge-base of A and B)
-      # gives exactly the files changed in this PR branch.
-      - name: 'SETUP :: Collect changed files'
-        if: github.event_name == 'pull_request'
-        shell: bash
-        env:
-          BASE_REF: origin/${{ github.base_ref }}
-        run: |
-          git diff --name-only "${BASE_REF}...HEAD" > "$CHANGED_FILES_FILE"
-          echo "Changed files:"
-          cat "$CHANGED_FILES_FILE"
-
-      - name: 'SETUP :: Compute build scopes'
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          jbang script/ci/CiComputeBuildScopes.java \
-            "$CHANGED_FILES_FILE" \
-            "$MAVEN_PL_UPSTREAM_FILE" \
-            "$MAVEN_PL_AFFECTED_FILE" \
-            "$MAVEN_PL_CHANGED_FILE"
-
-      # Flag glossary:
-      #   --no-transfer-progress                    silence download progress bars (critical for 800+ modules)
-      #   -fae / --fail-at-end                      continue past failures so all broken modules are reported
-      #   -Dsurefire.redirectTestOutputToFile=true  redirect test JVM stdout/stderr to surefire-reports files
-      #   -Denforcer.skip=true                      skip Enforcer plugin
-      #   -Dcheckstyle.skip=true                    skip Checkstyle plugin
-      #   -Dformatter.skip=true                     skip formatter plugin     
-      #   -Darchunit.skip=true                      skip ArchUnit plugin     
-      #
-      # CiComputeBuildScopes writes one groupId:artifactId per line; we join
-      # them with commas for the -pl argument. Passing -pl on the command line
-      # (rather than via .mvn/maven.config) avoids polluting nested Maven runs
-      # spawned by integration tests — those walk up the filesystem looking for
-      # a .mvn directory and would otherwise inherit our -pl filter.
-      #
-      # Both sets are pre-computed and disjoint, so no -am / -amd flags are needed:
-      #   Upstream pass  (-pl upstream -DskipTests): builds intra-reactor deps of affected modules,
-      #                                              skipping tests.
-      #   Affected pass  (-pl affected):             builds exactly the affected modules (changed +
-      #                                              transitive downstream), running tests.
-
-      - name: "PR CHECK :: BUILD :: Upstream modules${{ github.event_name == 'push' && ' (skipped)' || '' }}"
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          pl=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
-          [ -z "$pl" ] && echo "No upstream modules. Skipping." && exit 0
-          mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
-
-      - name: "PR CHECK :: BUILD :: Changed and affected modules${{ github.event_name == 'push' && ' (skipped)' || '' }}"
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
-          [ -z "$pl" ] && echo "No affected modules. Skipping." && exit 0
-          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
-
-      - name: "CI :: BUILD :: Full${{ github.event_name == 'pull_request' && ' (skipped)' || '' }}"
-        if: github.event_name == 'push'
+      - name: "CI :: BUILD :: Full"
         shell: bash
         run: mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible install
 
@@ -224,6 +101,292 @@ jobs:
         if: ${{ always() }}
         with:
           name: build-compare_${{ matrix.os }}_java-${{ matrix.java }}
+          path: |
+            **/*.buildcompare
+            **/*.buildinfo
+
+  # PR builds split affected modules into 4 parallel test jobs by category:
+  #   test-drools, test-optaplanner, test-kogito-runtimes, test-kogito-apps
+  # Categories are derived from <!-- BEGIN/END xxx modules (auto) --> markers in
+  # the root pom.xml (see CiComputeBuildScopes.parseModuleCategories).
+  # Each job installs its upstream dependencies without tests, then runs tests
+  # for its own category only. Jobs with no affected modules skip entirely.
+
+  test-drools:
+    if: github.event.action != 'closed' && github.event_name == 'pull_request'
+    name: 'drools :: ${{ matrix.os }}, Java ${{ matrix.java }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:   [ubuntu-latest]
+        java: [17, 21]
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/ci-setup
+        with:
+          ref: ${{ github.base_ref }}
+          java-version: ${{ matrix.java }}
+
+      # Flag glossary:
+      #   --no-transfer-progress                    silence download progress bars (critical for 800+ modules)
+      #   -fae / --fail-at-end                      continue past failures so all broken modules are reported
+      #   -Dsurefire.redirectTestOutputToFile=true  redirect test JVM stdout/stderr to surefire-reports files
+      #   -Denforcer.skip=true                      skip Enforcer plugin
+      #   -Dcheckstyle.skip=true                    skip Checkstyle plugin
+      #   -Dformatter.skip=true                     skip formatter plugin
+      #   -Darchunit.skip=true                      skip ArchUnit plugin
+      #   -Dquarkus.build.skip=true                 skip Quarkus application build
+      #
+      # CiComputeBuildScopes writes one groupId:artifactId per line; we join
+      # them with commas for the -pl argument. Passing -pl on the command line
+      # (rather than via .mvn/maven.config) avoids polluting nested Maven runs
+      # spawned by integration tests — those walk up the filesystem looking for
+      # a .mvn directory and would otherwise inherit our -pl filter.
+      #
+      # Both sets are pre-computed and disjoint, so no -am / -amd flags are needed:
+      #   Upstream pass  (-pl upstream -DskipTests): builds intra-reactor deps of affected modules,
+      #                                              skipping tests.
+      #   Affected pass  (-pl affected):             builds exactly the affected modules (changed +
+      #                                              transitive downstream), running tests.
+
+      - name: "PR CHECK :: BUILD :: Upstream modules"
+        shell: bash
+        run: |
+          [ ! -s "$MAVEN_PL_AFFECTED_DROOLS_FILE" ] && echo "No affected drools modules. Skipping upstream build." && exit 0
+          pl=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
+          [ -z "$pl" ] && echo "No upstream modules. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -T 1C -fae -DskipTests -DskipITs -Dquarkus.build.skip=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+
+      - name: "PR CHECK :: TEST :: drools"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "$MAVEN_PL_AFFECTED_DROOLS_FILE")
+          [ -z "$pl" ] && echo "No affected drools modules. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+
+      - name: 'SUMMARY :: Publish'
+        if: always()
+        shell: bash
+        env:
+          MERMAID_EXPANDED: ${{ matrix.java == 21 }}
+          MATRIX_OS: ${{ matrix.os }}
+          MATRIX_JAVA: ${{ matrix.java }}
+        run: |
+          MAVEN_PL_AFFECTED=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE" 2>/dev/null || true) \
+          MAVEN_PL_UPSTREAM=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE" 2>/dev/null || true) \
+          MAVEN_PL_CHANGED=$(paste -sd, "$MAVEN_PL_CHANGED_FILE" 2>/dev/null || true) \
+          jbang script/ci/CiSummary.java
+
+      - name: Upload Build logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-logs_drools_${{ matrix.os }}_java-${{ matrix.java }}
+          path: '**/build.log'
+
+      - name: Upload Build Compare
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-compare_drools_${{ matrix.os }}_java-${{ matrix.java }}
+          path: |
+            **/*.buildcompare
+            **/*.buildinfo
+
+  test-optaplanner:
+    if: github.event.action != 'closed' && github.event_name == 'pull_request'
+    name: 'optaplanner :: ${{ matrix.os }}, Java ${{ matrix.java }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:   [ubuntu-latest]
+        java: [17, 21]
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/ci-setup
+        with:
+          ref: ${{ github.base_ref }}
+          java-version: ${{ matrix.java }}
+
+      - name: "PR CHECK :: BUILD :: Upstream + drools modules (tests skipped)"
+        shell: bash
+        run: |
+          [ ! -s "$MAVEN_PL_AFFECTED_OPTAPLANNER_FILE" ] && echo "No affected optaplanner modules. Skipping upstream build." && exit 0
+          upstream=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
+          drools=$(paste -sd, "$MAVEN_PL_AFFECTED_DROOLS_FILE")
+          pl=$(echo "$upstream,$drools" | sed 's/^,//;s/,$//')
+          [ -z "$pl" ] && echo "No modules to build. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -T 1C -fae -DskipTests -DskipITs -Dquarkus.build.skip=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+
+      - name: "PR CHECK :: TEST :: optaplanner"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "$MAVEN_PL_AFFECTED_OPTAPLANNER_FILE")
+          [ -z "$pl" ] && echo "No affected optaplanner modules. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+
+      - name: 'SUMMARY :: Publish'
+        if: always()
+        shell: bash
+        env:
+          MERMAID_EXPANDED: ${{ matrix.java == 21 }}
+          MATRIX_OS: ${{ matrix.os }}
+          MATRIX_JAVA: ${{ matrix.java }}
+        run: |
+          MAVEN_PL_AFFECTED=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE" 2>/dev/null || true) \
+          MAVEN_PL_UPSTREAM=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE" 2>/dev/null || true) \
+          MAVEN_PL_CHANGED=$(paste -sd, "$MAVEN_PL_CHANGED_FILE" 2>/dev/null || true) \
+          jbang script/ci/CiSummary.java
+
+      - name: Upload Build logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-logs_optaplanner_${{ matrix.os }}_java-${{ matrix.java }}
+          path: '**/build.log'
+
+      - name: Upload Build Compare
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-compare_optaplanner_${{ matrix.os }}_java-${{ matrix.java }}
+          path: |
+            **/*.buildcompare
+            **/*.buildinfo
+
+  test-kogito-runtimes:
+    if: github.event.action != 'closed' && github.event_name == 'pull_request'
+    name: 'kogito-runtimes :: ${{ matrix.os }}, Java ${{ matrix.java }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:   [ubuntu-latest]
+        java: [17, 21]
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/ci-setup
+        with:
+          ref: ${{ github.base_ref }}
+          java-version: ${{ matrix.java }}
+
+      - name: "PR CHECK :: BUILD :: Upstream + drools + optaplanner modules (tests skipped)"
+        shell: bash
+        run: |
+          [ ! -s "$MAVEN_PL_AFFECTED_KOGITO_RUNTIMES_FILE" ] && echo "No affected kogito-runtimes modules. Skipping upstream build." && exit 0
+          upstream=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
+          drools=$(paste -sd, "$MAVEN_PL_AFFECTED_DROOLS_FILE")
+          optaplanner=$(paste -sd, "$MAVEN_PL_AFFECTED_OPTAPLANNER_FILE")
+          pl=$(echo "$upstream,$drools,$optaplanner" | sed 's/^,//;s/,,*/,/g;s/,$//')
+          [ -z "$pl" ] && echo "No modules to build. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -T 1C -fae -DskipTests -DskipITs -Dquarkus.build.skip=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+
+      - name: "PR CHECK :: TEST :: kogito-runtimes"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "$MAVEN_PL_AFFECTED_KOGITO_RUNTIMES_FILE")
+          [ -z "$pl" ] && echo "No affected kogito-runtimes modules. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+
+      - name: 'SUMMARY :: Publish'
+        if: always()
+        shell: bash
+        env:
+          MERMAID_EXPANDED: ${{ matrix.java == 21 }}
+          MATRIX_OS: ${{ matrix.os }}
+          MATRIX_JAVA: ${{ matrix.java }}
+        run: |
+          MAVEN_PL_AFFECTED=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE" 2>/dev/null || true) \
+          MAVEN_PL_UPSTREAM=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE" 2>/dev/null || true) \
+          MAVEN_PL_CHANGED=$(paste -sd, "$MAVEN_PL_CHANGED_FILE" 2>/dev/null || true) \
+          jbang script/ci/CiSummary.java
+
+      - name: Upload Build logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-logs_kogito-runtimes_${{ matrix.os }}_java-${{ matrix.java }}
+          path: '**/build.log'
+
+      - name: Upload Build Compare
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-compare_kogito-runtimes_${{ matrix.os }}_java-${{ matrix.java }}
+          path: |
+            **/*.buildcompare
+            **/*.buildinfo
+
+  test-kogito-apps:
+    if: github.event.action != 'closed' && github.event_name == 'pull_request'
+    name: 'kogito-apps :: ${{ matrix.os }}, Java ${{ matrix.java }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:   [ubuntu-latest]
+        java: [17, 21]
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/ci-setup
+        with:
+          ref: ${{ github.base_ref }}
+          java-version: ${{ matrix.java }}
+
+      - name: "PR CHECK :: BUILD :: Upstream + drools + optaplanner + kogito-runtimes modules (tests skipped)"
+        shell: bash
+        run: |
+          [ ! -s "$MAVEN_PL_AFFECTED_KOGITO_APPS_FILE" ] && echo "No affected kogito-apps modules. Skipping upstream build." && exit 0
+          upstream=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
+          drools=$(paste -sd, "$MAVEN_PL_AFFECTED_DROOLS_FILE")
+          optaplanner=$(paste -sd, "$MAVEN_PL_AFFECTED_OPTAPLANNER_FILE")
+          kogito_rt=$(paste -sd, "$MAVEN_PL_AFFECTED_KOGITO_RUNTIMES_FILE")
+          pl=$(echo "$upstream,$drools,$optaplanner,$kogito_rt" | sed 's/^,//;s/,,*/,/g;s/,$//')
+          [ -z "$pl" ] && echo "No modules to build. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -T 1C -fae -DskipTests -DskipITs -Dquarkus.build.skip=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+
+      - name: "PR CHECK :: TEST :: kogito-apps"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "$MAVEN_PL_AFFECTED_KOGITO_APPS_FILE")
+          [ -z "$pl" ] && echo "No affected kogito-apps modules. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+
+      - name: 'SUMMARY :: Publish'
+        if: always()
+        shell: bash
+        env:
+          MERMAID_EXPANDED: ${{ matrix.java == 21 }}
+          MATRIX_OS: ${{ matrix.os }}
+          MATRIX_JAVA: ${{ matrix.java }}
+        run: |
+          MAVEN_PL_AFFECTED=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE" 2>/dev/null || true) \
+          MAVEN_PL_UPSTREAM=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE" 2>/dev/null || true) \
+          MAVEN_PL_CHANGED=$(paste -sd, "$MAVEN_PL_CHANGED_FILE" 2>/dev/null || true) \
+          jbang script/ci/CiSummary.java
+
+      - name: Upload Build logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-logs_kogito-apps_${{ matrix.os }}_java-${{ matrix.java }}
+          path: '**/build.log'
+
+      - name: Upload Build Compare
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-compare_kogito-apps_${{ matrix.os }}_java-${{ matrix.java }}
           path: |
             **/*.buildcompare
             **/*.buildinfo

@@ -1,0 +1,14 @@
+org.drools:drools-quarkus
+org.drools:drools-quarkus-deployment
+org.drools:drools-quarkus-examples-multiunit
+org.drools:drools-quarkus-examples-reactive
+org.drools:drools-quarkus-integration-test
+org.drools:drools-quarkus-integration-test-hotreload
+org.drools:drools-quarkus-integration-test-kmodule
+org.drools:drools-quarkus-integration-test-multimodule-main
+org.drools:drools-quarkus-quickstart-test
+org.drools:drools-quarkus-ruleunit-integration-test
+org.drools:drools-quarkus-ruleunit-integration-test-norest
+org.drools:drools-quarkus-ruleunits
+org.drools:drools-quarkus-ruleunits-deployment
+org.drools:drools-quarkus-util-deployment
