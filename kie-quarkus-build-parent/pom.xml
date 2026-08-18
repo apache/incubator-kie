@@ -39,8 +39,8 @@
   </description>
 
   <properties>
-    <version.io.quarkus>3.27.5.1</version.io.quarkus>
-    <version.io.quarkus.camel>3.27.5.1</version.io.quarkus.camel>
+    <version.io.quarkus>3.33.3.1</version.io.quarkus>
+    <version.io.quarkus.camel>3.33.2</version.io.quarkus.camel>
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie:kie-quarkus-build-parent</allowedPomsList>
     <!-- To be overridden by poms with dependency management -->

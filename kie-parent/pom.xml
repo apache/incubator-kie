@@ -101,7 +101,7 @@
     <version.com.github.victools>4.37.0</version.com.github.victools>
     <version.com.google.collections>1.0</version.com.google.collections>
     <version.com.google.gson>2.13.2</version.com.google.gson>
-    <version.com.google.guava>33.4.8-jre</version.com.google.guava>
+    <version.com.google.guava>33.5.0-jre</version.com.google.guava>
     <version.com.google.protobuf>3.25.5</version.com.google.protobuf>
     <version.com.graphql-java>25.0</version.com.graphql-java>
     <version.com.graphql-java-extended-scalars>24.0</version.com.graphql-java-extended-scalars>
@@ -123,7 +123,7 @@
     <version.common.exec>1.3</version.common.exec>
     <version.commons-codec>1.19.0</version.commons-codec>
     <version.commons-collections>3.2.2</version.commons-collections>
-    <version.commons-io>2.20.0</version.commons-io>
+    <version.commons-io>2.21.0</version.commons-io>
     <version.commons-logging>1.1.1</version.commons-logging>
     <version.compiler.plugin>3.13.0</version.compiler.plugin>
     <version.copy-rename-maven-plugin>1.0</version.copy-rename-maven-plugin>
@@ -143,19 +143,19 @@
     <version.io.cloudevents>3.0.0</version.io.cloudevents>
     <version.io.fabric8>7.3.1</version.io.fabric8>
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
-    <version.io.grpc>1.76.0</version.io.grpc>
+    <version.io.grpc>1.81.0</version.io.grpc>
     <version.io.micrometer>1.16.6</version.io.micrometer>
     <version.io.netty>4.1.136.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
-    <version.io.smallrye-config>3.13.4</version.io.smallrye-config>
-    <version.io.smallrye-health>4.2.0</version.io.smallrye-health>
-    <version.io.smallrye-open-api>4.0.12</version.io.smallrye-open-api>
-    <version.io.smallrye.config.core>3.13.4</version.io.smallrye.config.core>
-    <version.io.smallrye.jandex>3.4.0</version.io.smallrye.jandex>
-    <version.io.smallrye.mutiny>2.9.5</version.io.smallrye.mutiny>
-    <version.io.smallrye.openapi.core>4.0.12</version.io.smallrye.openapi.core>
-    <version.io.smallrye.reactive.messaging.in.memory>4.28.0</version.io.smallrye.reactive.messaging.in.memory>
+    <version.io.smallrye-config>3.16.0</version.io.smallrye-config>
+    <version.io.smallrye-health>4.3.0</version.io.smallrye-health>
+    <version.io.smallrye-open-api>4.2.4</version.io.smallrye-open-api>
+    <version.io.smallrye.config.core>3.16.0</version.io.smallrye.config.core>
+    <version.io.smallrye.jandex>3.5.3</version.io.smallrye.jandex>
+    <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
+    <version.io.smallrye.openapi.core>4.2.4</version.io.smallrye.openapi.core>
+    <version.io.smallrye.reactive.messaging.in.memory>4.33.0</version.io.smallrye.reactive.messaging.in.memory>
     <version.io.smallrye.reactive.mutiny-vertx-web-client>3.21.6</version.io.smallrye.reactive.mutiny-vertx-web-client>
     <!-- Mutiny Zero Flow Adapters -->
     <version.io.smallrye.reactive.mutiny-zero>1.1.1</version.io.smallrye.reactive.mutiny-zero>
@@ -199,7 +199,7 @@
     <version.maven.plugin>3.15.1</version.maven.plugin>
     <version.maven.project>2.2.1</version.maven.project>
     <version.maven.resolver.api>1.9.27</version.maven.resolver.api>
-    <version.mongodb-driver-sync>5.5.1</version.mongodb-driver-sync>
+    <version.mongodb-driver-sync>5.6.4</version.mongodb-driver-sync>
     <version.nashorn>15.3</version.nashorn>
     <version.native2ascii-maven-plugin>1.0-beta-1</version.native2ascii-maven-plugin>
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
@@ -224,7 +224,7 @@
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
     <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
     <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
-         quarkus-bom:3.27.4.1 promotes it to 2.25.1. Both are below the minimum safe version 2.25.5.
+         quarkus-bom:3.33.3.1 promotes it to 2.25.3. Both are below the minimum safe version 2.25.5.
          This managed entry forces 2.26.1 across all modules inheriting kie-parent.
          https://logging.apache.org/security.html#CVE-2026-49844 -->
     <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
@@ -259,7 +259,7 @@
     <!--This needs to be in sync with JUnit-->
     <version.org.hamcrest>3.0</version.org.hamcrest>
     <version.org.hamcrest.hamcrest-all>1.3</version.org.hamcrest.hamcrest-all>
-    <version.org.hibernate>7.1.18.Final</version.org.hibernate>
+    <version.org.hibernate>7.2.19.Final</version.org.hibernate>
     <version.org.hsqldb>2.7.1</version.org.hsqldb>
     <version.org.infinispan>15.2.6.Final</version.org.infinispan>
     <version.org.infinispan.protostream>5.0.13.Final</version.org.infinispan.protostream>
@@ -287,7 +287,7 @@
     <version.org.mvel>2.5.2.Final</version.org.mvel>
     <!-- Version of JMH -->
     <version.org.openjdk.jmh>1.21</version.org.openjdk.jmh>
-    <version.org.postgresql>42.7.12</version.org.postgresql>
+    <version.org.postgresql>42.7.13</version.org.postgresql>
     <version.org.powermock>2.0.9</version.org.powermock>
     <version.org.reactivestreams>1.0.4</version.org.reactivestreams>
     <version.org.reflections>0.10.2</version.org.reflections>
@@ -1346,7 +1346,7 @@
       </dependency>
       <dependency>
         <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
-             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.27.4.1 (to 2.25.1).
+             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.33.3.1 (to 2.25.3).
              Both are vulnerable; this pins the version to 2.26.1 for all inheriting modules. -->
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
