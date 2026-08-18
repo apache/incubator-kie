@@ -107,6 +107,23 @@
       <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- Ensure jobs-service binary is built before running integration tests.
+         This is a build-ordering sentinel only: type=pom + full exclusions means nothing
+         is added to the classpath. Without this edge the partial CI build skips the
+         service module and the Testcontainer image is missing at runtime. -->
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>jobs-service-common</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>
