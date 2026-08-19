@@ -156,6 +156,11 @@ public class DMNRuntimeBuilder {
             this.dmnCompiler = dmnCompiler;
         }
 
+        public DMNRuntime withModels(Collection<DMNModel> models) {
+            return new DMNRuntimeImpl(new DMNRuntimeKBStatic(ctx.cc.getRootClassLoader(), models,
+                    ctx.dmnProfiles));
+        }
+
         public Either<Exception, DMNRuntime> fromClasspathResource(final String resourceName, final Class<?> testClass) {
             return fromResources(List.of(new ClassPathResource(resourceName, testClass)));
         }
