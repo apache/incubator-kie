@@ -85,6 +85,9 @@ import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_VISIBILITY;
 
 public class ProcessVisitor extends AbstractVisitor {
 
+    private static final String FACTORY_PARAM_NAME = "factory";
+    private static final String INIT_CONNECTIONS_METHOD = "initConnections";
+
     public static final String DEFAULT_VERSION = "1.0";
 
     private NodeVisitorBuilderService nodeVisitorService;
@@ -95,8 +98,6 @@ public class ProcessVisitor extends AbstractVisitor {
         nodeVisitorService = new NodeVisitorBuilderService(contextClassLoader);
         returnValueEvaluatorBuilderService = ReturnValueEvaluatorBuilderService.instance(contextClassLoader);
     }
-
-    private static final String FACTORY_PARAM_NAME = "factory";
 
     private static MethodDeclaration buildHelperMethod(String name, BlockStmt helperBody) {
         return new MethodDeclaration()
@@ -274,8 +275,6 @@ public class ProcessVisitor extends AbstractVisitor {
         }
         return visitor != null ? visitor.getNodeId(((Node) contextContainer)) : FACTORY_FIELD_NAME;
     }
-
-    private static final String INIT_CONNECTIONS_METHOD = "initConnections";
 
     private void visitConnections(org.kie.api.definition.process.Node[] nodes, BlockStmt body, ProcessMetaData metadata) {
 
