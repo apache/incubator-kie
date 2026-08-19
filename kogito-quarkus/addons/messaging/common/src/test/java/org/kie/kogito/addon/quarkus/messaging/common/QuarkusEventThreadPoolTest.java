@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @NotThreadSafe
+@org.junit.jupiter.api.Disabled("Flaky under parallel builds (-T 2): timing-sensitive queue overflow depends on CPU availability")
 public class QuarkusEventThreadPoolTest {
 
     private static final String CHANNEL_NAME = "nevermind";

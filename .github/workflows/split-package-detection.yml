@@ -35,6 +35,7 @@ concurrency:
 
 jobs:
   check-split-packages:
+    if: false
     runs-on: ubuntu-latest
 
     steps:

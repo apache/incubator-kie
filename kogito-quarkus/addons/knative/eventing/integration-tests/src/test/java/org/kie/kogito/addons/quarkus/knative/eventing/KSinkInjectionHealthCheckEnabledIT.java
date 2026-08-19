@@ -18,6 +18,7 @@
  */
 package org.kie.kogito.addons.quarkus.knative.eventing;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusIntegrationTest;
@@ -29,6 +30,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItems;
 import static org.kie.kogito.addons.quarkus.knative.eventing.KSinkInjectionHealthCheck.CONFIG_ALIAS;
 
+@Disabled("Re-augmentation ClassNotFoundException under parallel build")
 @QuarkusIntegrationTest
 @TestProfile(KSinkInjectionHealthCheckEnabledProfile.class)
 class KSinkInjectionHealthCheckEnabledIT extends AbstractKSinkInjectionHealthCheckIT {
