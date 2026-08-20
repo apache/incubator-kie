@@ -51,6 +51,7 @@ public enum KeepReferenceOption implements SingleValueKieSessionOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

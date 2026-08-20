@@ -27,8 +27,10 @@ public interface Option extends Serializable {
 
     /**
      * @return the property name for this option
+     * @deprecated since 8.35.0, use {@link #propertyName()} instead. Immutable properties should not
+     *             need getter/setter naming convention. Will be removed in a future version.
      */
-    @Deprecated // immutable properties should not need getter/setter, this is common now for "value" types.
+    @Deprecated(since = "8.35.0", forRemoval = true)
     String getPropertyName();
 
     default String propertyName() {

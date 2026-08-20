@@ -69,6 +69,7 @@ public class WorkItemHandlerOption implements MultiValueKieSessionOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME+name;
     }

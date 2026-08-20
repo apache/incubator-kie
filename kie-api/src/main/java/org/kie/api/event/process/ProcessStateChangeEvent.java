@@ -19,7 +19,9 @@
 package org.kie.api.event.process;
 
 /**
- * An event when a process instance has been started.
+ * Event fired when a process instance changes state.
+ * @since 10.2.0
+ * @apiNote Used for SLA timer re-scheduling notifications
  */
 public interface ProcessStateChangeEvent
     extends

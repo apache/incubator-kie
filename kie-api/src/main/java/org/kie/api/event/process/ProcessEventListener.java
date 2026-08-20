@@ -130,13 +130,17 @@ public interface ProcessEventListener
 
     /**
      * This listener method is invoked right after a process instance is modified.
-     * @param event
+     * @param event the process state change event
+     * @since 10.2.0
+     * @apiNote Use for SLA timer re-scheduling notifications
      */
     default void onProcessStateChanged(ProcessStateChangeEvent event) {}
 
     /**
      * This listener method is invoked right after a node in a process instance is modified.
-     * @param event
+     * @param event the node state change event
+     * @since 10.2.0
+     * @apiNote Use for SLA timer re-scheduling notifications
      */
     default void onNodeStateChanged(ProcessNodeStateChangeEvent event) {}
 }

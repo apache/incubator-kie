@@ -28,13 +28,10 @@ public interface OptionsConfiguration<T extends Option, S extends SingleValueOpt
     void makeImmutable();
 
     /**
-     * Gets an option value
+     * Sets an option value
      *
      * @param option the option class for the option being requested
-     * @param <C extends T>
-     *
-     * @return the Option value for the given option. Returns null if option is
-     *         not configured.
+     * @param <C> the option type
      */
     <C extends T> void setOption( C option );
 
@@ -67,11 +64,14 @@ public interface OptionsConfiguration<T extends Option, S extends SingleValueOpt
 
     /**
      * Deprecated, KEY now exists top level, and its preferred to be explicit that this is a sub key
-     * @param optionKey
-     * @return
-     * @param <C>
+     *
+     * @param optionKey the option key
+     * @return the set of sub keys
+     * @param <C> the option type
+     * @deprecated since 8.35.0, use {@link #getOptionSubKeys(OptionKey)} instead. The method name
+     *             should explicitly indicate it returns sub keys. Will be removed in a future version.
      */
-    @Deprecated
+    @Deprecated(since = "8.35.0", forRemoval = true)
     default <C extends M> Set<String> getOptionKeys(OptionKey<C> optionKey) {
         return getOptionSubKeys(optionKey);
     }
