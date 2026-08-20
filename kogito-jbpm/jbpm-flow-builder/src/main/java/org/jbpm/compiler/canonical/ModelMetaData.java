@@ -86,11 +86,13 @@ public class ModelMetaData {
         this(processId, packageName, modelClassSimpleName, visibility, variableScope, hidden, "/class-templates/ModelTemplate.java");
     }
 
+    @SuppressWarnings("unchecked")
     public ModelMetaData(String processId, String packageName, String modelClassSimpleName, String visibility, VariableDeclarations variableScope, boolean hidden, String templateName) {
         this(processId, packageName, modelClassSimpleName, visibility, variableScope, hidden, templateName, c -> {
         });
     }
 
+    @SafeVarargs
     public ModelMetaData(String processId, String packageName, String modelClassSimpleName, String visibility, VariableDeclarations variableScope, boolean hidden, String templateName,
             Consumer<CompilationUnit>... customGenerator) {
         this.processId = processId;
@@ -236,7 +238,9 @@ public class ModelMetaData {
             applyValidation(fd, tags);
             applyOpenApiSchemaAnnotation(fd);
 
-            fd.createGetter();
+            MethodDeclaration getter = fd.createGetter();
+            getter.addAnnotation(new NormalAnnotationExpr(new Name(JsonProperty.class.getCanonicalName()),
+                    NodeList.nodeList(new MemberValuePair("value", new StringLiteralExpr(varName)))));
             MethodDeclaration setter = fd.createSetter();
             if (isInputModel()) {
                 // Only Input setters run from request deserialization - Model/Output setters
