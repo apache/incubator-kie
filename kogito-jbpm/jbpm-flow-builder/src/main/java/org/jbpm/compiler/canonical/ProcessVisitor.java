@@ -20,6 +20,7 @@ package org.jbpm.compiler.canonical;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,16 +54,23 @@ import org.kie.api.definition.process.Process;
 import org.kie.api.definition.process.WorkflowProcess;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NullLiteralExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
@@ -79,6 +87,7 @@ import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_TYPE;
 import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_VALIDATE;
 import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_VERSION;
 import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_VISIBILITY;
+import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
 
 public class ProcessVisitor extends AbstractVisitor {
 
@@ -149,10 +158,24 @@ public class ProcessVisitor extends AbstractVisitor {
         for (org.kie.api.definition.process.Node procNode : process.getNodes()) {
             processNodes.add((Node) procNode);
         }
-        visitNodes(processNodes, body, variableScope, metadata);
-        //exception scope
+
+        // Collect imports declared at the process level (e.g. java.util.List) and
+        // from the process template (e.g. KieFunctions).  These need to appear in
+        // every node builder class CU so that lambdas / script actions can use them.
+        Set<String> processLevelImports = new LinkedHashSet<>();
+        if (process instanceof org.jbpm.process.core.Process coreProcess) {
+            Set<String> declared = coreProcess.getImports();
+            if (declared != null) {
+                processLevelImports.addAll(declared);
+            }
+        }
+        // KieFunctions is always added by the ProcessTemplate – include it in every node CU
+        processLevelImports.add(org.drools.core.util.KieFunctions.class.getCanonicalName());
+
+        visitNodesAsBuilderClasses(processNodes, body, variableScope, metadata, processLevelImports);
+        //exception scope – only root-process scope; sub-process scopes are handled per-node
         visitExceptionScope(process, body);
-        visitConnections(process.getNodes(), body);
+        visitConnectionsAsBuilderClass(process.getNodes(), body, metadata);
 
         body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_VALIDATE));
 
@@ -235,6 +258,163 @@ public class ProcessVisitor extends AbstractVisitor {
     }
 
     @SuppressWarnings("unchecked")
+    private <U extends org.kie.api.definition.process.Node> void visitNodesAsBuilderClasses(
+            List<U> nodes, BlockStmt body, VariableScope variableScope, ProcessMetaData metadata,
+            Set<String> processLevelImports) {
+        String processBaseClassName = metadata.getProcessBaseClassName();
+        String packageName = metadata.getPackageName();
+
+        for (U node : nodes) {
+            AbstractNodeVisitor<U> visitor = (AbstractNodeVisitor<U>) this.nodeVisitorService.findNodeVisitor(node.getClass());
+            if (visitor == null) {
+                throw new IllegalStateException("No visitor found for node " + node.getClass().getName());
+            }
+
+            String nodeClassName = processBaseClassName + "_node_" + sanitizeClassName(node.getId().toExternalFormat());
+
+            CompilationUnit cu = new CompilationUnit();
+            if (packageName != null) {
+                cu.setPackageDeclaration(packageName);
+            }
+            cu.addImport(org.jbpm.ruleflow.core.RuleFlowProcessFactory.class.getCanonicalName());
+            cu.addImport(org.jbpm.ruleflow.core.WorkflowElementIdentifierFactory.class.getCanonicalName());
+            // Propagate process-level and template imports so that lambdas / script actions compile
+            for (String imp : processLevelImports) {
+                cu.addImport(new ImportDeclaration(imp, false, false));
+            }
+
+            ClassOrInterfaceDeclaration nodeClass = cu.addClass(nodeClassName);
+            nodeClass.setModifiers(); // package-private
+
+            // Attach the build() method with an empty body to the class BEFORE visiting the node,
+            // so that tryAddImportToParentCompilationUnit() calls inside visitors propagate up to `cu`.
+            MethodDeclaration buildMethod = nodeClass.addMethod("build");
+            buildMethod.setModifiers(); // package-private
+            buildMethod.setType("void");
+            buildMethod.addParameter(new Parameter(
+                    new ClassOrInterfaceType(null, org.jbpm.ruleflow.core.RuleFlowProcessFactory.class.getSimpleName()),
+                    FACTORY_FIELD_NAME));
+            BlockStmt helperBody = new BlockStmt();
+            buildMethod.setBody(helperBody);
+
+            visitor.visitNodeEntryPoint(null, node, helperBody, variableScope, metadata);
+
+            // If this node is a composite context container (e.g. sub-process), inline its
+            // exception scope handling (and all nested sub-process scopes) into the same
+            // build() body so the local factory variable is still in scope.
+            // visitSubExceptionScope() in the main process() body skips these.
+            if (node instanceof ContextContainer contextContainer) {
+                org.jbpm.process.core.Context exScope =
+                        contextContainer.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
+                if (exScope != null) {
+                    visitContextExceptionScope(exScope, helperBody);
+                }
+            }
+            if (node instanceof NodeContainer nodeContainer) {
+                visitAllSubExceptionScopes(nodeContainer.getNodes(), helperBody);
+            }
+
+            // Build a lookup of producer field name -> fully-qualified Supplier type.
+            // This must be done AFTER visitNodeEntryPoint because triggers are registered
+            // inside the visitor via metadata.addTrigger().
+            //
+            // IMPORTANT — CDI late injection: in the Quarkus path the producer field on the
+            // outer process class is @Inject-ed after construction, so its value is null when
+            // process() runs (triggered by activate() in the constructor).  We therefore store
+            // the producer as a Supplier so the lambda reads the field lazily at execution time.
+            //   node builder field : Supplier<MessageProducer<T>> producer__xyz
+            //   build() lambda     : () -> producer__xyz.get()     ← evaluated late
+            //   dispatch call      : new NodeClass(() -> producer__xyz).build(factory)
+            //                        ↑ closes over `this` in the outer class; evaluated late
+            Set<String> producerFieldNames = new java.util.HashSet<>();
+            Map<String, String> producerFieldTypes = new java.util.HashMap<>();
+            for (TriggerMetaData trigger : metadata.getTriggers()) {
+                if (trigger.getType() == TriggerMetaData.TriggerType.ProduceMessage) {
+                    String fieldName = "producer_" + trigger.getOwnerId();
+                    String dataType = trigger.getDataType() != null ? trigger.getDataType() : "java.lang.Object";
+                    // Supplier<MessageProducer<DataType>>
+                    String supplierType = java.util.function.Supplier.class.getCanonicalName()
+                            + "<" + org.kie.kogito.event.impl.MessageProducer.class.getCanonicalName()
+                            + "<" + dataType + ">>";
+                    producerFieldNames.add(fieldName);
+                    producerFieldTypes.put(fieldName, supplierType);
+                }
+            }
+
+            // For every bare NameExpr in the body that references a producer field, rewrite
+            // it to a .get() call so the supplier is dereferenced at execution time, not at
+            // build time.  E.g.  () -> producer__xyz  →  () -> producer__xyz.get()
+            if (!producerFieldNames.isEmpty()) {
+                helperBody.findAll(com.github.javaparser.ast.expr.NameExpr.class).stream()
+                        .filter(ne -> producerFieldNames.contains(ne.getNameAsString()))
+                        .forEach(ne -> ne.replace(new MethodCallExpr(ne.clone(), "get")));
+            }
+
+            // Collect all bare NameExprs in the body that refer to outer-class fields.
+            // Known outer-class fields that visitors can reference:
+            //   "app"        - Application field (RuleSetNodeVisitor: DMN decisions, rule flow groups)
+            //   "producer_*" - MessageProducer fields (AbstractNodeVisitor: ProduceMessage actions)
+            // We use a LinkedHashMap to preserve insertion order and store fieldName -> type.
+            java.util.LinkedHashMap<String, String> outerFields = new java.util.LinkedHashMap<>();
+            // Scan after the producer rewrite so NameExprs are gone and MethodCallExprs remain
+            helperBody.findAll(com.github.javaparser.ast.expr.MethodCallExpr.class).stream()
+                    .filter(mc -> mc.getScope().filter(s -> s instanceof NameExpr).isPresent()
+                            && "get".equals(mc.getNameAsString())
+                            && mc.getArguments().isEmpty())
+                    .map(mc -> ((NameExpr) mc.getScope().get()).getNameAsString())
+                    .filter(producerFieldTypes::containsKey)
+                    .distinct()
+                    .forEach(name -> outerFields.put(name, producerFieldTypes.get(name)));
+            // Also detect "app" (plain NameExpr, not rewritten)
+            helperBody.findAll(com.github.javaparser.ast.expr.NameExpr.class).stream()
+                    .map(com.github.javaparser.ast.expr.NameExpr::getNameAsString)
+                    .filter("app"::equals)
+                    .findFirst()
+                    .ifPresent(name -> outerFields.put(name, org.kie.kogito.Application.class.getCanonicalName()));
+
+            if (!outerFields.isEmpty()) {
+                // Add a private final field for each outer reference
+                outerFields.forEach((fieldName, fieldType) -> nodeClass.addField(fieldType, fieldName, Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL));
+
+                // Add a constructor that accepts them all – insert before the build() method
+                com.github.javaparser.ast.body.ConstructorDeclaration ctor = nodeClass.addConstructor();
+                BlockStmt ctorBody = new BlockStmt();
+                outerFields.forEach((fieldName, fieldType) -> {
+                    ctor.addParameter(new Parameter(new ClassOrInterfaceType(null, fieldType), fieldName));
+                    ctorBody.addStatement(new AssignExpr(
+                            new com.github.javaparser.ast.expr.FieldAccessExpr(new com.github.javaparser.ast.expr.ThisExpr(), fieldName),
+                            new NameExpr(fieldName),
+                            AssignExpr.Operator.ASSIGN));
+                });
+                ctor.setBody(ctorBody);
+            }
+
+            metadata.addNodeBuilderClass(cu);
+
+            // Emit the dispatch call into process().
+            // For producer fields: wrap in a lambda () -> producer__xyz so the supplier
+            // closes over `this` (the outer process instance) and reads the CDI-injected
+            // field lazily at execution time rather than capturing null at build time.
+            com.github.javaparser.ast.NodeList<com.github.javaparser.ast.expr.Expression> ctorArgs = new com.github.javaparser.ast.NodeList<>();
+            outerFields.forEach((fieldName, fieldType) -> {
+                if (producerFieldNames.contains(fieldName)) {
+                    // Wrap producer in a no-arg lambda: () -> producer__xyz
+                    ctorArgs.add(new com.github.javaparser.ast.expr.LambdaExpr(
+                            new com.github.javaparser.ast.NodeList<>(),
+                            new NameExpr(fieldName)));
+                } else {
+                    ctorArgs.add(new NameExpr(fieldName));
+                }
+            });
+            body.addStatement(new ExpressionStmt(
+                    new MethodCallExpr(
+                            new ObjectCreationExpr(null, new ClassOrInterfaceType(null, nodeClassName), ctorArgs),
+                            "build",
+                            new com.github.javaparser.ast.NodeList<>(new NameExpr(FACTORY_FIELD_NAME)))));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private String getFieldName(ContextContainer contextContainer) {
         AbstractNodeVisitor visitor = null;
         if (contextContainer instanceof CompositeNode) {
@@ -254,6 +434,53 @@ public class ProcessVisitor extends AbstractVisitor {
         for (Connection connection : connections) {
             visitConnection(connection, body);
         }
+    }
+
+    private void visitConnectionsAsBuilderClass(org.kie.api.definition.process.Node[] nodes, BlockStmt body, ProcessMetaData metadata) {
+        List<Connection> connections = new ArrayList<>();
+        for (org.kie.api.definition.process.Node node : nodes) {
+            for (List<Connection> connectionList : node.getIncomingConnections().values()) {
+                connections.addAll(connectionList);
+            }
+        }
+        if (connections.isEmpty()) {
+            return;
+        }
+
+        String processBaseClassName = metadata.getProcessBaseClassName();
+        String packageName = metadata.getPackageName();
+        String connectionsClassName = processBaseClassName + "_connections";
+
+        CompilationUnit cu = new CompilationUnit();
+        if (packageName != null) {
+            cu.setPackageDeclaration(packageName);
+        }
+        cu.addImport(org.jbpm.ruleflow.core.RuleFlowProcessFactory.class.getCanonicalName());
+        cu.addImport(org.jbpm.ruleflow.core.WorkflowElementIdentifierFactory.class.getCanonicalName());
+
+        ClassOrInterfaceDeclaration connectionsClass = cu.addClass(connectionsClassName);
+        connectionsClass.setModifiers(); // package-private
+
+        BlockStmt helperBody = new BlockStmt();
+        for (Connection connection : connections) {
+            visitConnection(connection, helperBody);
+        }
+
+        MethodDeclaration buildMethod = connectionsClass.addMethod("build");
+        buildMethod.setModifiers(); // package-private
+        buildMethod.setType("void");
+        buildMethod.addParameter(new Parameter(
+                new ClassOrInterfaceType(null, org.jbpm.ruleflow.core.RuleFlowProcessFactory.class.getSimpleName()),
+                FACTORY_FIELD_NAME));
+        buildMethod.setBody(helperBody);
+
+        metadata.addNodeBuilderClass(cu);
+
+        body.addStatement(new ExpressionStmt(
+                new MethodCallExpr(
+                        new ObjectCreationExpr(null, new ClassOrInterfaceType(null, connectionsClassName), new com.github.javaparser.ast.NodeList<>()),
+                        "build",
+                        new com.github.javaparser.ast.NodeList<>(new NameExpr(FACTORY_FIELD_NAME)))));
     }
 
     // KOGITO-1882 Finish implementation or delete completely
@@ -325,7 +552,30 @@ public class ProcessVisitor extends AbstractVisitor {
                 })
                 .filter(ContextContainer.class::isInstance)
                 .map(ContextContainer.class::cast)
+                // Skip CompositeNode sub-processes: their exception scopes are handled
+                // inside the node's own builder class build() method, where the local
+                // composite node factory variable is still in scope.
+                .filter(container -> !(container instanceof CompositeNode))
                 .map(container -> container.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE))
+                .forEach(context -> visitContextExceptionScope(context, body));
+    }
+
+    /**
+     * Like visitSubExceptionScope but does NOT skip CompositeNode instances.
+     * Used from within a node builder class body, where nested sub-process exception
+     * scopes must be inlined (they are not processed by the main process() body).
+     */
+    private void visitAllSubExceptionScopes(org.kie.api.definition.process.Node[] nodes, BlockStmt body) {
+        Stream.of(nodes)
+                .peek(node -> {
+                    if (node instanceof NodeContainer) {
+                        visitAllSubExceptionScopes(((NodeContainer) node).getNodes(), body);
+                    }
+                })
+                .filter(ContextContainer.class::isInstance)
+                .map(ContextContainer.class::cast)
+                .map(container -> container.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE))
+                .filter(java.util.Objects::nonNull)
                 .forEach(context -> visitContextExceptionScope(context, body));
     }
 }

@@ -63,6 +63,7 @@ public class ProcessMetaData {
 
     private Map<String, CompilationUnit> generatedHandlers = new HashMap<>();
     private Set<CompilationUnit> generatedListeners = new HashSet<>();
+    private List<CompilationUnit> nodeBuilderClasses = new ArrayList<>();
 
     public ProcessMetaData(String processId, String extractedProcessId, String processName, String processVersion, String processPackageName, String processClassName) {
         super();
@@ -213,6 +214,14 @@ public class ProcessMetaData {
 
     public void setDynamic(boolean dynamic) {
         this.dynamic = dynamic;
+    }
+
+    public List<CompilationUnit> getNodeBuilderClasses() {
+        return nodeBuilderClasses;
+    }
+
+    public void addNodeBuilderClass(CompilationUnit cu) {
+        nodeBuilderClasses.add(cu);
     }
 
     @Override
