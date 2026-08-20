@@ -65,24 +65,24 @@ public class ProcessGeneratorCodeSizeTest {
         org.jbpm.compiler.canonical.ProcessMetaData metadata = generators.get(0).generate();
 
         assertThat(metadata.getProcessHelperMethods())
-                .as("Each node must have its own helper method, plus one initConnections helper")
+                .as("Each node must have its own helper method, plus one buildConnections helper")
                 .hasSizeGreaterThan(750);
 
         // Every helper must be private void with a RuleFlowProcessFactory parameter.
         metadata.getProcessHelperMethods().forEach(m -> {
             assertThat(m.getNameAsString())
-                    .matches("initNode_.*|initConnections");
+                    .matches("build[A-Z].*|buildConnections");
             assertThat(m.isPrivate()).isTrue();
             assertThat(m.isStatic()).isFalse();
             assertThat(m.getParameters()).hasSize(1);
         });
 
-        // Exactly one initConnections helper
+        // Exactly one buildConnections helper
         long connectionsHelperCount = metadata.getProcessHelperMethods().stream()
-                .filter(m -> m.getNameAsString().equals("initConnections"))
+                .filter(m -> m.getNameAsString().equals("buildConnections"))
                 .count();
         assertThat(connectionsHelperCount)
-                .as("All connections must be grouped into exactly one initConnections helper")
+                .as("All connections must be grouped into exactly one buildConnections helper")
                 .isEqualTo(1);
 
         // The process() template body must contain only helper call statements
@@ -91,7 +91,7 @@ public class ProcessGeneratorCodeSizeTest {
                 .map(com.github.javaparser.ast.body.MethodDeclaration::toString)
                 .orElse("");
 
-        assertThat(processBody).contains("initNode_");
-        assertThat(processBody).contains("initConnections(");
+        assertThat(processBody).contains("build");
+        assertThat(processBody).contains("buildConnections(");
     }
 }

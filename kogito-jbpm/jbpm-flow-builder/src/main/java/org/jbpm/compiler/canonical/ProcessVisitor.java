@@ -86,7 +86,7 @@ import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_VISIBILITY;
 public class ProcessVisitor extends AbstractVisitor {
 
     private static final String FACTORY_PARAM_NAME = "factory";
-    private static final String INIT_CONNECTIONS_METHOD = "initConnections";
+    private static final String BUILD_CONNECTIONS_METHOD = "buildConnections";
 
     public static final String DEFAULT_VERSION = "1.0";
 
@@ -259,7 +259,8 @@ public class ProcessVisitor extends AbstractVisitor {
                 visitSubExceptionScope(((NodeContainer) node).getNodes(), nodeBody);
             }
 
-            String helperName = "initNode_" + node.getId().toSanitizeString();
+            String nodeKey = visitor.getNodeKey();
+            String helperName = "build" + Character.toUpperCase(nodeKey.charAt(0)) + nodeKey.substring(1) + node.getId().toSanitizeString();
             metadata.addProcessHelperMethod(buildHelperMethod(helperName, nodeBody));
 
             body.addStatement(new MethodCallExpr(null, helperName)
@@ -294,9 +295,9 @@ public class ProcessVisitor extends AbstractVisitor {
             visitConnection(connection, connectionsBody);
         }
 
-        metadata.addProcessHelperMethod(buildHelperMethod(INIT_CONNECTIONS_METHOD, connectionsBody));
+        metadata.addProcessHelperMethod(buildHelperMethod(BUILD_CONNECTIONS_METHOD, connectionsBody));
 
-        body.addStatement(new MethodCallExpr(null, INIT_CONNECTIONS_METHOD)
+        body.addStatement(new MethodCallExpr(null, BUILD_CONNECTIONS_METHOD)
                 .addArgument(new NameExpr(FACTORY_FIELD_NAME)));
     }
 
