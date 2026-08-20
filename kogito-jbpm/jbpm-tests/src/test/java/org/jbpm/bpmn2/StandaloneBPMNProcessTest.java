@@ -461,18 +461,29 @@ public class StandaloneBPMNProcessTest extends JbpmBpmn2TestCase {
         org.kie.kogito.process.Process<org.jbpm.bpmn2.intermediate.EventBasedSplit5Model> processDefinition =
                 org.jbpm.bpmn2.intermediate.EventBasedSplit5Process.newProcess(app);
         // Yes
-        ProcessInstance<org.jbpm.bpmn2.intermediate.EventBasedSplit5Model> processInstance =
+        ProcessInstance<org.jbpm.bpmn2.intermediate.EventBasedSplit5Model> yesInstance =
                 processDefinition.createInstance(processDefinition.createModel());
-        processInstance.start();
-        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
-        ProcessTestHelper.completeWorkItem(processInstance, Map.of("Message", "YesValue"));
-        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+        yesInstance.start();
+        assertThat(yesInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(yesInstance.variables().getX()).isNull();
+        yesInstance.workItems().stream()
+                .filter(wi -> "Yes".equals(wi.getName()))
+                .findFirst()
+                .ifPresent(wi -> yesInstance.completeWorkItem(wi.getId(), Map.of("Message", "YesValue")));
+        assertThat(yesInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+        assertThat(yesInstance.variables().getX()).isEqualTo("YesValue");
         // No
-        processInstance = processDefinition.createInstance(processDefinition.createModel());
-        processInstance.start();
-        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
-        ProcessTestHelper.completeWorkItem(processInstance, Map.of("Message", "NoValue"));
-        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+        ProcessInstance<org.jbpm.bpmn2.intermediate.EventBasedSplit5Model> noInstance =
+                processDefinition.createInstance(processDefinition.createModel());
+        noInstance.start();
+        assertThat(noInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(noInstance.variables().getX()).isNull();
+        noInstance.workItems().stream()
+                .filter(wi -> "No".equals(wi.getName()))
+                .findFirst()
+                .ifPresent(wi -> noInstance.completeWorkItem(wi.getId(), Map.of("Message", "NoValue")));
+        assertThat(noInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+        assertThat(noInstance.variables().getX()).isEqualTo("NoValue");
     }
 
     @Test
