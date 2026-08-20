@@ -145,7 +145,7 @@
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
     <version.io.micrometer>1.16.6</version.io.micrometer>
-    <version.io.netty>4.1.136.Final</version.io.netty>
+    <version.io.netty>4.2.16.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
     <version.io.smallrye-config>3.13.4</version.io.smallrye-config>
