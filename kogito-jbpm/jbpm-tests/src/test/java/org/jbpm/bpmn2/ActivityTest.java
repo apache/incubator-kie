@@ -39,6 +39,8 @@ import org.jbpm.bpmn2.activity.ScriptTaskWithIOModel;
 import org.jbpm.bpmn2.activity.ScriptTaskWithIOProcess;
 import org.jbpm.bpmn2.activity.UserTaskWithBooleanOutputModel;
 import org.jbpm.bpmn2.activity.UserTaskWithBooleanOutputProcess;
+import org.jbpm.bpmn2.activity.UserTaskWithDataStoreModel;
+import org.jbpm.bpmn2.activity.UserTaskWithDataStoreProcess;
 import org.jbpm.bpmn2.activity.UserTaskWithIOexpressionModel;
 import org.jbpm.bpmn2.activity.UserTaskWithIOexpressionProcess;
 import org.jbpm.bpmn2.activity.UserTaskWithParametrizedInputModel;
@@ -503,11 +505,13 @@ public class ActivityTest extends JbpmBpmn2TestCase {
     }
 
     @Test
-    public void testUserTaskWithDataStoreScenario() throws Exception {
-        kruntime = createKogitoProcessRuntime("org/jbpm/bpmn2/activity/BPMN2-UserTaskWithDataStore.bpmn2");
-        kruntime.getKogitoWorkItemManager().registerWorkItemHandler("Human Task",
-                new DoNothingWorkItemHandler());
-        kruntime.startProcess("UserTaskWithDataStore");
+    public void testUserTaskWithDataStoreScenario() {
+        Application app = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(app, "Human Task", new DoNothingWorkItemHandler());
+        org.kie.kogito.process.Process<UserTaskWithDataStoreModel> processDefinition = UserTaskWithDataStoreProcess.newProcess(app);
+        UserTaskWithDataStoreModel model = processDefinition.createModel();
+        org.kie.kogito.process.ProcessInstance<UserTaskWithDataStoreModel> instance = processDefinition.createInstance(model);
+        instance.start();
         // we can't test further as user tasks are asynchronous.
     }
 
