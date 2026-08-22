@@ -483,6 +483,8 @@ public class ProcessGenerator {
                 .addMember(createReadOnlyInstanceGenericWithWorkflowInstanceMethod(processInstanceFQCN))
                 .addMember(process(processMetaData));
 
+        processMetaData.getProcessHelperMethods().forEach(cls::addMember);
+
         internalConfigure(processMetaData).ifPresent(cls::addMember);
         internalRegisterListeners(processMetaData).ifPresent(cls::addMember);
 
