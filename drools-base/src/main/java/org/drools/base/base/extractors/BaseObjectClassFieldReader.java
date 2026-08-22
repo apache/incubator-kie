@@ -26,8 +26,8 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 
 import org.drools.base.base.BaseClassFieldReader;
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.util.FloatHelper;
 
 public abstract class BaseObjectClassFieldReader extends BaseClassFieldReader {
@@ -46,9 +46,9 @@ public abstract class BaseObjectClassFieldReader extends BaseClassFieldReader {
                valueType );
     }
 
-    public abstract Object getValue(ValueResolver valueResolver, Object object);
+    public abstract Object getValue(GlobalResolver valueResolver, Object object);
 
-    public boolean getBooleanValue(ValueResolver valueResolver, Object object) {
+    public boolean getBooleanValue(GlobalResolver valueResolver, Object object) {
         final Object value = getValue( valueResolver, object );
 
         if ( value instanceof Boolean b ) {
@@ -59,7 +59,7 @@ public abstract class BaseObjectClassFieldReader extends BaseClassFieldReader {
     }
 
 
-    public double getDecimalValue(ValueResolver valueResolver, Object object) {
+    public double getDecimalValue(GlobalResolver valueResolver, Object object) {
         final Object value = getValue( valueResolver, object );
 
         if( value instanceof Character c ) {
@@ -72,7 +72,7 @@ public abstract class BaseObjectClassFieldReader extends BaseClassFieldReader {
     }
 
 
-    public long getWholeNumberValue(ValueResolver valueResolver, Object object) {
+    public long getWholeNumberValue(GlobalResolver valueResolver, Object object) {
         final Object value = getValue( valueResolver, object );
 
         if( value instanceof Character c ) {
@@ -92,14 +92,14 @@ public abstract class BaseObjectClassFieldReader extends BaseClassFieldReader {
         throw new RuntimeException( "Conversion to long not supported from " +  getExtractToClass().getName() );
     }
 
-    public boolean isNullValue(ValueResolver valueResolver, Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, Object object) {
         return object == null || getValue( valueResolver, object ) == null;
     }
 
 
     public Method getNativeReadMethod() {
         try {
-            return this.getClass().getMethod(getNativeReadMethodName(), ValueResolver.class, Object.class);
+            return this.getClass().getMethod(getNativeReadMethodName(), GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(), e );
         }
@@ -117,7 +117,7 @@ public abstract class BaseObjectClassFieldReader extends BaseClassFieldReader {
         return "get" + type.getName().substring(0, 1).toUpperCase() + type.getName().substring(1) + "Value";
     }
 
-    public int getHashCode(ValueResolver valueResolver, Object object) {
+    public int getHashCode(GlobalResolver valueResolver, Object object) {
         final Object value = getValue( valueResolver, object );
         return (value != null) ? value.hashCode() : 0;
     }

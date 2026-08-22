@@ -27,7 +27,6 @@ import java.lang.reflect.Method;
 import org.drools.base.base.AcceptsClassObjectType;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.extractors.BaseObjectClassFieldReader;
 import org.drools.util.ClassUtils;
 import org.kie.api.prototype.PrototypeFactInstance;
@@ -77,9 +76,9 @@ public class GlobalExtractor extends BaseObjectClassFieldReader
     }
 
     @Override
-    public Object getValue(ValueResolver valueResolver,
+    public Object getValue(GlobalResolver valueResolver,
                            final Object object) {
-        return valueResolver.getGlobal( identifier );
+        return valueResolver.resolveGlobal( identifier );
     }
 
     public ObjectType getObjectType() {
@@ -109,7 +108,7 @@ public class GlobalExtractor extends BaseObjectClassFieldReader
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod("getValue",
-                                                     ValueResolver.class, Object.class);
+                                                     GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );

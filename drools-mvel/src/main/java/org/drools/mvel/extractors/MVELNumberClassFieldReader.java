@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.extractors.BaseObjectClassFieldReader;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.drools.mvel.expr.MVELCompileable;
 import org.drools.mvel.expr.MvelEvaluator;
@@ -114,7 +114,7 @@ public class MVELNumberClassFieldReader extends BaseObjectClassFieldReader imple
     /* (non-Javadoc)
      * @see org.kie.base.extractors.BaseObjectClassFieldExtractor#getValue(java.lang.Object)
      */
-    public Object getValue(ValueResolver valueResolver, Object object) {
+    public Object getValue(GlobalResolver valueResolver, Object object) {
         return evaluator.evaluate( object  );
     }
 

@@ -30,6 +30,7 @@ import org.drools.base.base.ValueType;
 import org.drools.base.common.DroolsObjectInputStream;
 import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.rule.accessor.AcceptsReadAccessor;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
 import org.kie.api.runtime.rule.FactHandle;
@@ -235,27 +236,31 @@ public class Declaration implements Externalizable, AcceptsReadAccessor, TupleVa
 
     public Object getValue(ValueResolver valueResolver,
                            final Object object) {
-        return this.readAccessor.getValue(valueResolver, object);
+        return this.readAccessor.getValue(getGlobalExtractor(valueResolver), object);
+    }
+
+    private GlobalResolver getGlobalExtractor(ValueResolver valueResolver) {
+        return valueResolver == null? null: valueResolver.getGlobalResolver();
     }
 
     public long getWholeNumberValue(ValueResolver valueResolver,
                              final Object object) {
-        return this.readAccessor.getWholeNumberValue(valueResolver, object);
+        return this.readAccessor.getWholeNumberValue(getGlobalExtractor(valueResolver), object);
     }
 
     public double getDecimalValue(ValueResolver valueResolver,
                                  final Object object) {
-        return this.readAccessor.getDecimalValue(valueResolver, object);
+        return this.readAccessor.getDecimalValue(getGlobalExtractor(valueResolver), object);
     }
 
     public boolean getBooleanValue(ValueResolver valueResolver,
                                    final Object object) {
-        return this.readAccessor.getBooleanValue(valueResolver, object);
+        return this.readAccessor.getBooleanValue(getGlobalExtractor(valueResolver), object);
     }
 
     public int getHashCode(ValueResolver valueResolver,
                            final Object object) {
-        return this.readAccessor.getHashCode(valueResolver, object);
+        return this.readAccessor.getHashCode(getGlobalExtractor(valueResolver), object);
     }
 
     public boolean isGlobal() {

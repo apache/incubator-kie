@@ -28,6 +28,7 @@ import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.Tuple;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
 import org.drools.base.util.FastIterator;
@@ -377,7 +378,7 @@ public class FastUtilTreeMemoryTest {
     public static TupleValueExtractor getRightExtractor() {
         ReadAccessor readAccessor = new BaseObjectClassFieldReader() {
             @Override
-            public Object getValue(ValueResolver valueResolver, Object object) {
+            public Object getValue(GlobalResolver valueResolver, Object object) {
                 return object;
             }
         };

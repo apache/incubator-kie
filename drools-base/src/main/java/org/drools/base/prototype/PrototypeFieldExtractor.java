@@ -24,8 +24,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.util.ClassUtils;
 import org.kie.api.prototype.Prototype;
@@ -65,7 +65,7 @@ public class PrototypeFieldExtractor implements Externalizable, ReadAccessor {
         return ValueType.determineValueType(getExtractToClass());
     }
 
-    public Object getValue(ValueResolver valueResolver, final Object object) {
+    public Object getValue(GlobalResolver valueResolver, final Object object) {
         return ((PrototypeFactInstance) object).get(this.fieldName );
     }
 
@@ -82,16 +82,16 @@ public class PrototypeFieldExtractor implements Externalizable, ReadAccessor {
         return ClassUtils.canonicalName( getExtractToClass() );
     }
 
-    public boolean getBooleanValue(ValueResolver valueResolver, Object object) {
+    public boolean getBooleanValue(GlobalResolver valueResolver, Object object) {
         return (Boolean) ((PrototypeFactInstance) object).get(fieldName);
     }
 
 
-    public double getDecimalValue(ValueResolver valueResolver, Object object) {
+    public double getDecimalValue(GlobalResolver valueResolver, Object object) {
         return ((Number) ((PrototypeFactInstance) object).get( fieldName )).doubleValue();
     }
 
-    public long getWholeNumberValue(ValueResolver valueResolver, Object object) {
+    public long getWholeNumberValue(GlobalResolver valueResolver, Object object) {
         return ((Number) ((PrototypeFactInstance) object).get( fieldName )).longValue();
     }
 
@@ -99,7 +99,7 @@ public class PrototypeFieldExtractor implements Externalizable, ReadAccessor {
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod("getValue",
-                                                        ValueResolver.class, Object.class);
+                    GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
@@ -110,7 +110,7 @@ public class PrototypeFieldExtractor implements Externalizable, ReadAccessor {
         return "getValue";
     }
 
-    public int getHashCode(ValueResolver valueResolver, Object object) {
+    public int getHashCode(GlobalResolver valueResolver, Object object) {
         return getValue( valueResolver, object ).hashCode();
     }
 
@@ -122,7 +122,7 @@ public class PrototypeFieldExtractor implements Externalizable, ReadAccessor {
         return false;
     }
 
-    public boolean isNullValue(ValueResolver valueResolver, Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, Object object) {
         return ((PrototypeFactInstance) object).get( this.fieldName ) == null;
     }
 

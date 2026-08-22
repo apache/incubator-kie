@@ -31,6 +31,7 @@ import org.drools.drl.parser.DrlParser;
 import org.drools.drl.parser.impl.Operator;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.mvel.evaluators.BaseEvaluator;
 import org.drools.mvel.evaluators.VariableRestriction;
@@ -205,8 +206,8 @@ public class CustomOperatorTest {
 
         // In this method, 'factHandle' is the left operand of the expression. 'value' is the right operand.
         @Override
-        public boolean evaluate(final ValueResolver valueResolver, final ReadAccessor extractor, final FactHandle factHandle, final FieldValue value) {
-            final Object objectValue = extractor.getValue(valueResolver, factHandle);
+        public boolean evaluate(final GlobalResolver globalResolver, final ReadAccessor extractor, final FactHandle factHandle, final FieldValue value) {
+            final Object objectValue = extractor.getValue(globalResolver, factHandle);
             return evaluateExpression((Collection) objectValue, (Collection) value.getValue());
         }
 
@@ -215,7 +216,7 @@ public class CustomOperatorTest {
         //     leftOperandFact.getObject() is addresses
         //     rightOperandFact.getObject() is $alice.addresses
         @Override
-        public boolean evaluate(final ValueResolver valueResolver, final ReadAccessor ira, final FactHandle leftOperandFact, final ReadAccessor ira1, final FactHandle rightOperandFact) {
+        public boolean evaluate(final GlobalResolver globalResolver, final ReadAccessor ira, final FactHandle leftOperandFact, final ReadAccessor ira1, final FactHandle rightOperandFact) {
             return evaluateExpression((Collection) leftOperandFact.getObject(), (Collection) rightOperandFact.getObject());
         }
 
@@ -225,8 +226,8 @@ public class CustomOperatorTest {
         //     valRight is addresses
         //     context.left is $alice.addresses
         @Override
-        public boolean evaluateCachedLeft(final ValueResolver valueResolver, final VariableRestriction.VariableContextEntry context, final FactHandle right) {
-            final Object valRight = context.extractor.getValue(valueResolver, right.getObject());
+        public boolean evaluateCachedLeft(final GlobalResolver globalResolver, final VariableRestriction.VariableContextEntry context, final FactHandle right) {
+            final Object valRight = context.extractor.getValue(globalResolver, right.getObject());
             return evaluateExpression((Collection) valRight, (Collection) ((VariableRestriction.ObjectVariableContextEntry) context).left);
         }
 
@@ -236,8 +237,8 @@ public class CustomOperatorTest {
         //     context.right is addresses
         //     varLeft is $alice.addresses
         @Override
-        public boolean evaluateCachedRight(final ValueResolver reteEvaluator, final VariableRestriction.VariableContextEntry context, final FactHandle left) {
-            final Object varLeft = context.declaration.getExtractor().getValue(reteEvaluator, left);
+        public boolean evaluateCachedRight(final GlobalResolver globalResolver, final VariableRestriction.VariableContextEntry context, final FactHandle left) {
+            final Object varLeft = context.declaration.getExtractor().getValue(globalResolver, left);
             return evaluateExpression((Collection) ((VariableRestriction.ObjectVariableContextEntry) context).right, (Collection) varLeft);
         }
 

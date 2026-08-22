@@ -22,10 +22,10 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.drl.parser.impl.Operator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.kie.api.runtime.rule.FactHandle;
 
@@ -95,69 +95,69 @@ public abstract class PointInTimeEvaluator extends BaseEvaluator {
     }
 
     @Override
-    public boolean evaluate(final ValueResolver valueResolver,
+    public boolean evaluate(final GlobalResolver globalResolver,
                             final ReadAccessor extractor,
                             final FactHandle object1,
                             final FieldValue object2) {
         long rightTS = extractor.isSelfReference() ?
                        getRightTimestamp( object1 ) :
-                       extractor.getWholeNumberValue( valueResolver, object1.getObject() );
+                       extractor.getWholeNumberValue( globalResolver, object1.getObject() );
         long leftTS = getTimestamp(object2);
         return evaluate(rightTS, leftTS);
     }
 
     @Override
-    public boolean evaluateCachedLeft(final ValueResolver valueResolver,
+    public boolean evaluateCachedLeft(final GlobalResolver globalResolver,
                                       final VariableRestriction.VariableContextEntry context,
                                       final FactHandle right) {
         if ( context.leftNull ||
-             context.extractor.isNullValue( valueResolver, right.getObject() ) ) {
+             context.extractor.isNullValue( globalResolver, right.getObject() ) ) {
             return false;
         }
 
         long leftTS = ((VariableRestriction.TimestampedContextEntry)context).timestamp;
         long rightTS = context.getFieldExtractor().isSelfReference() ?
                        getRightTimestamp(right) :
-                       context.getFieldExtractor().getWholeNumberValue( valueResolver, right.getObject() );
+                       context.getFieldExtractor().getWholeNumberValue( globalResolver, right.getObject() );
 
         return evaluate(rightTS, leftTS);
     }
 
     @Override
-    public boolean evaluateCachedRight(final ValueResolver valueResolver,
+    public boolean evaluateCachedRight(final GlobalResolver globalResolver,
                                        final VariableRestriction.VariableContextEntry context,
                                        final FactHandle left) {
         if ( context.rightNull ||
-             context.declaration.getExtractor().isNullValue( valueResolver, left.getObject() )) {
+             context.declaration.getExtractor().isNullValue( globalResolver, left.getObject() )) {
             return false;
         }
 
         long rightTS = ((VariableRestriction.TimestampedContextEntry)context).timestamp;
         long leftTS = context.declaration.getExtractor().isSelfReference() ?
                       getLeftTimestamp( left ) :
-                      context.declaration.getExtractor().getWholeNumberValue( valueResolver, left.getObject() );
+                      context.declaration.getExtractor().getWholeNumberValue( globalResolver, left.getObject() );
 
         return evaluate(rightTS, leftTS);
     }
 
     @Override
-    public boolean evaluate(final ValueResolver valueResolver,
+    public boolean evaluate(final GlobalResolver globalResolver,
                             final ReadAccessor extractor1,
                             final FactHandle handle1,
                             final ReadAccessor extractor2,
                             final FactHandle handle2) {
-        if ( extractor1.isNullValue( valueResolver, handle1.getObject() ) ||
-             extractor2.isNullValue( valueResolver, handle2.getObject() ) ) {
+        if ( extractor1.isNullValue( globalResolver, handle1.getObject() ) ||
+             extractor2.isNullValue( globalResolver, handle2.getObject() ) ) {
             return false;
         }
 
         long rightTS = extractor1.isSelfReference() ?
                        getRightTimestamp( handle1 ) :
-                       extractor1.getWholeNumberValue( valueResolver, handle1.getObject() );
+                       extractor1.getWholeNumberValue( globalResolver, handle1.getObject() );
 
         long leftTS = extractor2.isSelfReference() ?
                       getLeftTimestamp( handle2 ) :
-                      extractor2.getWholeNumberValue( valueResolver, handle2.getObject() );
+                      extractor2.getWholeNumberValue( globalResolver, handle2.getObject() );
 
         return evaluate(rightTS, leftTS);
     }

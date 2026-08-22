@@ -24,10 +24,10 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.FieldAccessor;
 import org.drools.base.base.ValueType;
 import org.drools.base.rule.accessor.AcceptsReadAccessor;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 
 /**
@@ -71,34 +71,34 @@ public class ClassFieldAccessor implements AcceptsReadAccessor, FieldAccessor, E
     }
 
     @Override
-    public Object getValue(ValueResolver valueResolver, Object object) {
+    public Object getValue(GlobalResolver valueResolver, Object object) {
         return this.reader.getValue(valueResolver, object);
     }
 
 
 
     @Override
-    public long getWholeNumberValue(ValueResolver valueResolver, Object object) {
+    public long getWholeNumberValue(GlobalResolver valueResolver, Object object) {
         return this.reader.getWholeNumberValue(valueResolver, object);
     }
 
     @Override
-    public double getDecimalValue(ValueResolver valueResolver, Object object) {
+    public double getDecimalValue(GlobalResolver valueResolver, Object object) {
         return this.reader.getDecimalValue(valueResolver, object);
     }
 
     @Override
-    public boolean getBooleanValue(ValueResolver valueResolver, Object object) {
+    public boolean getBooleanValue(GlobalResolver valueResolver, Object object) {
         return this.reader.getBooleanValue(valueResolver, object);
     }
 
     @Override
-    public boolean isNullValue(ValueResolver valueResolver, Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, Object object) {
         return this.reader.isNullValue(valueResolver, object);
     }
 
     @Override
-    public int getHashCode(ValueResolver valueResolver, Object object) {
+    public int getHashCode(GlobalResolver valueResolver, Object object) {
         return this.reader.getHashCode(valueResolver, object);
     }
 

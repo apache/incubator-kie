@@ -20,7 +20,6 @@ package org.drools.base.rule.accessor;
 
 import java.io.Serializable;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.base.time.Interval;
 import org.kie.api.runtime.rule.FactHandle;
@@ -81,7 +80,7 @@ public interface Evaluator extends Serializable, org.kie.api.runtime.rule.Evalua
      * 
      * @return Returns true if evaluation is successful. false otherwise.
      */
-    public boolean evaluate(ValueResolver valueResolver,
+    public boolean evaluate(GlobalResolver valueResolver,
                             ReadAccessor extractor,
                             FactHandle factHandle,
                             FieldValue value);
@@ -120,7 +119,7 @@ public interface Evaluator extends Serializable, org.kie.api.runtime.rule.Evalua
      *
      * @return Returns true if evaluation is successful. false otherwise.
      */
-    public boolean evaluate(ValueResolver valueResolver,
+    public boolean evaluate(GlobalResolver valueResolver,
                             ReadAccessor leftExtractor,
                             FactHandle leftOperandFact,
                             ReadAccessor rightExtractor,

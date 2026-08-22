@@ -20,8 +20,8 @@ package org.drools.mvel.accessors;
 
 import org.drools.base.base.AccessorKey;
 import org.drools.base.base.AccessorKeySupplier;
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.core.base.FieldNameSupplier;
 import org.drools.util.ClassUtils;
@@ -88,7 +88,7 @@ public class ClassFieldReader implements Externalizable, ReadAccessor, FieldName
         return this.reader != null;
     }
     
-    public Object getValue(final ValueResolver valueResolver,
+    public Object getValue(final GlobalResolver valueResolver,
                            final Object object) {
         return this.reader.getValue( valueResolver,
                                      object );
@@ -132,28 +132,28 @@ public class ClassFieldReader implements Externalizable, ReadAccessor, FieldName
         return true;
     }
 
-    public boolean getBooleanValue(final ValueResolver valueResolver,
+    public boolean getBooleanValue(final GlobalResolver valueResolver,
                                    final Object object) {
         return this.reader.getBooleanValue( valueResolver,
                                             object );
     }
 
 
-    public double getDecimalValue(ValueResolver valueResolver,
+    public double getDecimalValue(GlobalResolver valueResolver,
                                   final Object object) {
         return this.reader.getDecimalValue( valueResolver,
                                            object );
     }
 
 
-    public long getWholeNumberValue(ValueResolver valueResolver,
+    public long getWholeNumberValue(GlobalResolver valueResolver,
                              final Object object) {
         return this.reader.getWholeNumberValue( valueResolver,
                                          object );
     }
 
 
-    public boolean isNullValue(ValueResolver valueResolver,
+    public boolean isNullValue(GlobalResolver valueResolver,
                                final Object object) {
         return this.reader.isNullValue( valueResolver,
                                         object );
@@ -167,7 +167,7 @@ public class ClassFieldReader implements Externalizable, ReadAccessor, FieldName
         return this.reader.getNativeReadMethod().getName();
     }
 
-    public int getHashCode(ValueResolver valueResolver,
+    public int getHashCode(GlobalResolver valueResolver,
                            final Object object) {
         return this.reader.getHashCode( valueResolver,
                                         object );

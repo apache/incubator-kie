@@ -20,9 +20,9 @@ package org.drools.mvel.accessors;
 
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.BaseClassFieldReader;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 
 public abstract class BaseDecimalClassFieldReader extends BaseClassFieldReader {
 
@@ -46,7 +46,7 @@ public abstract class BaseDecimalClassFieldReader extends BaseClassFieldReader {
     public BaseDecimalClassFieldReader() {
     }
 
-    public Object getValue(ValueResolver valueResolver, final Object object) {
+    public Object getValue(GlobalResolver valueResolver, final Object object) {
         double value = getDecimalValue(valueResolver, object);
         // Return the correct wrapper type based on the original field type
         if (getExtractToClass() == float.class) {
@@ -56,34 +56,34 @@ public abstract class BaseDecimalClassFieldReader extends BaseClassFieldReader {
         }
     }
 
-    public boolean getBooleanValue(ValueResolver valueResolver, final Object object) {
+    public boolean getBooleanValue(GlobalResolver valueResolver, final Object object) {
         throw new RuntimeException( "Conversion to boolean not supported from double" );
     }
 
 
-    public abstract double getDecimalValue(ValueResolver valueResolver, Object object);
+    public abstract double getDecimalValue(GlobalResolver valueResolver, Object object);
 
 
-    public long getWholeNumberValue(ValueResolver valueResolver, final Object object) {
+    public long getWholeNumberValue(GlobalResolver valueResolver, final Object object) {
         return (long) getDecimalValue( valueResolver, object );
     }
 
 
-    public boolean isNullValue(ValueResolver valueResolver, final Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, final Object object) {
         return false;
     }
 
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod("getDecimalValue",
-                                                     ValueResolver.class, Object.class);
+                                                     GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
         }
     }
 
-    public int getHashCode(ValueResolver valueResolver, final Object object) {
+    public int getHashCode(GlobalResolver valueResolver, final Object object) {
         final long temp = Double.doubleToLongBits( getDecimalValue( valueResolver, object ) );
         return (int) (temp ^ (temp >>> 32));
     }

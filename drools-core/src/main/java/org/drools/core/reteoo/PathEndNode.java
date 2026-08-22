@@ -56,7 +56,7 @@ public interface PathEndNode extends LeftTupleSinkNode, MemoryFactory<PathMemory
     void setPathMemSpec(PathMemSpec pathMemSpec);
 
     class PathMemSpec implements Serializable {
-        long allLinkedTestMask;
+        public long allLinkedTestMask;
         int smemCount;
 
         public PathMemSpec( long allLinkedTestMask, int smemCount ) {

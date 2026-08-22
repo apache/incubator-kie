@@ -41,6 +41,7 @@ import org.drools.mvel.evaluators.VariableRestriction;
 import org.drools.mvel.evaluators.VariableRestriction.VariableContextEntry;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.traits.core.factmodel.CodedHierarchy;
 import org.drools.traits.core.reteoo.TraitRuntimeComponentFactory;
@@ -177,7 +178,7 @@ public class IsAEvaluatorDefinition implements EvaluatorDefinition {
         /**
          * @inheridDoc
          */
-        public boolean evaluate(ValueResolver valueResolver,
+        public boolean evaluate(GlobalResolver valueResolver,
                                 ReadAccessor extractor, FactHandle handle, FieldValue value) {
             final Object objectValue = extractor.getValue( valueResolver, handle.getObject() );
             final Object literal = value.getValue();
@@ -208,7 +209,7 @@ public class IsAEvaluatorDefinition implements EvaluatorDefinition {
                     return this.getOperator().isNegated() ^ hasTrait( core, literal );
                 }
             } else {
-                core = lookForWrapper( objectValue, valueResolver );
+                core = lookForWrapper( objectValue, null );
                 if ( core == null ) {
                     if ( literal instanceof Class<?> ) {
                         return this.getOperator().isNegated() ^ ( (Class<?>) literal ).isInstance( objectValue );
@@ -241,8 +242,8 @@ public class IsAEvaluatorDefinition implements EvaluatorDefinition {
             throw new UnsupportedOperationException( " IsA Operator : Unsupported literal " + value );
         }
 
-        private void cacheLiteral( Object value, ValueResolver valueResolver ) {
-            CodedHierarchy x = ((TraitRuntimeComponentFactory) RuntimeComponentFactory.get()).getTraitRegistry(valueResolver.getRuleBase()).getHierarchy();
+        private void cacheLiteral( Object value, GlobalResolver valueResolver ) {
+            CodedHierarchy x = null; //((TraitRuntimeComponentFactory) RuntimeComponentFactory.get()).getTraitRegistry(valueResolver.getRuleBase()).getHierarchy();
             cachedLiteral = getCode( value, x );
         }
 
@@ -289,32 +290,32 @@ public class IsAEvaluatorDefinition implements EvaluatorDefinition {
             }
         }
 
-        public boolean evaluate(ValueResolver valueResolver,
+        public boolean evaluate(GlobalResolver valueResolver,
                                 ReadAccessor leftExtractor, FactHandle left,
                                 ReadAccessor rightExtractor, FactHandle right) {
             Object source = leftExtractor.getValue( valueResolver, left != null ? left.getObject() : null );
             Object target = rightExtractor.getValue( valueResolver, right != null ? right.getObject() : null );
 
-            return compare( source, target, valueResolver );
+            return compare( source, target, null );
         }
 
 
-        public boolean evaluateCachedLeft( ValueResolver valueResolver,
+        public boolean evaluateCachedLeft( GlobalResolver valueResolver,
                                            VariableContextEntry context, FactHandle right ) {
 
             Object target = ((VariableRestriction.ObjectVariableContextEntry) context).left;
-            Object source = context.getFieldExtractor().getValue( valueResolver, right.getObject() );
+            Object source = context.getFieldExtractor().getValue( null, right.getObject() );
 
-            return compare( source, target, valueResolver );
+            return compare( source, target, null);
         }
 
-        public boolean evaluateCachedRight( ValueResolver valueResolver,
+        public boolean evaluateCachedRight( GlobalResolver valueResolver,
                                             VariableContextEntry context, FactHandle left ) {
 
-            Object target = context.getFieldExtractor().getValue( valueResolver, left.getObject() );
+            Object target = context.getFieldExtractor().getValue( null, left.getObject() );
             Object source = ((VariableRestriction.ObjectVariableContextEntry) context).right;
 
-            return compare( source, target, valueResolver );
+            return compare( source, target, null);
         }
 
 

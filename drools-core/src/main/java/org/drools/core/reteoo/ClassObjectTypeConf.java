@@ -132,10 +132,10 @@ public class ClassObjectTypeConf
         if ( isEvent() ) {
             TypeDeclaration type = getTypeDeclaration();
             long timestamp = type != null && type.getTimestampExtractor() != null ?
-                    type.getTimestampExtractor().getWholeNumberValue( reteEvaluator, object ) :
+                    type.getTimestampExtractor().getWholeNumberValue( reteEvaluator.getGlobalResolver(), object ) :
                     reteEvaluator.getTimerService().getCurrentTime();
             long duration = type != null && type.getDurationExtractor() != null ?
-                    type.getDurationExtractor().getWholeNumberValue( reteEvaluator, object ) :
+                    type.getDurationExtractor().getWholeNumberValue( reteEvaluator.getGlobalResolver(), object ) :
                     0;
             return factHandleFactory.createEventFactHandle(id, object, recency, entryPoint, timestamp, duration);
         }

@@ -23,7 +23,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.mvel.field.FieldFactory;
 import org.junit.jupiter.api.Test;
 import org.drools.base.base.ValueType;
@@ -34,6 +33,7 @@ import org.drools.core.common.DefaultEventHandle;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1168,22 +1168,22 @@ public class TemporalEvaluatorFactoryTest {
             return true;
         }
 
-        public boolean getBooleanValue(ValueResolver valueResolver,
+        public boolean getBooleanValue(GlobalResolver valueResolver,
                                        final Object object) {
             return object != null ? ((Boolean) object).booleanValue() : false;
         }
 
-        public byte getByteValue(ValueResolver valueResolver,
+        public byte getByteValue(GlobalResolver valueResolver,
                                  final Object object) {
             return object != null ? ((Number) object).byteValue() : (byte) 0;
         }
 
-        public char getCharValue(ValueResolver valueResolver,
+        public char getCharValue(GlobalResolver valueResolver,
                                  final Object object) {
             return (char) getWholeNumberValue(valueResolver, object);
         }
 
-        public double getDecimalValue(ValueResolver valueResolver,
+        public double getDecimalValue(GlobalResolver valueResolver,
                                       final Object object) {
             return object != null ? ((Number) object).doubleValue() : 0.0;
         }
@@ -1196,13 +1196,13 @@ public class TemporalEvaluatorFactoryTest {
             return null;
         }
 
-        public int getHashCode(ValueResolver valueResolver,
+        public int getHashCode(GlobalResolver valueResolver,
                                final Object object) {
             return 0;
         }
 
 
-        public long getWholeNumberValue(ValueResolver valueResolver,
+        public long getWholeNumberValue(GlobalResolver valueResolver,
                                  final Object object) {
             return object != null ? ((Number) object).longValue() : 0;
         }
@@ -1215,17 +1215,17 @@ public class TemporalEvaluatorFactoryTest {
             return null;
         }
 
-        public short getShortValue(ValueResolver valueResolver,
+        public short getShortValue(GlobalResolver valueResolver,
                                    final Object object) {
             return object != null ? ((Number) object).shortValue() : (short) 0;
         }
 
-        public Object getValue(ValueResolver valueResolver,
+        public Object getValue(GlobalResolver valueResolver,
                                final Object object) {
             return object;
         }
 
-        public boolean isNullValue(ValueResolver valueResolver,
+        public boolean isNullValue(GlobalResolver valueResolver,
                                    final Object object) {
             return object == null;
         }

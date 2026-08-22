@@ -20,9 +20,9 @@ package org.drools.mvel.accessors;
 
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.BaseClassFieldReader;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 
 public abstract class BaseWholeNumberClassFieldReader extends BaseClassFieldReader {
 
@@ -46,7 +46,7 @@ public abstract class BaseWholeNumberClassFieldReader extends BaseClassFieldRead
     public BaseWholeNumberClassFieldReader() {
     }
 
-    public Object getValue(ValueResolver valueResolver, final Object object) {
+    public Object getValue(GlobalResolver valueResolver, final Object object) {
         long value = getWholeNumberValue( valueResolver, object );
         if(getExtractToClass() == byte.class) {
             return Byte.valueOf((byte) value);
@@ -66,34 +66,34 @@ public abstract class BaseWholeNumberClassFieldReader extends BaseClassFieldRead
         return Long.valueOf(value);
     }
 
-    public boolean getBooleanValue(ValueResolver valueResolver, final Object object) {
+    public boolean getBooleanValue(GlobalResolver valueResolver, final Object object) {
         throw new RuntimeException( "Conversion to boolean not supported from long" );
     }
 
 
-    public double getDecimalValue(ValueResolver valueResolver, final Object object) {
+    public double getDecimalValue(GlobalResolver valueResolver, final Object object) {
         return getWholeNumberValue( valueResolver, object );
     }
 
 
-    public abstract long getWholeNumberValue(ValueResolver valueResolver, Object object);
+    public abstract long getWholeNumberValue(GlobalResolver valueResolver, Object object);
 
 
-    public boolean isNullValue(ValueResolver valueResolver, final Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, final Object object) {
         return false;
     }
 
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod("getWholeNumberValue",
-                                                     ValueResolver.class, Object.class);
+                                                     GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
         }
     }
 
-    public int getHashCode(ValueResolver valueResolver, final Object object) {
+    public int getHashCode(GlobalResolver valueResolver, final Object object) {
         final long temp = getWholeNumberValue( valueResolver, object );
         return (int) (temp ^ (temp >>> 32));
     }

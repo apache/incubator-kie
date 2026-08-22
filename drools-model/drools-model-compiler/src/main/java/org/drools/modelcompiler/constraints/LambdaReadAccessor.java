@@ -20,9 +20,9 @@ package org.drools.modelcompiler.constraints;
 
 import java.util.Objects;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.base.base.extractors.BaseObjectClassFieldReader;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.model.functions.Function1;
 
@@ -40,7 +40,7 @@ public class LambdaReadAccessor extends BaseObjectClassFieldReader implements Re
     }
 
     @Override
-    public Object getValue(ValueResolver valueResolver, Object object) {
+    public Object getValue(GlobalResolver valueResolver, Object object) {
         return lambda.apply( object );
     }
 

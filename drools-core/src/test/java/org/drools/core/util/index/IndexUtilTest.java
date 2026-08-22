@@ -23,7 +23,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.reteoo.NodeTypeEnums;
@@ -31,6 +30,7 @@ import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.IndexableConstraint;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.accessor.RightTupleValueExtractor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
@@ -320,32 +320,32 @@ public class IndexUtilTest {
         }
 
         @Override
-        public Object getValue(ValueResolver valueResolver, Object object) {
+        public Object getValue(GlobalResolver valueResolver, Object object) {
             return null;
         }
 
         @Override
-        public long getWholeNumberValue(ValueResolver valueResolver, Object object) {
+        public long getWholeNumberValue(GlobalResolver valueResolver, Object object) {
             return 0;
         }
 
         @Override
-        public double getDecimalValue(ValueResolver valueResolver, Object object) {
+        public double getDecimalValue(GlobalResolver valueResolver, Object object) {
             return 0;
         }
 
         @Override
-        public boolean getBooleanValue(ValueResolver valueResolver, Object object) {
+        public boolean getBooleanValue(GlobalResolver valueResolver, Object object) {
             return false;
         }
 
         @Override
-        public boolean isNullValue(ValueResolver valueResolver, Object object) {
+        public boolean isNullValue(GlobalResolver valueResolver, Object object) {
             return false;
         }
 
         @Override
-        public int getHashCode(ValueResolver valueResolver, Object object) {
+        public int getHashCode(GlobalResolver valueResolver, Object object) {
             return 0;
         }
 

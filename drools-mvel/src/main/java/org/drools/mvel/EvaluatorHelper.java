@@ -40,10 +40,10 @@ public class EvaluatorHelper {
         Map<String, Object> map = new HashMap<>();
         for (Declaration declaration : declarations) {
             if (tuple == null) {
-                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(valueResolver, object));
+                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(valueResolver.getGlobalResolver(), object));
             } else {
                 Object fact = tuple.getObject(declaration);
-                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(valueResolver, fact != null ? fact : object));
+                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(valueResolver.getGlobalResolver(), fact != null ? fact : object));
             }
         }
         return map;

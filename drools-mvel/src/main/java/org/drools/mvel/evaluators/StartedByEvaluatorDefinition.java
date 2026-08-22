@@ -35,6 +35,7 @@ import org.drools.mvel.evaluators.VariableRestriction.TemporalVariableContextEnt
 import org.drools.mvel.evaluators.VariableRestriction.VariableContextEntry;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.time.Interval;
 import org.kie.api.runtime.rule.FactHandle;
@@ -237,18 +238,18 @@ public class StartedByEvaluatorDefinition
             return new Interval( 0, 0 );
         }
         
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor,
                                 final FactHandle object1,
                                 final FieldValue object2) {
             throw new RuntimeException( "The 'startedby' operator can only be used to compare one event to another, and never to compare to literal constraints." );
         }
 
-        public boolean evaluateCachedRight(final ValueResolver valueResolver,
+        public boolean evaluateCachedRight(final GlobalResolver globalResolver,
                                            final VariableContextEntry context,
                                            final FactHandle left) {
             if ( context.rightNull || 
-                    context.declaration.getExtractor().isNullValue( valueResolver, left.getObject() )) {
+                    context.declaration.getExtractor().isNullValue( globalResolver, left.getObject() )) {
                 return false;
             }
             
@@ -257,11 +258,11 @@ public class StartedByEvaluatorDefinition
             return this.getOperator().isNegated() ^ ( distStart <= this.startDev && distEnd > 0 );
         }
 
-        public boolean evaluateCachedLeft(final ValueResolver valueResolver,
+        public boolean evaluateCachedLeft(final GlobalResolver globalResolver,
                                           final VariableContextEntry context,
                                           final FactHandle right) {
             if ( context.leftNull ||
-                    context.extractor.isNullValue( valueResolver, right.getObject() ) ) {
+                    context.extractor.isNullValue( globalResolver, right.getObject() ) ) {
                 return false;
             }
             
@@ -270,13 +271,13 @@ public class StartedByEvaluatorDefinition
             return this.getOperator().isNegated() ^ ( distStart <= this.startDev && distEnd > 0 );
         }
 
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor1,
                                 final FactHandle handle1,
                                 final ReadAccessor extractor2,
                                 final FactHandle handle2) {
-            if ( extractor1.isNullValue( valueResolver, handle1.getObject() ) ||
-                    extractor2.isNullValue( valueResolver, handle2.getObject() ) ) {
+            if ( extractor1.isNullValue( globalResolver, handle1.getObject() ) ||
+                    extractor2.isNullValue( globalResolver, handle2.getObject() ) ) {
                 return false;
             }
             

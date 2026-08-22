@@ -20,9 +20,9 @@ package org.drools.mvel.accessors;
 
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.BaseClassFieldReader;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 
 /**
  * A Base class for primitive boolean class field
@@ -50,29 +50,29 @@ public abstract class BaseBooleanClassFieldReader extends BaseClassFieldReader {
     public BaseBooleanClassFieldReader() {
     }
 
-    public Object getValue(ValueResolver valueResolver,
+    public Object getValue(GlobalResolver globalResolver,
                            final Object object) {
-        return getBooleanValue( valueResolver,
+        return getBooleanValue( globalResolver,
                                 object ) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    public abstract boolean getBooleanValue(ValueResolver valueResolver,
+    public abstract boolean getBooleanValue(GlobalResolver globalResolver,
                                             Object object);
 
 
-    public double getDecimalValue(ValueResolver valueResolver,
+    public double getDecimalValue(GlobalResolver globalResolver,
                                   final Object object) {
         throw new RuntimeException( "Conversion to double not supported from boolean" );
     }
 
 
-    public long getWholeNumberValue(ValueResolver valueResolver,
+    public long getWholeNumberValue(GlobalResolver globalResolver,
                              final Object object) {
         throw new RuntimeException( "Conversion to long not supported from boolean" );
     }
 
 
-    public boolean isNullValue(ValueResolver valueResolver,
+    public boolean isNullValue(GlobalResolver globalResolver,
                                final Object object) {
         return false;
     }
@@ -80,16 +80,16 @@ public abstract class BaseBooleanClassFieldReader extends BaseClassFieldReader {
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod("getBooleanValue",
-                                                     ValueResolver.class, Object.class);
+                                                     GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
         }
     }
 
-    public int getHashCode(ValueResolver valueResolver,
+    public int getHashCode(GlobalResolver globalResolver,
                            final Object object) {
-        return getBooleanValue( valueResolver,
+        return getBooleanValue( globalResolver,
                                 object ) ? 1231 : 1237;
     }
 

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
 import org.drools.drl.parser.impl.Operator;
@@ -30,6 +29,7 @@ import org.drools.mvel.evaluators.VariableRestriction.ObjectVariableContextEntry
 import org.drools.mvel.evaluators.VariableRestriction.VariableContextEntry;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.kie.api.runtime.rule.FactHandle;
 
@@ -159,11 +159,11 @@ public class StrEvaluatorDefinition implements EvaluatorDefinition {
         /**
          * @inheridDoc
          */
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor,
                                 final FactHandle factHandle,
                                 final FieldValue value) {
-            final Object objectValue = extractor.getValue(valueResolver, factHandle.getObject());
+            final Object objectValue = extractor.getValue(globalResolver, factHandle.getObject());
 
             switch (parameter) {
                 case startsWith:
@@ -177,11 +177,11 @@ public class StrEvaluatorDefinition implements EvaluatorDefinition {
             }
         }
 
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor leftExtractor, final FactHandle left,
                                 final ReadAccessor rightExtractor, final FactHandle right) {
-            final Object value1 = leftExtractor.getValue(valueResolver, left.getObject());
-            final Object value2 = rightExtractor.getValue(valueResolver, right.getObject());
+            final Object value1 = leftExtractor.getValue(globalResolver, left.getObject());
+            final Object value2 = rightExtractor.getValue(globalResolver, right.getObject());
 
             switch (parameter) {
                 case startsWith:
@@ -196,7 +196,7 @@ public class StrEvaluatorDefinition implements EvaluatorDefinition {
 
         }
 
-        public boolean evaluateCachedLeft(final ValueResolver valueResolver,
+        public boolean evaluateCachedLeft(final GlobalResolver globalResolver,
                                           final VariableContextEntry context,
                                           final FactHandle right) {
 
@@ -216,7 +216,7 @@ public class StrEvaluatorDefinition implements EvaluatorDefinition {
 
         }
 
-        public boolean evaluateCachedRight(final ValueResolver valueResolver,
+        public boolean evaluateCachedRight(final GlobalResolver globalResolver,
                                            final VariableContextEntry context,
                                            final FactHandle left) {
                 switch (parameter) {

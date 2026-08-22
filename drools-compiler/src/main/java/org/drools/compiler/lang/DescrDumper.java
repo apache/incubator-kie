@@ -543,7 +543,7 @@ public class DescrDumper extends ReflectiveVisitor implements ExpressionRewriter
         operator.setRightString( right );
         sbuilder.append( evaluatorPrefix( operator.isNegated() ) )
                 .append( alias )
-                .append( ".evaluate( ").append( WM_ARGUMENT ).append( ", " )
+                .append( ".evaluate( ").append( WM_ARGUMENT + ".getGlobalResolver()" ).append( ", " )
                 .append( left ).append( ", " ).append( right ).append( " )" )
                 .append( evaluatorSufix( operator.isNegated() ) );
 

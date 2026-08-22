@@ -37,7 +37,7 @@ public class RightTupleValueExtractor implements TupleValueExtractor {
 
     @Override
     public Object getValue(ValueResolver valueResolver, BaseTuple tuple) {
-        return extractor.getValue(valueResolver, tuple.getFactHandle().getObject());
+        return extractor.getValue(valueResolver != null? valueResolver.getGlobalResolver() : null, tuple.getFactHandle().getObject());
     }
 
     @Override

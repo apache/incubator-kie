@@ -25,9 +25,9 @@ import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 
 import org.drools.base.base.ClassWireable;
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.base.rule.accessor.AcceptsReadAccessor;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.util.ClassUtils;
 import org.drools.util.StringUtils;
@@ -83,7 +83,7 @@ public class ArrayElementReader
         return ClassUtils.canonicalName( type );
     }
 
-    public boolean getBooleanValue(ValueResolver valueResolver,
+    public boolean getBooleanValue(GlobalResolver valueResolver,
                                    Object object) {
         Object[] array = (Object[]) this.arrayReadAccessor.getValue( valueResolver,
                                                                      object );
@@ -91,14 +91,14 @@ public class ArrayElementReader
     }
 
 
-    public double getDecimalValue(ValueResolver valueResolver,
+    public double getDecimalValue(GlobalResolver valueResolver,
                                   Object object) {
         Object[] array = (Object[]) this.arrayReadAccessor.getValue( valueResolver,
                                                                      object );
         return ((Number) array[this.index]).doubleValue();
     }
 
-    public long getWholeNumberValue(ValueResolver valueResolver,
+    public long getWholeNumberValue(GlobalResolver valueResolver,
                              Object object) {
         Object[] array = (Object[]) this.arrayReadAccessor.getValue( valueResolver,
                                                                      object );
@@ -108,7 +108,7 @@ public class ArrayElementReader
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod(getNativeReadMethodName(),
-                                                     ValueResolver.class, Object.class);
+                    GlobalResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
@@ -130,7 +130,7 @@ public class ArrayElementReader
     }
 
 
-    public Object getValue(ValueResolver valueResolver,
+    public Object getValue(GlobalResolver valueResolver,
                            Object object) {
         Object[] array = (Object[]) this.arrayReadAccessor.getValue( valueResolver,
                                                                      object );
@@ -141,14 +141,14 @@ public class ArrayElementReader
         return ValueType.OBJECT_TYPE;
     }
 
-    public boolean isNullValue(ValueResolver valueResolver,
+    public boolean isNullValue(GlobalResolver valueResolver,
                                Object object) {
         Object[] array = (Object[]) this.arrayReadAccessor.getValue( valueResolver,
                                                                      object );
         return array[this.index] == null;
     }
 
-    public int getHashCode(ValueResolver valueResolver,
+    public int getHashCode(GlobalResolver valueResolver,
                            Object object) {
         Object[] array = (Object[]) this.arrayReadAccessor.getValue( valueResolver,
                                                                      object );

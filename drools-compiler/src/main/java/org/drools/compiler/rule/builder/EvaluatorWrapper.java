@@ -18,18 +18,17 @@
  */
 package org.drools.compiler.rule.builder;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
 import org.drools.base.base.field.ObjectFieldImpl;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.time.Interval;
 import org.drools.core.base.extractors.ConstantValueReader;
 import org.drools.core.common.DefaultEventHandle;
-import org.drools.core.common.ReteEvaluator;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.drools.core.common.InternalFactHandle.dummyFactHandleOf;
@@ -87,16 +86,16 @@ public class EvaluatorWrapper implements Evaluator {
      * 
      * @return
      */
-    public boolean evaluate(ReteEvaluator reteEvaluator, Object left, Object right) {
+    public boolean evaluate(GlobalResolver globalResolver, Object left, Object right) {
         Object leftValue = leftTimestamp != null ? leftTimestamp : left;
         Object rightValue = rightTimestamp != null ? rightTimestamp : right;
 
         return rightLiteral ?
-                evaluator.evaluate( reteEvaluator,
+                evaluator.evaluate( globalResolver,
                                     new ConstantValueReader( leftValue ),
                                     dummyFactHandleOf( leftValue ),
                                     new ObjectFieldImpl( rightValue ) ) :
-                evaluator.evaluate( reteEvaluator,
+                evaluator.evaluate( globalResolver,
                                     new ConstantValueReader( leftValue ),
                                     dummyFactHandleOf( leftValue ),
                                     new ConstantValueReader( rightValue ),
@@ -127,22 +126,22 @@ public class EvaluatorWrapper implements Evaluator {
         return evaluator.getCoercedValueType();
     }
 
-    public boolean evaluate(ValueResolver valueResolver,
+    public boolean evaluate(GlobalResolver globalResolver,
                             ReadAccessor extractor,
                             FactHandle factHandle,
                             FieldValue value) {
-        return evaluator.evaluate( valueResolver,
+        return evaluator.evaluate( globalResolver,
                                    extractor,
                                    factHandle,
                                    value );
     }
 
-    public boolean evaluate(ValueResolver valueResolver,
+    public boolean evaluate(GlobalResolver globalResolver,
                             ReadAccessor leftExtractor,
                             FactHandle left,
                             ReadAccessor rightExtractor,
                             FactHandle right) {
-        return evaluator.evaluate( valueResolver,
+        return evaluator.evaluate( globalResolver,
                                    leftExtractor,
                                    left,
                                    rightExtractor,

@@ -18,8 +18,8 @@
  */
 package org.drools.mvel.evaluators;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.kie.api.runtime.rule.FactHandle;
 
 public interface MvelEvaluator extends Evaluator {
@@ -52,7 +52,7 @@ public interface MvelEvaluator extends Evaluator {
      *
      * @return Returns true if evaluation is successful. false otherwise.
      */
-    boolean evaluateCachedLeft(ValueResolver valueResolver,
+    boolean evaluateCachedLeft(GlobalResolver valueResolver,
                                VariableRestriction.VariableContextEntry context,
                                FactHandle right);
 
@@ -83,7 +83,7 @@ public interface MvelEvaluator extends Evaluator {
      *
      * @return Returns true if evaluation is successful. false otherwise.
      */
-    boolean evaluateCachedRight(ValueResolver valueResolver,
+    boolean evaluateCachedRight(GlobalResolver valueResolver,
                                 VariableRestriction.VariableContextEntry context,
                                 FactHandle left);
 }

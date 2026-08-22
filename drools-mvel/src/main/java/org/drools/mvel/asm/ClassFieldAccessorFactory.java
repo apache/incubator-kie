@@ -20,12 +20,12 @@ package org.drools.mvel.asm;
 
 import org.drools.base.base.BaseClassFieldReader;
 import org.drools.base.base.ClassFieldInspector;
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
 import org.drools.core.base.*;
 import org.drools.core.base.ClassFieldAccessorCache.CacheEntry;
 import org.drools.base.base.extractors.BaseObjectClassFieldReader;
 import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.util.Drools;
 import org.drools.mvel.accessors.*;
 import org.drools.wiring.api.util.ByteArrayClassLoader;
@@ -310,7 +310,7 @@ public class ClassFieldAccessorFactory implements FieldAccessorFactory {
         final Class< ? > fieldType = getterMethod.getReturnType();
         Method overridingMethod;
         try {
-            overridingMethod = superClass.getMethod( getOverridingGetMethodName( fieldType ), ValueResolver.class, Object.class );
+            overridingMethod = superClass.getMethod( getOverridingGetMethodName( fieldType ), GlobalResolver.class, Object.class );
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report back to JBoss Rules team.",
                                         e );
@@ -374,7 +374,7 @@ public class ClassFieldAccessorFactory implements FieldAccessorFactory {
                                l1,
                                0 );
         mv.visitLocalVariable( "workingMemory",
-                               Type.getDescriptor( ValueResolver.class ),
+                               Type.getDescriptor( GlobalResolver.class ),
                                null,
                                l0,
                                l1,

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.CoreComponentsBuilder;
 import org.drools.base.base.ValueType;
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
@@ -31,6 +30,7 @@ import org.drools.mvel.evaluators.VariableRestriction.ObjectVariableContextEntry
 import org.drools.mvel.evaluators.VariableRestriction.VariableContextEntry;
 import org.drools.base.rule.accessor.Evaluator;
 import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.kie.api.runtime.rule.FactHandle;
 
@@ -159,37 +159,37 @@ public class SoundslikeEvaluatorsDefinition implements EvaluatorDefinition {
                    SOUNDSLIKE );
         }
 
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor,
                                 final FactHandle handle1,
                                 final FieldValue handle2) {
-            final String value1 = (String) extractor.getValue( valueResolver, handle1.getObject() );
+            final String value1 = (String) extractor.getValue( globalResolver, handle1.getObject() );
             final String value2 = (String) handle2.getValue();
 
             return soundslike(value1,value2);
         }
 
-        public boolean evaluateCachedRight(final ValueResolver valueResolver,
+        public boolean evaluateCachedRight(final GlobalResolver globalResolver,
                                            final VariableContextEntry context, final FactHandle left) {
             final String value = (String) ((ObjectVariableContextEntry) context).right;
 
-            return soundslike( value, (String) context.declaration.getExtractor().getValue( valueResolver, left.getObject() ) );
+            return soundslike( value, (String) context.declaration.getExtractor().getValue( globalResolver, left.getObject() ) );
         }
 
-        public boolean evaluateCachedLeft(final ValueResolver valueResolver,
+        public boolean evaluateCachedLeft(final GlobalResolver globalResolver,
                                           final VariableContextEntry context, final FactHandle rightHandle) {
-            final String value = (String) context.extractor.getValue( valueResolver, rightHandle.getObject() );
+            final String value = (String) context.extractor.getValue( globalResolver, rightHandle.getObject() );
 
             return soundslike(value, (String) ((ObjectVariableContextEntry) context).left );
         }
 
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor1,
                                 final FactHandle handle1,
                                 final ReadAccessor extractor2,
                                 final FactHandle handle2) {
-            final Object value1 = extractor1.getValue( valueResolver, handle1.getObject() );
-            final Object value2 = extractor2.getValue( valueResolver, handle2.getObject() );
+            final Object value1 = extractor1.getValue( globalResolver, handle1.getObject() );
+            final Object value2 = extractor2.getValue( globalResolver, handle2.getObject() );
 
             return soundslike( (String) value1, (String) value2 );
         }
@@ -209,39 +209,39 @@ public class SoundslikeEvaluatorsDefinition implements EvaluatorDefinition {
                    NOT_SOUNDSLIKE );
         }
 
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor,
                                 final FactHandle handle1,
                                 final FieldValue object2) {
-            final String value1 = (String) extractor.getValue( valueResolver, handle1.getObject() );
+            final String value1 = (String) extractor.getValue( globalResolver, handle1.getObject() );
             final String value2 = (String) object2.getValue();
 
             return ! soundslike( value1,  value2 );
         }
 
-        public boolean evaluateCachedRight(final ValueResolver valueResolver,
+        public boolean evaluateCachedRight(final GlobalResolver globalResolver,
                                            final VariableContextEntry context,
                                            final FactHandle left) {
             final String value = (String) ((ObjectVariableContextEntry) context).right;
 
-            return ! soundslike( value, (String) context.declaration.getExtractor().getValue( valueResolver, left.getObject() ) );
+            return ! soundslike( value, (String) context.declaration.getExtractor().getValue( globalResolver, left.getObject() ) );
         }
 
-        public boolean evaluateCachedLeft(final ValueResolver valueResolver,
+        public boolean evaluateCachedLeft(final GlobalResolver globalResolver,
                                           final VariableContextEntry context,
                                           final FactHandle right) {
-            final String value = (String) context.extractor.getValue( valueResolver, right.getObject() );
+            final String value = (String) context.extractor.getValue( globalResolver, right.getObject() );
 
             return ! soundslike( value, (String) ((ObjectVariableContextEntry) context).left );
         }
 
-        public boolean evaluate(final ValueResolver valueResolver,
+        public boolean evaluate(final GlobalResolver globalResolver,
                                 final ReadAccessor extractor1,
                                 final FactHandle handl1,
                                 final ReadAccessor extractor2,
                                 final FactHandle handl2) {
-            final Object value1 = extractor1.getValue( valueResolver, handl1.getObject() );
-            final Object value2 = extractor2.getValue( valueResolver, handl2.getObject() );
+            final Object value1 = extractor1.getValue( globalResolver, handl1.getObject() );
+            final Object value2 = extractor2.getValue( globalResolver, handl2.getObject() );
 
             return ! soundslike( (String) value1,  (String) value2 );
         }

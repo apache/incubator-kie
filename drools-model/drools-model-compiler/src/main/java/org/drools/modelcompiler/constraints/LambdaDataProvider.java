@@ -102,7 +102,7 @@ public class LambdaDataProvider implements DataProvider {
 
     private Object getValueForDeclaration( BaseTuple tuple, ValueResolver reteEvaluator, Declaration declaration ) {
         return declaration.getExtractor().isGlobal() ?
-                declaration.getExtractor().getValue( reteEvaluator, declaration.getIdentifier() ) :
+                declaration.getExtractor().getValue( reteEvaluator.getGlobalResolver(), declaration.getIdentifier() ) :
                 declaration.getValue( reteEvaluator, tuple );
     }
 

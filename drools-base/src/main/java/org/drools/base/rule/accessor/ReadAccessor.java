@@ -44,17 +44,17 @@ public interface ReadAccessor {
 
     int getIndex();
 
-    Object getValue(ValueResolver valueResolver, Object object);
+    Object getValue(GlobalResolver valueResolver, Object object);
 
-    long getWholeNumberValue(ValueResolver valueResolver, Object object);
+    long getWholeNumberValue(GlobalResolver valueResolver, Object object);
 
-    double getDecimalValue(ValueResolver valueResolver, Object object);
+    double getDecimalValue(GlobalResolver valueResolver, Object object);
 
-    boolean getBooleanValue(ValueResolver valueResolver, Object object);
+    boolean getBooleanValue(GlobalResolver valueResolver, Object object);
 
-    boolean isNullValue(ValueResolver valueResolver, Object object);
+    boolean isNullValue(GlobalResolver valueResolver, Object object);
 
-    int getHashCode(ValueResolver valueResolver, Object object);
+    int getHashCode(GlobalResolver valueResolver, Object object);
 
     boolean isGlobal();
 

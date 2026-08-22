@@ -20,8 +20,8 @@ package org.drools.base.base.extractors;
 
 import java.io.Externalizable;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 
 /**
  * A special field extractor for the self reference "this".
@@ -40,11 +40,11 @@ public class SelfReferenceClassFieldReader extends BaseObjectClassFieldReader im
                ValueType.determineValueType( clazz ) ); // value type
     }
 
-    public Object getValue(ValueResolver valueResolver, final Object object) {
+    public Object getValue(GlobalResolver valueResolver, final Object object) {
         return object;
     }
     
-    public boolean isNullValue(ValueResolver valueResolver, final Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, final Object object) {
         return getValue( valueResolver, object ) == null;
     }
     

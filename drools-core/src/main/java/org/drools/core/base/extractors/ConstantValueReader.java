@@ -20,8 +20,8 @@ package org.drools.core.base.extractors;
 
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.ValueType;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.base.rule.accessor.ReadAccessor;
 
 import static org.drools.base.util.TimeIntervalParser.getTimestampFromDate;
@@ -34,29 +34,29 @@ public class ConstantValueReader implements ReadAccessor {
         this.value = value;
     }
 
-    public Object getValue(ValueResolver valueResolver, Object object) {
+    public Object getValue(GlobalResolver valueResolver, Object object) {
         return value;
     }
 
 
 
-    public long getWholeNumberValue(ValueResolver valueResolver, Object object) {
+    public long getWholeNumberValue(GlobalResolver valueResolver, Object object) {
         return value instanceof Long ? (Long)value : getTimestampFromDate( value );
     }
 
-    public double getDecimalValue(ValueResolver valueResolver, Object object) {
+    public double getDecimalValue(GlobalResolver valueResolver, Object object) {
         return (Double)value;
     }
 
-    public boolean getBooleanValue(ValueResolver valueResolver, Object object) {
+    public boolean getBooleanValue(GlobalResolver valueResolver, Object object) {
         return (Boolean)value;
     }
 
-    public boolean isNullValue(ValueResolver valueResolver, Object object) {
+    public boolean isNullValue(GlobalResolver valueResolver, Object object) {
         return value == null;
     }
 
-    public int getHashCode(ValueResolver valueResolver, Object object) {
+    public int getHashCode(GlobalResolver valueResolver, Object object) {
         return value.hashCode();
     }
 

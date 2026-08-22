@@ -66,10 +66,10 @@ public class EvaluatorConstraint extends MutableTypeConstraint<ContextEntry> imp
 
     public boolean isAllowed(FactHandle handle, ValueResolver valueResolver) {
         if (isLiteral()) {
-            return evaluator.evaluate(valueResolver, rightReadAccessor, handle, field);
+            return evaluator.evaluate(valueResolver.getGlobalResolver(), rightReadAccessor, handle, field);
         }
 
-        return evaluator.evaluate( valueResolver,
+        return evaluator.evaluate( valueResolver.getGlobalResolver(),
                                    rightReadAccessor,
                                    handle,
                                    declarations[0].getExtractor(),
@@ -78,26 +78,26 @@ public class EvaluatorConstraint extends MutableTypeConstraint<ContextEntry> imp
 
     public boolean isAllowedCachedLeft(ContextEntry context, FactHandle handle) {
         if (isLiteral()) {
-            return evaluator.evaluate( ((LiteralContextEntry) context).valueResolver,
+            return evaluator.evaluate( ((LiteralContextEntry) context).valueResolver.getGlobalResolver(),
                                        ((LiteralContextEntry) context).getFieldExtractor(),
                                        handle,
                                        field );
         }
 
-        return ((MvelEvaluator) evaluator).evaluateCachedLeft( ((VariableContextEntry) context).valueResolver,
+        return ((MvelEvaluator) evaluator).evaluateCachedLeft( ((VariableContextEntry) context).valueResolver.getGlobalResolver(),
                                              (VariableContextEntry) context,
                                              handle );
     }
 
     public boolean isAllowedCachedRight(BaseTuple tuple, ContextEntry context) {
         if (isLiteral()) {
-            return evaluator.evaluate( ((LiteralContextEntry) context).valueResolver,
+            return evaluator.evaluate( ((LiteralContextEntry) context).valueResolver.getGlobalResolver(),
                                        ((LiteralContextEntry) context).getFieldExtractor(),
                                        ((LiteralContextEntry) context).getFactHandle(),
                                        field );
         }
 
-        return ((MvelEvaluator) evaluator).evaluateCachedRight( ((VariableContextEntry) context).valueResolver,
+        return ((MvelEvaluator) evaluator).evaluateCachedRight( ((VariableContextEntry) context).valueResolver.getGlobalResolver(),
                                               (VariableContextEntry) context,
                                               tuple.get(declarations[0]));
     }
