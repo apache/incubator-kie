@@ -164,6 +164,7 @@ public class KogitoAssetsProcessor {
             List<KogitoAddonsPreGeneratedSourcesBuildItem> addonsPreSources,
             List<KogitoAddonsPostGeneratedSourcesBuildItem> addonsPostSources,
             KogitoBuildContextBuildItem contextBuildItem,
+            Capabilities capabilities,
             BuildProducer<GeneratedBeanBuildItem> generatedBeans,
             BuildProducer<GeneratedJaxRsResourceBuildItem> jaxrsProducer,
             BuildProducer<AdditionalStaticResourceBuildItem> staticResProducer,
@@ -197,6 +198,7 @@ public class KogitoAssetsProcessor {
         // build Java source code and register the generated beans
         Optional<KogitoGeneratedClassesBuildItem> optionalIndex = indexGeneratedBeanBuildItemWithRestResources(
                 context,
+                capabilities,
                 generatedJavaSourcesFiles,
                 generatedBeanBuildItems,
                 generatedBeans,
@@ -319,16 +321,22 @@ public class KogitoAssetsProcessor {
 
     private Optional<KogitoGeneratedClassesBuildItem> indexGeneratedBeanBuildItemWithRestResources(
             KogitoBuildContext context,
+            Capabilities capabilities,
             Collection<GeneratedFile> generatedFiles,
             Collection<GeneratedBeanBuildItem> generatedBeanBuildItems,
             BuildProducer<GeneratedBeanBuildItem> generatedBeans,
             BuildProducer<GeneratedJaxRsResourceBuildItem> jaxrsProducer) throws IOException {
 
-        generatedBeanBuildItems.forEach(generatedBeans::produce);
         Set<String> restResourceClassNameSet = generatedFiles.stream()
                 .filter(file -> file.type().equals(REST))
                 .map(file -> toClassName(file.path().toString()))
                 .collect(Collectors.toSet());
+        // Reactive REST re-registers JaxRs resources as beans (duplicate-class check); classic ignores that channel, so REST
+        // classes need bean registration there. Capability.REST comes from BOTH stacks; only RESTEASY_REACTIVE is reactive-specific.
+        boolean reactiveRestPresent = capabilities.isPresent(Capability.RESTEASY_REACTIVE);
+        generatedBeanBuildItems.stream()
+                .filter(b -> !reactiveRestPresent || !restResourceClassNameSet.contains(b.getName()))
+                .forEach(generatedBeans::produce);
         generatedBeanBuildItems.stream()
                 .filter(b -> restResourceClassNameSet.contains(b.getName()))
                 .forEach(b -> jaxrsProducer.produce(new GeneratedJaxRsResourceBuildItem(b.getName(), b.getData())));

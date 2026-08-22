@@ -43,7 +43,7 @@ import org.optaplanner.quarkus.testdata.normal.constraints.TestdataQuarkusConstr
 import org.optaplanner.quarkus.testdata.normal.domain.TestdataQuarkusEntity;
 import org.optaplanner.quarkus.testdata.normal.domain.TestdataQuarkusSolution;
 
-import io.quarkus.bootstrap.model.AppArtifact;
+import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.test.QuarkusProdModeTest;
 import io.restassured.RestAssured;
 
@@ -61,7 +61,7 @@ class OptaPlannerProcessorOverridePropertiesAtRuntimeTest {
 
     @RegisterExtension
     static final QuarkusProdModeTest config = new QuarkusProdModeTest()
-            .setForcedDependencies(List.of(new AppArtifact("io.quarkus", "quarkus-resteasy", QUARKUS_VERSION)))
+            .setForcedDependencies(List.of(Dependency.of("io.quarkus", "quarkus-resteasy", QUARKUS_VERSION)))
             // We want to check if these are overridden at runtime
             .overrideConfigKey("quarkus.optaplanner.solver.termination.best-score-limit", "0")
             .overrideConfigKey("quarkus.optaplanner.solver.move-thread-count", "4")
