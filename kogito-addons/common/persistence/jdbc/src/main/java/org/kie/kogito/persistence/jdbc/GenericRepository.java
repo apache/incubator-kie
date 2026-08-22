@@ -88,24 +88,23 @@ public class GenericRepository extends Repository {
      * @param processIds Collection of process IDs to include in the CTE
      * @return The wrapped query with CTE and data isolation filtering
      */
-    private String buildQueryWithProcessFiltering(String baseQuery, Collection<Process<? extends Model>> processIds) {
+    private String buildQueryWithProcessFiltering(String baseQuery, Collection<Process<? extends Model>> processIds, String fromTable) {
         if (!isFilterByLocalProcess()) {
             return baseQuery;
         }
 
-        String valueTuples = java.util.stream.IntStream.range(0, processIds.size())
+        String anchorBlock = "WITH anchor_row AS (SELECT MIN(id) as target_id FROM " + fromTable + ")";
+        String unionSelects = java.util.stream.IntStream.range(0, processIds.size())
                 .mapToObj(i -> {
                     if (i == 0) {
-                        return "(CAST(? AS VARCHAR(255)), CAST(? AS VARCHAR(255)))";
+                        return "SELECT CAST(? AS VARCHAR(255)), CAST(? AS VARCHAR(255)) FROM " + fromTable + " WHERE id = (SELECT target_id FROM anchor_row)";
                     } else {
-                        return "(?, ?)";
+                        return "SELECT ?, ? FROM " + fromTable + " WHERE id = (SELECT target_id FROM anchor_row)";
                     }
                 })
-                .collect(Collectors.joining(", "));
+                .collect(Collectors.joining(" UNION ALL "));
 
-        String cte = "WITH allowed_processes (process_id, process_version) AS (" +
-                "  SELECT * FROM (VALUES " + valueTuples + ") AS temp(pid, pver)" +
-                ") ";
+        String cte = anchorBlock + ", allowed_processes (process_id, process_version) AS (" + unionSelects + ") ";
 
         // Determine if we need WHERE or AND
         String whereClause = baseQuery.toLowerCase().contains(" where ") ? " AND " : " WHERE ";
@@ -274,7 +273,7 @@ public class GenericRepository extends Repository {
     Optional<Record> findByIdInternal(String processId, String processVersion, UUID id) {
         Collection<Process<? extends Model>> processIds = getProcessIdsForFiltering();
         String baseQuery = sqlIncludingVersion(FIND_BY_ID, processVersion);
-        String query = buildQueryWithProcessFiltering(baseQuery, processIds);
+        String query = buildQueryWithProcessFiltering(baseQuery, processIds, "process_instances");
 
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
@@ -299,7 +298,7 @@ public class GenericRepository extends Repository {
     Stream<Record> findAllInternalWaitingFor(String processId, String processVersion, String eventType) {
         Collection<Process<? extends Model>> processIds = getProcessIdsForFiltering();
         String baseQuery = sqlIncludingVersion(FIND_ALL_WAITING_FOR_EVENT_TYPE, processVersion);
-        String query = buildQueryWithProcessFiltering(baseQuery, processIds);
+        String query = buildQueryWithProcessFiltering(baseQuery, processIds, "process_instances");
 
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
@@ -326,7 +325,7 @@ public class GenericRepository extends Repository {
     Optional<Record> findByBusinessKey(String processId, String processVersion, String businessKey) {
         Collection<Process<? extends Model>> processIds = getProcessIdsForFiltering();
         String baseQuery = sqlIncludingVersion(FIND_BY_BUSINESS_KEY, processVersion);
-        String query = buildQueryWithProcessFiltering(baseQuery, processIds);
+        String query = buildQueryWithProcessFiltering(baseQuery, processIds, "process_instances");
 
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(query)) {
@@ -384,7 +383,7 @@ public class GenericRepository extends Repository {
     Stream<Record> findAllInternal(String processId, String processVersion) {
         Collection<Process<? extends Model>> processIds = getProcessIdsForFiltering();
         String baseQuery = sqlIncludingVersion(FIND_ALL, processVersion);
-        String query = buildQueryWithProcessFiltering(baseQuery, processIds);
+        String query = buildQueryWithProcessFiltering(baseQuery, processIds, "process_instances");
 
         CloseableWrapper close = new CloseableWrapper();
         try {
