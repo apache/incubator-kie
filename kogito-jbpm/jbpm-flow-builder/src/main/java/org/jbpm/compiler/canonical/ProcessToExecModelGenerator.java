@@ -114,7 +114,7 @@ public class ProcessToExecModelGenerator {
                 .asString()
                 .equals("process"));
 
-        processVisitor.visitProcess(process, processMethod.get(), metadata);
+        processVisitor.visitProcess(process, processClazz, processMethod.get(), metadata);
 
         metadata.setGeneratedClassModel(parsedClazzFile);
         return metadata;

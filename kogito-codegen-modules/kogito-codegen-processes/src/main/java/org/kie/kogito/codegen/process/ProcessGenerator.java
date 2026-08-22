@@ -86,6 +86,7 @@ public class ProcessGenerator {
     private static final String WPI = "wpi";
     private static final String FACTORY = "factory";
     private static final String CORRELATIONS = "correlations";
+    private static final String PROCESS_METHOD_NAME = "process";
 
     private final String packageName;
     private final KogitoWorkflowProcess process;
@@ -289,13 +290,20 @@ public class ProcessGenerator {
         return methodDeclaration;
     }
 
-    private MethodDeclaration process(ProcessMetaData processMetaData) {
-        return processMetaData.getGeneratedClassModel()
-                .findFirst(MethodDeclaration.class)
-                .orElseThrow(() -> new NoSuchElementException("Compilation unit doesn't contain a method declaration!"))
-                .setModifiers(Modifier.Keyword.PROTECTED)
+    private void addProcessMethods(ClassOrInterfaceDeclaration cls, ProcessMetaData processMetaData) {
+        ClassOrInterfaceDeclaration generatedClazz = processMetaData.getGeneratedClassModel()
+                .findFirst(ClassOrInterfaceDeclaration.class)
+                .orElseThrow(() -> new NoSuchElementException("Compilation unit doesn't contain a class declaration!"));
+
+        MethodDeclaration processMethod = generatedClazz.getMethods().stream()
+                .filter(m -> m.getNameAsString().equals(PROCESS_METHOD_NAME))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Compilation unit doesn't contain a method declaration!"));
+        processMethod.setModifiers(Modifier.Keyword.PROTECTED)
                 .setType(Process.class.getCanonicalName())
-                .setName("process");
+                .setName(PROCESS_METHOD_NAME);
+
+        generatedClazz.getMethods().forEach(cls::addMember);
     }
 
     private MethodCallExpr createProcessRuntime() {
@@ -480,8 +488,8 @@ public class ProcessGenerator {
                 .addMember(createInstanceGenericMethod(processInstanceFQCN))
                 .addMember(createInstanceGenericWithBusinessKeyMethod(processInstanceFQCN))
                 .addMember(createInstanceGenericWithWorkflowInstanceMethod(processInstanceFQCN))
-                .addMember(createReadOnlyInstanceGenericWithWorkflowInstanceMethod(processInstanceFQCN))
-                .addMember(process(processMetaData));
+                .addMember(createReadOnlyInstanceGenericWithWorkflowInstanceMethod(processInstanceFQCN));
+        addProcessMethods(cls, processMetaData);
 
         internalConfigure(processMetaData).ifPresent(cls::addMember);
         internalRegisterListeners(processMetaData).ifPresent(cls::addMember);

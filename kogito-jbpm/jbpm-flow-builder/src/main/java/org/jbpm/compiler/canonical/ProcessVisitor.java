@@ -53,7 +53,10 @@ import org.kie.api.definition.process.Process;
 import org.kie.api.definition.process.WorkflowProcess;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -84,6 +87,13 @@ public class ProcessVisitor extends AbstractVisitor {
 
     public static final String DEFAULT_VERSION = "1.0";
 
+    private static final String INIT_VARIABLES_METHOD_NAME = "initVariables";
+    private static final String INIT_METADATA_METHOD_NAME = "initMetadata";
+    private static final String INIT_NODES_METHOD_NAME = "initNodes";
+    private static final String INIT_CONNECTIONS_METHOD_NAME = "initConnections";
+
+    private static final int NODE_CHUNK_STATEMENT_THRESHOLD = 1500;
+
     private NodeVisitorBuilderService nodeVisitorService;
 
     private ReturnValueEvaluatorBuilderService returnValueEvaluatorBuilderService;
@@ -93,11 +103,11 @@ public class ProcessVisitor extends AbstractVisitor {
         returnValueEvaluatorBuilderService = ReturnValueEvaluatorBuilderService.instance(contextClassLoader);
     }
 
-    public void visitProcess(WorkflowProcess process, MethodDeclaration processMethod, ProcessMetaData metadata) {
-        BlockStmt body = new BlockStmt();
-        processMethod.setBody(body);
-
+    public void visitProcess(WorkflowProcess process, ClassOrInterfaceDeclaration processClazz, MethodDeclaration processMethod, ProcessMetaData metadata) {
         ClassOrInterfaceType processFactoryType = new ClassOrInterfaceType(null, RuleFlowProcessFactory.class.getSimpleName());
+
+        BlockStmt processBody = new BlockStmt();
+        processMethod.setBody(processBody);
 
         // create local variable factory and assign new fluent process to it
         VariableDeclarationExpr factoryField = new VariableDeclarationExpr(processFactoryType, FACTORY_FIELD_NAME);
@@ -106,20 +116,20 @@ public class ProcessVisitor extends AbstractVisitor {
         if (process instanceof org.jbpm.workflow.core.WorkflowProcess) {
             assignFactoryMethod.addArgument(new BooleanLiteralExpr(((org.jbpm.workflow.core.WorkflowProcess) process).isAutoComplete()));
         }
-
-        body.addStatement(new AssignExpr(factoryField, assignFactoryMethod, AssignExpr.Operator.ASSIGN));
+        processBody.addStatement(new AssignExpr(factoryField, assignFactoryMethod, AssignExpr.Operator.ASSIGN));
 
         // item definitions
+        BlockStmt variablesBody = new BlockStmt();
         Set<String> visitedVariables = new HashSet<>();
         VariableScope variableScope = (VariableScope) ((org.jbpm.process.core.Process) process).getDefaultContext(VariableScope.VARIABLE_SCOPE);
 
-        visitVariableScope(FACTORY_FIELD_NAME, variableScope, body, visitedVariables, metadata.getProcessClassName());
-        visitSubVariableScopes(process.getNodes(), body, visitedVariables);
+        visitVariableScope(FACTORY_FIELD_NAME, variableScope, variablesBody, visitedVariables, metadata.getProcessClassName());
+        visitSubVariableScopes(process.getNodes(), variablesBody, visitedVariables);
 
         if (process instanceof org.jbpm.workflow.core.WorkflowProcess) {
             org.jbpm.workflow.core.WorkflowProcess processImpl = (org.jbpm.workflow.core.WorkflowProcess) process;
             if (processImpl.getExpressionLanguage() != null) {
-                body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, "expressionLanguage", new StringLiteralExpr(processImpl.getExpressionLanguage())));
+                variablesBody.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, "expressionLanguage", new StringLiteralExpr(processImpl.getExpressionLanguage())));
             }
         }
 
@@ -127,7 +137,8 @@ public class ProcessVisitor extends AbstractVisitor {
 
         metadata.setDynamic(((org.jbpm.workflow.core.WorkflowProcess) process).isDynamic());
         // the process itself
-        body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_NAME, new StringLiteralExpr(process.getName())))
+        BlockStmt metadataBody = new BlockStmt();
+        metadataBody.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_NAME, new StringLiteralExpr(process.getName())))
                 .addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_PACKAGE_NAME, new StringLiteralExpr(process.getPackageName())))
                 .addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_DYNAMIC, new BooleanLiteralExpr(metadata.isDynamic())))
                 .addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_VERSION, new StringLiteralExpr(getOrDefault(process.getVersion(), DEFAULT_VERSION))))
@@ -136,28 +147,69 @@ public class ProcessVisitor extends AbstractVisitor {
                         new StringLiteralExpr(getOrDefault(((KogitoWorkflowProcess) process).getVisibility(), KogitoWorkflowProcess.PUBLIC_VISIBILITY))));
 
         ((org.jbpm.workflow.core.WorkflowProcess) process).getInputValidator().ifPresent(
-                v -> body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, "inputValidator", ExpressionUtils.getLiteralExpr(v))));
+                v -> metadataBody.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, "inputValidator", ExpressionUtils.getLiteralExpr(v))));
         ((org.jbpm.workflow.core.WorkflowProcess) process).getOutputValidator().ifPresent(
-                v -> body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, "outputValidator", ExpressionUtils.getLiteralExpr(v))));
+                v -> metadataBody.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, "outputValidator", ExpressionUtils.getLiteralExpr(v))));
 
-        visitMetaData(process.getMetaData(), body, FACTORY_FIELD_NAME);
-        visitCollaboration(process, body);
-        visitCompensationScope(process, body);
-        visitHeader(process, body);
+        visitMetaData(process.getMetaData(), metadataBody, FACTORY_FIELD_NAME);
+        visitCollaboration(process, metadataBody);
+        visitCompensationScope(process, metadataBody);
+        visitHeader(process, metadataBody);
 
         List<Node> processNodes = new ArrayList<>();
         for (org.kie.api.definition.process.Node procNode : process.getNodes()) {
             processNodes.add((Node) procNode);
         }
-        visitNodes(processNodes, body, variableScope, metadata);
-        //exception scope
-        visitExceptionScope(process, body);
-        visitConnections(process.getNodes(), body);
+        List<BlockStmt> nodeChunks = visitNodes(processNodes, variableScope, metadata);
 
-        body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_VALIDATE));
+        //exception scope
+        BlockStmt connectionsBody = new BlockStmt();
+        visitExceptionScope(process, connectionsBody);
+        visitConnections(process.getNodes(), connectionsBody);
+
+        addPhaseMethod(processClazz, processFactoryType, INIT_VARIABLES_METHOD_NAME, variablesBody);
+        addPhaseMethod(processClazz, processFactoryType, INIT_METADATA_METHOD_NAME, metadataBody);
+        emitInitNodes(processClazz, processFactoryType, nodeChunks);
+        addPhaseMethod(processClazz, processFactoryType, INIT_CONNECTIONS_METHOD_NAME, connectionsBody);
+
+        processBody.addStatement(phaseMethodCallStatement(INIT_VARIABLES_METHOD_NAME));
+        processBody.addStatement(phaseMethodCallStatement(INIT_METADATA_METHOD_NAME));
+        processBody.addStatement(phaseMethodCallStatement(INIT_NODES_METHOD_NAME));
+        processBody.addStatement(phaseMethodCallStatement(INIT_CONNECTIONS_METHOD_NAME));
+
+        processBody.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_VALIDATE));
 
         MethodCallExpr getProcessMethod = new MethodCallExpr(new NameExpr(FACTORY_FIELD_NAME), "getProcess");
-        body.addStatement(new ReturnStmt(getProcessMethod));
+        processBody.addStatement(new ReturnStmt(getProcessMethod));
+    }
+
+    private void addPhaseMethod(ClassOrInterfaceDeclaration processClazz, ClassOrInterfaceType processFactoryType, String name, BlockStmt body) {
+        MethodDeclaration method = processClazz.addMethod(name, Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC);
+        method.addParameter(new Parameter(processFactoryType, FACTORY_FIELD_NAME));
+        method.setBody(body);
+    }
+
+    private MethodCallExpr phaseMethodCallStatement(String name) {
+        MethodCallExpr call = new MethodCallExpr(null, name);
+        call.addArgument(new NameExpr(FACTORY_FIELD_NAME));
+        return call;
+    }
+
+    private void emitInitNodes(ClassOrInterfaceDeclaration processClazz, ClassOrInterfaceType processFactoryType, List<BlockStmt> nodeChunks) {
+        if (nodeChunks.size() == 1) {
+            addPhaseMethod(processClazz, processFactoryType, INIT_NODES_METHOD_NAME, nodeChunks.get(0));
+            return;
+        }
+
+        BlockStmt dispatcherBody = new BlockStmt();
+        for (int i = 0; i < nodeChunks.size(); i++) {
+            String chunkMethodName = INIT_NODES_METHOD_NAME + "_" + i;
+            addPhaseMethod(processClazz, processFactoryType, chunkMethodName, nodeChunks.get(i));
+            dispatcherBody.addStatement(phaseMethodCallStatement(chunkMethodName));
+        }
+        MethodDeclaration dispatcher = processClazz.addMethod(INIT_NODES_METHOD_NAME, Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC);
+        dispatcher.addParameter(new Parameter(processFactoryType, FACTORY_FIELD_NAME));
+        dispatcher.setBody(dispatcherBody);
     }
 
     private void visitCollaboration(WorkflowProcess process, BlockStmt body) {
@@ -223,15 +275,28 @@ public class ProcessVisitor extends AbstractVisitor {
         }
     }
 
-    private <U extends org.kie.api.definition.process.Node> void visitNodes(List<U> nodes, BlockStmt body, VariableScope variableScope, ProcessMetaData metadata) {
+    private <U extends org.kie.api.definition.process.Node> List<BlockStmt> visitNodes(List<U> nodes, VariableScope variableScope, ProcessMetaData metadata) {
+        List<BlockStmt> chunks = new ArrayList<>();
+        BlockStmt currentChunk = new BlockStmt();
+        chunks.add(currentChunk);
+
         for (U node : nodes) {
             @SuppressWarnings("unchecked")
             AbstractNodeVisitor<U> visitor = (AbstractNodeVisitor<U>) this.nodeVisitorService.findNodeVisitor(node.getClass());
             if (visitor == null) {
                 throw new IllegalStateException("No visitor found for node " + node.getClass().getName());
             }
-            visitor.visitNodeEntryPoint(null, node, body, variableScope, metadata);
+            visitor.visitNodeEntryPoint(null, node, currentChunk, variableScope, metadata);
+
+            if (currentChunk.getStatements().size() >= NODE_CHUNK_STATEMENT_THRESHOLD) {
+                currentChunk = new BlockStmt();
+                chunks.add(currentChunk);
+            }
         }
+        if (chunks.size() > 1 && chunks.get(chunks.size() - 1).getStatements().isEmpty()) {
+            chunks.remove(chunks.size() - 1);
+        }
+        return chunks;
     }
 
     @SuppressWarnings("unchecked")
