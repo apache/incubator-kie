@@ -1110,6 +1110,13 @@ public abstract class WorkflowProcessInstanceImpl extends ProcessInstanceImpl im
     }
 
     @Override
+    public void nodeInstanceCancelled(NodeInstance nodeInstance) {
+        if (((org.jbpm.workflow.core.WorkflowProcess) getProcess()).isAutoComplete() && canComplete()) {
+            setState(KogitoProcessInstance.STATE_COMPLETED);
+        }
+    }
+
+    @Override
     public void nodeInstanceCompleted(NodeInstance nodeInstance, String outType) {
         org.kie.api.definition.process.Node nodeInstanceNode = nodeInstance.getNode();
         if (nodeInstanceNode != null) {
@@ -1122,7 +1129,8 @@ public abstract class WorkflowProcessInstanceImpl extends ProcessInstanceImpl im
         if (nodeInstance instanceof FaultNodeInstance || nodeInstance instanceof EndNodeInstance ||
                 ((org.jbpm.workflow.core.WorkflowProcess) getWorkflowProcess()).isDynamic()
                 || nodeInstance instanceof CompositeNodeInstance) {
-            if (((org.jbpm.workflow.core.WorkflowProcess) getProcess()).isAutoComplete() && canComplete()) {
+            if (canComplete() && (nodeInstance instanceof FaultNodeInstance || nodeInstance instanceof EndNodeInstance
+                    || ((org.jbpm.workflow.core.WorkflowProcess) getProcess()).isAutoComplete())) {
                 setState(KogitoProcessInstance.STATE_COMPLETED);
             }
         } else {
