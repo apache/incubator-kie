@@ -63,7 +63,6 @@
     <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
     <version.org.jredisearch>2.2.0</version.org.jredisearch>
     <version.org.json>20231013</version.org.json>
-    <!-- CVE fix: reactor-core CVE-2026-47857, CVE-2026-47863 -->
     <version.io.projectreactor>3.8.7</version.io.projectreactor>
 </properties>
   <dependencyManagement>
@@ -150,8 +149,6 @@
         <artifactId>quarkus-reactive-messaging-http-deployment</artifactId>
         <version>${version.io.quarkiverse.reactivemessaging.http}</version>
       </dependency>
-      <!-- CVE fix: reactor-core CVE-2026-47857, CVE-2026-47863 — upgrade from 3.5.0/3.8.6 to 3.8.7.
-           Must appear before quarkus-bom import to take precedence. -->
       <dependency>
         <groupId>io.projectreactor</groupId>
         <artifactId>reactor-core</artifactId>
