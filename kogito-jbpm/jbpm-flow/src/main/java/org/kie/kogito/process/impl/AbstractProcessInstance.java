@@ -157,10 +157,6 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
         this(process, variables, null, wpi);
     }
 
-    /**
-     * Keeps the given state when a ProcessRuntime is provided, so that it does not have to be read and unmarshalled
-     * again on the next load. Read-only instances keep loading their state lazily.
-     */
     public AbstractProcessInstance(AbstractProcess<T> process, T variables, ProcessRuntime rt, org.kie.api.runtime.process.WorkflowProcessInstance wpi) {
         this.process = process;
         this.rt = (InternalProcessRuntime) rt;
@@ -168,10 +164,6 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
         this.processInstanceLockStrategy = new ContextAwareProcessInstanceLockStrategy(ProcessInstanceAtomicLockStrategy.instance());
 
         syncWorkflowInstanceState((WorkflowProcessInstance) wpi);
-
-        if (isProcessInstanceConnected()) {
-            internalSetProcessInstance((WorkflowProcessInstance) wpi);
-        }
     }
 
     private void syncWorkflowInstanceState(WorkflowProcessInstance wpi) {
