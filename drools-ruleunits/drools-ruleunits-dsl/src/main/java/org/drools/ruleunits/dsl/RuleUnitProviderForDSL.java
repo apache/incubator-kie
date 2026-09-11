@@ -30,12 +30,15 @@ import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.RuleUnit;
 import org.drools.ruleunits.api.RuleUnitData;
 import org.drools.ruleunits.api.RuleUnitInstance;
+import org.drools.ruleunits.api.conf.EventProcessing;
+import org.drools.ruleunits.api.conf.EventProcessingType;
 import org.drools.ruleunits.api.conf.RuleConfig;
 import org.drools.ruleunits.impl.EntryPointDataProcessor;
 import org.drools.ruleunits.impl.ReteEvaluatorBasedRuleUnitInstance;
 import org.drools.ruleunits.impl.RuleUnitProviderImpl;
 import org.drools.ruleunits.impl.factory.AbstractRuleUnit;
 import org.drools.ruleunits.impl.sessions.RuleUnitExecutorImpl;
+import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import java.util.Map;
@@ -69,7 +72,14 @@ public class RuleUnitProviderForDSL extends RuleUnitProviderImpl {
         public ModelRuleUnit(Class<T> type, Model model, UnitGlobalsResolver unitGlobalsResolver) {
             super(type);
             this.unitGlobalsResolver = unitGlobalsResolver;
-            this.ruleBase = KieBaseBuilder.createKieBaseFromModel( model );
+            EventProcessing annotation = type.getAnnotation(EventProcessing.class);
+            if (annotation == null) {
+                this.ruleBase = KieBaseBuilder.createKieBaseFromModel(model);
+            } else {
+                EventProcessingOption option = annotation.value() == EventProcessingType.STREAM
+                        ? EventProcessingOption.STREAM : EventProcessingOption.CLOUD;
+                this.ruleBase = KieBaseBuilder.createKieBaseFromModel(model, option);
+            }
             if (DUMP_GENERATED_RETE) {
                 ReteDumper.dumpRete(this.ruleBase);
             }

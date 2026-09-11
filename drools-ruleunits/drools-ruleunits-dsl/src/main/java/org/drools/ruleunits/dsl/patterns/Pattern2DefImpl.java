@@ -19,10 +19,12 @@
 package org.drools.ruleunits.dsl.patterns;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.drools.model.Condition;
 import org.drools.model.DSL;
 import org.drools.model.Index;
+import org.drools.model.functions.temporal.TemporalPredicate;
 import org.drools.model.functions.Block1;
 import org.drools.model.functions.Block2;
 import org.drools.model.functions.Block3;
@@ -69,6 +71,21 @@ public class Pattern2DefImpl<A, B> extends SinglePatternDef<B> implements Patter
     @Override
     public <V> Pattern2DefImpl<A, B> filter(String fieldName, Function1<B, V> leftExtractor, Index.ConstraintType constraintType, Function1<A, V> rightExtractor) {
         patternB.constraints.add(new Beta1Constraint<>(variable, fieldName, leftExtractor, constraintType, patternA.variable, rightExtractor));
+        return this;
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> after(long min, long max, TimeUnit unit) {
+        return addTemporalConstraint(DSL.after(min, unit, max, unit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> before(long min, long max, TimeUnit unit) {
+        return addTemporalConstraint(DSL.before(min, unit, max, unit));
+    }
+
+    protected Pattern2DefImpl<A, B> addTemporalConstraint(TemporalPredicate temporalPredicate) {
+        patternB.constraints.add(patternDef -> patternDef.expr(UUID.randomUUID().toString(), patternA.variable, temporalPredicate));
         return this;
     }
 

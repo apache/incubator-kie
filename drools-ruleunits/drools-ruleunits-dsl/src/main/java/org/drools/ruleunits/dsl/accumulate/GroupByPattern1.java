@@ -21,6 +21,7 @@ package org.drools.ruleunits.dsl.accumulate;
 import org.drools.model.DSL;
 import org.drools.model.Variable;
 import org.drools.model.functions.Function1;
+import org.drools.model.functions.temporal.TemporalPredicate;
 import org.drools.model.view.ExprViewItem;
 import org.drools.model.view.ViewItem;
 import org.drools.ruleunits.dsl.patterns.InternalPatternDef;
@@ -43,6 +44,11 @@ public class GroupByPattern1<A, K, V> extends Pattern2DefImpl<K, V> {
         this.pattern = pattern;
         this.groupingFunction = groupingFunction;
         this.acc = acc;
+    }
+
+    @Override
+    protected Pattern2DefImpl<K, V> addTemporalConstraint(TemporalPredicate temporalPredicate) {
+        throw new UnsupportedOperationException("Temporal constraints are not supported on groupBy results");
     }
 
     @Override

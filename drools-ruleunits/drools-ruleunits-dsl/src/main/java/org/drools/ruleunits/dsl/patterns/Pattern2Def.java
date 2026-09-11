@@ -18,6 +18,8 @@
  */
 package org.drools.ruleunits.dsl.patterns;
 
+import java.util.concurrent.TimeUnit;
+
 import org.drools.model.Index;
 import org.drools.model.functions.Block1;
 import org.drools.model.functions.Block2;
@@ -38,6 +40,22 @@ public interface Pattern2Def<A, B> extends PatternDef {
     <V> Pattern2Def<A, B> filter(Function1<B, V> leftExtractor, Index.ConstraintType constraintType, Function1<A, V> rightExtractor);
 
     <V> Pattern2Def<A, B> filter(String fieldName, Function1<B, V> leftExtractor, Index.ConstraintType constraintType, Function1<A, V> rightExtractor);
+
+    /**
+     * Constrains pattern B to occur after pattern A within inclusive bounds {@code [min, max]}
+     * converted to the given time unit. The gap is measured from {@code end(A)} to {@code start(B)}.
+     * Both operands must be events annotated with {@code @Role(Role.Type.EVENT)}.
+     * Supported time units: MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS.
+     */
+    Pattern2Def<A, B> after(long min, long max, TimeUnit unit);
+
+    /**
+     * Constrains pattern B to occur before pattern A within inclusive bounds {@code [min, max]}
+     * converted to the given time unit. The gap is measured from {@code end(B)} to {@code start(A)}.
+     * Both operands must be events annotated with {@code @Role(Role.Type.EVENT)}.
+     * Supported time units: MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS.
+     */
+    Pattern2Def<A, B> before(long min, long max, TimeUnit unit);
 
     <C> Pattern3Def<A, B, C> on(DataSource<C> dataSource);
 

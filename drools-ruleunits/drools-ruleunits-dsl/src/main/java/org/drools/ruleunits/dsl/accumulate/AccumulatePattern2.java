@@ -18,6 +18,7 @@
  */
 package org.drools.ruleunits.dsl.accumulate;
 
+import org.drools.model.functions.temporal.TemporalPredicate;
 import org.drools.model.view.ViewItem;
 import org.drools.ruleunits.dsl.patterns.Pattern1DefImpl;
 import org.drools.ruleunits.dsl.patterns.Pattern2DefImpl;
@@ -32,6 +33,11 @@ public class AccumulatePattern2<A, B, C> extends Pattern2DefImpl<A, C> {
     public AccumulatePattern2(RuleDefinition rule, Pattern1DefImpl<A> patternA, Pattern1DefImpl<C> patternC, Accumulator1<B, C> acc) {
         super(rule, patternA, patternC);
         this.acc = acc;
+    }
+
+    @Override
+    protected Pattern2DefImpl<A, C> addTemporalConstraint(TemporalPredicate temporalPredicate) {
+        throw new UnsupportedOperationException("Temporal constraints are not supported on accumulate results");
     }
 
     @Override
