@@ -31,7 +31,8 @@ import org.kie.kogito.process.version.ProjectVersionProcessVersionResolver;
 import org.kie.kogito.services.jobs.impl.InMemoryJobContext;
 import org.kie.kogito.services.jobs.impl.InMemoryJobService;
 import org.kie.kogito.services.jobs.impl.InMemoryProcessJobExecutorFactory;
-import org.kie.kogito.services.uow.StaticUnitOfWorkManger;
+import org.kie.kogito.services.uow.CollectingUnitOfWorkFactory;
+import org.kie.kogito.services.uow.DefaultUnitOfWorkManager;
 import org.kie.kogito.uow.UnitOfWorkManager;
 import org.kie.kogito.usertask.UserTasks;
 
@@ -41,6 +42,7 @@ import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
 
 @ApplicationScoped
 public class KogitoBeanProducer {
@@ -57,10 +59,12 @@ public class KogitoBeanProducer {
         return new DefaultCorrelationService();
     }
 
+    // Must stay a per-application singleton: a JVM-wide static outlives a dev-mode reload. See incubator-kie#7106.
     @DefaultBean
     @Produces
+    @Singleton
     UnitOfWorkManager unitOfWorkManager() {
-        return StaticUnitOfWorkManger.staticUnitOfWorkManager();
+        return new DefaultUnitOfWorkManager(new CollectingUnitOfWorkFactory());
     }
 
     @DefaultBean
