@@ -56,20 +56,4 @@ public interface ProcessInstances<T> {
     }
 
     Stream<ProcessInstance<T>> waitingForEventType(String eventType, ProcessInstanceReadMode mode);
-
-    default Stream<ProcessInstance<T>> acceptingEventType(String signalName, String id) {
-        return findById(id, ProcessInstanceReadMode.MUTABLE)
-                .filter(pi -> {
-                    // Check if waiting for event (traditional signal event)
-                    boolean isWaitingForSignal = Stream.concat(
-                            waitingForEventType(signalName, ProcessInstanceReadMode.READ_ONLY),
-                            waitingForEventType("Message-" + signalName, ProcessInstanceReadMode.READ_ONLY)).anyMatch(p -> p.id().equals(id));
-
-                    boolean isAdHocNode = pi.adHocFragments().stream()
-                            .anyMatch(fragment -> fragment.getName().equals(signalName));
-
-                    return isWaitingForSignal || isAdHocNode;
-                })
-                .stream();
-    }
 }

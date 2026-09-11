@@ -2546,6 +2546,16 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
 
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
 
+        // events() must expose the resolved value, not the raw #{signalName} expression
+        Set<EventDescription<?>> eventDescriptions = processInstance.events();
+        assertThat(eventDescriptions)
+                .hasSize(1)
+                .extracting(EventDescription::getEvent).contains(signalVar);
+
+        // a signal with a different name must not advance the instance
+        processInstance.send(SignalFactory.of("wrongSignalName", "WrongValue"));
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+
         processInstance.send(SignalFactory.of(signalVar, "SomeValue"));
 
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);

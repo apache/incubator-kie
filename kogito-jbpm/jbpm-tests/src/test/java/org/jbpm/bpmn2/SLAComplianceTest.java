@@ -248,7 +248,6 @@ public class SLAComplianceTest extends JbpmBpmn2TestCase {
         assertThat(nodeSlaCompliance.get()).isEqualTo(org.kie.api.runtime.process.ProcessInstance.SLA_MET);
     }
 
-
     @Test
     public void testSLAonProcessViolatedWithExpression() throws Exception {
         AtomicInteger processSlaCompliance = new AtomicInteger(-1);
@@ -293,7 +292,6 @@ public class SLAComplianceTest extends JbpmBpmn2TestCase {
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
         assertThat(processSlaCompliance.get()).isEqualTo(org.kie.api.runtime.process.ProcessInstance.SLA_VIOLATED);
     }
-
 
     @Test
     public void testSLAonCatchEventViolated() throws Exception {

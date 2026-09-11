@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import org.jbpm.process.core.context.variable.Variable;
 import org.jbpm.process.core.context.variable.VariableScope;
 import org.jbpm.process.instance.InternalProcessRuntime;
+import org.jbpm.process.instance.context.variable.VariableScopeInstance;
 import org.jbpm.util.PatternConstants;
 import org.jbpm.workflow.core.Node;
 import org.jbpm.workflow.core.impl.NodeIoHelper;
@@ -44,6 +45,8 @@ import org.kie.kogito.process.NamedDataType;
 import org.kie.kogito.timer.TimerInstance;
 
 import static java.util.Objects.isNull;
+import static org.jbpm.ruleflow.core.Metadata.EVENT_TYPE;
+import static org.jbpm.ruleflow.core.Metadata.EVENT_TYPE_SIGNAL;
 import static org.jbpm.workflow.instance.impl.DummyEventListener.EMPTY_EVENT_LISTENER;
 import static org.jbpm.workflow.instance.node.TimerNodeInstance.TIMER_TRIGGERED_EVENT;
 import static org.kie.kogito.internal.utils.ConversionUtils.isEmpty;
@@ -272,12 +275,22 @@ public class EventNodeInstance extends ExtendedNodeInstanceImpl implements Kogit
     @Override
     public Set<EventDescription<?>> getEventDescriptions() {
         NamedDataType dataType = null;
-        if (getEventNode().getVariableName() != null) {
-            VariableScope variableScope = (VariableScope) getEventNode().getContext(VariableScope.VARIABLE_SCOPE);
-            Variable variable = variableScope.findVariable(getEventNode().getVariableName());
-            dataType = new NamedDataType(variable.getName(), variable.getType());
+        String variableName = getEventNode().getVariableName();
+        if (variableName != null) {
+            VariableScopeInstance variableScopeInstance = (VariableScopeInstance) resolveContextInstance(VariableScope.VARIABLE_SCOPE, variableName);
+            if (variableScopeInstance == null) {
+                variableScopeInstance = (VariableScopeInstance) getProcessInstance().getContextInstance(VariableScope.VARIABLE_SCOPE);
+            }
+            if (variableScopeInstance != null) {
+                Variable variable = variableScopeInstance.getVariableScope().findVariable(variableName);
+                if (variable != null) {
+                    dataType = new NamedDataType(variable.getName(), variable.getType());
+                }
+            }
         }
-        return Collections.singleton(new BaseEventDescription(getEventType(), getNodeDefinitionId(), getNodeName(), "signal", getStringId(), getProcessInstance().getStringId(), dataType));
+        EventNode eventNode = getEventNode();
+        return Collections.singleton(new BaseEventDescription(getEventType(), eventNode.getUniqueId(), eventNode.getName(),
+                (String) eventNode.getMetaData().getOrDefault(EVENT_TYPE, EVENT_TYPE_SIGNAL), getStringId(), getProcessInstance().getStringId(), dataType));
     }
 
     @Override

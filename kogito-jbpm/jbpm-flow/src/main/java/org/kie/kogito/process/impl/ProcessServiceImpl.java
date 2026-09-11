@@ -20,6 +20,7 @@ package org.kie.kogito.process.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -160,11 +161,19 @@ public class ProcessServiceImpl implements ProcessService {
 
     @Override
     public <T extends MappableToModel<R>, R> Optional<R> signalProcessInstance(Process<T> process, String id, Object data, String signalName) {
+        Objects.requireNonNull(signalName, "signalName must not be null");
         return UnitOfWorkExecutor.executeInUnitOfWork(
                 application.unitOfWorkManager(),
-                () -> process
-                        .instances().acceptingEventType(signalName, id)
-                        .findFirst()
+                () -> process.instances()
+                        .findById(id)
+                        .filter(pi -> {
+                            if (pi.events().stream().anyMatch(e -> signalName.equals(e.getEvent()))) {
+                                return true;
+                            }
+                            return pi.adHocFragments()
+                                    .stream()
+                                    .anyMatch(f -> f.getName().equals(signalName));
+                        })
                         .map(pi -> {
                             pi.send(SignalFactory.of(signalName, data));
                             return pi.checkError().variables().toModel();
