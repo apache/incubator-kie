@@ -7,6 +7,6 @@
 **Full build:**
 
 ```bash
-mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true install
+mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible install
 ```
 

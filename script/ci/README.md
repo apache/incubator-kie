@@ -19,9 +19,10 @@
 
 # CI scripts
 
-Used by [.github/workflows/ci.yaml](../../.github/workflows/ci.yaml).
+Used by [.github/workflows/ci.yaml](../../.github/workflows/ci.yaml) and
+[.github/workflows/ci-parallel.yaml](../../.github/workflows/ci-parallel.yaml).
 
-- [CiComputeBuildScopes.java](CiComputeBuildScopes.java) — figures out which modules a PR actually touches, so CI only builds and tests what's needed instead of the whole reactor.
+- [CiComputeBuildScopes.java](CiComputeBuildScopes.java) — figures out which modules a PR actually touches, so CI only builds and tests what's needed instead of the whole reactor. When `CI_PARTITIONS_DIR` is set, it also partitions affected modules across parallel jobs using the partition files in [.github/supporting-files/ci/partitions/](../../.github/supporting-files/ci/partitions/). Its optional fifth output contains the upstream modules listed in [`image-producers.txt`](../../.github/supporting-files/ci/partitions/image-producers.txt), so CI can build their image artifacts before running downstream tests.
 - [CiSummary.java](CiSummary.java) — turns the build's test results into the human-readable summary you see at the top of a CI run on GitHub.
 - [DepGraph.java](DepGraph.java) — reads the dependency graph TSV. Shared with [script/dev/](../dev/), so CI and local builds cannot disagree about the reactor.
 - [dep-graph-extractor/](dep-graph-extractor/) — Maven extension that writes the reactor dependency graph. Required by `CiComputeBuildScopes` (and exercised transitively by its tests). Its output is a TSV of one-letter record types; consumers ignore types they do not know, so new ones can be added without breaking them.

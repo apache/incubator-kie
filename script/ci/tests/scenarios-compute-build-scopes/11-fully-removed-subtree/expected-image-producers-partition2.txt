@@ -1,0 +1,8 @@
+org.kie.kogito:data-index-service-inmemory
+org.kie.kogito:data-index-service-mongodb
+org.kie.kogito:data-index-service-postgresql
+org.kie.kogito:explainability-service-messaging
+org.kie.kogito:jitexecutor-runner
+org.kie.kogito:jobs-service-common
+org.kie.kogito:jobs-service-inmemory
+org.kie.kogito:jobs-service-postgresql

@@ -41,7 +41,7 @@ concurrency:
 jobs:
 
   build:
-    if: github.event.action != 'closed'
+    if: github.event.action != 'closed' && !(github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'parallel ci'))
     name: '${{ matrix.os }}, Java ${{ matrix.java }}'
     runs-on: ${{ matrix.os }}
     strategy:

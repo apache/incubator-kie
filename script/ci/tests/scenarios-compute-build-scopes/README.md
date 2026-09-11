@@ -21,9 +21,10 @@
 
 Each subdirectory is a scenario for
 [`CiComputeBuildScopesTest.java`](../CiComputeBuildScopesTest.java): the runner
-feeds `changed-files.txt` to `CiComputeBuildScopes` and asserts the produced
-`changed` / `affected` / `upstream` lists match the committed `expected-*.txt`
-goldens.
+feeds `changed-files.txt` to `CiComputeBuildScopes` (with `CI_PARTITIONS_DIR`
+pointing to the real partition files) and asserts the produced
+`changed` / `affected` / `upstream` lists — plus per-partition and default
+variants — match the committed `expected-*.txt` goldens.
 
 Scenarios are numbered (`01-`, `02-`, …) so new ones append without
 renumbering. What each one exercises is explained in its own `README.md`.

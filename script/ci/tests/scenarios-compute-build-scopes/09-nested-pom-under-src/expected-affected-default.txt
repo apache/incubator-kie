@@ -1,0 +1,8 @@
+org.drools.testcoverage:kjar-with-invoker
+org.drools.testcoverage:test-integration-prebuilt-tests
+org.kie:kie-archetypes
+org.kie:kie-drools-dmn-archetype
+org.kie:kie-drools-exec-model-archetype
+org.kie:kie-drools-exec-model-ruleunit-archetype
+org.kie:kie-drools-yaml-archetype
+org.kie:kie-maven-plugin

@@ -1,0 +1,183 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: 'CI :: Build - Parallel'
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'docsimg/**'
+      - '.ci/jenkins/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+
+  # Compute build scopes and partition affected modules.
+  # Uploads per-partition files as artifact and outputs a JSON array of
+  # partition names that have affected modules.
+  compute-partitions:
+    if: >-
+      github.event.action != 'closed'
+      && github.event_name == 'pull_request'
+      && contains(github.event.pull_request.labels.*.name, 'parallel ci')
+    runs-on: ubuntu-latest
+    outputs:
+      partitions: ${{ steps.partitions.outputs.partitions }}
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/ci-setup
+        with:
+          ref: ${{ github.base_ref }}
+          java-version: 17
+          partitions-dir: .github/supporting-files/ci/partitions
+
+      - id: partitions
+        name: "SETUP :: Build partition matrix"
+        shell: bash
+        run: |
+          json='['
+          first=true
+          for f in "${{ runner.temp }}"/maven-pl-affected-partition*.txt "${{ runner.temp }}"/maven-pl-affected-default.txt; do
+            [ ! -s "$f" ] && continue
+            name=$(basename "$f" .txt | sed 's/^maven-pl-affected-//')
+            $first || json+=','
+            first=false
+            json+="\"$name\""
+          done
+          json+=']'
+          echo "partitions=$json" >> "$GITHUB_OUTPUT"
+          echo "Partitions with affected modules: $json"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: partition-files
+          path: |
+            ${{ runner.temp }}/maven-pl-affected-partition*.txt
+            ${{ runner.temp }}/maven-pl-affected-default.txt
+            ${{ runner.temp }}/maven-pl-upstream-partition*.txt
+            ${{ runner.temp }}/maven-pl-upstream-default.txt
+            ${{ runner.temp }}/maven-pl-changed-partition*.txt
+            ${{ runner.temp }}/maven-pl-changed-default.txt
+            ${{ runner.temp }}/maven-pl-image-producers-partition*.txt
+            ${{ runner.temp }}/maven-pl-image-producers-default.txt
+            ${{ runner.temp }}/dep-graph.tsv
+
+  # Each partition runs as an independent job via the dynamic matrix.
+  # GHA computes the cross-product of partition × java × os.
+  test:
+    needs: compute-partitions
+    if: needs.compute-partitions.outputs.partitions != '[]'
+    name: '${{ matrix.partition }} :: ${{ matrix.os }}, Java ${{ matrix.java }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(needs.compute-partitions.outputs.partitions) }}
+        java: [17, 21]
+        os: [ubuntu-latest]
+    steps:
+      - name: "SETUP :: Checkout to load local actions"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/ci-setup
+        with:
+          ref: ${{ github.base_ref }}
+          java-version: ${{ matrix.java }}
+          skip-build-scopes: true
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: partition-files
+          path: ${{ runner.temp }}
+
+      # Flag glossary:
+      #   --no-transfer-progress                    silence download progress bars (critical for 800+ modules)
+      #   -fae / --fail-at-end                      continue past failures so all broken modules are reported
+      #   -Dsurefire.redirectTestOutputToFile=true  redirect test JVM stdout/stderr to surefire-reports files
+      #   -Denforcer.skip=true                      skip Enforcer plugin
+      #   -Dcheckstyle.skip=true                    skip Checkstyle plugin
+      #   -Dformatter.skip=true                     skip formatter plugin
+      #   -Darchunit.skip=true                      skip ArchUnit plugin
+      #   -Dquarkus.build.skip=true                 skip Quarkus application build
+      #   -Ddisable.quarkus.plugin=true             skip compile-time Quarkus bootstrap
+      #   -Dskip.quarkus.image.assembly=true        skip assemblies that package target/quarkus-app
+
+      - name: "PR CHECK :: BUILD :: Upstream modules (tests skipped)"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "${{ runner.temp }}/maven-pl-upstream-${{ matrix.partition }}.txt")
+          [ -z "$pl" ] && echo "No upstream modules. Skipping." && exit 0
+          mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Dquarkus.build.skip=true -Ddisable.quarkus.plugin=true -Dskip.quarkus.image.assembly=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+
+      - name: "PR CHECK :: BUILD :: Required image-producing modules"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "${{ runner.temp }}/maven-pl-image-producers-${{ matrix.partition }}.txt")
+          [ -z "$pl" ] && echo "No required image-producing modules. Skipping." && exit 0
+          mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
+
+      - name: "PR CHECK :: TEST :: ${{ matrix.partition }}"
+        shell: bash
+        run: |
+          pl=$(paste -sd, "${{ runner.temp }}/maven-pl-affected-${{ matrix.partition }}.txt")
+          [ -z "$pl" ] && echo "No affected modules. Skipping." && exit 0
+          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+
+      - name: 'SUMMARY :: Publish'
+        if: always()
+        shell: bash
+        env:
+          CI_PARALLEL_BUILD: 'true'
+          MERMAID_EXPANDED: ${{ matrix.java == 21 }}
+          MATRIX_OS: ${{ matrix.os }}
+          MATRIX_JAVA: ${{ matrix.java }}
+        run: |
+          MAVEN_PL_AFFECTED=$(paste -sd, "${{ runner.temp }}/maven-pl-affected-${{ matrix.partition }}.txt" 2>/dev/null || true) \
+          MAVEN_PL_UPSTREAM=$(paste -sd, "${{ runner.temp }}/maven-pl-upstream-${{ matrix.partition }}.txt" 2>/dev/null || true) \
+          MAVEN_PL_CHANGED=$(paste -sd, "${{ runner.temp }}/maven-pl-changed-${{ matrix.partition }}.txt" 2>/dev/null || true) \
+          MAVEN_PL_IMAGE_PRODUCERS=$(paste -sd, "${{ runner.temp }}/maven-pl-image-producers-${{ matrix.partition }}.txt" 2>/dev/null || true) \
+          jbang script/ci/CiSummary.java
+
+      - name: Upload Build logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-logs_${{ matrix.partition }}_${{ matrix.os }}_java-${{ matrix.java }}
+          path: '**/build.log'
+
+      - name: Upload Build Compare
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: build-compare_${{ matrix.partition }}_${{ matrix.os }}_java-${{ matrix.java }}
+          path: |
+            **/*.buildcompare
+            **/*.buildinfo
