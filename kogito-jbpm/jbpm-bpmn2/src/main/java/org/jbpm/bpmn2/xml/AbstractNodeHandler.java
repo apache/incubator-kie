@@ -258,9 +258,9 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
     }
 
     public static DroolsAction extractScript(Element xmlNode) {
-        String dialect = "mvel";
-        if ("http://www.java.com/java".equals(xmlNode.getAttribute("scriptFormat"))) {
-            dialect = "java";
+        String dialect = "java";
+        if ("http://www.mvel.org/2.0".equals(xmlNode.getAttribute("scriptFormat"))) {
+            dialect = "mvel";
         }
         NodeList subNodeList = xmlNode.getChildNodes();
         for (int j = 0; j < subNodeList.getLength(); j++) {
@@ -272,7 +272,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
                 }
             }
         }
-        return new DroolsConsequenceAction("mvel", "");
+        return new DroolsConsequenceAction(dialect, "");
     }
 
     protected void writeMetaData(final Node node, final StringBuilder xmlDump) {

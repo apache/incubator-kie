@@ -27,6 +27,7 @@ import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.impl.SerializationContextImpl;
 import org.jbpm.flow.serialization.ObjectMarshallerStrategy;
 import org.jbpm.flow.serialization.ProcessInstanceMarshallerException;
+import org.jbpm.flow.serialization.marshaller.SerializableMarshallerProvider;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -38,7 +39,9 @@ public class ProtostreamObjectMarshaller implements ObjectMarshallerStrategy {
 
     public ProtostreamObjectMarshaller() {
         context = new SerializationContextImpl(Configuration.builder().build());
-
+        // ProtoStream 6 no longer indexes interface-typed marshallers by Java class; this provider
+        // keeps Serializable-typed variables resolvable (see SerializableMarshallerProvider).
+        context.registerMarshallerProvider(new SerializableMarshallerProvider());
     }
 
     @Override

@@ -643,7 +643,7 @@
                                             <span>CSV files per solver:</span>
                                             <div class="btn-group download-btn-group">
                                             <#list problemStatistic.subSingleStatisticList as subSingleStatistic>
-                                                <button class="btn" onclick="window.location.href='${subSingleStatistic.relativeCsvFilePath}'"><i class="icon-download"></i></button>
+                                                <button class="btn btn-secondary btn-sm" onclick="window.location.href='${subSingleStatistic.relativeCsvFilePath}'">&#x2B07;</button>
                                             </#list>
                                             </div>
                                         </#if>
@@ -689,7 +689,7 @@
                                             <#if !benchmarkReport.plannerBenchmarkResult.aggregation>
                                                 <span>CSV file:</span>
                                                 <div class="btn-group download-btn-group">
-                                                    <button class="btn" onclick="window.location.href='${pureSubSingleStatistic.relativeCsvFilePath}'"><i class="icon-download"></i></button>
+                                                    <button class="btn btn-secondary btn-sm" onclick="window.location.href='${pureSubSingleStatistic.relativeCsvFilePath}'">&#x2B07;</button>
                                                 </div>
                                             </#if>
                                         </#list>

@@ -42,14 +42,14 @@
     <version.org.drools>${project.version}</version.org.drools>
 
     <!-- Normal dependency versions -->
-    <version.ch.qos.logback>1.5.35</version.ch.qos.logback>
+    <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
     <!-- CVE-2026-49844: log4j-api versions below 2.25.5 are vulnerable. Upgrade log4j to 2.26.1.
          This covers log4j-to-slf4j (explicitly managed) and log4j-api (promoted by quarkus-bom to 2.25.1).
          https://logging.apache.org/security.html#CVE-2026-49844 -->
     <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
     <version.com.thoughtworks.xstream>1.4.21</version.com.thoughtworks.xstream>
     <version.io.quarkiverse.operatorsdk>6.6.7</version.io.quarkiverse.operatorsdk>
-    <version.io.quarkus>3.27.5.1</version.io.quarkus>
+    <version.io.quarkus>3.33.3.2</version.io.quarkus>
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
     <version.org.apache.commons.text>1.14.0</version.org.apache.commons.text>
     <version.org.apache.openjpa>4.0.0</version.org.apache.openjpa>
@@ -58,14 +58,13 @@
     <version.org.freemarker>2.3.34</version.org.freemarker>
     <version.org.jdom2>2.0.6.1</version.org.jdom2>
     <version.org.jfree.jfreechart>1.5.4</version.org.jfree.jfreechart>
-    <version.io.micrometer>1.16.6</version.io.micrometer>
     <version.org.openrewrite.recipe>1.19.3</version.org.openrewrite.recipe>
     <version.org.slf4j>2.0.17</version.org.slf4j><!-- TODO keep in sync with quarkus-bom -->
     <version.org.eclipse.parsson>1.1.8</version.org.eclipse.parsson>
     <!-- CVE-2026-56624: Apache MINA SSHD fixed version -->
     <version.org.apache.sshd>2.19.0</version.org.apache.sshd>
-    <version.org.springframework>7.0.8</version.org.springframework>
-    <version.org.springframework.boot>4.0.7</version.org.springframework.boot>
+    <version.org.springframework>7.0.9</version.org.springframework>
+    <version.org.springframework.boot>4.0.8</version.org.springframework.boot>
     <version.com.fasterxml.jackson.databind>2.22.1</version.com.fasterxml.jackson.databind>
     <!-- ************************************************************************ -->
     <!-- Plugins -->
@@ -143,7 +142,7 @@
         <scope>import</scope>
       </dependency>
       <!-- Normal dependencies versions-->
-      <!-- CVE-2026-56624: override sshd-common and sshd-core pinned at 2.12.1 by quarkus-bom -->
+      <!-- CVE-2026-56624: override sshd-common and sshd-core pinned at 2.17.1 by quarkus-bom -->
       <dependency>
         <groupId>org.apache.sshd</groupId>
         <artifactId>sshd-common</artifactId>
@@ -153,22 +152,6 @@
         <groupId>org.apache.sshd</groupId>
         <artifactId>sshd-core</artifactId>
         <version>${version.org.apache.sshd}</version>
-      </dependency>
-      <!-- CVE fix: override micrometer version brought in by quarkus-bom 3.27.4 (1.14.7) to 1.16.6 -->
-      <dependency>
-        <groupId>io.micrometer</groupId>
-        <artifactId>micrometer-core</artifactId>
-        <version>${version.io.micrometer}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.micrometer</groupId>
-        <artifactId>micrometer-commons</artifactId>
-        <version>${version.io.micrometer}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.micrometer</groupId>
-        <artifactId>micrometer-observation</artifactId>
-        <version>${version.io.micrometer}</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
@@ -262,6 +245,7 @@
           <groupId>io.quarkus</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${version.io.quarkus}</version>
+          <extensions>true</extensions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

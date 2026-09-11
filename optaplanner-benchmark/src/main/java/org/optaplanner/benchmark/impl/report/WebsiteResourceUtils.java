@@ -29,14 +29,9 @@ public class WebsiteResourceUtils {
     private static final String RESOURCE_NAMESPACE = "/org/optaplanner/benchmark/impl/report/";
 
     public static void copyResourcesTo(File benchmarkReportDirectory) {
-        // Twitter Bootstrap
-        copyResource(benchmarkReportDirectory, "twitterbootstrap/css/bootstrap-responsive.css");
-        // copyResource(benchmarkReportDirectory, "twitterbootstrap/css/bootstrap-responsive.min.css");
         copyResource(benchmarkReportDirectory, "twitterbootstrap/css/bootstrap.css");
         // copyResource(benchmarkReportDirectory, "twitterbootstrap/css/bootstrap.min.css");
         copyResource(benchmarkReportDirectory, "twitterbootstrap/css/prettify.css");
-        copyResource(benchmarkReportDirectory, "twitterbootstrap/img/glyphicons-halflings-white.png");
-        copyResource(benchmarkReportDirectory, "twitterbootstrap/img/glyphicons-halflings.png");
         copyResource(benchmarkReportDirectory, "twitterbootstrap/js/bootstrap.js");
         // copyResource(benchmarkReportDirectory, "twitterbootstrap/js/bootstrap.min.js");
         copyResource(benchmarkReportDirectory, "twitterbootstrap/js/jquery.js");

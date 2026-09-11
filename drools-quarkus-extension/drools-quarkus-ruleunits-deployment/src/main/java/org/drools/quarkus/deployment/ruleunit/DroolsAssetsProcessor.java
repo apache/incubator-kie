@@ -20,6 +20,7 @@ package org.drools.quarkus.deployment.ruleunit;
 
 
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ArchiveRootBuildItem;
@@ -54,7 +55,8 @@ public class DroolsAssetsProcessor extends AbstractDroolsAssetsProcessor{
     		ArchiveRootBuildItem root,
     	    LiveReloadBuildItem liveReload,
     	    CurateOutcomeBuildItem curateOutcomeBuildItem,
-    	    CombinedIndexBuildItem combinedIndexBuildItem,    		
+    	    CombinedIndexBuildItem combinedIndexBuildItem,
+    	    Capabilities capabilities,
     	    BuildProducer<GeneratedBeanBuildItem> generatedBeans,
                                  BuildProducer<NativeImageResourceBuildItem> resource,
                                  BuildProducer<AdditionalStaticResourceBuildItem> staticResProducer,
@@ -63,6 +65,6 @@ public class DroolsAssetsProcessor extends AbstractDroolsAssetsProcessor{
                                  BuildProducer<KmoduleKieBaseModelsBuiltItem> kbaseModelsBI,
                                  BuildProducer<GlobalsBuildItem> globalsBI,
                                  BuildProducer<GeneratedJaxRsResourceBuildItem> jaxrsProducer) {
-    	super.generateSources(root, liveReload, curateOutcomeBuildItem, combinedIndexBuildItem, generatedBeans, resource, staticResProducer, genResBI, otnClasesBI, kbaseModelsBI, globalsBI, jaxrsProducer);
+    	super.generateSources(root, liveReload, curateOutcomeBuildItem, combinedIndexBuildItem, capabilities, generatedBeans, resource, staticResProducer, genResBI, otnClasesBI, kbaseModelsBI, globalsBI, jaxrsProducer);
     }
 }

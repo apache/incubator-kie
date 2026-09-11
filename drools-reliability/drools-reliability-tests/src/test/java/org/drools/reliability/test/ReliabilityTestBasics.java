@@ -38,6 +38,7 @@ import org.drools.reliability.core.StorageManagerFactory;
 import org.drools.reliability.core.TestableStorageManager;
 import org.drools.reliability.infinispan.InfinispanStorageManager;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.commons.util.Version;
 import org.infinispan.server.test.core.InfinispanContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -142,8 +143,8 @@ public abstract class ReliabilityTestBasics {
     public void setUp() {
         if (((TestableStorageManager) StorageManagerFactory.get().getStorageManager()).isRemote()) {
             LOG.info("Starting InfinispanContainer");
-            container = new InfinispanContainer()
-                    .withFileSystemBind("infinispan-remote-config", "/user-config")
+            container = new InfinispanContainer(InfinispanContainer.IMAGE_BASENAME + ":" + Version.getMajorMinor());
+            container.withFileSystemBind("infinispan-remote-config", "/user-config")
                     .withCommand("-c /user-config/infinispan-local.xml");
             container.start();
             LOG.info("InfinispanContainer started"); // takes about 10 seconds

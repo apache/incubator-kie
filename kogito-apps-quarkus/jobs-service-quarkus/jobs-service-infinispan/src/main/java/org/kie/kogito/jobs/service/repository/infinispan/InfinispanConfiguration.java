@@ -24,7 +24,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.Readiness;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.marshall.MarshallerUtil;
 import org.kie.kogito.infinispan.health.InfinispanHealthCheck;
+import org.kie.kogito.jobs.service.repository.infinispan.marshaller.TriggerMarshallerProvider;
 
 import io.quarkus.runtime.StartupEvent;
 
@@ -64,6 +66,11 @@ public class InfinispanConfiguration {
     void initializeCaches(@Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE) StartupEvent startupEvent,
             Instance<RemoteCacheManager> remoteCacheManager,
             Event<InfinispanInitialized> initializedEvent) {
+        // ProtoStream 6 no longer indexes interface-typed marshallers by Java class; this provider
+        // keeps Trigger-typed values resolvable (see TriggerMarshallerProvider). Trigger marshalling
+        // is mandatory for this repository, so a missing SerializationContext must abort startup.
+        MarshallerUtil.getSerializationContext(remoteCacheManager.get())
+                .registerMarshallerProvider(new TriggerMarshallerProvider());
         Optional.ofNullable(remoteCacheManager.get().getCache(JOB_DETAILS))
                 .ifPresent(c -> {
                     initializedEvent.fire(new InfinispanInitialized());

@@ -66,8 +66,9 @@ Notes:
   on non-Linux runners.
 - The `apache.snapshots` Maven repository is blocked via a mirror in
   `settings.xml`, so builds cannot silently depend on snapshot artifacts.
-- A new push to a PR cancels that PR's in-progress run; runs for pushes to
-  `main` are never canceled.
+- A new push to a PR cancels that PR's in-progress run, and so does closing
+  or merging the PR. Runs for pushes to `main` are never canceled.
+  `CI :: CI Tests` and `Dev :: Tests` follow the same rules.
 - After the build, a Surefire report step fails the job on test failures, and
   the build logs (`build.log`) plus the reproducibility outputs
   (`*.buildcompare`, `*.buildinfo`) are uploaded as workflow artifacts.

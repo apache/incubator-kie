@@ -65,11 +65,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-infinispan-client</artifactId>
         </dependency>
-        <!-- Needs to be declared as Jobs service doesn't leverage persistence-commons-infinispan. -->
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-dsl</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.kie</groupId>
             <artifactId>kie-addons-quarkus-persistence-infinispan-health</artifactId>
@@ -89,7 +84,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

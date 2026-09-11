@@ -42,10 +42,8 @@ public abstract class BaseReactiveJobRepository implements ReactiveJobRepository
     }
 
     public <T> CompletionStage<T> runAsync(Supplier<T> function) {
-        final CompletableFuture<T> future = new CompletableFuture<>();
-        vertx.executeBlocking(v -> future.complete(function.get()), r -> {
-        });
-        return future;
+        // a throwing supplier fails the returned future instead of leaving callers waiting forever
+        return vertx.executeBlocking(function::get).toCompletionStage();
     }
 
     @Override

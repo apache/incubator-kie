@@ -39,8 +39,19 @@
   </description>
 
   <properties>
-    <version.io.quarkus>3.27.5.1</version.io.quarkus>
-    <version.io.quarkus.camel>3.27.5.1</version.io.quarkus.camel>
+    <version.io.quarkus>3.33.3.2</version.io.quarkus>
+    <version.io.quarkus.camel>3.33.2</version.io.quarkus.camel>
+    <!-- Quarkus-platform-aligned pin. kie-parent keeps the Spring Boot / framework-neutral value;
+         this tree needs the platform one (smallrye-reactive-messaging 4.33.0 requires Mutiny 3). -->
+    <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
+    <version.io.smallrye.reactive.messaging.in.memory>4.33.0</version.io.smallrye.reactive.messaging.in.memory>
+    <!-- Quarkus 3.33 platform pins (same as kogito-quarkus/bom; this tree does not inherit it). kie-parent keeps the
+         framework-neutral values. smallrye-config 3.16 and jandex 3.5 are hard requirements; open-api 4.2.4 needs jandex 3.5. -->
+    <version.io.smallrye-config>3.16.0</version.io.smallrye-config>
+    <version.io.smallrye.config.core>3.16.0</version.io.smallrye.config.core>
+    <version.io.smallrye.jandex>3.5.3</version.io.smallrye.jandex>
+    <version.io.smallrye-open-api>4.2.4</version.io.smallrye-open-api>
+    <version.io.smallrye.openapi.core>4.2.4</version.io.smallrye.openapi.core>
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie:kie-quarkus-build-parent</allowedPomsList>
     <!-- To be overridden by poms with dependency management -->

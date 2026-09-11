@@ -22,10 +22,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.drools.core.base.RuleNameStartsWithAgendaFilter;
+import org.drools.core.time.impl.JDKTimerService;
 import org.drools.ruleunits.api.DataHandle;
 import org.drools.ruleunits.api.DataProcessor;
 import org.drools.ruleunits.api.RuleUnitInstance;
 import org.drools.ruleunits.api.RuleUnitProvider;
+import org.drools.ruleunits.api.conf.ClockType;
 import org.drools.ruleunits.api.conf.RuleConfig;
 import org.drools.ruleunits.dsl.domain.Cheese;
 import org.drools.ruleunits.dsl.domain.Person;
@@ -34,6 +36,8 @@ import org.drools.ruleunits.impl.listener.TestRuleEventListener;
 import org.drools.ruleunits.impl.listener.TestRuleRuntimeEventListener;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.rule.FactHandle;
+import org.kie.api.time.SessionClock;
+import org.kie.api.time.SessionPseudoClock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -328,6 +332,29 @@ public class RuleUnitsTest {
             assertThat(testRuleEventListener.getResults().get(1)).startsWith("onAfterMatchFire");
             assertThat(testRuleEventListener.getResults().get(2)).startsWith("onBeforeMatchFire");
             assertThat(testRuleEventListener.getResults().get(3)).startsWith("onAfterMatchFire");
+        }
+    }
+
+    @Test
+    public void pseudoClockDoesNotAffectSubsequentDefaultInstance() {
+        HelloWorldUnit unit1 = new HelloWorldUnit();
+        unit1.getStrings().add("Hello World");
+
+        RuleConfig pseudoConfig = RuleUnitProvider.get().newRuleConfig();
+        pseudoConfig.setClockType(ClockType.PSEUDO);
+
+        try (RuleUnitInstance<HelloWorldUnit> pseudoInstance = RuleUnitProvider.get().createRuleUnitInstance(unit1, pseudoConfig)) {
+            SessionClock clock1 = pseudoInstance.getClock();
+            assertThat(clock1).isInstanceOf(SessionPseudoClock.class);
+        }
+
+        HelloWorldUnit unit2 = new HelloWorldUnit();
+        unit2.getStrings().add("Hello World");
+
+        try (RuleUnitInstance<HelloWorldUnit> defaultInstance = RuleUnitProvider.get().createRuleUnitInstance(unit2)) {
+            SessionClock clock2 = defaultInstance.getClock();
+            assertThat(clock2).isNotInstanceOf(SessionPseudoClock.class);
+            assertThat(clock2).isInstanceOf(JDKTimerService.class);
         }
     }
 

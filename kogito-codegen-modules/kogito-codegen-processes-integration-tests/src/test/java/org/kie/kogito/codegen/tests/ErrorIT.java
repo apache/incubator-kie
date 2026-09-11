@@ -128,6 +128,69 @@ public class ErrorIT extends AbstractCodegenIT {
                 "EndErrorInSubprocessWithEventSubprocess");
     }
 
+    @Test
+    void testBoundaryErrorOnInnerSubProcessNode() throws Exception {
+        Application app = generateCodeProcessesOnly(
+                "error/NestedSubProcessBoundaryErrorOnInnerSubProcess.bpmn2");
+        assertThat(app).isNotNull();
+
+        List<String> completedNames = completedNodesListener(app);
+
+        Process<? extends Model> p = app.get(Processes.class)
+                .processById("NestedSubProcessBoundaryErrorOnInnerSubProcess");
+        ProcessInstance<?> instance = p.createInstance(p.createModel());
+        instance.start();
+
+        assertState(instance, ProcessInstance.STATE_COMPLETED);
+        assertThat(completedNames)
+                .as("InnerTask must run before the error fires")
+                .contains("InnerTask");
+        assertThat(completedNames)
+                .as("HandlerTask must run — boundary on innerSub must be registered")
+                .contains("HandlerTask");
+    }
+
+    @Test
+    void testBoundarySignalOnUserTaskInsideNestedSubProcess() throws Exception {
+        Application app = generateCodeProcessesOnly(
+                "error/NestedSubProcessBoundaryOnUserTask.bpmn2");
+        assertThat(app).isNotNull();
+
+        List<String> completedNames = completedNodesListener(app);
+
+        Process<? extends Model> p = app.get(Processes.class)
+                .processById("NestedSubProcessBoundaryOnUserTask");
+        ProcessInstance<?> instance = p.createInstance(p.createModel());
+        instance.start();
+
+        // UserTask inside InnerSubProcess is now waiting — send signal to fire the boundary
+        instance.send(org.kie.kogito.process.SignalFactory.of("CancelTask", null));
+
+        assertState(instance, ProcessInstance.STATE_COMPLETED);
+        assertThat(completedNames)
+                .as("HandlerTask must run — signal boundary on UserTask inside nested sub must be registered")
+                .contains("HandlerTask");
+    }
+
+    @Test
+    void testBoundaryErrorOnWorkItemNodeInsideNestedSubProcess() throws Exception {
+        Application app = generateCodeProcessesOnly(
+                "error/NestedSubProcessBoundaryErrorOnWorkItemNode.bpmn2");
+        assertThat(app).isNotNull();
+
+        List<String> completedNames = completedNodesListener(app);
+
+        Process<? extends Model> p = app.get(Processes.class)
+                .processById("NestedSubProcessBoundaryErrorOnWorkItemNode");
+        ProcessInstance<?> instance = p.createInstance(p.createModel());
+        instance.start();
+
+        assertState(instance, ProcessInstance.STATE_COMPLETED);
+        assertThat(completedNames)
+                .as("HandlerTask must run — error boundary on WorkItemNode inside nested sub must be registered")
+                .contains("HandlerTask");
+    }
+
     private List<String> completedNodesListener(Application app) {
         List<String> completedIds = new ArrayList<>();
         addProcessEventListener(app, new DefaultKogitoProcessEventListener() {

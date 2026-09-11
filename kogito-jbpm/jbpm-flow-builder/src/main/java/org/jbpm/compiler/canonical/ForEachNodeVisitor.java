@@ -54,6 +54,11 @@ public class ForEachNodeVisitor extends AbstractCompositeNodeVisitor<ForEachNode
     }
 
     @Override
+    protected Class<?> factoryClass() {
+        return ForEachNodeFactory.class;
+    }
+
+    @Override
     public void visitNode(String factoryField, ForEachNode node, BlockStmt body, VariableScope variableScope, ProcessMetaData metadata) {
         body.addStatement(getAssignedFactoryMethod(factoryField, ForEachNodeFactory.class, getNodeId(node), getNodeKey(), getWorkflowElementConstructor(node.getId())))
                 .addStatement(getNameMethod(node, "ForEach"));

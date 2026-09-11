@@ -32,6 +32,11 @@ import org.kie.api.definition.process.WorkflowProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProcessToExecModelGeneratorTest {
@@ -198,5 +203,51 @@ public class ProcessToExecModelGeneratorTest {
 
         ProcessMetaData processMetadata = ProcessToExecModelGenerator.INSTANCE.generate(process);
         assertThat(processMetadata).as("Dumper should return non null class for process").isNotNull();
+    }
+
+    @Test
+    public void testUppercaseVariableGetterHasJsonProperty() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.uppercase");
+
+        factory
+                .variable("FirstName", new StringDataType())
+                .name("uppercase")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one)
+                .name("start")
+                .done()
+                .endNode(two)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(one, two);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        ModelMetaData modelMetadata = ProcessToExecModelGenerator.INSTANCE.generateModel(process);
+
+        CompilationUnit generatedModel = modelMetadata.generateUnit();
+
+        MethodDeclaration getter = generatedModel
+                .findFirst(MethodDeclaration.class,
+                        method -> method.getNameAsString().equals("getFirstName"))
+                .orElseThrow(() -> new AssertionError("Generated getter getFirstName() was not found"));
+
+        NormalAnnotationExpr jsonProperty = getter
+                .getAnnotationByName(JsonProperty.class.getCanonicalName())
+                .orElseThrow(() -> new AssertionError(
+                        "Generated getter getFirstName() does not have @JsonProperty"))
+                .asNormalAnnotationExpr();
+
+        assertThat(jsonProperty.getPairs()).hasSize(1);
+        assertThat(jsonProperty.getPairs().get(0).getNameAsString())
+                .isEqualTo("value");
+        assertThat(jsonProperty.getPairs().get(0)
+                .getValue()
+                .asStringLiteralExpr()
+                .asString())
+                        .isEqualTo("FirstName");
     }
 }

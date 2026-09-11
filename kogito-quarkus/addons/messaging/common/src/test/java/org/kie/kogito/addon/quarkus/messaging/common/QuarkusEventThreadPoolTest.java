@@ -20,7 +20,6 @@ package org.kie.kogito.addon.quarkus.messaging.common;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -116,16 +115,23 @@ public class QuarkusEventThreadPoolTest {
     private void testIt(int numThreads, int queueSize, int count) throws InterruptedException, ExecutionException {
         QuarkusEventThreadPool executor = new QuarkusEventThreadPool(numThreads, queueSize, controller, CHANNEL_NAME);
         final CountDownLatch latch = new CountDownLatch(count);
-        List<Callable<Integer>> runnables = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            final int temp = i;
-            runnables.add(() -> {
-                latch.countDown();
-                return temp + 1;
-            });
+        // Hold every task that reaches a worker thread until all of them have been submitted. Otherwise whether the
+        // pool grows up to numThreads with a full queue, and therefore whether backpressure kicks in at all, depends
+        // on the workers draining the queue slower than this thread fills it, which is not guaranteed under load.
+        final CountDownLatch gate = new CountDownLatch(1);
+        List<Future<Integer>> answers = new ArrayList<>();
+        try {
+            for (int i = 0; i < count; i++) {
+                final int temp = i;
+                answers.add(executor.submit(() -> {
+                    gate.await();
+                    latch.countDown();
+                    return temp + 1;
+                }));
+            }
+        } finally {
+            gate.countDown();
         }
-
-        List<Future<Integer>> answers = executor.invokeAll(runnables, 5, TimeUnit.MINUTES);
 
         // Wait for all tasks to executed
         assertTrue(latch.await(1, TimeUnit.MINUTES));

@@ -25,24 +25,25 @@ import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.DataStore;
 import org.drools.ruleunits.dsl.RuleUnitDefinition;
 import org.drools.ruleunits.dsl.RulesFactory;
+import org.drools.ruleunits.dsl.domain.Person;
 
-import static org.drools.model.Index.ConstraintType.EQUAL;
+import static org.drools.model.Index.ConstraintType.GREATER_THAN;
 
 public class CalendarsUnit implements RuleUnitDefinition {
 
-    private final DataStore<String> strings;
+    private final DataStore<Person> persons;
     private final List<String> results = new ArrayList<>();
 
     public CalendarsUnit() {
         this(DataSource.createStore());
     }
 
-    public CalendarsUnit(DataStore<String> strings) {
-        this.strings = strings;
+    public CalendarsUnit(DataStore<Person> persons) {
+        this.persons = persons;
     }
 
-    public DataStore<String> getStrings() {
-        return strings;
+    public DataStore<Person> getPersons() {
+        return persons;
     }
 
     public List<String> getResults() {
@@ -53,8 +54,8 @@ public class CalendarsUnit implements RuleUnitDefinition {
     public void defineRules(RulesFactory rulesFactory) {
         rulesFactory.rule("CalendarRule")
                     .calendars("myCalendar")
-                    .on(strings)
-                    .filter(EQUAL, "Hello World")
-                    .execute(results, r -> r.add("calendar fired"));
+                    .on(persons)
+                    .filter(Person::getAge, GREATER_THAN, 18)
+                    .execute(results, (r, p) -> r.add("calendar fired: " + p.getName()));
     }
 }

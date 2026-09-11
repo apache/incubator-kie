@@ -21,9 +21,11 @@ package org.kie.kogito.jobs.service.openapi;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.microprofile.openapi.OASFactory;
 import org.eclipse.microprofile.openapi.OASFilter;
+import org.eclipse.microprofile.openapi.models.Components;
 import org.eclipse.microprofile.openapi.models.OpenAPI;
 import org.eclipse.microprofile.openapi.models.media.Discriminator;
 import org.eclipse.microprofile.openapi.models.media.Schema;
@@ -55,9 +57,18 @@ public class JobServiceModelFilter implements OASFilter {
 
     @Override
     public void filterOpenAPI(OpenAPI openAPI) {
+        // Since smallrye-open-api 4.2 both the components and their schemas map can be null when the
+        // document declares no schemas (e.g. embedded job service without the REST API).
+        Components components = openAPI.getComponents();
+        Map<String, Schema> schemas = components != null ? components.getSchemas() : null;
+        if (schemas == null) {
+            LOGGER.debug("No component schemas are present in the OpenAPI document, skipping job service schema adjustments.");
+            return;
+        }
+
         // The JsonNode schema is automatically generated from the com.fasterxml.jackson.databind.JsonNode class with
         // the type Schema.SchemaType.ARRAY, however the real type is Schema.SchemaType.OBJECT.
-        Schema jsonObjectSchema = openAPI.getComponents().getSchemas().get(JSON_NODE_SCHEMA);
+        Schema jsonObjectSchema = schemas.get(JSON_NODE_SCHEMA);
         if (jsonObjectSchema != null) {
             LOGGER.debug("Setting {} schema type to: {}.", JSON_NODE_SCHEMA, Schema.SchemaType.OBJECT);
             jsonObjectSchema.type(List.of(Schema.SchemaType.OBJECT));
@@ -68,7 +79,7 @@ public class JobServiceModelFilter implements OASFilter {
         // The SpecVersion schema is automatically generated from the io.cloudevents.SpecVersion enum, and thus will
         // be composed of the enum names V03 and V1, however third party clients must send the values "0.3" and "1.0"
         // as part of their produced json. So the OpenAPI document must declare these values instead.
-        Schema specVersionSchema = openAPI.getComponents().getSchemas().get(SPEC_VERSION_SCHEMA);
+        Schema specVersionSchema = schemas.get(SPEC_VERSION_SCHEMA);
         if (specVersionSchema != null) {
             List<Object> enumerationValues = Collections.unmodifiableList(Arrays.asList(V03.toString(), V1.toString()));
             LOGGER.debug("Changing {} enum schema from: {}, to: {}", SPEC_VERSION_SCHEMA, specVersionSchema.getEnumeration(), enumerationValues);
@@ -77,14 +88,14 @@ public class JobServiceModelFilter implements OASFilter {
             LOGGER.warn("{} enum schema is not present in the OpenAPI document.", SPEC_VERSION_SCHEMA);
         }
 
-        Schema recipientSchema = openAPI.getComponents().getSchemas().get(RECIPIENT_SCHEMA);
+        Schema recipientSchema = schemas.get(RECIPIENT_SCHEMA);
         if (recipientSchema != null) {
             adjustRecipientSchema(recipientSchema);
         } else {
             LOGGER.error("{} schema is not present in the OpenAPI document.", RECIPIENT_SCHEMA);
         }
 
-        Schema scheduleSchema = openAPI.getComponents().getSchemas().get(SCHEDULE_SCHEMA);
+        Schema scheduleSchema = schemas.get(SCHEDULE_SCHEMA);
         if (scheduleSchema != null) {
             adjustScheduleSchema(scheduleSchema);
         } else {

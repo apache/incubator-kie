@@ -96,6 +96,8 @@ final class GizmoMemberAccessorEntityEnhancer {
     // This keep track of what fields we made non-final
     private final Set<Field> visitedFinalFields = new HashSet<>();
     private final Set<MethodInfo> visitedMethods = new HashSet<>();
+    // A member with several solver annotations must yield ONE accessor class; duplicates fail the Quarkus jar consistency check
+    private final Set<String> generatedAccessorClassNames = new HashSet<>();
 
     private static String getVirtualGetterName(boolean isField, String name) {
         return "$get$optaplanner$__" + ((isField) ? "field$__" : "method$__") + name;
@@ -120,11 +122,14 @@ final class GizmoMemberAccessorEntityEnhancer {
         Class<?> declaringClass = Class.forName(fieldInfo.declaringClass().name().toString(), false,
                 Thread.currentThread().getContextClassLoader());
         Field fieldMember = declaringClass.getDeclaredField(fieldInfo.name());
+        String generatedClassName = GizmoMemberAccessorFactory.getGeneratedClassName(fieldMember);
+        if (!generatedAccessorClassNames.add(generatedClassName)) {
+            return generatedClassName;
+        }
         GizmoMemberDescriptor member = createMemberDescriptorForField(fieldMember, transformers);
         GizmoMemberInfo memberInfo = new GizmoMemberInfo(member,
                 (Class<? extends Annotation>) Class.forName(annotationInstance.name().toString(), false,
                         Thread.currentThread().getContextClassLoader()));
-        String generatedClassName = GizmoMemberAccessorFactory.getGeneratedClassName(fieldMember);
         GizmoMemberAccessorImplementor.defineAccessorFor(generatedClassName, classOutput, memberInfo);
         return generatedClassName;
     }
@@ -186,6 +191,9 @@ final class GizmoMemberAccessorEntityEnhancer {
                 Thread.currentThread().getContextClassLoader());
         Method methodMember = declaringClass.getDeclaredMethod(methodInfo.name());
         String generatedClassName = GizmoMemberAccessorFactory.getGeneratedClassName(methodMember);
+        if (!generatedAccessorClassNames.add(generatedClassName)) {
+            return generatedClassName;
+        }
         GizmoMemberDescriptor member;
         String name = getMemberName(methodMember);
         Optional<MethodDescriptor> setterDescriptor = getSetterDescriptor(classInfo, methodInfo, name);

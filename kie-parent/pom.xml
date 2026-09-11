@@ -86,7 +86,7 @@
     <version.black.ninia>4.2.0</version.black.ninia>
     <version.build.helper.maven.plugin>3.4.0</version.build.helper.maven.plugin>
     <version.ch.obermuhlner>2.0.1</version.ch.obermuhlner>
-    <version.ch.qos.logback>1.5.35</version.ch.qos.logback>
+    <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
     <version.com.fasterxml.jackson>2.22.1</version.com.fasterxml.jackson>
     <version.com.fasterxml.jackson.annotations>2.22</version.com.fasterxml.jackson.annotations>
     <version.com.fasterxml.jackson.databind>2.22.1</version.com.fasterxml.jackson.databind>
@@ -97,11 +97,10 @@
     <version.com.github.javaparser>3.27.0</version.com.github.javaparser>
     <!-- replaces findbugs-maven-plugin -->
     <version.com.github.spotbugs-maven-plugin>4.9.8.3</version.com.github.spotbugs-maven-plugin>
-    <version.com.github.stephenc.jcip>1.0-1</version.com.github.stephenc.jcip>
     <version.com.github.victools>4.37.0</version.com.github.victools>
     <version.com.google.collections>1.0</version.com.google.collections>
     <version.com.google.gson>2.13.2</version.com.google.gson>
-    <version.com.google.guava>33.4.8-jre</version.com.google.guava>
+    <version.com.google.guava>33.5.0-jre</version.com.google.guava>
     <version.com.google.protobuf>3.25.5</version.com.google.protobuf>
     <version.com.graphql-java>25.0</version.com.graphql-java>
     <version.com.graphql-java-extended-scalars>24.0</version.com.graphql-java-extended-scalars>
@@ -145,11 +144,10 @@
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
     <version.io.micrometer>1.16.6</version.io.micrometer>
-    <version.io.netty>4.1.136.Final</version.io.netty>
+    <version.io.netty>4.1.137.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
     <version.io.smallrye-config>3.13.4</version.io.smallrye-config>
-    <version.io.smallrye-health>4.2.0</version.io.smallrye-health>
     <version.io.smallrye-open-api>4.0.12</version.io.smallrye-open-api>
     <version.io.smallrye.config.core>3.13.4</version.io.smallrye.config.core>
     <version.io.smallrye.jandex>3.4.0</version.io.smallrye.jandex>
@@ -199,7 +197,7 @@
     <version.maven.plugin>3.15.1</version.maven.plugin>
     <version.maven.project>2.2.1</version.maven.project>
     <version.maven.resolver.api>1.9.27</version.maven.resolver.api>
-    <version.mongodb-driver-sync>5.5.1</version.mongodb-driver-sync>
+    <version.mongodb-driver-sync>5.9.2</version.mongodb-driver-sync>
     <version.nashorn>15.3</version.nashorn>
     <version.native2ascii-maven-plugin>1.0-beta-1</version.native2ascii-maven-plugin>
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
@@ -224,7 +222,7 @@
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
     <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
     <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
-         quarkus-bom:3.27.4.1 promotes it to 2.25.1. Both are below the minimum safe version 2.25.5.
+         quarkus-bom:3.33.3.2 promotes it to 2.25.3. Both are below the minimum safe version 2.25.5.
          This managed entry forces 2.26.1 across all modules inheriting kie-parent.
          https://logging.apache.org/security.html#CVE-2026-49844 -->
     <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
@@ -255,14 +253,13 @@
     <version.org.flywaydb>11.14.1</version.org.flywaydb>
     <version.org.freemarker>2.3.34</version.org.freemarker>
     <version.org.glassfish.jaxb>4.0.6</version.org.glassfish.jaxb>
-    <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
     <!--This needs to be in sync with JUnit-->
     <version.org.hamcrest>3.0</version.org.hamcrest>
     <version.org.hamcrest.hamcrest-all>1.3</version.org.hamcrest.hamcrest-all>
     <version.org.hibernate>7.1.18.Final</version.org.hibernate>
     <version.org.hsqldb>2.7.1</version.org.hsqldb>
-    <version.org.infinispan>15.2.6.Final</version.org.infinispan>
-    <version.org.infinispan.protostream>5.0.13.Final</version.org.infinispan.protostream>
+    <version.org.infinispan>16.0.13</version.org.infinispan>
+    <version.org.infinispan.protostream>6.0.7</version.org.infinispan.protostream>
     <version.org.javassist>3.26.0-GA</version.org.javassist>
     <version.org.jboss.arquillian.selenium>3.13.0</version.org.jboss.arquillian.selenium>
     <version.org.jboss.logging>3.6.1.Final</version.org.jboss.logging>
@@ -273,18 +270,15 @@
     <version.org.jboss.transaction.spi>8.0.0.Final</version.org.jboss.transaction.spi>
     <version.org.jboss.weld.weld>3.1.6.Final</version.org.jboss.weld.weld>
     <version.org.jpmml.model>1.6.4</version.org.jpmml.model>
-    <version.org.jredisearch>2.2.0</version.org.jredisearch>
-    <version.org.json>20231013</version.org.json>
     <version.org.json-unit-assertj>2.9.0</version.org.json-unit-assertj>
     <!-- JUnit 6: single version property for jupiter + platform + vintage artifacts. See version.junit above for the legacy JUnit 4 API. -->
     <version.org.junit>6.0.3</version.org.junit>
-    <version.org.keycloak>26.1.0</version.org.keycloak>
+    <version.org.keycloak>26.1.5</version.org.keycloak>
     <version.org.mapstruct>1.5.5.Final</version.org.mapstruct>
     <version.org.mockito>5.18.0</version.org.mockito>
     <version.org.mongo>5.3.1</version.org.mongo>
     <version.org.mozilla.rhino>1.8.1</version.org.mozilla.rhino>
-    <!-- Keep synchronized with junit-jupiter (middle and minor should be the same) -->
-    <version.org.mvel>2.5.2.Final</version.org.mvel>
+    <version.org.mvel>2.5.4.Final</version.org.mvel>
     <!-- Version of JMH -->
     <version.org.openjdk.jmh>1.21</version.org.openjdk.jmh>
     <version.org.postgresql>42.7.12</version.org.postgresql>
@@ -294,8 +288,6 @@
     <version.org.rocksdb>7.10.2</version.org.rocksdb>
     <version.org.skyscreamer>1.5.1</version.org.skyscreamer>
     <version.org.slf4j>2.0.17</version.org.slf4j>
-    <version.org.spockframework>2.2-groovy-4.0</version.org.spockframework>
-    <version.org.springdoc>2.8.13</version.org.springdoc>
     <version.org.testcontainers>2.0.4</version.org.testcontainers>
     <version.org.testcontainers.junit-jupiter>1.21.4</version.org.testcontainers.junit-jupiter>
     <version.org.testcontainers.postgresql>1.21.4</version.org.testcontainers.postgresql>
@@ -327,7 +319,7 @@
     <version.simple-jndi>0.11.4.1</version.simple-jndi>
     <version.sisu.inject>1.4.2</version.sisu.inject>
     <version.sonar-maven-plugin>3.6.0.1398</version.sonar-maven-plugin>
-    <version.tomcat.embed.core>11.0.24</version.tomcat.embed.core>
+    <version.tomcat.embed.core>11.0.25</version.tomcat.embed.core>
     <version.versions-maven-plugin>2.10.0</version.versions-maven-plugin>
     <version.wildfly-maven-plugin>1.2.0.Final</version.wildfly-maven-plugin>
     <version.xerces>2.12.2</version.xerces>
@@ -482,12 +474,6 @@
         <version>${version.com.github.javaparser}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.stephenc.jcip</groupId>
-        <artifactId>jcip-annotations</artifactId>
-        <version>${version.com.github.stephenc.jcip}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-generator</artifactId>
         <version>${version.com.github.victools}</version>
@@ -583,17 +569,6 @@
         <groupId>com.ongres.scram</groupId>
         <artifactId>scram-client</artifactId>
         <version>${version.com.ongres.scram}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.redislabs</groupId>
-        <artifactId>jredisearch</artifactId>
-        <version>${version.org.jredisearch}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
@@ -1346,7 +1321,7 @@
       </dependency>
       <dependency>
         <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
-             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.27.4.1 (to 2.25.1).
+             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.33.3.2 (to 2.25.3).
              Both are vulnerable; this pins the version to 2.26.1 for all inheriting modules. -->
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
@@ -1764,11 +1739,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.graalvm.nativeimage</groupId>
-        <artifactId>svm</artifactId>
-        <version>${version.org.graalvm.nativeimage}</version>
-      </dependency>
-      <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest</artifactId>
         <version>${version.org.hamcrest}</version>
@@ -1833,16 +1803,6 @@
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-core</artifactId>
-        <version>${version.org.infinispan}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-query-dsl</artifactId>
-        <version>${version.org.infinispan}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-remote-query-client</artifactId>
         <version>${version.org.infinispan}</version>
       </dependency>
       <dependency>
@@ -1963,11 +1923,6 @@
         <groupId>org.jpmml</groupId>
         <artifactId>pmml-model</artifactId>
         <version>${version.org.jpmml.model}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>${version.org.json}</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -2206,17 +2161,6 @@
         <artifactId>sisu-inject-plexus</artifactId>
         <version>${version.sisu.inject}</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.spockframework</groupId>
-        <artifactId>spock-core</artifactId>
-        <version>${version.org.spockframework}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        <version>${version.org.springdoc}</version>
       </dependency>
       <!-- testcontainers dependencies -->
       <dependency>

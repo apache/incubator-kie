@@ -18,11 +18,12 @@
  */
 package org.kie.kogito.quarkus.decisions.hotreload;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.kie.kogito.test.utils.SocketUtils;
 
 import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.RestAssured;
@@ -42,11 +43,17 @@ public class SimpleModifyHotReloadIT {
     private static final String RESOURCE_FILE_PATH = PACKAGE.replace('.', '/');
     private static final String DMN_RESOURCE_FILE = RESOURCE_FILE_PATH + "/TrafficViolation.dmn";
 
+    // Pick a free port up front and hand it to the dev-mode app through the archive's
+    // application.properties; since Quarkus 3.33 dev mode no longer writes its resolved
+    // port back for tests to read.
+    final static int httpPort = SocketUtils.findAvailablePort();
+
     @RegisterExtension
     final static QuarkusDevModeTest test =
             new QuarkusDevModeTest().setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
-                            .addAsResource("application.properties.stronglytyped", "/application.properties")
+                            .addAsResource(new StringAsset("kogito.decisions.stronglytyped=true\nquarkus.kogito.devservices.enabled=false\nquarkus.http.port=" + httpPort),
+                                    "application.properties")
                             .addAsResource("TrafficViolation.txt", DMN_RESOURCE_FILE));
 
     @Test
@@ -66,7 +73,6 @@ public class SimpleModifyHotReloadIT {
     }
 
     private void executeTest(String result) {
-        String httpPort = ConfigProvider.getConfig().getValue("quarkus.http.port", String.class);
         ValidatableResponse response = given()
                 .baseUri("http://localhost:" + httpPort)
                 .contentType(ContentType.JSON)
@@ -89,4 +95,5 @@ public class SimpleModifyHotReloadIT {
         response.statusCode(200)
                 .body("'Should the driver be suspended?'", is(result));
     }
+
 }

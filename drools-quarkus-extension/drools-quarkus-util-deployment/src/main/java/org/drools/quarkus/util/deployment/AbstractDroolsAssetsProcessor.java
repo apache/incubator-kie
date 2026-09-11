@@ -31,6 +31,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.builditem.ArchiveRootBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
@@ -87,7 +89,7 @@ public class AbstractDroolsAssetsProcessor {
     	    LiveReloadBuildItem liveReload,
     	    CurateOutcomeBuildItem curateOutcomeBuildItem,
     	    CombinedIndexBuildItem combinedIndexBuildItem,
-    		
+    	    Capabilities capabilities,
     		BuildProducer<GeneratedBeanBuildItem> generatedBeans,
                                  BuildProducer<NativeImageResourceBuildItem> resource,
                                  BuildProducer<AdditionalStaticResourceBuildItem> staticResProducer,
@@ -120,7 +122,16 @@ public class AbstractDroolsAssetsProcessor {
         // build Java source code and register the generated beans
         Collection<GeneratedBeanBuildItem> generatedBeanBuildItems =
                 compileGeneratedSources(context, dependencies, generatedFiles, liveReload.isLiveReload());
-        generatedBeanBuildItems.forEach(generatedBeans::produce);
+        Set<String> restResourceClassNameSet = generatedFiles.stream()
+                .filter(file -> file.type() == GeneratedFileType.REST)
+                .map(file -> toClassName(file.path().toString()))
+                .collect(Collectors.toSet());
+        // Reactive REST re-registers JaxRs resources as beans (duplicate-class check); classic ignores that channel, so REST
+        // classes need bean registration there. Capability.REST comes from BOTH stacks; only RESTEASY_REACTIVE is reactive-specific.
+        boolean reactiveRestPresent = capabilities.isPresent(Capability.RESTEASY_REACTIVE);
+        generatedBeanBuildItems.stream()
+                .filter(b -> !reactiveRestPresent || !restResourceClassNameSet.contains(b.getName()))
+                .forEach(generatedBeans::produce);
 
         registerResources(generatedFiles, staticResProducer, resource, genResBI);
         
@@ -130,10 +141,6 @@ public class AbstractDroolsAssetsProcessor {
         }
         globalsBI.produce(new GlobalsBuildItem(ruleCodegen.getPackageModels().stream().collect(Collectors.toMap(PackageModel::getName, PackageModel::getGlobals))));
 
-        Set<String> restResourceClassNameSet = generatedFiles.stream()
-                .filter(file -> file.type() == GeneratedFileType.REST)
-                .map(file -> toClassName(file.path().toString()))
-                .collect(Collectors.toSet());
         generatedBeanBuildItems.stream()
                 .filter(b -> restResourceClassNameSet.contains(b.getName()))
                 .forEach(b -> jaxrsProducer.produce(new GeneratedJaxRsResourceBuildItem(b.getName(), b.getData())));

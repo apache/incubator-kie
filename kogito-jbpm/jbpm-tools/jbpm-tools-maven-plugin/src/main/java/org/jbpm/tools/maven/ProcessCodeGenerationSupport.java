@@ -245,6 +245,9 @@ public class ProcessCodeGenerationSupport {
 
     private void addMembers(ProcessMetaData processMetaData, CompilationUnit compilationUnit) {
         ClassOrInterfaceDeclaration cls = compilationUnit.findFirst(ClassOrInterfaceDeclaration.class).get();
+
+        processMetaData.getProcessHelperMethods().forEach(cls::addMember);
+
         if (!processMetaData.getTriggers().isEmpty()) {
 
             for (TriggerMetaData trigger : processMetaData.getTriggers()) {

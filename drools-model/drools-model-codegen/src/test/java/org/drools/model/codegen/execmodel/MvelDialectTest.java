@@ -763,7 +763,7 @@ public class MvelDialectTest extends BaseModelTest {
 
         ksession.insert(john);
         assertThat(ksession.fireAllRules()).isEqualTo(1);
-        assertThat(john.getMoney()).isEqualTo(new BigDecimal( 0 ));
+        assertThat(john.getMoney()).isEqualByComparingTo(new BigDecimal( 0 ));
     }
 
     @ParameterizedTest
@@ -1075,7 +1075,7 @@ public class MvelDialectTest extends BaseModelTest {
 
         ksession.insert(john);
         assertThat(ksession.fireAllRules()).isEqualTo(1);
-        assertThat(john.getMoney()).isEqualTo(new BigDecimal( 0 ));
+        assertThat(john.getMoney()).isEqualByComparingTo(new BigDecimal( 0 ));
     }
 
     @ParameterizedTest

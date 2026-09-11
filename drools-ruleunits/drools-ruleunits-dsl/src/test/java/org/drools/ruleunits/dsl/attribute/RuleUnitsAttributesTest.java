@@ -18,12 +18,17 @@
  */
 package org.drools.ruleunits.dsl.attribute;
 
+import java.util.concurrent.TimeUnit;
+
 import org.drools.core.common.ReteEvaluator;
 import org.drools.ruleunits.api.RuleUnitInstance;
 import org.drools.ruleunits.api.RuleUnitProvider;
+import org.drools.ruleunits.api.conf.ClockType;
+import org.drools.ruleunits.api.conf.RuleConfig;
 import org.drools.ruleunits.dsl.domain.Person;
 import org.drools.ruleunits.impl.AbstractRuleUnitInstance;
 import org.junit.jupiter.api.Test;
+import org.kie.api.time.SessionPseudoClock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,30 +36,45 @@ public class RuleUnitsAttributesTest {
 
     @Test
     public void timer() {
-        // incubator-kie#6911: RuleUnit DSL does not apply RuleConfig clock type, so pseudo clock cannot be used here.
-        // When fixed, use pseudo clock to advance time and verify the timer rule fires after the delay.
         TimerUnit unit = new TimerUnit();
         unit.getStrings().add("Hello Timer");
 
-        try (RuleUnitInstance<TimerUnit> unitInstance = RuleUnitProvider.get().createRuleUnitInstance(unit)) {
+        RuleConfig ruleConfig = RuleUnitProvider.get().newRuleConfig();
+        ruleConfig.setClockType(ClockType.PSEUDO);
+
+        try (RuleUnitInstance<TimerUnit> unitInstance = RuleUnitProvider.get().createRuleUnitInstance(unit, ruleConfig)) {
+            SessionPseudoClock pseudoClock = unitInstance.getClock();
+
             assertThat(unitInstance.fire()).isZero();
             assertThat(unit.getResults()).isEmpty();
+
+            pseudoClock.advanceTime(40L, TimeUnit.MINUTES);
+            assertThat(unitInstance.fire()).isEqualTo(1);
+            assertThat(unit.getResults()).containsExactly("timer fired");
         }
     }
 
     @Test
     public void calendars() {
-        // incubator-kie#6911: RuleUnit DSL does not apply RuleConfig clock type, so pseudo clock cannot be used here.
-        // When fixed, use pseudo clock to also test calendar + timer combination.
         CalendarsUnit unit = new CalendarsUnit();
 
-        try (RuleUnitInstance<CalendarsUnit> unitInstance = RuleUnitProvider.get().createRuleUnitInstance(unit)) {
-            ReteEvaluator evaluator = (ReteEvaluator) ((AbstractRuleUnitInstance) unitInstance).getEvaluator();
-            evaluator.getCalendars().set("myCalendar", timestamp -> false);
+        RuleConfig ruleConfig = RuleUnitProvider.get().newRuleConfig();
+        ruleConfig.setClockType(ClockType.PSEUDO);
 
-            unit.getStrings().add("Hello World");
+        try (RuleUnitInstance<CalendarsUnit> unitInstance = RuleUnitProvider.get().createRuleUnitInstance(unit, ruleConfig)) {
+            SessionPseudoClock pseudoClock = unitInstance.getClock();
+            long cutoff = 60_000L;
+            ReteEvaluator evaluator = (ReteEvaluator) ((AbstractRuleUnitInstance) unitInstance).getEvaluator();
+            evaluator.getCalendars().set("myCalendar", timestamp -> timestamp >= cutoff);
+
+            unit.getPersons().add(new Person("Mario", 40));
             assertThat(unitInstance.fire()).isZero();
             assertThat(unit.getResults()).isEmpty();
+
+            pseudoClock.advanceTime(1L, TimeUnit.MINUTES);
+            unit.getPersons().add(new Person("Toshiya", 50));
+            assertThat(unitInstance.fire()).isEqualTo(1);
+            assertThat(unit.getResults()).containsExactly("calendar fired: Toshiya");
         }
     }
 

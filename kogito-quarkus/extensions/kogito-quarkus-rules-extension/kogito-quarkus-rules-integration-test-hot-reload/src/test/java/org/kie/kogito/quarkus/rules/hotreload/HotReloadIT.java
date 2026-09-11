@@ -20,11 +20,12 @@ package org.kie.kogito.quarkus.rules.hotreload;
 
 import java.util.List;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.kie.kogito.test.utils.SocketUtils;
 
 import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.http.ContentType;
@@ -38,15 +39,21 @@ public class HotReloadIT {
     private static final String PACKAGE = "org.kie.kogito.quarkus.rules.hotreload";
     private static final String RESOURCE_FILE = PACKAGE.replace('.', '/') + "/adult.drl";
 
+    // Pick a free port up front and hand it to the dev-mode app through the archive's
+    // application.properties; since Quarkus 3.33 dev mode no longer writes its resolved
+    // port back for tests to read.
+    final static int httpPort = SocketUtils.findAvailablePort();
+
     @RegisterExtension
-    final static QuarkusDevModeTest test = new QuarkusDevModeTest().setArchiveProducer(
-            () -> ShrinkWrap.create(JavaArchive.class).addAsResource("adult.txt", RESOURCE_FILE));
+    final static QuarkusDevModeTest test = new QuarkusDevModeTest()
+            .setArchiveProducer(
+                    () -> ShrinkWrap.create(JavaArchive.class)
+                            .addAsResource(new StringAsset("quarkus.kogito.devservices.enabled=false\nquarkus.http.port=" + httpPort), "application.properties")
+                            .addAsResource("adult.txt", RESOURCE_FILE));
 
     @Test
     public void testServletChange() {
         String personsPayload = "{\"persons\":[{\"name\":\"Mario\",\"age\":45,\"adult\":false},{\"name\":\"Sofia\",\"age\":17,\"adult\":false}]}";
-
-        String httpPort = ConfigProvider.getConfig().getValue("quarkus.http.port", String.class);
 
         List<String> names = given()
                 .baseUri("http://localhost:" + httpPort)

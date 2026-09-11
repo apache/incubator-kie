@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.jbpm.compiler.canonical.builtin.ReturnValueEvaluatorBuilderService;
 import org.jbpm.compiler.canonical.descriptors.ExpressionUtils;
@@ -53,7 +52,9 @@ import org.kie.api.definition.process.Process;
 import org.kie.api.definition.process.WorkflowProcess;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -65,6 +66,7 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.VoidType;
 
 import static org.jbpm.ruleflow.core.Metadata.ASSOCIATION;
 import static org.jbpm.ruleflow.core.RuleFlowNodeContainerFactory.METHOD_ASSOCIATION;
@@ -82,6 +84,9 @@ import static org.jbpm.ruleflow.core.RuleFlowProcessFactory.METHOD_VISIBILITY;
 
 public class ProcessVisitor extends AbstractVisitor {
 
+    private static final String FACTORY_PARAM_NAME = "factory";
+    private static final String BUILD_CONNECTIONS_METHOD = "buildConnections";
+
     public static final String DEFAULT_VERSION = "1.0";
 
     private NodeVisitorBuilderService nodeVisitorService;
@@ -91,6 +96,17 @@ public class ProcessVisitor extends AbstractVisitor {
     public ProcessVisitor(ClassLoader contextClassLoader) {
         nodeVisitorService = new NodeVisitorBuilderService(contextClassLoader);
         returnValueEvaluatorBuilderService = ReturnValueEvaluatorBuilderService.instance(contextClassLoader);
+    }
+
+    private static MethodDeclaration buildHelperMethod(String name, BlockStmt body) {
+        return new MethodDeclaration()
+                .setModifiers(Modifier.Keyword.PRIVATE)
+                .setType(new VoidType())
+                .setName(name)
+                .addParameter(new Parameter(
+                        new ClassOrInterfaceType(null, RuleFlowProcessFactory.class.getCanonicalName()),
+                        FACTORY_PARAM_NAME))
+                .setBody(body);
     }
 
     public void visitProcess(WorkflowProcess process, MethodDeclaration processMethod, ProcessMetaData metadata) {
@@ -152,7 +168,7 @@ public class ProcessVisitor extends AbstractVisitor {
         visitNodes(processNodes, body, variableScope, metadata);
         //exception scope
         visitExceptionScope(process, body);
-        visitConnections(process.getNodes(), body);
+        visitConnections(process.getNodes(), body, metadata);
 
         body.addStatement(getFactoryMethod(FACTORY_FIELD_NAME, METHOD_VALIDATE));
 
@@ -230,7 +246,21 @@ public class ProcessVisitor extends AbstractVisitor {
             if (visitor == null) {
                 throw new IllegalStateException("No visitor found for node " + node.getClass().getName());
             }
-            visitor.visitNodeEntryPoint(null, node, body, variableScope, metadata);
+
+            BlockStmt nodeBody = new BlockStmt();
+            visitor.visitNodeEntryPoint(null, node, nodeBody, variableScope, metadata);
+
+            if (node instanceof ContextContainer) {
+                Context exceptionContext = ((ContextContainer) node).getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
+                visitContextExceptionScope(exceptionContext, nodeBody);
+            }
+
+            String nodeKey = visitor.getNodeKey();
+            String helperName = "build" + Character.toUpperCase(nodeKey.charAt(0)) + nodeKey.substring(1) + node.getId().toSanitizeString();
+            metadata.addProcessHelperMethod(buildHelperMethod(helperName, nodeBody));
+
+            body.addStatement(new MethodCallExpr(null, helperName)
+                    .addArgument(new NameExpr(FACTORY_FIELD_NAME)));
         }
     }
 
@@ -243,7 +273,7 @@ public class ProcessVisitor extends AbstractVisitor {
         return visitor != null ? visitor.getNodeId(((Node) contextContainer)) : FACTORY_FIELD_NAME;
     }
 
-    private void visitConnections(org.kie.api.definition.process.Node[] nodes, BlockStmt body) {
+    private void visitConnections(org.kie.api.definition.process.Node[] nodes, BlockStmt body, ProcessMetaData metadata) {
 
         List<Connection> connections = new ArrayList<>();
         for (org.kie.api.definition.process.Node node : nodes) {
@@ -251,9 +281,20 @@ public class ProcessVisitor extends AbstractVisitor {
                 connections.addAll(connectionList);
             }
         }
-        for (Connection connection : connections) {
-            visitConnection(connection, body);
+
+        if (connections.isEmpty()) {
+            return;
         }
+
+        BlockStmt connectionsBody = new BlockStmt();
+        for (Connection connection : connections) {
+            visitConnection(connection, connectionsBody);
+        }
+
+        metadata.addProcessHelperMethod(buildHelperMethod(BUILD_CONNECTIONS_METHOD, connectionsBody));
+
+        body.addStatement(new MethodCallExpr(null, BUILD_CONNECTIONS_METHOD)
+                .addArgument(new NameExpr(FACTORY_FIELD_NAME)));
     }
 
     // KOGITO-1882 Finish implementation or delete completely
@@ -287,15 +328,12 @@ public class ProcessVisitor extends AbstractVisitor {
     }
 
     private void visitExceptionScope(Process process, BlockStmt body) {
-        if (!(process instanceof org.jbpm.workflow.core.WorkflowProcess)) {
+        if (!(process instanceof org.jbpm.workflow.core.WorkflowProcess workflowProcess)) {
             return;
         }
-        org.jbpm.workflow.core.WorkflowProcess workflowProcess = (org.jbpm.workflow.core.WorkflowProcess) process;
         Context context = workflowProcess.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
-        //root process
+        // Root process exception scope only
         visitContextExceptionScope(context, body);
-        //visit sub-processes
-        visitSubExceptionScope(workflowProcess.getNodes(), body);
     }
 
     private void visitContextExceptionScope(Context context, BlockStmt body) {
@@ -315,17 +353,4 @@ public class ProcessVisitor extends AbstractVisitor {
         }
     }
 
-    private void visitSubExceptionScope(org.kie.api.definition.process.Node[] nodes, BlockStmt body) {
-        Stream.of(nodes)
-                .peek(node -> {
-                    //recursively handle subprocesses exception scope
-                    if (node instanceof NodeContainer) {
-                        visitSubExceptionScope(((NodeContainer) node).getNodes(), body);
-                    }
-                })
-                .filter(ContextContainer.class::isInstance)
-                .map(ContextContainer.class::cast)
-                .map(container -> container.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE))
-                .forEach(context -> visitContextExceptionScope(context, body));
-    }
 }

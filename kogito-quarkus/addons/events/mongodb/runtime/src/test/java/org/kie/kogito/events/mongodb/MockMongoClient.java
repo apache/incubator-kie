@@ -27,6 +27,7 @@ import org.bson.conversions.Bson;
 
 import com.mongodb.ClientBulkWriteException;
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.MongoDriverInformation;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -75,6 +76,11 @@ public class MockMongoClient implements MongoClient {
     @Override
     public ReadConcern getReadConcern() {
         return null;
+    }
+
+    @Override
+    public void appendMetadata(MongoDriverInformation driverInformation) {
+        // no-op test stub
     }
 
     @Override

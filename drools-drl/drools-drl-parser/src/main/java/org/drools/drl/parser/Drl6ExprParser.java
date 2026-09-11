@@ -25,8 +25,10 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.RecognizerSharedState;
+import org.antlr.runtime.Token;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.ConstraintConnectiveDescr;
+import org.drools.drl.parser.lang.DRL6Lexer;
 import org.drools.drl.parser.lang.DRLExpressions;
 import org.drools.drl.parser.lang.DRLLexer;
 import org.drools.drl.parser.lang.ParserHelper;
@@ -68,6 +70,26 @@ public class Drl6ExprParser implements DrlExprParser {
         return constraint;
     }
     
+    /**
+     * Returns whether to preserve the eval wrapper around the supplied contents.
+     * The constraint parser enters at conditionalOrExpression, which is below
+     * ternaryExpression in the grammar, so a top-level ternary's branches are
+     * silently discarded. Question-mark tokens at any nesting depth may indicate
+     * such a ternary. Strings and comments are ignored.
+     * Lexer errors also preserve the wrapper, leaving validation to compilation.
+     * This is a conservative check, not validation of ternary syntax.
+     */
+    public static boolean shouldPreserveEval(String expression) {
+        DRL6Lexer lexer = new DRL6Lexer(new ANTLRStringStream(expression));
+        for (Token token = lexer.nextToken(); token.getType() != Token.EOF; token = lexer.nextToken()) {
+            // QUESTION_DIV also covers a ternary immediately followed by a comment: x?/*...*/y:z.
+            if (token.getType() == DRL6Lexer.QUESTION || token.getType() == DRL6Lexer.QUESTION_DIV) {
+                return true;
+            }
+        }
+        return !lexer.getErrors().isEmpty();
+    }
+
     public String getLeftMostExpr() {
         return helper != null ? helper.getLeftMostExpr() : null;
     }

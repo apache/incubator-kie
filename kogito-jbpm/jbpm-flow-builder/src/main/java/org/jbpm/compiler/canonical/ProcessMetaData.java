@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.MethodDeclaration;
 
 public class ProcessMetaData {
 
@@ -63,6 +64,8 @@ public class ProcessMetaData {
 
     private Map<String, CompilationUnit> generatedHandlers = new HashMap<>();
     private Set<CompilationUnit> generatedListeners = new HashSet<>();
+
+    private List<MethodDeclaration> processHelperMethods = new ArrayList<>();
 
     public ProcessMetaData(String processId, String extractedProcessId, String processName, String processVersion, String processPackageName, String processClassName) {
         super();
@@ -213,6 +216,14 @@ public class ProcessMetaData {
 
     public void setDynamic(boolean dynamic) {
         this.dynamic = dynamic;
+    }
+
+    public List<MethodDeclaration> getProcessHelperMethods() {
+        return processHelperMethods;
+    }
+
+    public void addProcessHelperMethod(MethodDeclaration method) {
+        processHelperMethods.add(method);
     }
 
     @Override

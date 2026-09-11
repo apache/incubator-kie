@@ -36,17 +36,11 @@
     <allowedPomsList>org.kie.kogito:kogito-spring-boot-bom</allowedPomsList>
     <!-- Aligned with Spring Boot Cloud (spring-cloud-kubernetes-fabric8 5.0.1 declares fabric8 7.4.0) -->
     <version.io.fabric8>7.4.0</version.io.fabric8>
-    <version.io.netty>4.2.16.Final</version.io.netty>
+    <version.io.netty>4.2.17.Final</version.io.netty>
     <version.jakarta.servlet>6.0.0</version.jakarta.servlet>
-    <!-- This is needed to override the default version inherited from kie-parent-drools -->
-    <version.mongodb-driver-sync>5.6.4</version.mongodb-driver-sync>
     <version.org.springdoc>2.8.13</version.org.springdoc>
-    <version.org.springframework>7.0.8</version.org.springframework>
-    <version.org.springframework.boot>4.0.7</version.org.springframework.boot>
-    <!-- Spring Boot Cloud aligned with Spring Boot Framework version. See: https://spring.io/projects/spring-cloud -->
-    <!-- 2025.1.x (Oakwood) is the first Spring Cloud train compatible with Spring Boot 4.0.x;
-         2025.1.1 specifically targets Spring Boot 4.0.1+. -->
-    <!-- https://github.com/spring-cloud/spring-cloud-release/wiki/Spring-Cloud-2025.1-Release-Notes -->
+    <version.org.springframework>7.0.9</version.org.springframework>
+    <version.org.springframework.boot>4.0.8</version.org.springframework.boot>
     <version.org.springframework.cloud>2025.1.1</version.org.springframework.cloud>
     <!-- CVE-2026-49844: Spring Boot 4.0.7 sets log4j2.version=2.25.4 which is vulnerable.
          Override the version property inherited from kie-parent to 2.26.1 (minimum 2.25.5).
@@ -56,9 +50,29 @@
          spring-boot-dependencies:4.0.7 carries the vulnerable jackson-databind:3.1.4.
          Remove this pin once spring-boot-dependencies imports jackson-databind >= 3.1.5. -->
     <version.tools.jackson.core>3.1.5</version.tools.jackson.core>
-  </properties>
+    <!-- Framework-specific pins moved out of kie-parent: only this tree declares these artifacts. -->
+    <version.org.spockframework>2.2-groovy-4.0</version.org.spockframework>
+</properties>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.spockframework</groupId>
+        <artifactId>spock-core</artifactId>
+        <version>${version.org.spockframework}</version>
+        <scope>test</scope>
+      </dependency>
+      <!-- Infinispan must be imported here, ahead of spring-boot-dependencies, so the Spring Boot side gets one
+           coherent Infinispan/ProtoStream stack. kie-parent pins infinispan-client-hotrod/-commons/-core and
+           protostream explicitly (the shared addons are compiled against ProtoStream 6), while spring-boot-dependencies
+           imports infinispan-bom 15.2.6.Final — without this import the two mix: protostream-types 5.0.13.Final under
+           protostream 6.0.7, infinispan-counter-api 15.2.6.Final under infinispan-client-hotrod 16.0.13. -->
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-bom</artifactId>
+        <version>${version.org.infinispan}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>tools.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
@@ -70,6 +84,24 @@
         <version>${version.org.springframework.cloud}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- CVE fix: spring-boot-dependencies:4.0.x imports mongodb-driver-bom:5.6.5 which pins
+           mongodb-driver-core and bson to 5.6.5. Override to match mongodb-driver-sync:5.9.2.
+           https://jira.mongodb.org/browse/JAVA-6266 -->
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-core</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson-record-codec</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>

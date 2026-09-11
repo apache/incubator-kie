@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<bpmn2:definitions
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+    xmlns:drools="http://www.jboss.org/drools"
+    id="_NestedSubBoundaryErrorOnWorkItemDefs"
+    exporter="jBPM Process Modeler" exporterVersion="2.0"
+    targetNamespace="http://www.omg.org/bpmn20">
+
+  <bpmn2:error id="err_IllegalArgumentException" errorCode="java.lang.IllegalArgumentException" name="java.lang.IllegalArgumentException"/>
+
+  <bpmn2:interface id="HelloServiceInterface" name="org.kie.kogito.codegen.data.HelloService"
+      implementationRef="org.kie.kogito.codegen.data.HelloService">
+    <bpmn2:operation id="HelloServiceOp_error" name="error" implementationRef="error"/>
+  </bpmn2:interface>
+
+  <bpmn2:process id="NestedSubProcessBoundaryErrorOnWorkItemNode"
+      drools:packageName="com.example" drools:version="1.0" drools:adHoc="false"
+      name="NestedSubProcessBoundaryErrorOnWorkItemNode"
+      isExecutable="true" processType="Public">
+
+    <bpmn2:startEvent id="processStart" name="Start">
+      <bpmn2:outgoing>sf_start_outerSub</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:endEvent id="processEnd">
+      <bpmn2:incoming>sf_outerSub_processEnd</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:subProcess id="outerSub" name="OuterSubProcess">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue>OuterSubProcess</drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>sf_start_outerSub</bpmn2:incoming>
+      <bpmn2:outgoing>sf_outerSub_processEnd</bpmn2:outgoing>
+
+      <bpmn2:startEvent id="outerStart">
+        <bpmn2:outgoing>sf_outerStart_innerSub</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:endEvent id="outerEnd">
+        <bpmn2:incoming>sf_innerSub_outerEnd</bpmn2:incoming>
+      </bpmn2:endEvent>
+
+      <bpmn2:subProcess id="innerSub" name="InnerSubProcess">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue>InnerSubProcess</drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>sf_outerStart_innerSub</bpmn2:incoming>
+        <bpmn2:outgoing>sf_innerSub_outerEnd</bpmn2:outgoing>
+
+        <bpmn2:startEvent id="innerStart">
+          <bpmn2:outgoing>sf_innerStart_serviceTask</bpmn2:outgoing>
+        </bpmn2:startEvent>
+
+        <!-- ServiceTask — WorkItemNode implements ContextContainer; boundary error written onto this node -->
+        <bpmn2:serviceTask id="serviceTask" name="ServiceTask"
+            drools:serviceimplementation="Java"
+            drools:serviceinterface="org.kie.kogito.codegen.data.HelloService"
+            drools:serviceoperation="error"
+            implementation="Java"
+            operationRef="HelloServiceOp_error">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue>ServiceTask</drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:incoming>sf_innerStart_serviceTask</bpmn2:incoming>
+          <bpmn2:outgoing>sf_serviceTask_normalEnd</bpmn2:outgoing>
+          <bpmn2:ioSpecification>
+            <bpmn2:dataInput id="serviceTask_errorTypeInput" name="errorType"/>
+            <bpmn2:inputSet>
+              <bpmn2:dataInputRefs>serviceTask_errorTypeInput</bpmn2:dataInputRefs>
+            </bpmn2:inputSet>
+          </bpmn2:ioSpecification>
+          <bpmn2:dataInputAssociation>
+            <!-- hardcode "error1" so HelloService.error() always throws IllegalArgumentException -->
+            <bpmn2:assignment>
+              <bpmn2:from xsi:type="bpmn2:tFormalExpression"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">error1</bpmn2:from>
+              <bpmn2:to xsi:type="bpmn2:tFormalExpression"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">serviceTask_errorTypeInput</bpmn2:to>
+            </bpmn2:assignment>
+          </bpmn2:dataInputAssociation>
+        </bpmn2:serviceTask>
+
+        <!-- Error boundary on serviceTask — ExceptionScope written onto the WorkItemNode (ContextContainer) -->
+        <!-- drools:dockerinfo: bottom-centre of serviceTask (154x102): x=77, y=102 -->
+        <bpmn2:boundaryEvent id="serviceTaskBoundary" attachedToRef="serviceTask"
+            drools:dockerinfo="77^102|" drools:boundaryca="true">
+          <bpmn2:outgoing>sf_boundary_handlerTask</bpmn2:outgoing>
+          <bpmn2:errorEventDefinition errorRef="err_IllegalArgumentException"
+              drools:erefname="java.lang.IllegalArgumentException"/>
+        </bpmn2:boundaryEvent>
+
+        <bpmn2:scriptTask id="handlerTask" name="HandlerTask" scriptFormat="http://www.java.com/java">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue>HandlerTask</drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:incoming>sf_boundary_handlerTask</bpmn2:incoming>
+          <bpmn2:outgoing>sf_handlerTask_handlerEnd</bpmn2:outgoing>
+          <bpmn2:script>System.out.println("HandlerTask running");</bpmn2:script>
+        </bpmn2:scriptTask>
+
+        <bpmn2:endEvent id="handlerEnd">
+          <bpmn2:incoming>sf_handlerTask_handlerEnd</bpmn2:incoming>
+        </bpmn2:endEvent>
+        <bpmn2:endEvent id="normalEnd">
+          <bpmn2:incoming>sf_serviceTask_normalEnd</bpmn2:incoming>
+        </bpmn2:endEvent>
+
+        <bpmn2:sequenceFlow id="sf_innerStart_serviceTask"  sourceRef="innerStart"    targetRef="serviceTask"/>
+        <bpmn2:sequenceFlow id="sf_serviceTask_normalEnd"   sourceRef="serviceTask"   targetRef="normalEnd"/>
+        <bpmn2:sequenceFlow id="sf_boundary_handlerTask"    sourceRef="serviceTaskBoundary" targetRef="handlerTask"/>
+        <bpmn2:sequenceFlow id="sf_handlerTask_handlerEnd"  sourceRef="handlerTask"   targetRef="handlerEnd"/>
+      </bpmn2:subProcess>
+
+      <bpmn2:sequenceFlow id="sf_outerStart_innerSub" sourceRef="outerStart" targetRef="innerSub"/>
+      <bpmn2:sequenceFlow id="sf_innerSub_outerEnd"   sourceRef="innerSub"   targetRef="outerEnd"/>
+    </bpmn2:subProcess>
+
+    <bpmn2:sequenceFlow id="sf_start_outerSub"     sourceRef="processStart" targetRef="outerSub"/>
+    <bpmn2:sequenceFlow id="sf_outerSub_processEnd" sourceRef="outerSub"    targetRef="processEnd"/>
+  </bpmn2:process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="NestedSubProcessBoundaryErrorOnWorkItemNode">
+
+      <!-- Process level -->
+      <bpmndi:BPMNShape id="shape_processStart" bpmnElement="processStart">
+        <dc:Bounds height="56" width="56" x="60" y="392"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_outerSub" bpmnElement="outerSub" isExpanded="true">
+        <dc:Bounds height="620" width="1100" x="175" y="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_processEnd" bpmnElement="processEnd">
+        <dc:Bounds height="56" width="56" x="1340" y="392"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_start_outerSub" bpmnElement="sf_start_outerSub">
+        <di:waypoint x="116" y="420"/>
+        <di:waypoint x="175" y="420"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_outerSub_processEnd" bpmnElement="sf_outerSub_processEnd">
+        <di:waypoint x="1275" y="420"/>
+        <di:waypoint x="1340" y="420"/>
+      </bpmndi:BPMNEdge>
+
+      <!-- OuterSubProcess contents -->
+      <bpmndi:BPMNShape id="shape_outerStart" bpmnElement="outerStart">
+        <dc:Bounds height="56" width="56" x="220" y="392"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_innerSub" bpmnElement="innerSub" isExpanded="true">
+        <dc:Bounds height="480" width="900" x="320" y="160"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_outerEnd" bpmnElement="outerEnd">
+        <dc:Bounds height="56" width="56" x="1240" y="392"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_outerStart_innerSub" bpmnElement="sf_outerStart_innerSub">
+        <di:waypoint x="276" y="420"/>
+        <di:waypoint x="320" y="400"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_innerSub_outerEnd" bpmnElement="sf_innerSub_outerEnd">
+        <di:waypoint x="1220" y="400"/>
+        <di:waypoint x="1240" y="420"/>
+      </bpmndi:BPMNEdge>
+
+      <!-- InnerSubProcess contents
+           innerStart   : 380,380  (56x56)
+           serviceTask  : 490,360  (154x102) bottom-centre=(567,462)
+           boundary     : 539,434  (56x56)   x=490+77-28=539, y=360+102-28=434
+           normalEnd    : 720,380  (56x56)
+           handlerTask  : 660,510  (140x80)
+           handlerEnd   : 870,522  (56x56)
+      -->
+      <bpmndi:BPMNShape id="shape_innerStart" bpmnElement="innerStart">
+        <dc:Bounds height="56" width="56" x="380" y="380"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_serviceTask" bpmnElement="serviceTask">
+        <dc:Bounds height="102" width="154" x="490" y="360"/>
+      </bpmndi:BPMNShape>
+      <!-- boundary centred on bottom-centre of serviceTask: x=490+77-28=539, y=360+102-28=434 -->
+      <bpmndi:BPMNShape id="shape_serviceTaskBoundary" bpmnElement="serviceTaskBoundary">
+        <dc:Bounds height="56" width="56" x="539" y="434"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_normalEnd" bpmnElement="normalEnd">
+        <dc:Bounds height="56" width="56" x="720" y="380"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_handlerTask" bpmnElement="handlerTask">
+        <dc:Bounds height="80" width="140" x="660" y="510"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_handlerEnd" bpmnElement="handlerEnd">
+        <dc:Bounds height="56" width="56" x="870" y="522"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_innerStart_serviceTask" bpmnElement="sf_innerStart_serviceTask">
+        <di:waypoint x="436" y="408"/>
+        <di:waypoint x="490" y="411"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_serviceTask_normalEnd" bpmnElement="sf_serviceTask_normalEnd">
+        <di:waypoint x="644" y="411"/>
+        <di:waypoint x="720" y="408"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_boundary_handlerTask" bpmnElement="sf_boundary_handlerTask">
+        <di:waypoint x="567" y="490"/>
+        <di:waypoint x="567" y="550"/>
+        <di:waypoint x="660" y="550"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_handlerTask_handlerEnd" bpmnElement="sf_handlerTask_handlerEnd">
+        <di:waypoint x="800" y="550"/>
+        <di:waypoint x="870" y="550"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn2:definitions>

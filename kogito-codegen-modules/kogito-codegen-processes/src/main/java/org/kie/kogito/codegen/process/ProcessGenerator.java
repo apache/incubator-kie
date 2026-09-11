@@ -151,7 +151,8 @@ public class ProcessGenerator {
         CompilationUnit compilationUnit = new CompilationUnit(packageName);
         compilationUnit.addImport(modelTypeName);
         compilationUnit.getTypes().add(classDeclaration());
-        processExecutable.generate().getGeneratedClassModel().getImports().forEach(compilationUnit::addImport);
+        ProcessMetaData processMetaData = processExecutable.generate();
+        processMetaData.getGeneratedClassModel().getImports().forEach(compilationUnit::addImport);
         return compilationUnit;
     }
 
@@ -482,6 +483,8 @@ public class ProcessGenerator {
                 .addMember(createInstanceGenericWithWorkflowInstanceMethod(processInstanceFQCN))
                 .addMember(createReadOnlyInstanceGenericWithWorkflowInstanceMethod(processInstanceFQCN))
                 .addMember(process(processMetaData));
+
+        processMetaData.getProcessHelperMethods().forEach(cls::addMember);
 
         internalConfigure(processMetaData).ifPresent(cls::addMember);
         internalRegisterListeners(processMetaData).ifPresent(cls::addMember);

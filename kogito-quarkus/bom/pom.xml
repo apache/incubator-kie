@@ -31,17 +31,69 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
-    <version.io.quarkus>3.27.5.1</version.io.quarkus>
+    <version.io.quarkus>3.33.3.2</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
-    <version.io.quarkiverse.openapi.generator>2.16.0-lts</version.io.quarkiverse.openapi.generator>
+    <version.io.quarkiverse.openapi.generator>2.17.0-lts</version.io.quarkiverse.openapi.generator>
     <version.io.quarkiverse.asyncapi>1.0.5</version.io.quarkiverse.asyncapi>
-    <version.io.quarkiverse.reactivemessaging.http>2.5.0-lts</version.io.quarkiverse.reactivemessaging.http>
+    <version.io.quarkiverse.reactivemessaging.http>2.7.1</version.io.quarkiverse.reactivemessaging.http>
     <version.io.quarkiverse.embedded.postgresql>0.8.0</version.io.quarkiverse.embedded.postgresql>
-    <version.io.quarkus.camel>3.27.5.1</version.io.quarkus.camel>
-  </properties>
+    <version.io.quarkus.camel>3.33.2</version.io.quarkus.camel>
+    <!-- Quarkus-platform-aligned pins. These live here, not in kie-parent, so that the Quarkus upgrade does not
+         change what the Spring Boot side resolves. -->
+    <version.io.grpc>1.81.0</version.io.grpc>
+    <version.io.smallrye.reactive.messaging.in.memory>4.33.0</version.io.smallrye.reactive.messaging.in.memory>
+    <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
+    <version.org.hibernate>7.2.19.Final</version.org.hibernate>
+    <version.org.postgresql>42.7.13</version.org.postgresql>
+    <!-- Quarkus 3.33 hard requirements: smallrye-config 3.16 (quarkus-core/junit-config reference io.smallrye.config.Config)
+         and jandex 3.5 (arc-processor uses MethodParameterInfo.nameOrDefault). The two smallrye-config properties are one
+         artifact family in kie-parent (they map to smallrye-config-core / smallrye-config) and must move together. -->
+    <version.io.smallrye-config>3.16.0</version.io.smallrye-config>
+    <version.io.smallrye.config.core>3.16.0</version.io.smallrye.config.core>
+    <version.io.smallrye.jandex>3.5.3</version.io.smallrye.jandex>
+    <!-- quarkus-bom alignment; smallrye-open-api 4.2.4 requires jandex 3.5, so it is pinned in the same scope as jandex. -->
+    <version.io.smallrye-open-api>4.2.4</version.io.smallrye-open-api>
+    <version.io.smallrye.openapi.core>4.2.4</version.io.smallrye.openapi.core>
+    <!-- quarkus-bom alignment; must match the bson/mongodb-driver-core version quarkus-bom supplies. -->
+    <version.mongodb-driver-sync>5.6.4</version.mongodb-driver-sync>
+    <!-- Framework-specific pins moved out of kie-parent: only this tree declares these artifacts. -->
+    <version.io.smallrye-health>4.3.0</version.io.smallrye-health>
+    <version.com.github.stephenc.jcip>1.0-1</version.com.github.stephenc.jcip>
+    <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
+    <version.org.jredisearch>2.2.0</version.org.jredisearch>
+    <version.org.json>20231013</version.org.json>
+    <version.io.projectreactor>3.8.7</version.io.projectreactor>
+</properties>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.github.stephenc.jcip</groupId>
+        <artifactId>jcip-annotations</artifactId>
+        <version>${version.com.github.stephenc.jcip}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.graalvm.nativeimage</groupId>
+        <artifactId>svm</artifactId>
+        <version>${version.org.graalvm.nativeimage}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.redislabs</groupId>
+        <artifactId>jredisearch</artifactId>
+        <version>${version.org.jredisearch}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>${version.org.json}</version>
+      </dependency>
       <dependency>
         <groupId>io.quarkiverse.asyncapi</groupId>
         <artifactId>quarkus-asyncapi</artifactId>
@@ -98,6 +150,40 @@
         <version>${version.io.quarkiverse.reactivemessaging.http}</version>
       </dependency>
       <dependency>
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-core</artifactId>
+        <version>${version.io.projectreactor}</version>
+      </dependency>
+      <!-- CVE fix: quarkus-bom:3.33.x pins all MongoDB driver artifacts to 5.5.1.
+           Override to match mongodb-driver-sync:${version.mongodb-driver-sync} already
+           pinned in kie-parent. Must appear before the quarkus-bom import to take precedence.
+           https://jira.mongodb.org/browse/JAVA-6266 -->
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-core</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-reactivestreams</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson-record-codec</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-bom</artifactId>
         <version>${version.io.quarkus}</version>
@@ -127,7 +213,7 @@
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-junit5</artifactId>
+        <artifactId>quarkus-junit</artifactId>
         <version>${version.io.quarkus.quarkus-test}</version>
         <exclusions>
           <exclusion>
@@ -138,7 +224,7 @@
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-junit5-internal</artifactId>
+        <artifactId>quarkus-junit-internal</artifactId>
         <version>${version.io.quarkus.quarkus-test}</version>
         <exclusions>
           <exclusion>
@@ -1383,6 +1469,7 @@
           <groupId>io.quarkus</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${version.io.quarkus}</version>
+          <extensions>true</extensions>
         </plugin>
         <plugin>
           <groupId>io.quarkus</groupId>

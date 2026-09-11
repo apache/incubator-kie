@@ -20,6 +20,7 @@ package org.kie.kogito.jobs.service.repository.infinispan;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.commons.marshall.ProtoStreamMarshaller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,6 +54,7 @@ class InfinispanConfigurationTest {
             @Mock Instance<RemoteCacheManager> instance,
             @Mock RemoteCache<Object, Object> cache) {
         when(instance.get()).thenReturn(remoteCacheManager);
+        when(remoteCacheManager.getMarshaller()).thenReturn(new ProtoStreamMarshaller());
         when(remoteCacheManager.getCache(InfinispanConfiguration.Caches.JOB_DETAILS)).thenReturn(cache);
 
         assertThat(tested.isInitialized()).isFalse();
