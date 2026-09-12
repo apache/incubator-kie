@@ -212,13 +212,13 @@
     <!-- New and overwritten dependencies -->
     <!-- ################################################################################ -->
     <version.org.antlr4>4.13.2</version.org.antlr4>
-    <version.org.apache.ant>1.10.11</version.org.apache.ant>
+    <version.org.apache.ant>1.10.17</version.org.apache.ant>
     <version.org.apache.avro>1.12.1</version.org.apache.avro>
     <version.org.apache.commons>3.19.0</version.org.apache.commons>
     <version.org.apache.commons.csv>1.10.0</version.org.apache.commons.csv>
     <version.org.apache.commons.lang3>3.19.0</version.org.apache.commons.lang3>
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
-    <version.org.apache.groovy>4.0.29</version.org.apache.groovy>
+    <version.org.apache.groovy>4.0.32</version.org.apache.groovy>
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
     <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
     <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
