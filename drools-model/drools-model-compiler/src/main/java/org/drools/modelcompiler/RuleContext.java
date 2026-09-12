@@ -39,6 +39,12 @@ import org.drools.model.Variable;
 
 public class RuleContext {
 
+    /** Index into the {@code int[]} stored in {@link #sequenceVarIndexes}: the sequence index (raw, before skip conversion). */
+    static final int SEQ_VAR_SEQ_IDX    = 0;
+    /** Index into the {@code int[]} stored in {@link #sequenceVarIndexes}: the filter/step index within that sequence. */
+    static final int SEQ_VAR_FILTER_IDX = 1;
+
+
     private final KiePackagesBuilder builder;
     private final InternalKnowledgePackage pkg;
     private final RuleImpl rule;
@@ -48,7 +54,10 @@ public class RuleContext {
     private Map<Variable, Declaration> queryDeclarations;
     private Map<Variable, Accumulate> accumulateSource;
 
+    private Map<Variable, int[]> sequenceVarIndexes;
+
     private int patternIndex = -1;
+    private int seqIndex = -1;
     private boolean needStreamMode = false;
 
     private Deque<Set<Variable>> variablesInOrCondition;
@@ -76,6 +85,14 @@ public class RuleContext {
 
     int getNextPatternIndex() {
         return ++patternIndex;
+    }
+
+    int nextSeqIndex() {
+        return ++seqIndex;
+    }
+
+    int getSequenceCount() {
+        return seqIndex + 1;
     }
 
     void startOrCondition() {
@@ -134,6 +151,17 @@ public class RuleContext {
 
     void addDeclaration( Variable variable, Declaration declaration ) {
         declarations.put( variable, declaration );
+    }
+
+    void addSequenceVarIndex( Variable variable, int seqIndex, int filterIndex ) {
+        if (sequenceVarIndexes == null) {
+            sequenceVarIndexes = new HashMap<>();
+        }
+        sequenceVarIndexes.put( variable, new int[]{ seqIndex, filterIndex } );
+    }
+
+    Map<Variable, int[]> getSequenceVarIndexes() {
+        return sequenceVarIndexes == null ? Map.of() : sequenceVarIndexes;
     }
 
     void addGroupByDeclaration( Variable groupKeyVar, Declaration declaration ) {

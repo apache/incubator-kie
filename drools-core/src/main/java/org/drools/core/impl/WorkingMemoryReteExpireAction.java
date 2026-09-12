@@ -23,14 +23,14 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.drools.base.phreak.PropagationEntry;
+import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.DefaultFactHandle;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.marshalling.MarshallerReaderContext;
-import org.drools.base.phreak.PropagationEntry;
-import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.phreak.actions.AbstractPartitionedPropagationEntry;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.RightTuple;
@@ -110,7 +110,7 @@ public class WorkingMemoryReteExpireAction
     }
 
     @Override
-    public PropagationEntry getSplitForPartition( int partitionNr ) {
+    public PropagationEntry<ReteEvaluator> getSplitForPartition( int partitionNr ) {
         return new PartitionAwareWorkingMemoryReteExpireAction( factHandle, node, partitionNr );
     }
 

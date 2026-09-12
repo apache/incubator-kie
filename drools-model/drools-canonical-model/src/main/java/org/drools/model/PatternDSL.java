@@ -93,8 +93,10 @@ import org.drools.model.view.BindViewItem1;
 import org.drools.model.view.BindViewItem2;
 import org.drools.model.view.BindViewItem3;
 import org.drools.model.view.BindViewItem4;
+import org.drools.model.view.CombinedExprViewItem;
 import org.drools.model.view.ExprViewItem;
 import org.drools.model.view.ViewItem;
+import org.drools.model.view.ViewItemBuilder;
 
 
 import static java.util.UUID.randomUUID;
@@ -142,7 +144,7 @@ public class PatternDSL extends DSL {
         return new ReactOn( reactOn );
     }
 
-    public interface PatternDef<T> extends ViewItem<T> {
+    public interface PatternDef<T> extends ViewItem<T>, SequenceStep {
         PatternDef<T> and();
         PatternDef<T> or();
         PatternDef<T> endAnd();
@@ -1775,6 +1777,23 @@ public class PatternDSL extends DSL {
         }
     }
 
+    public static class SequenceViewItem implements RuleItemBuilder<SequenceViewItem>, RuleItem {
+        private final SequenceStep[] steps;
+
+        public SequenceViewItem(SequenceStep... steps) {
+            this.steps = steps;
+        }
+
+        public SequenceStep[] getSteps() {
+            return steps;
+        }
+
+        @Override
+        public SequenceViewItem get() {
+            return this;
+        }
+    }
+
     public static abstract class PatternBindingImpl<T, A> implements PatternItem<T> {
         protected final Variable<A> boundVar;
         protected final ReactOn reactOn;
@@ -1886,6 +1905,32 @@ public class PatternDSL extends DSL {
     }
 
     // -- rule --
+
+    public static SequenceViewItem sequence(SequenceStep... steps) {
+        if (steps == null || steps.length == 0) {
+            throw new IllegalArgumentException("sequence() requires at least one step");
+        }
+        return new SequenceViewItem(steps);
+    }
+
+
+    public static CombinedExprViewItem or(ViewItemBuilder<?> first, ViewItemBuilder<?>... rest) {
+        return new CombinedExprViewItem(Condition.Type.OR, viewItems(first, rest));
+    }
+
+    public static CombinedExprViewItem and(ViewItemBuilder<?> first, ViewItemBuilder<?>... rest) {
+        return new CombinedExprViewItem(Condition.Type.AND, viewItems(first, rest));
+    }
+
+    private static ViewItem[] viewItems(ViewItemBuilder<?> first, ViewItemBuilder<?>[] rest) {
+        ViewItem[] all = new ViewItem[1 + rest.length];
+        all[0] = first.get();
+        for (int i = 0; i < rest.length; i++) {
+            all[1 + i] = rest[i].get();
+        }
+        return all;
+    }
+
 
     public static RuleBuilder rule( String name ) {
         return new RuleBuilder( VIEW_BUILDER, name );

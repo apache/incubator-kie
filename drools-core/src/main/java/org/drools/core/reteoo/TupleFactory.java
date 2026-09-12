@@ -40,6 +40,7 @@ public class TupleFactory {
             case NodeTypeEnums.ConditionalBranchNode:
             case NodeTypeEnums.EvalConditionNode:
             case NodeTypeEnums.TimerConditionNode:
+            case NodeTypeEnums.SequenceNode:
                 peer = new EvalNodeLeftTuple();
                 break;
             case NodeTypeEnums.ReactiveFromNode:
@@ -78,6 +79,7 @@ public class TupleFactory {
             case NodeTypeEnums.AsyncReceiveNode:
             case NodeTypeEnums.ConditionalBranchNode:
             case NodeTypeEnums.EvalConditionNode:
+            case NodeTypeEnums.SequenceNode:
             case NodeTypeEnums.TimerConditionNode:
                 return new EvalNodeLeftTuple(factHandle, s, leftTupleMemoryEnabled);
             case NodeTypeEnums.ReactiveFromNode:
@@ -109,6 +111,7 @@ public class TupleFactory {
             case NodeTypeEnums.ConditionalBranchNode:
             case NodeTypeEnums.EvalConditionNode:
             case NodeTypeEnums.TimerConditionNode:
+            case NodeTypeEnums.SequenceNode:
                 return new EvalNodeLeftTuple(factHandle, leftTuple, s);
             case NodeTypeEnums.ReactiveFromNode:
                 return new ReactiveFromNodeLeftTuple(factHandle, leftTuple, s);
@@ -140,6 +143,7 @@ public class TupleFactory {
             case NodeTypeEnums.ConditionalBranchNode:
             case NodeTypeEnums.EvalConditionNode:
             case NodeTypeEnums.TimerConditionNode:
+            case NodeTypeEnums.SequenceNode:
                 return new EvalNodeLeftTuple(leftTuple, s, pctx, leftTupleMemoryEnabled);
             case NodeTypeEnums.ReactiveFromNode:
                 throw new IllegalStateException("ReactFromNode does not implement this constructor.");
@@ -170,6 +174,7 @@ public class TupleFactory {
             case NodeTypeEnums.ConditionalBranchNode:
             case NodeTypeEnums.EvalConditionNode:
             case NodeTypeEnums.TimerConditionNode:
+            case NodeTypeEnums.SequenceNode:
                 return new EvalNodeLeftTuple(leftTuple, rightTuple, s);
             case NodeTypeEnums.ReactiveFromNode:
                 throw new IllegalStateException("ReactFromNode does not implement this constructor.");
@@ -203,6 +208,7 @@ public class TupleFactory {
             case NodeTypeEnums.ConditionalBranchNode:
             case NodeTypeEnums.EvalConditionNode:
             case NodeTypeEnums.TimerConditionNode:
+            case NodeTypeEnums.SequenceNode:
                 return new EvalNodeLeftTuple(leftTuple, rightTuple, currentLeftChild, currentRightChild, s, leftTupleMemoryEnabled);
             case NodeTypeEnums.ReactiveFromNode:
                 return new ReactiveFromNodeLeftTuple(leftTuple, rightTuple, currentLeftChild, currentRightChild, s, leftTupleMemoryEnabled);

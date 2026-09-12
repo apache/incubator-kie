@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.drools.base.common.NetworkNode;
 import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.util.LinkedList;
 import org.drools.core.common.ActivationsManager;
 import org.drools.core.common.Memory;
 import org.drools.core.common.NodeMemories;
@@ -63,6 +64,9 @@ import org.drools.core.reteoo.QueryTerminalNode;
 import org.drools.core.reteoo.ReactiveFromNode;
 import org.drools.core.reteoo.RightInputAdapterNode;
 import org.drools.core.reteoo.SegmentMemory;
+import org.drools.core.reteoo.SequenceNode;
+import org.drools.core.reteoo.SequenceNode.PhreakSequenceNode;
+import org.drools.core.reteoo.SequenceNode.SequenceNodeMemory;
 import org.drools.core.reteoo.SubnetworkTuple;
 import org.drools.core.reteoo.TimerNode;
 import org.drools.core.reteoo.TimerNode.TimerNodeMemory;
@@ -88,6 +92,7 @@ public class RuleNetworkEvaluatorImpl implements RuleNetworkEvaluator {
     private final PhreakBranchNode       pBranchNode;
     private final PhreakQueryNode        pQueryNode;
     private final PhreakTimerNode        pTimerNode;
+    private final PhreakSequenceNode     pSequenceNode;
     private final PhreakAsyncSendNode    pSendNode;
     private final PhreakAsyncReceiveNode pReceiveNode;
     private final PhreakRuleTerminalNode pRtNode;
@@ -113,6 +118,7 @@ public class RuleNetworkEvaluatorImpl implements RuleNetworkEvaluator {
         pBranchNode = PhreakNetworkNodeFactory.Factory.get().createPhreakBranchNode(reteEvaluator);
         pQueryNode  = PhreakNetworkNodeFactory.Factory.get().createPhreakQueryNode(reteEvaluator);
         pTimerNode  = PhreakNetworkNodeFactory.Factory.get().createPhreakTimerNode(reteEvaluator);
+        pSequenceNode = PhreakNetworkNodeFactory.Factory.get().createPhreakSequenceNode(reteEvaluator);
         pSendNode   = PhreakNetworkNodeFactory.Factory.get().createPhreakAsyncSendNode(reteEvaluator);
         pReceiveNode = PhreakNetworkNodeFactory.Factory.get().createPhreakAsyncReceiveNode(reteEvaluator);
         pRtNode     = PhreakNetworkNodeFactory.Factory.get().createPhreakRuleTerminalNode(reteEvaluator);
@@ -430,6 +436,10 @@ public class RuleNetworkEvaluatorImpl implements RuleNetworkEvaluator {
             }
             case NodeTypeEnums.AsyncReceiveNode: {
                 pReceiveNode.doNode((AsyncReceiveNode) sc.getCurrentNode(), (AsyncReceiveMemory) sc.getCurrentNodeMemory(), sink, sc.getSourceTuples(), trgTuples);
+                break;
+            }
+            case NodeTypeEnums.SequenceNode: {
+                pSequenceNode.doNode((SequenceNode) sc.getCurrentNode(), (SequenceNodeMemory) sc.getCurrentNodeMemory(), sink, sc.getSourceTuples(), trgTuples, sc.getStagedLeftTuples());
                 break;
             }
         }

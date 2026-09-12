@@ -19,6 +19,7 @@
 package org.drools.core.phreak;
 
 import org.drools.core.common.ReteEvaluator;
+import org.drools.core.reteoo.SequenceNode.PhreakSequenceNode;
 import org.kie.api.internal.utils.KieService;
 
 public interface PhreakNetworkNodeFactory extends KieService {
@@ -46,6 +47,8 @@ public interface PhreakNetworkNodeFactory extends KieService {
     PhreakTimerNode createPhreakTimerNode(ReteEvaluator reteEvaluator);
 
     PhreakAsyncSendNode createPhreakAsyncSendNode(ReteEvaluator reteEvaluator);
+
+    PhreakSequenceNode createPhreakSequenceNode(ReteEvaluator reteEvaluator);
 
     PhreakAsyncReceiveNode createPhreakAsyncReceiveNode(ReteEvaluator reteEvaluator);
 

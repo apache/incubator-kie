@@ -58,7 +58,7 @@ class ReteDumperTest extends BaseModelTest {
         List<String> lines = getLinesByCoreReteDumper(kbase);
 
         // The first RightInputAdapterNode should be followed by ExistsNode
-        assertSinkOrder(lines, "[RightInputAdapterNode", "[ExistsNode");
+        assertSinkOrder(lines, "RightInputAdapterNode", "[ExistsNode");
     }
 
     @ParameterizedTest
@@ -70,7 +70,7 @@ class ReteDumperTest extends BaseModelTest {
         List<String> lines = getLinesByExecmodelReteDumper(kbase);
 
         // The first RightInputAdapterNode should be followed by ExistsNode
-        assertSinkOrder(lines, "[RightInputAdapterNode", "[ExistsNode");
+        assertSinkOrder(lines, "RightInputAdapterNode", "[ExistsNode");
     }
 
     private static void assertSinkOrder(List<String> lines, String targetNodePrefix, String expectedNextNodePrefix) {

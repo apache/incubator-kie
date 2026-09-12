@@ -20,11 +20,24 @@ package org.drools.core.reteoo.builder;
 
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.drools.base.base.ObjectType;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.DynamicFilterProto;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.base.rule.constraint.CombinedAlphaConstraint;
+import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.reteoo.sequencing.Sequence;
+import org.drools.base.reteoo.sequencing.Sequencer;
 import org.drools.base.rule.Accumulate;
 import org.drools.base.rule.AsyncReceive;
 import org.drools.base.rule.AsyncSend;
@@ -35,7 +48,6 @@ import org.drools.base.rule.From;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.QueryElement;
 import org.drools.base.rule.accessor.DataProvider;
-import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.base.time.impl.Timer;
 import org.drools.core.common.BetaConstraints;
 import org.drools.core.reteoo.AccumulateNode;
@@ -46,6 +58,7 @@ import org.drools.core.reteoo.AsyncReceiveNode;
 import org.drools.core.reteoo.AsyncSendNode;
 import org.drools.core.reteoo.ConditionalBranchEvaluator;
 import org.drools.core.reteoo.ConditionalBranchNode;
+import org.drools.core.reteoo.CoreComponentFactory;
 import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.EvalConditionNode;
 import org.drools.core.reteoo.ExistsNode;
@@ -63,6 +76,8 @@ import org.drools.core.reteoo.QueryElementNode;
 import org.drools.core.reteoo.QueryTerminalNode;
 import org.drools.core.reteoo.ReactiveFromNode;
 import org.drools.core.reteoo.TupleToObjectNode;
+import org.drools.core.reteoo.SequenceNode;
+import org.drools.core.reteoo.SequenceNode.AlphaAdapter;
 import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.TimerNode;
@@ -112,6 +127,83 @@ public class PhreakNodeFactory implements NodeFactory, Serializable {
             startTupleSource = startTupleSource.getLeftTupleSource();
         }
         return new TupleToObjectNode(id, leftInput, startTupleSource, context );
+    }
+    public SequenceNode buildSequenceNode(final int id,
+                                          final LeftTupleSource tupleSource,
+                                          final Sequence seq,
+                                          final BuildContext context) {
+        SequenceNode node = new SequenceNode(id, tupleSource, context);
+        node.setSequencer(new Sequencer(seq));
+
+        NodeFactory nFactory = CoreComponentFactory.get().getNodeFactoryService();
+
+        Pattern[] patterns =  seq.getFilters();
+
+        // first attach the OTN sources in Rete.
+        // Use LinkedHashSet to preserve insertion order (first-seen per type),
+        // so objectTypeList index aligns with the first pattern index for that type.
+        Set<ObjectType>  objectTypeSet  = new LinkedHashSet<>();
+        Arrays.stream(patterns).forEach(p -> objectTypeSet.add(p.getObjectType()));
+        List<ObjectType> objectTypeList = new ArrayList<>(objectTypeSet);
+
+        Map<ObjectType, Integer> objectTypeIndex = new HashMap<>(objectTypeList.size() * 2);
+        ObjectSource[] otns = new ObjectSource[objectTypeList.size()];
+        EntryPointNode epn = context.getRuleBase().getRete().getEntryPointNode(context.getCurrentEntryPoint());
+        Map<ObjectType, ObjectTypeNode> existingOtns = epn.getObjectTypeNodes();
+        for ( int i = 0; i < objectTypeList.size(); i++ ) {
+            ObjectType objectType = objectTypeList.get(i);
+            objectTypeIndex.put(objectType, i);
+            ObjectTypeNode existing = existingOtns.get(objectType);
+            if (existing != null) {
+                // Reuse the existing OTN — building a fresh one and calling attach()
+                // would call EntryPointNode.addObjectSink which is a Map.put, silently
+                // replacing the existing OTN and cutting off all rules already wired to it.
+                otns[i] = existing;
+            } else {
+                otns[i] = nFactory.buildObjectTypeNode(context.getNextNodeId(), epn, objectType, context);
+                otns[i].attach(context);
+            }
+        }
+
+        // For each source create an alpha adapter, which will map it to any filters on the stack.
+        AlphaAdapter[] adapters = new AlphaAdapter[objectTypeList.size()];
+        for ( int i = 0; i < objectTypeList.size(); i++ ) {
+            adapters[i] = new AlphaAdapter(context.getNextNodeId(), otns[i],
+                    context.getPartitionId(), node, i);
+
+            adapters[i].attach(context);
+        }
+        node.setAlphaAdapters(adapters);
+
+
+        // Create all the dynamic filters, these are added on demand to the stack.
+        // filterIndex (i) is the pattern index — one per step.
+        // adapterIndex is the index of this pattern's type in objectTypeList — one per distinct type.
+        DynamicFilterProto[] filters = new DynamicFilterProto[patterns.length];
+        for ( int i = 0; i < patterns.length; i++ ) {
+            List<Constraint> constraints = patterns[i].getConstraints();
+            if (constraints.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "sequence step " + i + " has no constraint expression. " +
+                        "Every sequence step must have at least one expr(). " +
+                        "Add an expr() to the pattern, or use a dedicated fact type per step.");
+            }
+            AlphaNodeFieldConstraint combined;
+            if (constraints.size() == 1) {
+                combined = (AlphaNodeFieldConstraint) constraints.get(0);
+            } else {
+                AlphaNodeFieldConstraint[] all = constraints.stream()
+                        .map(c -> (AlphaNodeFieldConstraint) c)
+                        .toArray(AlphaNodeFieldConstraint[]::new);
+                combined = new CombinedAlphaConstraint(all);
+            }
+            int adapterIndex = objectTypeIndex.get(patterns[i].getObjectType());
+            filters[i] = new DynamicFilterProto(combined, adapterIndex);
+        }
+
+        node.setDynamicFilters( filters);
+
+        return node;
     }
 
     public JoinNode buildJoinNode( int id, LeftTupleSource leftInput, ObjectSource rightInput, BetaConstraints binder, BuildContext context ) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -406,7 +406,8 @@ public abstract class RightInputAdapterNode<T extends  BetaNode> extends BaseNod
 
     @Override
     public String toString() {
-        return "[RightInputAdapterNode(" + id + ")]";
+        return "RightInputAdapterNode(" + id + ")[ source="
+               + source + ", associations=" + associations + ", partitionId=" + partitionId + "]";
     }
 
     public void networkUpdated(UpdateContext updateContext) {

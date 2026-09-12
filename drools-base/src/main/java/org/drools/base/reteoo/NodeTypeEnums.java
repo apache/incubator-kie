@@ -75,6 +75,7 @@ public class NodeTypeEnums {
     public static final int AsyncReceiveNode        = (260 << shift) | TupleSourceMask | TupleSinkMask | TupleNodeMask | MemoryFactoryMask;
     public static final int FromNode                = (270 << shift) | TupleSourceMask | TupleSinkMask | TupleNodeMask | MemoryFactoryMask;
     public static final int ReactiveFromNode        = (280 << shift) | TupleSourceMask | TupleSinkMask | TupleNodeMask | MemoryFactoryMask;
+    public static final int SequenceNode            = (290 << shift) | TupleSourceMask | TupleSinkMask | TupleNodeMask | MemoryFactoryMask;
 
     public static final int QueryElementNode        = (300 << shift) | TupleSourceMask | TupleSinkMask | TupleNodeMask | MemoryFactoryMask;
     public static final int ConditionalBranchNode   = (310 << shift) | TupleSourceMask | TupleSinkMask | TupleNodeMask | MemoryFactoryMask;

@@ -16,13 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.drools.core.util;
+package org.drools.base.util;
 
-import org.drools.base.util.AbstractLinkedListNode;
-import org.drools.base.util.DoubleLinkedEntry;
-import org.drools.base.util.LinkedList;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -35,7 +32,7 @@ public class LinkedListTest {
     DoubleLinkedEntry node2 = null;
     DoubleLinkedEntry node3 = null;
 
-    @BeforeEach
+    @Before
     public void setUp() throws Exception {
         this.list = new LinkedList();
         this.node1 = new AbstractBaseLinkedListNodeMock();

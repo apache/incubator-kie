@@ -1162,6 +1162,19 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         }
     }
 
+    public static class SequenceMemoryPrototype extends MemoryPrototype {
+
+        public SequenceMemoryPrototype(long nodePosMaskBit) {
+            this.nodePosMaskBit = nodePosMaskBit;
+        }
+
+        @Override
+        public void populateMemory(NodeMemories nodeMemories, SegmentMemorySupport segmentMemorySupport, Memory mem) {
+            SequenceNode.SequenceNodeMemory seqmem = (SequenceNode.SequenceNodeMemory)  mem;
+            seqmem.setNodePosMaskBit(nodePosMaskBit);
+        }
+    }
+
     public static class AsyncSendMemoryPrototype extends MemoryPrototype {
 
         public AsyncSendMemoryPrototype() {}

@@ -131,6 +131,15 @@ import org.drools.model.patterns.ExistentialPatternImpl;
 import org.drools.model.patterns.GroupByPatternImpl;
 import org.drools.model.patterns.PatternImpl;
 import org.drools.model.patterns.QueryCallPattern;
+import org.drools.model.patterns.SequenceConditionImpl;
+import org.drools.base.reteoo.sequencing.Sequence;
+import org.drools.base.reteoo.sequencing.signalprocessors.Gates;
+import org.drools.base.reteoo.sequencing.signalprocessors.LogicCircuit;
+import org.drools.base.reteoo.sequencing.signalprocessors.LogicGate;
+import org.drools.base.reteoo.sequencing.signalprocessors.LogicGateOutputSignalProcessor;
+import org.drools.base.reteoo.sequencing.signalprocessors.SignalIndex;
+import org.drools.base.reteoo.sequencing.signalprocessors.TerminatingSignalProcessor;
+import org.drools.base.reteoo.sequencing.steps.Step;
 import org.drools.model.view.SelfPatternBiding;
 import org.drools.modelcompiler.attributes.LambdaEnabled;
 import org.drools.modelcompiler.attributes.LambdaSalience;
@@ -398,15 +407,41 @@ public class KiePackagesBuilder {
         Declaration[] requiredDeclarations = getRequiredDeclarationsIfPossible( ctx, consequence, name );
         boolean enabledTupleOptimization = requiredDeclarations != null && requiredDeclarations.length > 0;
 
+        Map<String, int[]> sequenceVarIndexes = buildSequenceVarIndexesForConsequence( ctx, consequence );
+
         if ( name.equals( RuleImpl.DEFAULT_CONSEQUENCE_NAME ) ) {
             if ("java".equals(consequence.getLanguage())) {
-                ctx.getRule().setConsequence( new LambdaConsequence( consequence, enabledTupleOptimization ) );
+                ctx.getRule().setConsequence( new LambdaConsequence( consequence, enabledTupleOptimization, sequenceVarIndexes ) );
             } else {
                 throw new UnsupportedOperationException("Unknown script language for consequence: " + consequence.getLanguage());
             }
         } else {
-            ctx.getRule().addNamedConsequence( name, new LambdaConsequence( consequence, enabledTupleOptimization ) );
+            ctx.getRule().addNamedConsequence( name, new LambdaConsequence( consequence, enabledTupleOptimization, sequenceVarIndexes ) );
         }
+    }
+
+    /**
+     * Builds a map of variable-name → sequencer-data-index for any consequence variables
+     * that were bound by a sequence step pattern (rather than a normal LHS pattern).
+     * These variables are not accessible via the activation tuple; they must be resolved
+     * from SequencerMemory.getData() at consequence evaluation time.
+     */
+    private Map<String, int[]> buildSequenceVarIndexesForConsequence( RuleContext ctx, Consequence consequence ) {
+        Map<Variable, int[]> seqIndexes = ctx.getSequenceVarIndexes();
+        if (seqIndexes.isEmpty()) {
+            return Map.of();
+        }
+        int totalSeqs = ctx.getSequenceCount();
+        Map<String, int[]> result = null;
+        for (Variable var : consequence.getDeclarations()) {
+            int[] entry = seqIndexes.get(var);
+            if (entry != null) {
+                if (result == null) result = new java.util.HashMap<>();
+                int skip = totalSeqs - 1 - entry[RuleContext.SEQ_VAR_SEQ_IDX];
+                result.put(var.getName(), new int[]{ skip, entry[RuleContext.SEQ_VAR_FILTER_IDX] });
+            }
+        }
+        return result == null ? Map.of() : result;
     }
 
     private Declaration[] getRequiredDeclarationsIfPossible( RuleContext ctx, Consequence consequence, String name ) {
@@ -499,6 +534,27 @@ public class KiePackagesBuilder {
             case FORALL: {
                 return buildForAll( ctx, group, condition );
             }
+            case SEQUENCE: {
+                int seqIdx = ctx.nextSeqIndex();
+                SequenceConditionImpl sc = (SequenceConditionImpl) condition;
+                List<Condition> steps = sc.getSubConditions();
+                int n = steps.size();
+                List<Pattern> filters = new ArrayList<>();
+                Step.StepFactory[] stepFactories = new Step.StepFactory[n];
+                int[] gateCounter = new int[]{0};
+
+                for (int i = 0; i < n; i++) {
+                    List<LogicGate> stepGates = new ArrayList<>();
+                    LogicGate root = buildStepGate(ctx, group, steps.get(i), filters, stepGates, gateCounter, seqIdx);
+                    root.setOutput(TerminatingSignalProcessor.get());
+                    stepFactories[i] = Step.of(new LogicCircuit(stepGates.toArray(new LogicGate[0])));
+                }
+
+                Sequence seq = new Sequence(0, stepFactories);
+                seq.setFilters(filters.toArray(new Pattern[0]));
+                ctx.getRule().addSequence(seq);
+                return null;
+            }
             case CONSEQUENCE:
                 if (condition instanceof NamedConsequenceImpl) {
                     NamedConsequenceImpl consequence = (NamedConsequenceImpl) condition;
@@ -547,6 +603,75 @@ public class KiePackagesBuilder {
         transformedForall.addChild( new GroupElement( GroupElement.Type.NOT ).addChild( conditionToElement( ctx, group, forallPattern ) ) );
 
         return transformedForall;
+    }
+
+    private static final String DEFERRED_GATE_ERROR =
+            "sequence(...) does not yet support condition type %s. Absence-based " +
+            "gates (nor, nand, xor, xnor, not) and other composites are deferred ";
+
+    private LogicGate buildStepGate(RuleContext ctx, GroupElement group,
+                                    Condition node, List<Pattern> filters,
+                                    List<LogicGate> stepGates, int[] gateCounter,
+                                    int seqIdx) {
+        Condition.Type type = node.getType();
+
+        if (type == Condition.Type.PATTERN) {
+            int idx = filters.size();
+            PatternImpl patternImpl = (PatternImpl) node;
+            RuleConditionElement built = buildPattern(ctx, group, patternImpl);
+            if (!(built instanceof Pattern)) {
+                throw new IllegalStateException(
+                        "SEQUENCE leaf must compile to a simple Pattern, got " + built);
+            }
+            filters.add((Pattern) built);
+            // Record variable → (sequence, filter index) so the consequence can look up the matched
+            // fact from SequencerMemory.getData() at rule-fire time.
+            Variable stepVar = patternImpl.getPatternVariable();
+            if (stepVar != null) {
+                ctx.addSequenceVarIndex(stepVar, seqIdx, idx);
+            }
+            LogicGate leaf = new LogicGate(
+                    Gates::and,
+                    gateCounter[0]++,
+                    new int[]{idx},
+                    new int[]{idx},
+                    0);
+            stepGates.add(leaf);
+            return leaf;
+        }
+
+        LogicCircuit.LongBiPredicate pred = predicateFor(type);
+        List<Condition> children = node.getSubConditions();
+        if (children.isEmpty()) {
+            throw new IllegalStateException(
+                    "SEQUENCE composite node has no children: " + type);
+        }
+        LogicGate[] inputs = new LogicGate[children.size()];
+        for (int i = 0; i < children.size(); i++) {
+            inputs[i] = buildStepGate(ctx, group, children.get(i), filters, stepGates, gateCounter, seqIdx);
+        }
+        LogicGate parent = new LogicGate(
+                pred,
+                gateCounter[0]++,
+                new int[0],
+                new int[0],
+                inputs.length);
+        parent.setInputGates(inputs);
+        for (int k = 0; k < inputs.length; k++) {
+            inputs[k].setOutput(new LogicGateOutputSignalProcessor(SignalIndex.of(parent, k + 1)));
+        }
+        stepGates.add(parent);
+        return parent;
+    }
+
+    private static LogicCircuit.LongBiPredicate predicateFor(Condition.Type t) {
+        switch (t) {
+            case AND: return Gates::and;
+            case OR:  return Gates::or;
+            default:
+                throw new UnsupportedOperationException(
+                        String.format(DEFERRED_GATE_ERROR, t));
+        }
     }
 
     private RuleConditionElement buildAccumulate( RuleContext ctx, GroupElement group, AccumulatePattern accumulatePattern ) {

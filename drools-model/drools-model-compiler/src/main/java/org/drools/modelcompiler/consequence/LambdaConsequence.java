@@ -21,11 +21,13 @@ package org.drools.modelcompiler.consequence;
 import org.drools.base.base.ValueResolver;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.reteoo.sequencing.SequencerMemory;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.consequence.Consequence;
 import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.reteoo.RuleTerminalNode;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.model.Variable;
 import org.kie.api.runtime.rule.FactHandle;
@@ -33,6 +35,7 @@ import org.kie.api.runtime.rule.FactHandle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class LambdaConsequence implements Consequence<KnowledgeHelper> {
 
@@ -40,21 +43,34 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
     // consequence in linear time by traversing the tuple only once.
     private static final boolean ENABLE_LINEARIZED_ARGUMENTS_RETRIEVAL_OPTIMIZATION = true;
 
+    /** Index into the {@code int[]} values of {@link #sequenceVarIndexes}: tuple-anchor skip count. */
+    private static final int SEQ_ENTRY_SKIP_IDX   = 0;
+    /** Index into the {@code int[]} values of {@link #sequenceVarIndexes}: filter/step index within the sequence. */
+    private static final int SEQ_ENTRY_FILTER_IDX = 1;
+
     private final org.drools.model.Consequence consequence;
     private final int factsNr;
     private final boolean enabledTupleOptimization;
     private Declaration[] requiredDeclarations;
 
+    // variable name → [skip, filterIndex] for step-pattern variables.
+    // Non-empty only when the rule contains a sequence() and the consequence references step-bound vars.
+    private final Map<String, int[]> sequenceVarIndexes;
+
     private TupleFactSupplier[] factSuppliers;
+    private SequencerFactSupplier[] sequencerFactSuppliers;
     private GlobalSupplier[] globalSuppliers;
     private Object[] facts;
 
     private FactHandleLookup fhLookup;
 
-    public LambdaConsequence( org.drools.model.Consequence consequence, boolean enabledTupleOptimization) {
+    public LambdaConsequence( org.drools.model.Consequence consequence,
+                              boolean enabledTupleOptimization,
+                              Map<String, int[]> sequenceVarIndexes) {
         this.consequence = consequence;
         this.enabledTupleOptimization = ENABLE_LINEARIZED_ARGUMENTS_RETRIEVAL_OPTIMIZATION & enabledTupleOptimization;
         this.factsNr = consequence.getVariables().length + ( consequence.isUsingDrools() ? 1 : 0 );
+        this.sequenceVarIndexes = sequenceVarIndexes;
     }
 
     @Override
@@ -69,7 +85,7 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
             if (enabledTupleOptimization) {
                 this.requiredDeclarations = declarations;
             } else {
-                Object[] facts = declarationsToFacts( knowledgeHelper, valueResolver, knowledgeHelper.getTuple(), declarations, consequence.getVariables(), consequence.isUsingDrools() );
+                Object[] facts = declarationsToFacts( knowledgeHelper, valueResolver, knowledgeHelper.getTuple(), declarations, consequence.getVariables(), consequence.isUsingDrools(), sequenceVarIndexes );
                 consequence.getBlock().execute( facts );
                 return;
             }
@@ -84,6 +100,10 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
     }
 
     private static Object[] declarationsToFacts( KnowledgeHelper knowledgeHelper, ValueResolver valueResolver, BaseTuple tuple, Declaration[] declarations, Variable[] vars, boolean useDrools ) {
+        return declarationsToFacts( knowledgeHelper, valueResolver, tuple, declarations, vars, useDrools, Map.of() );
+    }
+
+    private static Object[] declarationsToFacts( KnowledgeHelper knowledgeHelper, ValueResolver valueResolver, BaseTuple tuple, Declaration[] declarations, Variable[] vars, boolean useDrools, Map<String, int[]> sequenceVarIndexes ) {
         Object[] objects;
         FactHandleLookup fhLookup = useDrools ? new FactHandleLookup.Multi() : null;
 
@@ -99,17 +119,58 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
         int declrCounter = 0;
         for (Variable var : vars) {
             if ( var.isFact() ) {
-                Declaration declaration = declarations[declrCounter++];
-                FactHandle fh = getOriginalFactHandle(tuple.get(declaration));
-                if ( useDrools ) {
-                    fhLookup.put( fh.getObject(), fh );
+                int[] seqEntry = sequenceVarIndexes.get( var.getName() );
+                if ( seqEntry != null ) {
+                    // Sequence-step variable: not in the activation tuple — resolve from SequencerMemory.
+                    BaseTuple anchor = findSequencerAnchor( tuple, seqEntry[SEQ_ENTRY_SKIP_IDX] );
+                    if ( anchor == null ) {
+                        throw new IllegalStateException(
+                                "declarationsToFacts: no SequencerMemory anchor found at skip=" + seqEntry[SEQ_ENTRY_SKIP_IDX] +
+                                " for variable '" + var.getName() + "'. " +
+                                "This indicates a compile-time skip-count miscalculation in KiePackagesBuilder." );
+                    }
+                    SequencerMemory sequencerMemory = (SequencerMemory) anchor.getContextObject();
+                    FactHandle fh = getOriginalFactHandle( (FactHandle) sequencerMemory.getData().get( seqEntry[SEQ_ENTRY_FILTER_IDX] ) );
+                    if ( useDrools && fhLookup != null ) {
+                        fhLookup.put( fh.getObject(), fh );
+                    }
+                    objects[index++] = fh.getObject();
+                    declrCounter++; // consume the declaration slot (which is null for sequence vars)
+                } else {
+                    Declaration declaration = declarations[declrCounter++];
+                    FactHandle fh = getOriginalFactHandle(tuple.get(declaration));
+                    if ( useDrools ) {
+                        fhLookup.put( fh.getObject(), fh );
+                    }
+                    objects[index++] = declaration.getValue( valueResolver, fh );
                 }
-                objects[index++] = declaration.getValue( valueResolver, fh );
             } else {
                 objects[index++] = valueResolver.getGlobal( var.getName() );
             }
         }
         return objects;
+    }
+
+    /**
+     * Walks up the tuple parent chain counting {@link SequencerMemory} anchors.
+     * Returns the {@code skip}-th anchor found (0 = innermost/closest to terminal).
+     *
+     * Must use {@link TupleImpl#getLeftParent()} rather than {@link BaseTuple#getParent()}:
+     * in subnetwork tuples the two fields diverge — getParent() skips the SequencerMemory
+     * anchor tuples that getLeftParent() traverses.
+     */
+    private static TupleImpl findSequencerAnchor(BaseTuple tuple, int skip) {
+        TupleImpl t = ((TupleImpl) tuple).getLeftParent();
+        while (t != null) {
+            if (t.getContextObject() instanceof SequencerMemory) {
+                if (skip == 0) {
+                    return t;
+                }
+                skip--;
+            }
+            t = t.getLeftParent();
+        }
+        return null;
     }
 
     private static FactHandle getOriginalFactHandle( FactHandle handle ) {
@@ -148,6 +209,12 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
             tuple = factSuppliers[j].resolveAndStore(facts, reteEvaluator, tuple, fhLookup);
         }
 
+        if (sequencerFactSuppliers != null) {
+            for (int j = 0; j < sequencerFactSuppliers.length; j++) {
+                sequencerFactSuppliers[j].resolveAndStore(facts, reteEvaluator, knowledgeHelper.getTuple(), fhLookup);
+            }
+        }
+
         if (globalSuppliers != null) {
             for (int j = 0; j < globalSuppliers.length; j++) {
                 globalSuppliers[j].resolveAndStore(facts, reteEvaluator);
@@ -164,7 +231,8 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
         }
 
         BaseTuple tuple = knowledgeHelper.getTuple();
-        List<TupleFactSupplier> factSuppliers = new ArrayList<>();
+        List<TupleFactSupplier> tupleFactSuppliers = new ArrayList<>();
+        List<SequencerFactSupplier> seqFactSuppliers = new ArrayList<>();
         List<GlobalSupplier> globalSuppliers = new ArrayList<>();
 
         Object[] facts;
@@ -180,7 +248,14 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
         int declrCounter = 0;
         for (Variable var : vars) {
             if ( var.isFact() ) {
-                factSuppliers.add( new TupleFactSupplier( supplierIndex, requiredDeclarations[declrCounter++], consequence.isUsingDrools() ) );
+                int[] entry = sequenceVarIndexes.get(var.getName());
+                if (entry != null) {
+                    // Step-pattern variable: resolved from SequencerMemory, not from the tuple.
+                    seqFactSuppliers.add( new SequencerFactSupplier( supplierIndex, entry[SEQ_ENTRY_SKIP_IDX], entry[SEQ_ENTRY_FILTER_IDX], consequence.isUsingDrools() ) );
+                    declrCounter++; // still consume the declaration slot
+                } else {
+                    tupleFactSuppliers.add( new TupleFactSupplier( supplierIndex, requiredDeclarations[declrCounter++], consequence.isUsingDrools() ) );
+                }
             } else {
                 facts[supplierIndex] = reteEvaluator.getGlobal( var.getName() );
                 globalSuppliers.add( new GlobalSupplier( supplierIndex, var.getName() ) );
@@ -190,16 +265,16 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
 
         FactHandleLookup fhLookup = null;
         if ( consequence.isUsingDrools() ) {
-            fhLookup = FactHandleLookup.create( factSuppliers.size() );
+            fhLookup = FactHandleLookup.create( tupleFactSuppliers.size() + seqFactSuppliers.size() );
             facts[0] = new DroolsImpl( knowledgeHelper, reteEvaluator, fhLookup );
         }
 
-        Collections.sort( factSuppliers );
+        Collections.sort( tupleFactSuppliers );
         Collections.sort( globalSuppliers );
 
         BaseTuple current = tuple;
         boolean first = true;
-        for (TupleFactSupplier tupleFactSupplier : factSuppliers) {
+        for (TupleFactSupplier tupleFactSupplier : tupleFactSuppliers) {
             int targetTupleIndex = tupleFactSupplier.declarationTupleIndex;
 
             tupleFactSupplier.offsetFromPrior = 0;
@@ -214,9 +289,15 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
             tupleFactSupplier.resolveAndStore(facts, reteEvaluator, current.getFactHandle(), fhLookup);
         }
 
+        // Resolve sequence-step variables immediately (they are always stable once the sequence fired).
+        for (SequencerFactSupplier seqSupplier : seqFactSuppliers) {
+            seqSupplier.resolveAndStore(facts, reteEvaluator, tuple, fhLookup);
+        }
+
         // factSuppliers has to be last because factSuppliers is used as an initialization flag in fetchFacts(). See DROOLS-6961
         this.globalSuppliers = globalSuppliers.isEmpty() ? null : globalSuppliers.toArray( new GlobalSupplier[globalSuppliers.size()] );
-        this.factSuppliers = factSuppliers.toArray( new TupleFactSupplier[factSuppliers.size()] );
+        this.sequencerFactSuppliers = seqFactSuppliers.isEmpty() ? null : seqFactSuppliers.toArray( new SequencerFactSupplier[seqFactSuppliers.size()] );
+        this.factSuppliers = tupleFactSuppliers.toArray( new TupleFactSupplier[tupleFactSuppliers.size()] );
 
         if (!reteEvaluator.getRuleSessionConfiguration().isThreadSafe()) {
             this.facts = facts;
@@ -288,6 +369,45 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
             // Sorted from the one extracting a fact from the bottom of the tuple to the one reading from its top
             // In this way the whole tuple can be traversed only once to retrieve all facts
             return o.declarationTupleIndex - declarationTupleIndex;
+        }
+    }
+
+    /**
+     * Resolves a fact that was matched by a sequence step pattern.
+     * Instead of reading from the activation tuple (where step-matched facts do not appear),
+     * it reads from SequencerMemory.getData() on the anchor left-tuple's context object.
+     *
+     * The activation tuple chain is: child (fired) → anchor (SequencerMemory as context).
+     * SequencerMemory.getData() is a CircularArrayList indexed by filter/step index.
+     */
+    private static class SequencerFactSupplier {
+        private final int supplierIndex;
+        private final int skip;
+        private final int filterIndex;
+        private boolean useDrools;
+
+        private SequencerFactSupplier( int supplierIndex, int skip, int filterIndex, boolean useDrools ) {
+            this.supplierIndex = supplierIndex;
+            this.skip          = skip;
+            this.filterIndex   = filterIndex;
+            this.useDrools     = useDrools;
+        }
+
+        public void resolveAndStore(Object[] facts, ValueResolver reteEvaluator, BaseTuple tuple, FactHandleLookup fhLookup) {
+            // Walk up to the anchor tuple — counting past `skip` SequencerMemory anchors.
+            BaseTuple anchor = findSequencerAnchor(tuple, skip);
+            if (anchor == null) {
+                throw new IllegalStateException(
+                        "SequencerFactSupplier: no SequencerMemory anchor found at skip=" + skip +
+                        " (supplierIndex=" + supplierIndex + ", filterIndex=" + filterIndex +
+                        "). This indicates a compile-time skip-count miscalculation in KiePackagesBuilder.");
+            }
+            SequencerMemory sequencerMemory = (SequencerMemory) anchor.getContextObject();
+            FactHandle fh = getOriginalFactHandle( (FactHandle) sequencerMemory.getData().get(filterIndex) );
+            if ( useDrools && fhLookup != null ) {
+                fhLookup.put( fh.getObject(), fh );
+            }
+            facts[supplierIndex] = fh.getObject();
         }
     }
 }

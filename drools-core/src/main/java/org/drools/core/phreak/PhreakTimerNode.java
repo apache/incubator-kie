@@ -41,7 +41,6 @@ import org.drools.core.reteoo.TupleFactory;
 import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.time.Job;
 import org.drools.core.time.JobContext;
-import org.drools.base.phreak.PropagationEntry;
 import org.drools.base.phreak.actions.AbstractPropagationEntry;
 import org.drools.core.time.TimerService;
 import org.drools.core.time.impl.DefaultJobHandle;

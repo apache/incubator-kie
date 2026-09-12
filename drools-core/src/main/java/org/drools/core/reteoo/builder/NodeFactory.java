@@ -24,6 +24,7 @@ import java.util.List;
 import org.drools.base.base.ObjectType;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.sequencing.Sequence;
 import org.drools.base.rule.Accumulate;
 import org.drools.base.rule.AsyncReceive;
 import org.drools.base.rule.AsyncSend;
@@ -56,6 +57,7 @@ import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.QueryElementNode;
 import org.drools.core.reteoo.ReactiveFromNode;
 import org.drools.core.reteoo.TupleToObjectNode;
+import org.drools.core.reteoo.SequenceNode;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.TimerNode;
 import org.drools.core.reteoo.WindowNode;
@@ -95,6 +97,10 @@ public interface NodeFactory {
                                      EvalCondition eval,
                                      BuildContext context);
 
+    SequenceNode buildSequenceNode(int id,
+                                   LeftTupleSource tupleSource,
+                                   Sequence seq,
+                                   BuildContext context);
 
     TupleToObjectNode buildRightInputNode(int id,
                                           LeftTupleSource leftInput,

@@ -19,6 +19,7 @@
 package org.drools.model.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.drools.model.PatternDSL.PatternBindingImpl;
 import org.drools.model.PatternDSL.PatternDefImpl;
 import org.drools.model.PatternDSL.PatternExprImpl;
 import org.drools.model.PatternDSL.PatternItem;
+import org.drools.model.PatternDSL.SequenceViewItem;
 import org.drools.model.RuleItem;
 import org.drools.model.RuleItemBuilder;
 import org.drools.model.SingleConstraint;
@@ -59,6 +61,7 @@ import org.drools.model.patterns.ExistentialPatternImpl;
 import org.drools.model.patterns.GroupByPatternImpl;
 import org.drools.model.patterns.PatternImpl;
 import org.drools.model.patterns.QueryCallPattern;
+import org.drools.model.patterns.SequenceConditionImpl;
 import org.drools.model.view.AccumulateExprViewItem;
 import org.drools.model.view.CombinedExprViewItem;
 import org.drools.model.view.ExistentialExprViewItem;
@@ -178,6 +181,14 @@ public class ViewPatternBuilder implements ViewBuilder {
         if ( ruleItem instanceof ExchangeDefImpl ) {
             ExchangeDefImpl<?> exchangeDef = ( ExchangeDefImpl ) ruleItem;
             return new PatternImpl( exchangeDef.getFirstVariable(), Condition.Type.SENDER );
+        }
+
+        if (ruleItem instanceof SequenceViewItem) {
+            SequenceViewItem sv = (SequenceViewItem) ruleItem;
+            List<Condition> steps = Arrays.stream(sv.getSteps())
+                    .map(s -> ruleItem2Condition((RuleItem) s))
+                    .collect(toList());
+            return new SequenceConditionImpl(steps);
         }
 
         throw new UnsupportedOperationException( "Unknown " + ruleItem );

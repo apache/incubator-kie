@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import org.drools.model.Condition;
 import org.drools.model.Variable;
 
-public class CombinedExprViewItem<T> extends AbstractExprViewItem<T> {
+public class CombinedExprViewItem<T> extends AbstractExprViewItem<T> implements org.drools.model.SequenceStep {
 
     private final Condition.Type type;
     private final ViewItem[] expressions;

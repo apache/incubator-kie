@@ -18,6 +18,8 @@
  */
 package org.drools.core.phreak;
 
+import org.drools.core.reteoo.SequenceNode.PhreakSequenceNode;
+
 import org.drools.core.common.ReteEvaluator;
 
 public class PhreakNetworkNodeFactoryImpl implements PhreakNetworkNodeFactory {
@@ -75,6 +77,11 @@ public class PhreakNetworkNodeFactoryImpl implements PhreakNetworkNodeFactory {
     @Override
     public PhreakTimerNode createPhreakTimerNode(ReteEvaluator reteEvaluator) {
         return new PhreakTimerNode(reteEvaluator);
+    }
+
+    @Override
+    public PhreakSequenceNode createPhreakSequenceNode(ReteEvaluator reteEvaluator) {
+        return new PhreakSequenceNode(reteEvaluator);
     }
 
     @Override
