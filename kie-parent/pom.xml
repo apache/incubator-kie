@@ -100,7 +100,7 @@
     <version.com.github.victools>4.37.0</version.com.github.victools>
     <version.com.google.collections>1.0</version.com.google.collections>
     <version.com.google.gson>2.13.2</version.com.google.gson>
-    <version.com.google.guava>33.4.8-jre</version.com.google.guava>
+    <version.com.google.guava>33.5.0-jre</version.com.google.guava>
     <version.com.google.protobuf>3.25.5</version.com.google.protobuf>
     <version.com.graphql-java>25.0</version.com.graphql-java>
     <version.com.graphql-java-extended-scalars>24.0</version.com.graphql-java-extended-scalars>
@@ -144,7 +144,7 @@
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
     <version.io.micrometer>1.16.7</version.io.micrometer>
-    <version.io.netty>4.2.16.Final</version.io.netty>
+    <version.io.netty>4.1.137.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
     <version.io.smallrye-config>3.13.4</version.io.smallrye-config>
@@ -197,7 +197,7 @@
     <version.maven.plugin>3.15.1</version.maven.plugin>
     <version.maven.project>2.2.1</version.maven.project>
     <version.maven.resolver.api>1.9.27</version.maven.resolver.api>
-    <version.mongodb-driver-sync>5.5.1</version.mongodb-driver-sync>
+    <version.mongodb-driver-sync>5.9.2</version.mongodb-driver-sync>
     <version.nashorn>15.3</version.nashorn>
     <version.native2ascii-maven-plugin>1.0-beta-1</version.native2ascii-maven-plugin>
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
@@ -273,7 +273,7 @@
     <version.org.json-unit-assertj>2.9.0</version.org.json-unit-assertj>
     <!-- JUnit 6: single version property for jupiter + platform + vintage artifacts. See version.junit above for the legacy JUnit 4 API. -->
     <version.org.junit>6.0.3</version.org.junit>
-    <version.org.keycloak>26.1.0</version.org.keycloak>
+    <version.org.keycloak>26.1.5</version.org.keycloak>
     <version.org.mapstruct>1.5.5.Final</version.org.mapstruct>
     <version.org.mockito>5.18.0</version.org.mockito>
     <version.org.mongo>5.3.1</version.org.mongo>

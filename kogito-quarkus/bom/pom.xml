@@ -43,7 +43,6 @@
          change what the Spring Boot side resolves. -->
     <version.io.grpc>1.81.0</version.io.grpc>
     <version.io.smallrye.reactive.messaging.in.memory>4.33.0</version.io.smallrye.reactive.messaging.in.memory>
-    <version.com.google.guava>33.5.0-jre</version.com.google.guava>
     <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
     <version.org.hibernate>7.2.19.Final</version.org.hibernate>
     <version.org.postgresql>42.7.13</version.org.postgresql>
@@ -64,6 +63,7 @@
     <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
     <version.org.jredisearch>2.2.0</version.org.jredisearch>
     <version.org.json>20231013</version.org.json>
+    <version.io.projectreactor>3.8.7</version.io.projectreactor>
 </properties>
   <dependencyManagement>
     <dependencies>
@@ -154,6 +154,40 @@
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-registry-statsd</artifactId>
         <version>${version.io.micrometer}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-core</artifactId>
+        <version>${version.io.projectreactor}</version>
+      </dependency>
+      <!-- CVE fix: quarkus-bom:3.33.x pins all MongoDB driver artifacts to 5.5.1.
+           Override to match mongodb-driver-sync:${version.mongodb-driver-sync} already
+           pinned in kie-parent. Must appear before the quarkus-bom import to take precedence.
+           https://jira.mongodb.org/browse/JAVA-6266 -->
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-core</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-reactivestreams</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson-record-codec</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>

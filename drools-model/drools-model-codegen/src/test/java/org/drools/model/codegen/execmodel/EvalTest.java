@@ -775,4 +775,89 @@ public class EvalTest extends BaseModelTest {
             assertThat(list).as("R1 should not fire").containsExactly("ModifyingRule");
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("parametersStandardOnly") // standard only: inline eval with ternary is not supported in exec-model.
+                                            // See https://github.com/apache/incubator-kie/issues/7097
+    void testTernaryEvalInsidePattern(RUN_TYPE runType) {
+        String str =
+                "import " + MyPerson.class.getCanonicalName() + ";\n" +
+                        "rule \"TernaryEvalLoop\"\n" +
+                        "dialect \"mvel\"\n" +
+                        "when\n" +
+                        "  String(this == \"go\")\n" +
+                        "  $p : MyPerson( eval(\"foo\" == \"foo\" ? \"foo\" == flag1 : \"foo\" == flag2) )\n" +
+                        "then\n" +
+                        "  modify($p) {\n" +
+                        "    setOtherAttribute(\"done\")\n" +
+                        "  }\n" +
+                        "end";
+
+        //-- 1st round
+
+        KieSession ksession = getKieSession(runType, str);
+        try {
+            MyPerson person = new MyPerson();
+            person.setFlag1("foo"); // matches the rule
+            person.setFlag2("bar");
+
+            ksession.insert("go");
+            ksession.insert(person);
+            int fired = ksession.fireAllRules(10);
+
+            assertThat(fired).isEqualTo(1);
+            assertThat(person.getOtherAttribute()).isEqualTo("done");
+        } finally {
+            ksession.dispose();
+        }
+
+        //-- 2nd round
+
+        ksession = getKieSession(runType, str);
+        try {
+            MyPerson person = new MyPerson();
+            person.setFlag1("bar"); // doesn't match the rule
+            person.setFlag2("bar");
+
+            ksession.insert("go");
+            ksession.insert(person);
+            int fired = ksession.fireAllRules(10); // do not fire
+
+            assertThat(fired).isZero();
+            assertThat(person.getOtherAttribute()).isNull();
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    public static class MyPerson {
+        private String flag1;
+        private String flag2;
+        private String otherAttribute;
+
+        public String getFlag1() {
+            return flag1;
+        }
+
+        public void setFlag1(String flag1) {
+            this.flag1 = flag1;
+        }
+
+        public String getFlag2() {
+            return flag2;
+        }
+
+        public void setFlag2(String flag2) {
+            this.flag2 = flag2;
+        }
+
+        public String getOtherAttribute() {
+            return otherAttribute;
+        }
+
+        public void setOtherAttribute(String otherAttribute) {
+            this.otherAttribute = otherAttribute;
+        }
+    }
+
 }

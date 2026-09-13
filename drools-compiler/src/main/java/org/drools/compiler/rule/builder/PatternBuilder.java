@@ -98,6 +98,7 @@ import org.drools.drl.ast.descr.PredicateDescr;
 import org.drools.drl.ast.descr.RelationalExprDescr;
 import org.drools.drl.ast.descr.ReturnValueRestrictionDescr;
 import org.drools.drl.ast.descr.RuleDescr;
+import org.drools.drl.parser.Drl6ExprParser;
 import org.drools.drl.parser.DrlExprParser;
 import org.drools.drl.parser.DrlExprParserFactory;
 import org.drools.drl.parser.DroolsParserException;
@@ -1805,7 +1806,12 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
                                                         final BaseDescr original,
                                                         final String expression) {
         DrlExprParser parser = DrlExprParserFactory.getDrlExprParser(context.getConfiguration().getOption(LanguageLevelOption.KEY));
-        ConstraintConnectiveDescr result = parser.parse(normalizeEval(expression));
+        String toParse = normalizeEval(expression);
+        if (!toParse.equals(expression) && Drl6ExprParser.shouldPreserveEval(toParse)) {
+            toParse = expression;
+        }
+        ConstraintConnectiveDescr result = parser.parse(toParse);
+
         if (parser.hasErrors()) {
             for (DroolsParserException error : parser.getErrors()) {
                 registerDescrBuildError(context, patternDescr,

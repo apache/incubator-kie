@@ -38,8 +38,6 @@
     <version.io.fabric8>7.4.0</version.io.fabric8>
     <version.io.netty>4.2.17.Final</version.io.netty>
     <version.jakarta.servlet>6.0.0</version.jakarta.servlet>
-    <!-- This is needed to override the default version inherited from kie-parent-drools -->
-    <version.mongodb-driver-sync>5.6.5</version.mongodb-driver-sync>
     <version.org.springdoc>2.8.13</version.org.springdoc>
     <version.org.springframework>7.0.9</version.org.springframework>
     <version.org.springframework.boot>4.0.8</version.org.springframework.boot>
@@ -86,6 +84,24 @@
         <version>${version.org.springframework.cloud}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- CVE fix: spring-boot-dependencies:4.0.x imports mongodb-driver-bom:5.6.5 which pins
+           mongodb-driver-core and bson to 5.6.5. Override to match mongodb-driver-sync:5.9.2.
+           https://jira.mongodb.org/browse/JAVA-6266 -->
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-core</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson-record-codec</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
