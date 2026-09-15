@@ -20,16 +20,24 @@ package org.kie.kogito.process;
 
 public enum ProcessInstanceReadMode {
 
-    READ_ONLY(true),
-    MUTABLE(false);
+    READ_ONLY(true, false),
+    MUTABLE(false, false),
+    MUTABLE_EAGER(false, true);
 
     private boolean isReadOnly;
+
+    private boolean isEager;
 
     public boolean isReadOnly() {
         return isReadOnly;
     }
 
-    ProcessInstanceReadMode(boolean isReadOnly) {
+    public boolean isEager() {
+        return isEager;
+    }
+
+    ProcessInstanceReadMode(boolean isReadOnly, boolean isEager) {
         this.isReadOnly = isReadOnly;
+        this.isEager = isEager;
     }
 }
