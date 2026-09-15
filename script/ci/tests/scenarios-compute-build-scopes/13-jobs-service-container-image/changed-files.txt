@@ -1,0 +1,1 @@
+kogito-apps-quarkus/integration-tests-jobs-service-quarkus/integration-tests-jobs-service-quarkus-management/src/test/java/org/kie/kogito/it/jobs/IndependentJobsIT.java
