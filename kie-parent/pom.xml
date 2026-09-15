@@ -89,7 +89,7 @@
     <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
     <version.com.fasterxml.jackson>2.22.1</version.com.fasterxml.jackson>
     <version.com.fasterxml.jackson.annotations>2.22</version.com.fasterxml.jackson.annotations>
-    <version.com.fasterxml.jackson.databind>2.22.1</version.com.fasterxml.jackson.databind>
+    <version.com.fasterxml.jackson.databind>2.22.2</version.com.fasterxml.jackson.databind>
     <version.com.fasterxml.jackson.datatype>2.22.1</version.com.fasterxml.jackson.datatype>
     <version.com.github.docker-java>3.7.1</version.com.github.docker-java><!-- align with testcontainers ABI; Quarkus BOM pins older docker-java missing ImageHistoryCmd -->
     <version.com.github.eirslett>1.15.1</version.com.github.eirslett>
