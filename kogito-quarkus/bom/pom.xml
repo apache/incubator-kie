@@ -162,7 +162,7 @@
       </dependency>
       <!-- Override: quarkus-bom:3.33.3.2 ships MongoDB driver artifacts at 5.6.4.
            Pin to 5.9.2 (version.mongodb-driver-sync). Must appear before the quarkus-bom
-           import to take precedence (first explicit entry wins in Maven dependencyManagement).
+           import to take precedence (first explicit entry wins in Maven dependencyManagement). -->
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>mongodb-driver-sync</artifactId>
