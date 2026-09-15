@@ -180,4 +180,4 @@ package-lock.json
 !.rat-excludes
 
 # Jobs Service ITs
-apps-integration-tests/integration-tests-jobs-service/**/src/main/resources/shared/
+kogito-apps-quarkus/integration-tests-jobs-service-quarkus/**/src/main/resources/shared/
