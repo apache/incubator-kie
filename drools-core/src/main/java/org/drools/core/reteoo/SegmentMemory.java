@@ -1202,6 +1202,21 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
 
         public AccumulateMemoryPrototype(BetaMemoryPrototype betaProto) {
             this.betaProto = betaProto;
+            this.nodePosMaskBit = betaProto.getNodePosMaskBit();
+        }
+
+        @Override
+        public void setNodePosMaskBit(long nodePosMaskBit) {
+            // the bit lives in the wrapped BetaMemoryPrototype, which populateMemory() copies into the BetaMemory:
+            // keep both in sync, otherwise a segment split (SegmentPrototype.splitProtos) renumbers only this
+            // wrapper and the accumulate node's BetaMemory keeps its pre-split position bit
+            super.setNodePosMaskBit(nodePosMaskBit);
+            betaProto.setNodePosMaskBit(nodePosMaskBit);
+        }
+
+        @Override
+        public long getNodePosMaskBit() {
+            return betaProto.getNodePosMaskBit();
         }
 
         @Override
