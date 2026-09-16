@@ -31,6 +31,9 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
+    <!-- quarkus-bom 3.33.3.2 ships netty 4.1.136.Final; override to 4.1.137.Final.
+         netty-bom must be imported before quarkus-bom in dependencyManagement — first import wins. -->
+    <version.io.netty>4.1.137.Final</version.io.netty>
     <version.io.quarkus>3.33.3.2</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
@@ -187,6 +190,15 @@
         <groupId>org.mongodb</groupId>
         <artifactId>bson-record-codec</artifactId>
         <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <!-- quarkus-bom 3.33.3.2 ships netty 4.1.136.Final; override to 4.1.137.Final.
+           Placed before quarkus-bom so this import takes precedence — first import wins (Maven). -->
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${version.io.netty}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>

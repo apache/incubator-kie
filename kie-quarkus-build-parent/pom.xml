@@ -56,10 +56,22 @@
     <allowedPomsList>org.kie:kie-quarkus-build-parent</allowedPomsList>
     <!-- To be overridden by poms with dependency management -->
     <root_pom>../pom.xml</root_pom>
+    <!-- quarkus-bom 3.33.3.2 ships netty 4.1.136.Final; override to 4.1.137.Final.
+         netty-bom must be imported before quarkus-bom in dependencyManagement — first import wins. -->
+    <version.io.netty>4.1.137.Final</version.io.netty>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- quarkus-bom 3.33.3.2 ships netty 4.1.136.Final; override to 4.1.137.Final.
+           Placed before quarkus-bom so this import takes precedence — first import wins (Maven). -->
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${version.io.netty}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-bom</artifactId>
