@@ -40,8 +40,7 @@ import org.kie.api.runtime.KieSessionConfiguration;
 /**
  * <p>
  * The KieServices is a thread-safe singleton acting as a hub giving access to the other
- * Services provided by Kie. As general rule a getX() method just returns a reference to another
- * singleton while a newX() one creates a new instance.
+ * Services provided by Kie.
  * </p>
  * <p>
  * It is possible to obtain a KieServices reference via its Factory as it follows
@@ -49,6 +48,22 @@ import org.kie.api.runtime.KieSessionConfiguration;
  * <pre>
  * KieServices kieServices = KieServices.Factory.get();
  * </pre>
+ * <p>
+ * <b>Method Naming Convention:</b> Methods prefixed with {@code get()} return singleton or cached instances,
+ * while methods prefixed with {@code new()} create fresh instances each time they are called.
+ * </p>
+ * <p>
+ * <b>Container ID Enforcement:</b> Several methods accept a {@code containerId} parameter to enforce a specific
+ * container identifier. When successful, the KieContainer and its containerId are registered within KieServices.
+ * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.
+ * If you do not want to enforce a specific containerId, use the method variants without the containerId parameter.
+ * </p>
+ *
+ * @see KieContainer
+ * @see KieBase
+ * @see KieBaseConfiguration
+ * @see KieRepository
+ * @since 6.0.0
  */
 public interface KieServices extends KieService {
 
@@ -97,7 +112,7 @@ public interface KieServices extends KieService {
     /**
      * Returns KieContainer for the classpath using the given classLoader,
      * this a global singleton.
-     * @param classLoader classLoader
+     * @param classLoader The ClassLoader to use for loading classes
      * @return kie classpath container
      *
      * @throws IllegalStateException if this method get called twice with 2 different ClassLoaders
@@ -107,26 +122,21 @@ public interface KieServices extends KieService {
     /**
      * Returns KieContainer for the classpath enforcing the given containerId,
      * this a global singleton.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * <p> If you do not want to enforce a specific containerId, use the {@link #getKieClasspathContainer()} method instead. </p>
-     * @param containerId the containerId to enforce (non-null).
+     * @param containerId the containerId to enforce (non-null)
      * @return kie classpath container
      *
-     * @throws IllegalStateException if the containerId is already existing for another container and therefore cannot be enforced.
+     * @throws IllegalStateException if the containerId is already existing for another container and therefore cannot be enforced
      */
     KieContainer getKieClasspathContainer(String containerId);
 
     /**
      * Returns KieContainer for the classpath enforcing the given containerId and using the given classLoader,
      * this a global singleton.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * @param containerId the containerId to enforce (non-null).
-     * @param classLoader classLoader
+     * @param containerId the containerId to enforce (non-null)
+     * @param classLoader The ClassLoader to use for loading classes
      * @return kie classpath container
      *
-     * @throws IllegalStateException if this method get called twice with 2 different ClassLoaders, or if the containerId is already existing for another container and therefore cannot be enforced.
+     * @throws IllegalStateException if this method get called twice with 2 different ClassLoaders, or if the containerId is already existing for another container and therefore cannot be enforced
      */
     KieContainer getKieClasspathContainer(String containerId, ClassLoader classLoader);
 
@@ -139,7 +149,7 @@ public interface KieServices extends KieService {
     /**
      * Creates a new KieContainer for the classpath using the given classLoader,
      * regardless if there's already an existing one
-     * @param classLoader classLoader
+     * @param classLoader The ClassLoader to use for loading classes
      * @return new kie classpath container
      */
     KieContainer newKieClasspathContainer(ClassLoader classLoader);
@@ -148,12 +158,9 @@ public interface KieServices extends KieService {
      * Creates a new KieContainer for the classpath,
      * regardless if there's already an existing one,
      * enforcing the given containerId.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * <p> If you do not want to enforce a specific containerId, use the {@link #newKieClasspathContainer()} method instead. </p>
-     * @param containerId a unique containerId (non-null).
+     * @param containerId a unique containerId (non-null)
      * @return new kie classpath container
-     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced.
+     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced
      */
     KieContainer newKieClasspathContainer(String containerId);
 
@@ -161,12 +168,10 @@ public interface KieServices extends KieService {
      * Creates a new KieContainer for the classpath using the given classLoader,
      * regardless if there's already an existing one,
      * enforcing the given containerId.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * @param containerId a unique containerId (non-null).
-     * @param classLoader classLoader
+     * @param containerId a unique containerId (non-null)
+     * @param classLoader The ClassLoader to use for loading classes
      * @return new kie classpath container
-     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced.
+     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced
      */
     KieContainer newKieClasspathContainer(String containerId, ClassLoader classLoader);
 
@@ -174,14 +179,18 @@ public interface KieServices extends KieService {
      * Creates a new KieContainer for the classpath using the given classLoader,
      * regardless if there's already an existing one,
      * enforcing the given containerId.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * @param containerId a unique containerId (non-null).
-     * @param classLoaderContainer classLoader
+     * <p>
+     * This is an optional operation that may not be supported by all KieServices implementations.
+     * The default implementation throws UnsupportedOperationException. Implementations that support
+     * creating classpath containers with explicit release IDs should override this method.
+     * </p>
+     * @param containerId a unique containerId (non-null)
+     * @param classLoaderContainer The ClassLoader to use for loading classes
      * @param releaseId release id of this container
      * @return new kie classpath container
-     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced.
-     * @throws UnsupportedOperationException if the operation is not supported by the kie services
+     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced
+     * @throws UnsupportedOperationException if the operation is not supported by the kie services implementation
+     * @since 7.0.0
      */
     default KieContainer newKieClasspathContainer(String containerId, ClassLoader classLoaderContainer, ReleaseId releaseId) {
         throw new UnsupportedOperationException("new container with release id is not supported");
@@ -197,13 +206,10 @@ public interface KieServices extends KieService {
     /**
      * Creates a new KieContainer wrapping the KieModule with the given ReleaseId
      * and enforcing the given containerId.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * <p> If you do not want to enforce a specific containerId, use the {@link #newKieContainer(ReleaseId)} method instead. </p>
-     * @param containerId a unique containerId (non-null).
+     * @param containerId a unique containerId (non-null)
      * @param releaseId releaseId
      * @return new kie container
-     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced.
+     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced
      */
     KieContainer newKieContainer(String containerId, ReleaseId releaseId);
 
@@ -211,7 +217,7 @@ public interface KieServices extends KieService {
      * Creates a new KieContainer wrapping the KieModule with the given ReleaseId
      * and using the given class loader
      * @param releaseId releaseId
-     * @param classLoader classLoader
+     * @param classLoader The ClassLoader to use for loading classes
      * @return new kie container
      */
     KieContainer newKieContainer(ReleaseId releaseId, ClassLoader classLoader);
@@ -220,13 +226,11 @@ public interface KieServices extends KieService {
      * Creates a new KieContainer wrapping the KieModule with the given ReleaseId,
      * using the given class loader
      * and enforcing the given containerId.
-     * <p>If enforcing the containerId is successful, the KieContainer and its containerId are registered within the KieServices.
-     * Deregistration can be performed by calling {@link KieContainer#dispose()} on the resulting KieContainer.</p>
-     * @param containerId a unique containerId (non-null).
+     * @param containerId a unique containerId (non-null)
      * @param releaseId releaseId
-     * @param classLoader classLoader
+     * @param classLoader The ClassLoader to use for loading classes
      * @return new kie container
-     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced.
+     * @throws IllegalStateException if the containerId is already existing for another container, and therefore cannot be enforced
      */
     KieContainer newKieContainer(String containerId, ReleaseId releaseId, ClassLoader classLoader);
 
@@ -263,6 +267,8 @@ public interface KieServices extends KieService {
     /**
      * Creates a new KieBuilder to build the KieModule contained in the given KieFileSystem
      * and using the given class loader
+     * @param kieFileSystem The KieFileSystem containing the module resources
+     * @param classLoader The ClassLoader to use for loading classes
      * @return new kie builder
      */
     KieBuilder newKieBuilder(KieFileSystem kieFileSystem, ClassLoader classLoader);
@@ -280,7 +286,7 @@ public interface KieServices extends KieService {
      * Creates a new KieFileSystem used to programmatically define the resources composing a KieModule
      * @return new kie file system
      */
-    KieFileSystem newKieFileSystem( );
+    KieFileSystem newKieFileSystem();
 
     /**
      * Creates a new KieModuleModel to programmatically define a KieModule
@@ -306,12 +312,14 @@ public interface KieServices extends KieService {
      * Create a KieBaseConfiguration on which properties can be set. Use
      * the given properties file and ClassLoader - either of which can be null.
      * @param properties properties
-     * @param classLoader classLoader
+     * @param classLoader The ClassLoader to use (ignored - will be removed in future version)
      * @return new kiebase configuration
      *
-     * @deprecated The classLoader has to be defined when creating the KieContainer,
-     * so the one passed here will be just ignored
+     * @deprecated since 6.3.0, the classLoader must be defined when creating the KieContainer,
+     *             so the one passed here will be ignored. Use {@link #newKieBaseConfiguration(Properties)}
+     *             instead and set the ClassLoader on the KieContainer.
      */
+    @Deprecated(since = "6.3.0", forRemoval = true)
     KieBaseConfiguration newKieBaseConfiguration(Properties properties, ClassLoader classLoader);
 
     /**
@@ -331,7 +339,7 @@ public interface KieServices extends KieService {
      * Create a KieSessionConfiguration on which properties can be set. Use
      * the given properties file and ClassLoader - either of which can be null.
      * @param properties properties
-     * @param classLoader classLoader
+     * @param classLoader The ClassLoader to use for loading classes
      * @return new kiesession configuration
      */
     KieSessionConfiguration newKieSessionConfiguration(Properties properties, ClassLoader classLoader);
@@ -339,8 +347,7 @@ public interface KieServices extends KieService {
     /**
      * Instantiate and return an Environment
      *
-     * @return
-     *      The Environment
+     * @return A new Environment instance for configuring runtime context
      */
     Environment newEnvironment();
 
@@ -352,16 +359,26 @@ public interface KieServices extends KieService {
     }
 
     /**
-     * A Factory for this KieServices
+     * A Factory for this KieServices.
+     * <p>
+     * This factory uses the initialization-on-demand holder idiom to provide
+     * thread-safe lazy initialization of the KieServices singleton without
+     * requiring synchronization.
+     * </p>
      */
     class Factory {
 
+        /**
+         * Lazy holder for thread-safe singleton initialization.
+         * The INSTANCE is not initialized until the LazyHolder class is referenced.
+         */
         private static class LazyHolder {
-            private static KieServices INSTANCE = KieService.load(KieServices.class);
+            private static final KieServices INSTANCE = KieService.load(KieServices.class);
         }
 
         /**
          * Returns a reference to the KieServices singleton
+         * @return The KieServices singleton instance
          */
         public static KieServices get() {
             return LazyHolder.INSTANCE;

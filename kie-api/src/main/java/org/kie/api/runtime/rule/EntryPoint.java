@@ -69,8 +69,11 @@ public interface EntryPoint {
      * Retracts the fact for which the given FactHandle was assigned.
      *
      * @param handle the handle whose fact is to be retracted.
-     * @deprecated use {@link #delete(FactHandle)}
+     * @deprecated since 7.0.0, use {@link #delete(FactHandle)} instead. The {@code delete} method
+     *             provides clearer semantics and aligns with standard terminology for removing facts
+     *             from the working memory.
      */
+    @Deprecated(since = "7.0.0", forRemoval = true)
     void retract(FactHandle handle);
 
     /**

@@ -19,5 +19,10 @@
 
 package org.kie.api.event.process;
 
-public interface ProcessNodeStateChangeEvent extends ProcessNodeEvent{
+/**
+ * Event fired when a node in a process instance changes state.
+ * @since 10.2.0
+ * @apiNote Used for SLA timer re-scheduling notifications
+ */
+public interface ProcessNodeStateChangeEvent extends ProcessNodeEvent {
 }

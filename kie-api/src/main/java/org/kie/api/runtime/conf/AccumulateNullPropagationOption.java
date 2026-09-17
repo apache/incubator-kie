@@ -55,6 +55,7 @@ public enum AccumulateNullPropagationOption implements SingleValueRuleRuntimeOpt
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

@@ -20,6 +20,8 @@ package org.kie.api.event.process;
 
 /**
  * A runtime event that is generated when a ProcessInstance is re-triggered after an error.
+ * @since 10.1.0
+ * @apiNote Fired when a process is restarted after error recovery
  */
 public interface ProcessRetriggeredEvent
     extends
