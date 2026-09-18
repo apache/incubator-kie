@@ -1,0 +1,336 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+droolsRepo = 'drools'
+// kieJpmmlIntegrationRepo = 'kie-jpmml-integration' // Commented as not migrated for now
+
+ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
+ARTIFACTS_RELEASE_STAGE = 'stage.artifacts.release'
+
+JOB_PROPERTY_PREFIX = 'build'
+JOB_RESULT_PROPERTY_KEY = 'result'
+JOB_URL_PROPERTY_KEY = 'absoluteUrl'
+JOB_DECISION_PROPERTY_KEY = 'decision'
+JOB_DECISION_MESSAGE_PROPERTY_KEY = 'decisionMessage'
+
+releaseProperties = [:]
+
+pipeline {
+    agent {
+        label util.avoidFaultyNodes('ubuntu')
+    }
+
+    environment {
+        DROOLS_CI_EMAIL = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    // Restore config from previous run
+                    if (params.RESTORE_FROM_PREVIOUS_JOB) {
+                        releaseProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
+                        echo "Release properties imported from previous job: ${releaseProperties}"
+                    }
+
+                    assert getReleaseVersion()
+
+                    currentBuild.displayName = getDisplayName()
+
+                    sendNotification("Release Pipeline has started...\nDrools version = ${getReleaseVersion()}\n=> ${env.BUILD_URL}")
+                }
+            }
+            post {
+                always {
+                    setReleasePropertyIfneeded('release.version', getReleaseVersion())
+                    setReleasePropertyIfneeded('git.tag.name', getGitTagName())
+                }
+            }
+        }
+
+        stage('Build & Deploy Drools') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    buildJob(getDeployJobName(droolsRepo), buildParams)
+                }
+            }
+        }
+
+        stage('Artifacts\' staging finalization') {
+            steps {
+                script {
+                    if (!areArtifactsStaged()) {
+                        sendNotification('All artifacts have been staged.')
+                    }
+                    setArtifactsStaged()
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                saveReleaseProperties()
+            }
+        }
+        cleanup {
+            cleanWs()
+        }
+        success {
+            script {
+                sendSuccessfulReleaseNotification()
+            }
+        }
+        unsuccessful {
+            sendErrorNotification()
+        }
+    }
+}
+
+def buildJob(String jobName, List buildParams, boolean shouldWait = true) {
+    if (!hasJob(jobName) || (getJobResult(jobName) != 'SUCCESS' && getJobDecision(jobName) == 'retry')) {
+        sendStageNotification()
+        echo "Build ${jobName} with shouldWait=${shouldWait} and params ${buildParams}"
+        def job = build(job: "./${jobName}", wait: shouldWait, parameters: buildParams, propagate: false)
+        removeJobDecision(jobName)
+        registerJobExecution(jobName, job.result, job.absoluteUrl)
+    } else {
+        echo 'Job was already executed. Retrieving information...'
+    }
+
+    saveReleaseProperties()
+
+    def jobResult = getJobResult(jobName)
+    def jobUrl = getJobUrl(jobName)
+    def jobDecision = getJobDecision(jobName)
+    if (jobResult != 'SUCCESS') {
+        if (jobDecision != 'continue' && jobDecision != 'skip') {
+            echo "Sending a notification about an unsuccessful job build ${jobName}."
+            sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? continue ? skip ? abort ?): ${env.BUILD_URL}input")
+
+            // abort is handled automatically by the pipeline in the input
+            def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
+            def inputDecision = result['ACTION']
+            def inputMessage = result['MESSAGE']
+            registerJobDecision(jobName, inputDecision, inputMessage)
+
+            String resultStr = "`${jobName}` failure => Decision was made to ${inputDecision}."
+            if (inputMessage) {
+                resultStr += "Additional Information: `${inputMessage}`"
+            }
+            sendNotification(resultStr)
+
+            if (inputDecision == 'retry') {
+                // If retry, remove job and build again
+                return buildJob(jobName, buildParams)
+            }
+        } else {
+            echo "Job decision was '${jobDecision}'"
+        }
+    } else {
+        echo 'Job succeeded'
+    }
+}
+
+String getDeployJobName(String repository) {
+    return "${repository}-deploy"
+}
+
+String getJobPropertySuffix(String jobName) {
+    return "${JOB_PROPERTY_PREFIX}.${jobName}"
+}
+
+String getJobPropertyKey(String jobName, String key) {
+    return "${getJobPropertySuffix(jobName)}.${key}"
+}
+
+def registerJobExecution(String jobName, String result, String absoluteUrl) {
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_RESULT_PROPERTY_KEY), result)
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_URL_PROPERTY_KEY), absoluteUrl)
+}
+
+def registerJobDecision(String jobName, String decision, String message = '') {
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY), decision)
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_DECISION_MESSAGE_PROPERTY_KEY), message)
+}
+
+def removeJobDecision(String jobName) {
+    removeReleaseProperty(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY))
+    removeReleaseProperty(getJobPropertyKey(jobName, JOB_DECISION_MESSAGE_PROPERTY_KEY))
+}
+
+List getAllJobNames() {
+    return releaseProperties.findAll { it.key.startsWith(JOB_PROPERTY_PREFIX) }.collect { it.key.split('\\.')[1] }.unique()
+}
+
+boolean hasJob(String jobName) {
+    return releaseProperties.any { it.key.startsWith(getJobPropertySuffix(jobName)) }
+}
+
+String getJobUrl(String jobName) {
+    echo "getJobUrl for ${jobName}"
+    return getReleaseProperty(getJobPropertyKey(jobName, JOB_URL_PROPERTY_KEY)) ?: ''
+}
+
+String getJobResult(String jobName) {
+    echo "getJobResult for ${jobName}"
+    return getReleaseProperty(getJobPropertyKey(jobName, JOB_RESULT_PROPERTY_KEY)) ?: ''
+}
+
+String getJobDecision(String jobName) {
+    echo "getJobDecision for ${jobName}"
+    return getReleaseProperty(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY)) ?: ''
+}
+
+boolean isJobConsideredOk(String jobName) {
+    String result = getJobResult(jobName)
+    String decision = getJobDecision(jobName)
+    return result == 'SUCCESS' || (result == 'UNSTABLE' &&  decision == 'continue')
+}
+
+void saveReleaseProperties() {
+    def propertiesStr = releaseProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    writeFile( file : 'release.properties' , text : propertiesStr)
+    archiveArtifacts artifacts: 'release.properties'
+}
+
+void sendSuccessfulReleaseNotification() {
+    String bodyMsg = 'Release is successful with those jobs:\n'
+    getAllJobNames().findAll { isJobConsideredOk(it) }.each {
+        bodyMsg += "- ${it}\n"
+    }
+    bodyMsg += "\nPlease look here: ${BUILD_URL} for more information"
+    sendNotification(bodyMsg)
+}
+
+void sendErrorNotification() {
+    sendNotification("Kogito release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+}
+
+void sendStageNotification() {
+    sendNotification("${env.STAGE_NAME}")
+}
+
+void sendNotification(String body) {
+    echo 'Send Notification'
+    echo body
+    emailext body: body, subject: "[${env.GIT_BRANCH_NAME}] Release Pipeline",
+                to: env.DROOLS_CI_EMAIL
+}
+
+def readPropertiesFromUrl(String url, String propsFilename) {
+    if (!url.endsWith('/')) {
+        url += '/'
+    }
+    sh "wget ${url}artifact/${propsFilename} -O ${propsFilename}"
+    def props = readProperties file: propsFilename
+    echo props.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    return props
+}
+
+List getDefaultBuildParams() {
+    List buildParams = []
+    addDisplayNameParam(buildParams, getDisplayName(getReleaseVersion()))
+    addStringParam(buildParams, 'PROJECT_VERSION', getReleaseVersion())
+    addStringParam(buildParams, 'DROOLS_PR_BRANCH', "drools-${getReleaseVersion()}")
+    addStringParam(buildParams, 'GIT_TAG_NAME', getGitTagName())
+    return buildParams
+}
+
+void addDisplayNameParam(buildParams, name = '') {
+    name = name ?: getDisplayName()
+    addStringParam(buildParams, 'DISPLAY_NAME', name)
+}
+
+void addDeployBuildUrlParam(buildParams, jobName) {
+    addDeployBuildUrlParamOrClosure(buildParams, jobName)
+}
+
+void addDeployBuildUrlParamOrClosure(buildParams, jobName, closure = null) {
+    String url = getJobUrl(jobName)
+    if (url) {
+        addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
+    } else if (closure) {
+        closure()
+    }
+}
+
+void addSkipTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addStringParam(List buildParams, String key, String value) {
+    buildParams.add(string(name: key, value: value))
+}
+
+void addBooleanParam(List buildParams, String key, boolean value) {
+    buildParams.add(booleanParam(name: key, value: value))
+}
+
+String getDisplayName(version = '') {
+    version = version ?: getReleaseVersion()
+    return "Release ${version}"
+}
+
+String getReleaseVersion() {
+    return params.RELEASE_VERSION ?: getReleaseProperty('release.version')
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+void setReleasePropertyIfneeded(String key, def value) {
+    if (value) {
+        releaseProperties[key] = value
+    }
+}
+
+void removeReleaseProperty(String key) {
+    if (hasReleaseProperty(key)) {
+        releaseProperties.remove(key)
+    }
+}
+
+boolean hasReleaseProperty(String key) {
+    return releaseProperties.containsKey(key)
+}
+
+def getReleaseProperty(String key) {
+    return hasReleaseProperty(key) ? releaseProperties[key] : ''
+}
+
+boolean areArtifactsStaged() {
+    return hasReleaseProperty(ARTIFACTS_STAGING_STAGE)
+}
+
+void setArtifactsStaged() {
+    setReleasePropertyIfneeded(ARTIFACTS_STAGING_STAGE, true)
+}
+
+String getGitTagName() {
+    return params.GIT_TAG_NAME ?: getReleaseProperty('git.tag.name')
+}

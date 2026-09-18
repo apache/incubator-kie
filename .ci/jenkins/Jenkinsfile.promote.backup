@@ -22,6 +22,9 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 import org.kie.jenkins.MavenCommand
 
+deployProperties = [:]
+pipelineProperties = [:]
+
 pipeline {
     agent {
         docker { 
@@ -50,8 +53,21 @@ pipeline {
                         currentBuild.displayName = params.DISPLAY_NAME
                     }
 
+                    readDeployProperties()
+
                     assert getProjectVersion()
                     assert getBuildBranch() == util.getReleaseBranchFromVersion(getProjectVersion())
+                }
+            }
+        }
+        stage('Merge deploy PR and tag') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        approveAndMergePR(getDeployPrLink())
+                        checkoutRepo()
+                        tagLatest()
+                    }
                 }
             }
         }
@@ -113,6 +129,41 @@ void sendNotification() {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Deployment properties
+//////////////////////////////////////////////////////////////////////////////
+
+void readDeployProperties() {
+    String deployUrl = params.DEPLOY_BUILD_URL
+    if (deployUrl != '') {
+        if (!deployUrl.endsWith('/')) {
+            deployUrl += '/'
+        }
+        sh "wget ${deployUrl}artifact/${PROPERTIES_FILE_NAME} -O ${PROPERTIES_FILE_NAME}"
+        deployProperties = readProperties file: PROPERTIES_FILE_NAME
+        // echo all properties
+        echo deployProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    }
+}
+
+boolean hasDeployProperty(String key) {
+    return deployProperties[key] != null
+}
+
+String getDeployProperty(String key) {
+    if (hasDeployProperty(key)) {
+        return deployProperties[key]
+    }
+    return ''
+}
+
+String getParamOrDeployProperty(String paramKey, String deployPropertyKey) {
+    if (params[paramKey] != '') {
+        return params[paramKey]
+    }
+    return getDeployProperty(deployPropertyKey)
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Getter / Setter
 //////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +172,7 @@ String getRepoName() {
 }
 
 String getProjectVersion() {
-    return params.PROJECT_VERSION
+    return getParamOrDeployProperty('PROJECT_VERSION', 'project.version')
 }
 
 String getGitTag() {
@@ -144,6 +195,10 @@ String getGitAuthorPushCredsId() {
     return env.GIT_AUTHOR_PUSH_CREDS_ID
 }
 
+String getDeployPrLink() {
+    return getDeployProperty("${getRepoName()}.pr.link")
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Git
 //////////////////////////////////////////////////////////////////////////////
@@ -153,6 +208,19 @@ void checkoutRepo() {
     checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
     // need to manually checkout branch since on a detached branch after checkout command
     sh "git checkout ${getBuildBranch()}"
+}
+
+void approveAndMergePR(String prLink) {
+    if (prLink?.trim()) {
+        githubscm.approvePR(prLink, getGitAuthorPushCredsId())
+        githubscm.mergePR(prLink, getGitAuthorPushCredsId())
+    }
+}
+
+void tagLatest() {
+    if (getGitTag()) {
+        githubscm.tagLocalAndRemoteRepository('origin', getGitTag(), getGitAuthorPushCredsId(), env.BUILD_TAG, true)
+    }
 }
 
 MavenCommand getMavenCommand() {

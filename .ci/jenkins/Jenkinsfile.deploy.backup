@@ -54,9 +54,14 @@ pipeline {
                         currentBuild.displayName = params.DISPLAY_NAME
                     }
 
-                    if (isCreatePr()) {
+                    if (isRelease() || isCreatePr()) {
                         // Verify version is set
                         assert getProjectVersion()
+
+                        if (isRelease()) {
+                            // Verify if on right release branch
+                            assert getBuildBranch() == util.getReleaseBranchFromVersion(getProjectVersion())
+                        }
                     }
 
                     dir(getRepoName()) {
@@ -70,6 +75,7 @@ pipeline {
                         setDeployPropertyIfNeeded('git.branch', getBuildBranch())
                         setDeployPropertyIfNeeded('git.author', getGitAuthor())
                         setDeployPropertyIfNeeded('project.version', getProjectVersion())
+                        setDeployPropertyIfNeeded('release', isRelease())
                     }
                 }
             }
@@ -121,6 +127,13 @@ pipeline {
                            .withProperty('maven.test.failure.ignore', true)
                            .skipTests(params.SKIP_TESTS)
 
+                        if (isRelease()) {
+                            releaseUtils.gpgImportKeyFromStringWithoutPassword(getReleaseGpgSignKeyCredsId())
+                            mavenCommand
+                            .withProfiles(['apache-release'])
+                            .withProperty('only.reproducible')
+                        }
+
                         configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
                             mavenCommand.withSettingsXmlFile(MAVEN_SETTINGS_FILE).run("clean $installOrDeploy")
                         }
@@ -158,6 +171,29 @@ pipeline {
                         setDeployPropertyIfNeeded("${getRepoName()}.pr.source.ref", getPRBranch())
                         setDeployPropertyIfNeeded("${getRepoName()}.pr.target.uri", "https://github.com/${getGitAuthor()}/${getRepoName()}")
                         setDeployPropertyIfNeeded("${getRepoName()}.pr.target.ref", getBuildBranch())
+                    }
+                }
+            }
+        }
+        stage('Commit and Create Tag') {
+            when {
+                expression { return isRelease() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        if (githubscm.isThereAnyChanges()) {
+                            def commitMsg = "[${getBuildBranch()}] Update version to ${getProjectVersion()}"
+                            githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
+                            githubscm.commitChanges(commitMsg, {
+                                githubscm.findAndStageNotIgnoredFiles('pom.xml')
+                                githubscm.findAndStageNotIgnoredFiles('antora.yml')
+                            })
+                        } else {
+                            println '[WARN] no changes to commit'
+                        }
+                        githubscm.tagRepository(getGitTagName())
+                        githubscm.pushRemoteTag('origin', getGitTagName(), getGitAuthorPushCredsId())
                     }
                 }
             }
@@ -217,6 +253,10 @@ boolean shouldDeployToRepository() {
     return env.MAVEN_DEPLOY_REPOSITORY || getGitAuthor() == 'apache'
 }
 
+boolean isRelease() {
+    return env.RELEASE ? env.RELEASE.toBoolean() : false
+}
+
 boolean isCreatePr() {
     return params.CREATE_PR
 }
@@ -263,6 +303,14 @@ MavenCommand getMavenCommand(String directory = '') {
                 .inDirectory(directory)
                 .withProperty('full')
     return mvnCmd
+}
+
+String getReleaseGpgSignKeyCredsId() {
+    return env.RELEASE_GPG_SIGN_KEY_CREDS_ID
+}
+
+String getReleaseGpgSignPassphraseCredsId() {
+    return env.RELEASE_GPG_SIGN_PASSPHRASE_CREDS_ID
 }
 
 String getGitTagName() {
