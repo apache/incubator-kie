@@ -34,7 +34,7 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.reteoo.DynamicFilterProto;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.base.rule.constraint.CombinedAlphaConstraint;
+import org.drools.base.rule.constraint.CombinedConstraint;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.reteoo.sequencing.Sequence;
 import org.drools.base.reteoo.sequencing.Sequencer;
@@ -195,7 +195,7 @@ public class PhreakNodeFactory implements NodeFactory, Serializable {
                 AlphaNodeFieldConstraint[] all = constraints.stream()
                         .map(c -> (AlphaNodeFieldConstraint) c)
                         .toArray(AlphaNodeFieldConstraint[]::new);
-                combined = new CombinedAlphaConstraint(all);
+                combined = new CombinedConstraint(all);
             }
             int adapterIndex = objectTypeIndex.get(patterns[i].getObjectType());
             filters[i] = new DynamicFilterProto(combined, adapterIndex);
