@@ -24,6 +24,7 @@ on:
     types: [opened, reopened]
 jobs:
   message:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
