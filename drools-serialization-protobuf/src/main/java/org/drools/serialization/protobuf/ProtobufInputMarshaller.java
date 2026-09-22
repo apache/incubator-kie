@@ -425,9 +425,40 @@ public class ProtobufInputMarshaller {
                 assertHandleIntoOTN( context, wm, handle, pctxs );
             }
 
+            reattachPropertyChangeListener( entryPoint, handle, _handle.getIsDynamic() );
+
             if (handle.isExpired()) {
                 wm.addPropagation(new WorkingMemoryReteExpireAction((DefaultEventHandle) handle));
             }
+        }
+    }
+
+    /**
+     * Re-registers the entry point as the fact's JavaBeans {@code PropertyChangeListener}, which
+     * is what makes a fact dynamic. Marshalling cannot carry that registration: the listener is
+     * the entry point itself, which is not serializable, so {@link java.beans.PropertyChangeSupport}
+     * drops it and the restored fact reaches the engine with an empty listener list. Without this
+     * the fact still holds the right values, but a setter no longer notifies the session and the
+     * rules matching it are never re-evaluated.
+     *
+     * <p>Only facts that were dynamic in the marshalled session are re-registered: those inserted
+     * with {@link org.kie.api.runtime.rule.EntryPoint#insert(Object)}'s dynamic variant, recorded
+     * per handle in the blob, and those whose type is declared {@code @propertyChangeSupport},
+     * which is derivable from the knowledge base. This mirrors what
+     * {@code NamedEntryPoint.insert} does on a live insertion.</p>
+     */
+    private static void reattachPropertyChangeListener( EntryPoint entryPoint,
+                                                        InternalFactHandle handle,
+                                                        boolean dynamic ) {
+        Object object = handle.getObject();
+        if ( object == null || !(entryPoint instanceof NamedEntryPoint) ) {
+            return;
+        }
+        NamedEntryPoint namedEntryPoint = (NamedEntryPoint) entryPoint;
+        ObjectTypeConf typeConf = namedEntryPoint.getObjectTypeConfigurationRegistry()
+                .getOrCreateObjectTypeConf( namedEntryPoint.getEntryPoint(), object );
+        if ( dynamic || typeConf.isDynamic() ) {
+            namedEntryPoint.addPropertyChangeListener( handle, dynamic );
         }
     }
 

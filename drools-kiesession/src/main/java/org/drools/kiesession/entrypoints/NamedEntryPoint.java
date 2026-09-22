@@ -545,7 +545,18 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
         deleteFromTMS( handle, handle.getEqualityKey(), typeConf, null );
     }
 
-    protected void addPropertyChangeListener(final InternalFactHandle handle, final boolean dynamicFlag ) {
+    /**
+     * Whether this fact was inserted with the dynamic flag, that is through
+     * {@link #insert(Object, boolean)} with {@code dynamic} set to true, rather than gaining a
+     * listener from a type declared {@code @propertyChangeSupport}. Marshalling has to tell the
+     * two apart: the first is a property of the individual insertion and has to be recorded in
+     * the blob, while the second is derivable from the type declaration on read.
+     */
+    public boolean isDynamicFact(final InternalFactHandle handle ) {
+        return dynamicFacts != null && dynamicFacts.contains( handle );
+    }
+
+    public void addPropertyChangeListener(final InternalFactHandle handle, final boolean dynamicFlag ) {
         Object object = handle.getObject();
         try {
             final Method method = object.getClass().getMethod( "addPropertyChangeListener",
