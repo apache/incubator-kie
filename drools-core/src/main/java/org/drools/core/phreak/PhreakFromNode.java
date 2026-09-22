@@ -204,7 +204,10 @@ public class PhreakFromNode {
         for (TupleImpl leftTuple = srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
             TupleImpl next = leftTuple.getStagedNext();
 
-            ltm.remove(leftTuple);
+            if (leftTuple.getMemory() != null) {
+                // it may have been staged and never actually added
+                ltm.remove(leftTuple);
+            }
 
             if (leftTuple.getFirstChild() != null) {
                 TupleImpl childLeftTuple = leftTuple.getFirstChild();
