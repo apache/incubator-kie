@@ -251,7 +251,7 @@
     <version.org.eclipse.microprofile.openapi>4.0.2</version.org.eclipse.microprofile.openapi>
     <version.org.eclipse.yasson>3.0.4</version.org.eclipse.yasson>
     <version.org.flywaydb>11.14.1</version.org.flywaydb>
-    <version.org.freemarker>2.3.34</version.org.freemarker>
+    <version.org.freemarker>2.3.35</version.org.freemarker>
     <version.org.glassfish.jaxb>4.0.6</version.org.glassfish.jaxb>
     <!--This needs to be in sync with JUnit-->
     <version.org.hamcrest>3.0</version.org.hamcrest>
