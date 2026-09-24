@@ -273,10 +273,6 @@ message FactHandle {
     optional bool is_justified = 11;
 
     optional int32 otn_count = 12;
-
-    // true when the fact was inserted with the dynamic flag, so that the
-    // entry point can be re-registered as its PropertyChangeListener on read
-    optional bool is_dynamic = 13;
 }
 
 message Activation {

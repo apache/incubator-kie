@@ -161,7 +161,7 @@ public class ProtobufOutputMarshaller {
 
                 writeFactHandles( context,
                                   _epb,
-                                  (NamedEntryPoint) wmep );
+                                  ((NamedEntryPoint) wmep).getObjectStore() );
 
                 writeTruthMaintenanceSystem( context,
                                              wmep,
@@ -538,19 +538,18 @@ public class ProtobufOutputMarshaller {
 
     private static void writeFactHandles( MarshallerWriteContext context,
                                           ProtobufMessages.EntryPoint.Builder _epb,
-                                          NamedEntryPoint entryPoint) throws IOException {
+                                          ObjectStore objectStore) throws IOException {
         ObjectMarshallingStrategyStore objectMarshallingStrategyStore = context.getObjectMarshallingStrategyStore();
 
         // Write out FactHandles
-        for ( InternalFactHandle handle : orderFacts( entryPoint.getObjectStore() ) ) {
-            ProtobufMessages.FactHandle _handle = writeFactHandle( context, objectMarshallingStrategyStore, entryPoint, handle );
+        for ( InternalFactHandle handle : orderFacts( objectStore ) ) {
+            ProtobufMessages.FactHandle _handle = writeFactHandle( context, objectMarshallingStrategyStore, handle );
             _epb.addHandle( _handle );
         }
     }
 
     private static ProtobufMessages.FactHandle writeFactHandle( MarshallerWriteContext context,
                                                                 ObjectMarshallingStrategyStore objectMarshallingStrategyStore,
-                                                                NamedEntryPoint entryPoint,
                                                                 InternalFactHandle handle) throws IOException {
         ProtobufMessages.FactHandle.Builder _handle = ProtobufMessages.FactHandle.newBuilder();
 
@@ -573,11 +572,6 @@ public class ProtobufOutputMarshaller {
         } else {
             _handle.setIsJustified( false );
         }
-
-        // the PropertyChangeListener registered by a dynamic insert is the entry point itself,
-        // which is not serializable, so it is dropped from the fact's PropertyChangeSupport.
-        // Record the flag so that the listener can be registered again on read.
-        _handle.setIsDynamic( entryPoint.isDynamicFact( handle ) );
 
         Object object = handle.getObject();
 

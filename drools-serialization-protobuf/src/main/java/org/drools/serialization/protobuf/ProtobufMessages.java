@@ -27899,27 +27899,6 @@ public final class ProtobufMessages {
      * @return The otnCount.
      */
     int getOtnCount();
-
-    /**
-     * <pre>
-     * true when the fact was inserted with the dynamic flag, so that the
-     * entry point can be re-registered as its PropertyChangeListener on read
-     * </pre>
-     *
-     * <code>optional bool is_dynamic = 13;</code>
-     * @return Whether the isDynamic field is set.
-     */
-    boolean hasIsDynamic();
-    /**
-     * <pre>
-     * true when the fact was inserted with the dynamic flag, so that the
-     * entry point can be re-registered as its PropertyChangeListener on read
-     * </pre>
-     *
-     * <code>optional bool is_dynamic = 13;</code>
-     * @return The isDynamic.
-     */
-    boolean getIsDynamic();
   }
   /**
    * <pre>
@@ -28363,35 +28342,6 @@ public final class ProtobufMessages {
       return otnCount_;
     }
 
-    public static final int IS_DYNAMIC_FIELD_NUMBER = 13;
-    private boolean isDynamic_ = false;
-    /**
-     * <pre>
-     * true when the fact was inserted with the dynamic flag, so that the
-     * entry point can be re-registered as its PropertyChangeListener on read
-     * </pre>
-     *
-     * <code>optional bool is_dynamic = 13;</code>
-     * @return Whether the isDynamic field is set.
-     */
-    @java.lang.Override
-    public boolean hasIsDynamic() {
-      return ((bitField0_ & 0x00001000) != 0);
-    }
-    /**
-     * <pre>
-     * true when the fact was inserted with the dynamic flag, so that the
-     * entry point can be re-registered as its PropertyChangeListener on read
-     * </pre>
-     *
-     * <code>optional bool is_dynamic = 13;</code>
-     * @return The isDynamic.
-     */
-    @java.lang.Override
-    public boolean getIsDynamic() {
-      return isDynamic_;
-    }
-
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -28441,9 +28391,6 @@ public final class ProtobufMessages {
       }
       if (((bitField0_ & 0x00000800) != 0)) {
         output.writeInt32(12, otnCount_);
-      }
-      if (((bitField0_ & 0x00001000) != 0)) {
-        output.writeBool(13, isDynamic_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -28500,10 +28447,6 @@ public final class ProtobufMessages {
       if (((bitField0_ & 0x00000800) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(12, otnCount_);
-      }
-      if (((bitField0_ & 0x00001000) != 0)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(13, isDynamic_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -28579,11 +28522,6 @@ public final class ProtobufMessages {
         if (getOtnCount()
             != other.getOtnCount()) return false;
       }
-      if (hasIsDynamic() != other.hasIsDynamic()) return false;
-      if (hasIsDynamic()) {
-        if (getIsDynamic()
-            != other.getIsDynamic()) return false;
-      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -28649,11 +28587,6 @@ public final class ProtobufMessages {
       if (hasOtnCount()) {
         hash = (37 * hash) + OTN_COUNT_FIELD_NUMBER;
         hash = (53 * hash) + getOtnCount();
-      }
-      if (hasIsDynamic()) {
-        hash = (37 * hash) + IS_DYNAMIC_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-            getIsDynamic());
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -28800,7 +28733,6 @@ public final class ProtobufMessages {
         entryPoint_ = "";
         isJustified_ = false;
         otnCount_ = 0;
-        isDynamic_ = false;
         return this;
       }
 
@@ -28883,10 +28815,6 @@ public final class ProtobufMessages {
           result.otnCount_ = otnCount_;
           to_bitField0_ |= 0x00000800;
         }
-        if (((from_bitField0_ & 0x00001000) != 0)) {
-          result.isDynamic_ = isDynamic_;
-          to_bitField0_ |= 0x00001000;
-        }
         result.bitField0_ |= to_bitField0_;
       }
 
@@ -28939,9 +28867,6 @@ public final class ProtobufMessages {
         }
         if (other.hasOtnCount()) {
           setOtnCount(other.getOtnCount());
-        }
-        if (other.hasIsDynamic()) {
-          setIsDynamic(other.getIsDynamic());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -29036,11 +28961,6 @@ public final class ProtobufMessages {
                 bitField0_ |= 0x00000800;
                 break;
               } // case 96
-              case 104: {
-                isDynamic_ = input.readBool();
-                bitField0_ |= 0x00001000;
-                break;
-              } // case 104
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -29632,66 +29552,6 @@ public final class ProtobufMessages {
       public Builder clearOtnCount() {
         bitField0_ = (bitField0_ & ~0x00000800);
         otnCount_ = 0;
-        onChanged();
-        return this;
-      }
-
-      private boolean isDynamic_ ;
-      /**
-       * <pre>
-       * true when the fact was inserted with the dynamic flag, so that the
-       * entry point can be re-registered as its PropertyChangeListener on read
-       * </pre>
-       *
-       * <code>optional bool is_dynamic = 13;</code>
-       * @return Whether the isDynamic field is set.
-       */
-      @java.lang.Override
-      public boolean hasIsDynamic() {
-        return ((bitField0_ & 0x00001000) != 0);
-      }
-      /**
-       * <pre>
-       * true when the fact was inserted with the dynamic flag, so that the
-       * entry point can be re-registered as its PropertyChangeListener on read
-       * </pre>
-       *
-       * <code>optional bool is_dynamic = 13;</code>
-       * @return The isDynamic.
-       */
-      @java.lang.Override
-      public boolean getIsDynamic() {
-        return isDynamic_;
-      }
-      /**
-       * <pre>
-       * true when the fact was inserted with the dynamic flag, so that the
-       * entry point can be re-registered as its PropertyChangeListener on read
-       * </pre>
-       *
-       * <code>optional bool is_dynamic = 13;</code>
-       * @param value The isDynamic to set.
-       * @return This builder for chaining.
-       */
-      public Builder setIsDynamic(boolean value) {
-
-        isDynamic_ = value;
-        bitField0_ |= 0x00001000;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * true when the fact was inserted with the dynamic flag, so that the
-       * entry point can be re-registered as its PropertyChangeListener on read
-       * </pre>
-       *
-       * <code>optional bool is_dynamic = 13;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearIsDynamic() {
-        bitField0_ = (bitField0_ & ~0x00001000);
-        isDynamic_ = false;
         onChanged();
         return this;
       }
@@ -57290,7 +57150,7 @@ public final class ProtobufMessages {
       "ndle\022F\n\003tms\030\003 \001(\01329.org.drools.serializa" +
       "tion.protobuf.TruthMaintenanceSystem\022G\n\003" +
       "otc\030\004 \003(\0132:.org.drools.serialization.pro" +
-      "tobuf.ObjectTypeConfiguration\"\377\002\n\nFactHa" +
+      "tobuf.ObjectTypeConfiguration\"\353\002\n\nFactHa" +
       "ndle\022F\n\004type\030\001 \001(\01628.org.drools.serializ" +
       "ation.protobuf.FactHandle.HandleType\022\n\n\002" +
       "id\030\002 \001(\003\022\017\n\007recency\030\003 \001(\003\022\021\n\ttimestamp\030\004" +
@@ -57298,129 +57158,128 @@ public final class ProtobufMessages {
       "(\010\022\031\n\021activations_count\030\007 \001(\003\022\026\n\016strateg" +
       "y_index\030\010 \001(\005\022\016\n\006object\030\t \001(\014\022\023\n\013entry_p" +
       "oint\030\n \001(\t\022\024\n\014is_justified\030\013 \001(\010\022\021\n\totn_" +
-      "count\030\014 \001(\005\022\022\n\nis_dynamic\030\r \001(\010\">\n\nHandl" +
-      "eType\022\020\n\014INITIAL_FACT\020\001\022\010\n\004FACT\020\002\022\t\n\005QUE" +
-      "RY\020\003\022\t\n\005EVENT\020\004\"\362\001\n\nActivation\0227\n\005tuple\030" +
-      "\002 \001(\0132(.org.drools.serialization.protobu" +
-      "f.Tuple\022\020\n\010salience\030\003 \001(\005\022\024\n\014package_nam" +
-      "e\030\004 \001(\t\022\021\n\trule_name\030\005 \001(\t\022\030\n\020activation" +
-      "_group\030\007 \001(\t\022\024\n\014is_activated\030\010 \001(\010\022\021\n\tha" +
-      "ndle_id\030\t \001(\003\022\032\n\022logical_dependency\030\n \003(" +
-      "\003\022\021\n\tevaluated\030\013 \001(\010\"_\n\005Tuple\022\021\n\thandle_" +
-      "id\030\001 \003(\003\022C\n\006object\030\002 \003(\01323.org.drools.se" +
-      "rialization.protobuf.SerializedObject\":\n" +
-      "\020SerializedObject\022\026\n\016strategy_index\030\001 \001(" +
-      "\005\022\016\n\006object\030\002 \001(\014\"\243\001\n\026TruthMaintenanceSy" +
-      "stem\022;\n\003key\030\001 \003(\0132..org.drools.serializa" +
-      "tion.protobuf.EqualityKey\022L\n\026OBSOLETE_ju" +
-      "stification\030\002 \003(\0132,.org.drools.serializa" +
-      "tion.protobuf.BeliefSet\"<\n\027ObjectTypeCon" +
-      "figuration\022\014\n\004type\030\001 \001(\t\022\023\n\013tms_enabled\030" +
-      "\002 \001(\010\"\207\001\n\013EqualityKey\022\016\n\006status\030\001 \001(\005\022\021\n" +
-      "\thandle_id\030\002 \001(\003\022\024\n\014other_handle\030\003 \003(\003\022?" +
-      "\n\tbeliefSet\030\004 \001(\0132,.org.drools.serializa" +
-      "tion.protobuf.BeliefSet\"o\n\tBeliefSet\022\021\n\t" +
-      "handle_id\030\001 \001(\003\022O\n\021logicalDependency\030\002 \003" +
-      "(\01324.org.drools.serialization.protobuf.L" +
-      "ogicalDependency\"\262\001\n\021LogicalDependency\022A" +
-      "\n\nactivation\030\002 \001(\0132-.org.drools.serializ" +
-      "ation.protobuf.Activation\022\035\n\025object_stra" +
-      "tegy_index\030\010 \001(\005\022\016\n\006object\030\t \001(\014\022\034\n\024valu" +
-      "e_strategy_index\030\n \001(\005\022\r\n\005value\030\013 \001(\014\"\307\014" +
-      "\n\013ActionQueue\022E\n\006action\030\001 \003(\01325.org.droo" +
-      "ls.serialization.protobuf.ActionQueue.Ac" +
-      "tion\032\352\005\n\006Action\022G\n\004type\030\001 \001(\01629.org.droo" +
-      "ls.serialization.protobuf.ActionQueue.Ac" +
-      "tionType\022V\n\017behavior_expire\030\002 \001(\0132=.org." +
+      "count\030\014 \001(\005\">\n\nHandleType\022\020\n\014INITIAL_FAC" +
+      "T\020\001\022\010\n\004FACT\020\002\022\t\n\005QUERY\020\003\022\t\n\005EVENT\020\004\"\362\001\n\n" +
+      "Activation\0227\n\005tuple\030\002 \001(\0132(.org.drools.s" +
+      "erialization.protobuf.Tuple\022\020\n\010salience\030" +
+      "\003 \001(\005\022\024\n\014package_name\030\004 \001(\t\022\021\n\trule_name" +
+      "\030\005 \001(\t\022\030\n\020activation_group\030\007 \001(\t\022\024\n\014is_a" +
+      "ctivated\030\010 \001(\010\022\021\n\thandle_id\030\t \001(\003\022\032\n\022log" +
+      "ical_dependency\030\n \003(\003\022\021\n\tevaluated\030\013 \001(\010" +
+      "\"_\n\005Tuple\022\021\n\thandle_id\030\001 \003(\003\022C\n\006object\030\002" +
+      " \003(\01323.org.drools.serialization.protobuf" +
+      ".SerializedObject\":\n\020SerializedObject\022\026\n" +
+      "\016strategy_index\030\001 \001(\005\022\016\n\006object\030\002 \001(\014\"\243\001" +
+      "\n\026TruthMaintenanceSystem\022;\n\003key\030\001 \003(\0132.." +
+      "org.drools.serialization.protobuf.Equali" +
+      "tyKey\022L\n\026OBSOLETE_justification\030\002 \003(\0132,." +
+      "org.drools.serialization.protobuf.Belief" +
+      "Set\"<\n\027ObjectTypeConfiguration\022\014\n\004type\030\001" +
+      " \001(\t\022\023\n\013tms_enabled\030\002 \001(\010\"\207\001\n\013EqualityKe" +
+      "y\022\016\n\006status\030\001 \001(\005\022\021\n\thandle_id\030\002 \001(\003\022\024\n\014" +
+      "other_handle\030\003 \003(\003\022?\n\tbeliefSet\030\004 \001(\0132,." +
+      "org.drools.serialization.protobuf.Belief" +
+      "Set\"o\n\tBeliefSet\022\021\n\thandle_id\030\001 \001(\003\022O\n\021l" +
+      "ogicalDependency\030\002 \003(\01324.org.drools.seri" +
+      "alization.protobuf.LogicalDependency\"\262\001\n" +
+      "\021LogicalDependency\022A\n\nactivation\030\002 \001(\0132-" +
+      ".org.drools.serialization.protobuf.Activ" +
+      "ation\022\035\n\025object_strategy_index\030\010 \001(\005\022\016\n\006" +
+      "object\030\t \001(\014\022\034\n\024value_strategy_index\030\n \001" +
+      "(\005\022\r\n\005value\030\013 \001(\014\"\307\014\n\013ActionQueue\022E\n\006act" +
+      "ion\030\001 \003(\01325.org.drools.serialization.pro" +
+      "tobuf.ActionQueue.Action\032\352\005\n\006Action\022G\n\004t" +
+      "ype\030\001 \001(\01629.org.drools.serialization.pro" +
+      "tobuf.ActionQueue.ActionType\022V\n\017behavior" +
+      "_expire\030\002 \001(\0132=.org.drools.serialization" +
+      ".protobuf.ActionQueue.BehaviorExpire\022^\n\023" +
+      "deactivate_callback\030\003 \001(\0132A.org.drools.s" +
+      "erialization.protobuf.ActionQueue.Deacti" +
+      "vateCallback\022V\n\017logical_retract\030\004 \001(\0132=." +
+      "org.drools.serialization.protobuf.Action" +
+      "Queue.LogicalRetract\022K\n\tpropagate\030\005 \001(\0132" +
+      "8.org.drools.serialization.protobuf.Acti" +
+      "onQueue.Propagate\022E\n\006assert\030\006 \001(\01325.org." +
       "drools.serialization.protobuf.ActionQueu" +
-      "e.BehaviorExpire\022^\n\023deactivate_callback\030" +
-      "\003 \001(\0132A.org.drools.serialization.protobu" +
-      "f.ActionQueue.DeactivateCallback\022V\n\017logi" +
-      "cal_retract\030\004 \001(\0132=.org.drools.serializa" +
-      "tion.protobuf.ActionQueue.LogicalRetract" +
-      "\022K\n\tpropagate\030\005 \001(\01328.org.drools.seriali" +
-      "zation.protobuf.ActionQueue.Propagate\022E\n" +
-      "\006assert\030\006 \001(\01325.org.drools.serialization" +
-      ".protobuf.ActionQueue.Assert\022E\n\006expire\030\007" +
-      " \001(\01325.org.drools.serialization.protobuf" +
-      ".ActionQueue.Expire\022E\n\006signal\030\010 \001(\01325.or" +
-      "g.drools.serialization.protobuf.ActionQu" +
-      "eue.Signal\022e\n\027signal_process_instance\030\t " +
-      "\001(\0132D.org.drools.serialization.protobuf." +
-      "ActionQueue.SignalProcessInstance\032!\n\016Beh" +
-      "aviorExpire\022\017\n\007node_id\030\001 \001(\005\032,\n\022Deactiva" +
-      "teCallback\022\026\n\016ruleflow_group\030\001 \001(\t\032\215\001\n\016L" +
-      "ogicalRetract\022\021\n\thandle_id\030\001 \001(\003\022A\n\nacti" +
-      "vation\030\002 \001(\0132-.org.drools.serialization." +
-      "protobuf.Activation\022\025\n\rfully_retract\030\003 \001" +
-      "(\010\022\016\n\006update\030\004 \001(\010\032\034\n\tPropagate\022\017\n\007node_" +
-      "id\030\001 \001(\005\032\272\001\n\006Assert\022\021\n\thandle_id\030\001 \001(\003\022\026" +
-      "\n\016remove_logical\030\002 \001(\010\022\031\n\021update_equals_" +
-      "map\030\003 \001(\010\022\027\n\017origin_pkg_name\030\004 \001(\t\022\030\n\020or" +
-      "igin_rule_name\030\005 \001(\t\0227\n\005tuple\030\006 \001(\0132(.or" +
-      "g.drools.serialization.protobuf.Tuple\032,\n" +
-      "\006Expire\022\021\n\thandle_id\030\001 \001(\003\022\017\n\007node_id\030\002 " +
-      "\001(\005\032%\n\006Signal\022\014\n\004type\030\001 \001(\t\022\r\n\005event\030\002 \001" +
-      "(\014\032Q\n\025SignalProcessInstance\022\014\n\004type\030\001 \001(" +
-      "\t\022\r\n\005event\030\002 \001(\014\022\033\n\023process_instance_id\030" +
-      "\003 \001(\t\"\237\001\n\nActionType\022\023\n\017BEHAVIOR_EXPIRE\020" +
-      "\001\022\027\n\023DEACTIVATE_CALLBACK\020\002\022\023\n\017LOGICAL_RE" +
-      "TRACT\020\003\022\r\n\tPROPAGATE\020\004\022\n\n\006ASSERT\020\005\022\n\n\006EX" +
-      "PIRE\020\006\022\n\n\006SIGNAL\020\007\022\033\n\027SIGNAL_PROCESS_INS" +
-      "TANCE\020\010\"\233\010\n\006Timers\022>\n\005timer\030\001 \003(\0132/.org." +
-      "drools.serialization.protobuf.Timers.Tim" +
-      "er\032\200\003\n\005Timer\022A\n\004type\030\001 \001(\01623.org.drools." +
-      "serialization.protobuf.Timers.TimerType\022" +
-      "E\n\006expire\030\002 \001(\01325.org.drools.serializati" +
-      "on.protobuf.Timers.ExpireTimer\022M\n\nactiva" +
-      "tion\030\003 \001(\01329.org.drools.serialization.pr" +
-      "otobuf.Timers.ActivationTimer\022I\n\010behavio" +
-      "r\030\004 \001(\01327.org.drools.serialization.proto" +
-      "buf.Timers.BehaviorTimer\022L\n\ntimer_node\030\005" +
-      " \001(\01328.org.drools.serialization.protobuf" +
-      ".Timers.TimerNodeTimer*\005\010d\020\310\001\032i\n\013ExpireT" +
-      "imer\022\021\n\thandle_id\030\001 \001(\003\022\026\n\016entry_point_i" +
-      "d\030\002 \001(\t\022\022\n\nclass_name\030\003 \001(\t\022\033\n\023next_fire" +
-      "_timestamp\030\004 \001(\003\032\221\001\n\017ActivationTimer\022A\n\n" +
-      "activation\030\001 \001(\0132-.org.drools.serializat" +
-      "ion.protobuf.Activation\022;\n\007trigger\030\002 \001(\013" +
-      "2*.org.drools.serialization.protobuf.Tri" +
-      "gger\032a\n\rBehaviorTimer\022\032\n\022DEPRECATED_node" +
-      "_id\030\001 \001(\005\022!\n\031DEPRECATED_behavior_index\030\002" +
-      " \001(\005\022\021\n\thandle_id\030\003 \001(\003\032\227\001\n\016TimerNodeTim" +
-      "er\022\017\n\007node_id\030\001 \001(\005\0227\n\005tuple\030\002 \001(\0132(.org" +
-      ".drools.serialization.protobuf.Tuple\022;\n\007" +
-      "trigger\030\003 \001(\0132*.org.drools.serialization" +
-      ".protobuf.Trigger\"R\n\tTimerType\022\n\n\006EXPIRE" +
-      "\020\001\022\016\n\nACTIVATION\020\002\022\014\n\010BEHAVIOR\020\003\022\013\n\007PROC" +
-      "ESS\020\004\022\016\n\nTIMER_NODE\020\005\"\362\007\n\007Trigger\022D\n\004typ" +
-      "e\030\001 \001(\01626.org.drools.serialization.proto" +
-      "buf.Trigger.TriggerType\022D\n\004cron\030\002 \001(\01326." +
-      "org.drools.serialization.protobuf.Trigge" +
-      "r.CronTrigger\022L\n\010interval\030\003 \001(\0132:.org.dr" +
-      "ools.serialization.protobuf.Trigger.Inte" +
-      "rvalTrigger\022J\n\003pit\030\004 \001(\0132=.org.drools.se" +
-      "rialization.protobuf.Trigger.PointInTime" +
-      "Trigger\022T\n\004cmdt\030\005 \001(\0132F.org.drools.seria" +
-      "lization.protobuf.Trigger.CompositeMaxDu" +
-      "rationTrigger\032\247\001\n\013CronTrigger\022\022\n\nstart_t" +
-      "ime\030\001 \001(\003\022\020\n\010end_time\030\002 \001(\003\022\024\n\014repeat_li" +
-      "mit\030\003 \001(\005\022\024\n\014repeat_count\030\004 \001(\005\022\027\n\017cron_" +
-      "expression\030\005 \001(\t\022\026\n\016next_fire_time\030\006 \001(\003" +
-      "\022\025\n\rcalendar_name\030\007 \003(\t\032\242\001\n\017IntervalTrig" +
-      "ger\022\022\n\nstart_time\030\001 \001(\003\022\020\n\010end_time\030\002 \001(" +
-      "\003\022\024\n\014repeat_limit\030\003 \001(\005\022\024\n\014repeat_count\030" +
-      "\004 \001(\005\022\026\n\016next_fire_time\030\006 \001(\003\022\016\n\006period\030" +
-      "\007 \001(\003\022\025\n\rcalendar_name\030\010 \003(\t\032,\n\022PointInT" +
-      "imeTrigger\022\026\n\016next_fire_time\030\001 \001(\003\032\227\001\n\033C" +
-      "ompositeMaxDurationTrigger\022\034\n\024maxDuratio" +
-      "nTimestamp\030\001 \001(\003\022\030\n\020timerCurrentDate\030\002 \001" +
-      "(\003\022@\n\014timerTrigger\030\003 \001(\0132*.org.drools.se" +
-      "rialization.protobuf.Trigger\"T\n\013TriggerT" +
-      "ype\022\010\n\004CRON\020\000\022\014\n\010INTERVAL\020\001\022\021\n\rPOINT_IN_" +
-      "TIME\020\002\022\032\n\026COMPOSITE_MAX_DURATION\020\003B5\n!or" +
-      "g.drools.serialization.protobufB\020Protobu" +
-      "fMessages"
+      "e.Assert\022E\n\006expire\030\007 \001(\01325.org.drools.se" +
+      "rialization.protobuf.ActionQueue.Expire\022" +
+      "E\n\006signal\030\010 \001(\01325.org.drools.serializati" +
+      "on.protobuf.ActionQueue.Signal\022e\n\027signal" +
+      "_process_instance\030\t \001(\0132D.org.drools.ser" +
+      "ialization.protobuf.ActionQueue.SignalPr" +
+      "ocessInstance\032!\n\016BehaviorExpire\022\017\n\007node_" +
+      "id\030\001 \001(\005\032,\n\022DeactivateCallback\022\026\n\016rulefl" +
+      "ow_group\030\001 \001(\t\032\215\001\n\016LogicalRetract\022\021\n\than" +
+      "dle_id\030\001 \001(\003\022A\n\nactivation\030\002 \001(\0132-.org.d" +
+      "rools.serialization.protobuf.Activation\022" +
+      "\025\n\rfully_retract\030\003 \001(\010\022\016\n\006update\030\004 \001(\010\032\034" +
+      "\n\tPropagate\022\017\n\007node_id\030\001 \001(\005\032\272\001\n\006Assert\022" +
+      "\021\n\thandle_id\030\001 \001(\003\022\026\n\016remove_logical\030\002 \001" +
+      "(\010\022\031\n\021update_equals_map\030\003 \001(\010\022\027\n\017origin_" +
+      "pkg_name\030\004 \001(\t\022\030\n\020origin_rule_name\030\005 \001(\t" +
+      "\0227\n\005tuple\030\006 \001(\0132(.org.drools.serializati" +
+      "on.protobuf.Tuple\032,\n\006Expire\022\021\n\thandle_id" +
+      "\030\001 \001(\003\022\017\n\007node_id\030\002 \001(\005\032%\n\006Signal\022\014\n\004typ" +
+      "e\030\001 \001(\t\022\r\n\005event\030\002 \001(\014\032Q\n\025SignalProcessI" +
+      "nstance\022\014\n\004type\030\001 \001(\t\022\r\n\005event\030\002 \001(\014\022\033\n\023" +
+      "process_instance_id\030\003 \001(\t\"\237\001\n\nActionType" +
+      "\022\023\n\017BEHAVIOR_EXPIRE\020\001\022\027\n\023DEACTIVATE_CALL" +
+      "BACK\020\002\022\023\n\017LOGICAL_RETRACT\020\003\022\r\n\tPROPAGATE" +
+      "\020\004\022\n\n\006ASSERT\020\005\022\n\n\006EXPIRE\020\006\022\n\n\006SIGNAL\020\007\022\033" +
+      "\n\027SIGNAL_PROCESS_INSTANCE\020\010\"\233\010\n\006Timers\022>" +
+      "\n\005timer\030\001 \003(\0132/.org.drools.serialization" +
+      ".protobuf.Timers.Timer\032\200\003\n\005Timer\022A\n\004type" +
+      "\030\001 \001(\01623.org.drools.serialization.protob" +
+      "uf.Timers.TimerType\022E\n\006expire\030\002 \001(\01325.or" +
+      "g.drools.serialization.protobuf.Timers.E" +
+      "xpireTimer\022M\n\nactivation\030\003 \001(\01329.org.dro" +
+      "ols.serialization.protobuf.Timers.Activa" +
+      "tionTimer\022I\n\010behavior\030\004 \001(\01327.org.drools" +
+      ".serialization.protobuf.Timers.BehaviorT" +
+      "imer\022L\n\ntimer_node\030\005 \001(\01328.org.drools.se" +
+      "rialization.protobuf.Timers.TimerNodeTim" +
+      "er*\005\010d\020\310\001\032i\n\013ExpireTimer\022\021\n\thandle_id\030\001 " +
+      "\001(\003\022\026\n\016entry_point_id\030\002 \001(\t\022\022\n\nclass_nam" +
+      "e\030\003 \001(\t\022\033\n\023next_fire_timestamp\030\004 \001(\003\032\221\001\n" +
+      "\017ActivationTimer\022A\n\nactivation\030\001 \001(\0132-.o" +
+      "rg.drools.serialization.protobuf.Activat" +
+      "ion\022;\n\007trigger\030\002 \001(\0132*.org.drools.serial" +
+      "ization.protobuf.Trigger\032a\n\rBehaviorTime" +
+      "r\022\032\n\022DEPRECATED_node_id\030\001 \001(\005\022!\n\031DEPRECA" +
+      "TED_behavior_index\030\002 \001(\005\022\021\n\thandle_id\030\003 " +
+      "\001(\003\032\227\001\n\016TimerNodeTimer\022\017\n\007node_id\030\001 \001(\005\022" +
+      "7\n\005tuple\030\002 \001(\0132(.org.drools.serializatio" +
+      "n.protobuf.Tuple\022;\n\007trigger\030\003 \001(\0132*.org." +
+      "drools.serialization.protobuf.Trigger\"R\n" +
+      "\tTimerType\022\n\n\006EXPIRE\020\001\022\016\n\nACTIVATION\020\002\022\014" +
+      "\n\010BEHAVIOR\020\003\022\013\n\007PROCESS\020\004\022\016\n\nTIMER_NODE\020" +
+      "\005\"\362\007\n\007Trigger\022D\n\004type\030\001 \001(\01626.org.drools" +
+      ".serialization.protobuf.Trigger.TriggerT" +
+      "ype\022D\n\004cron\030\002 \001(\01326.org.drools.serializa" +
+      "tion.protobuf.Trigger.CronTrigger\022L\n\010int" +
+      "erval\030\003 \001(\0132:.org.drools.serialization.p" +
+      "rotobuf.Trigger.IntervalTrigger\022J\n\003pit\030\004" +
+      " \001(\0132=.org.drools.serialization.protobuf" +
+      ".Trigger.PointInTimeTrigger\022T\n\004cmdt\030\005 \001(" +
+      "\0132F.org.drools.serialization.protobuf.Tr" +
+      "igger.CompositeMaxDurationTrigger\032\247\001\n\013Cr" +
+      "onTrigger\022\022\n\nstart_time\030\001 \001(\003\022\020\n\010end_tim" +
+      "e\030\002 \001(\003\022\024\n\014repeat_limit\030\003 \001(\005\022\024\n\014repeat_" +
+      "count\030\004 \001(\005\022\027\n\017cron_expression\030\005 \001(\t\022\026\n\016" +
+      "next_fire_time\030\006 \001(\003\022\025\n\rcalendar_name\030\007 " +
+      "\003(\t\032\242\001\n\017IntervalTrigger\022\022\n\nstart_time\030\001 " +
+      "\001(\003\022\020\n\010end_time\030\002 \001(\003\022\024\n\014repeat_limit\030\003 " +
+      "\001(\005\022\024\n\014repeat_count\030\004 \001(\005\022\026\n\016next_fire_t" +
+      "ime\030\006 \001(\003\022\016\n\006period\030\007 \001(\003\022\025\n\rcalendar_na" +
+      "me\030\010 \003(\t\032,\n\022PointInTimeTrigger\022\026\n\016next_f" +
+      "ire_time\030\001 \001(\003\032\227\001\n\033CompositeMaxDurationT" +
+      "rigger\022\034\n\024maxDurationTimestamp\030\001 \001(\003\022\030\n\020" +
+      "timerCurrentDate\030\002 \001(\003\022@\n\014timerTrigger\030\003" +
+      " \001(\0132*.org.drools.serialization.protobuf" +
+      ".Trigger\"T\n\013TriggerType\022\010\n\004CRON\020\000\022\014\n\010INT" +
+      "ERVAL\020\001\022\021\n\rPOINT_IN_TIME\020\002\022\032\n\026COMPOSITE_" +
+      "MAX_DURATION\020\003B5\n!org.drools.serializati" +
+      "on.protobufB\020ProtobufMessages"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -57587,7 +57446,7 @@ public final class ProtobufMessages {
     internal_static_org_drools_serialization_protobuf_FactHandle_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_serialization_protobuf_FactHandle_descriptor,
-        new java.lang.String[] { "Type", "Id", "Recency", "Timestamp", "Duration", "IsExpired", "ActivationsCount", "StrategyIndex", "Object", "EntryPoint", "IsJustified", "OtnCount", "IsDynamic", });
+        new java.lang.String[] { "Type", "Id", "Recency", "Timestamp", "Duration", "IsExpired", "ActivationsCount", "StrategyIndex", "Object", "EntryPoint", "IsJustified", "OtnCount", });
     internal_static_org_drools_serialization_protobuf_Activation_descriptor =
       getDescriptor().getMessageTypes().get(12);
     internal_static_org_drools_serialization_protobuf_Activation_fieldAccessorTable = new

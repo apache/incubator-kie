@@ -25,7 +25,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.io.StringReader;
 
-import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
@@ -48,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@link PropertyChangeListener} registration, and the listener is the entry point itself, which
  * is not serializable: {@link PropertyChangeSupport} drops it on write and the unmarshalled fact
  * comes back with an empty listener list. These tests pin that a round trip keeps the fact
- * dynamic, for both ways a fact becomes dynamic.
+ * dynamic for types declared with {@code @propertyChangeSupport}.
  */
 public class DynamicFactMarshallingTest {
 
@@ -87,12 +86,12 @@ public class DynamicFactMarshallingTest {
      * has to preserve.
      */
     @Test
-    public void dynamicallyInsertedFact_inALiveSession_reevaluatesRulesOnSetter() {
-        final KieBase kieBase = knowledgeBase(RULE);
+    public void factOfTypeDeclaredWithPropertyChangeSupport_inALiveSession_reevaluatesRulesOnSetter() {
+        final KieBase kieBase = knowledgeBase(DECLARED_DYNAMIC_RULE);
         final KieSession session = kieBase.newKieSession();
         try {
             final DynamicFact fact = new DynamicFact("initial");
-            dynamicInsert(session, fact);
+            session.insert(fact);
 
             assertThat(session.fireAllRules()).isZero();
 
@@ -101,26 +100,6 @@ public class DynamicFactMarshallingTest {
             assertThat(session.fireAllRules()).isEqualTo(1);
         } finally {
             session.dispose();
-        }
-    }
-
-    @Test
-    public void dynamicallyInsertedFact_afterRoundTrip_reevaluatesRulesOnSetter() throws Exception {
-        final KieBase kieBase = knowledgeBase(RULE);
-        final KieSession session = kieBase.newKieSession();
-        dynamicInsert(session, new DynamicFact("initial"));
-        session.fireAllRules();
-
-        final KieSession restored = roundTrip(kieBase, session);
-        try {
-            final DynamicFact restoredFact = theFactIn(restored);
-            restoredFact.setName("changed");
-
-            assertThat(restored.fireAllRules())
-                    .as("the restored fact lost its PropertyChangeListener, so the setter did not notify the session")
-                    .isEqualTo(1);
-        } finally {
-            restored.dispose();
         }
     }
 
@@ -144,8 +123,30 @@ public class DynamicFactMarshallingTest {
         }
     }
 
+    @Test
+    public void factOfTypeDeclaredWithPropertyChangeSupport_afterRoundTripAndDelete_removesListener() throws Exception {
+        final KieBase kieBase = knowledgeBase(DECLARED_DYNAMIC_RULE);
+        final KieSession session = kieBase.newKieSession();
+        session.insert(new DynamicFact("initial"));
+        session.fireAllRules();
+
+        final KieSession restored = roundTrip(kieBase, session);
+        try {
+            final DynamicFact restoredFact = theFactIn(restored);
+            assertThat(restoredFact.support.getPropertyChangeListeners()).hasSize(1);
+
+            restored.delete(restored.getFactHandle(restoredFact));
+
+            assertThat(restoredFact.support.getPropertyChangeListeners()).isEmpty();
+            restoredFact.setName("changed");
+            assertThat(restored.fireAllRules()).isZero();
+        } finally {
+            restored.dispose();
+        }
+    }
+
     /**
-     * A fact inserted without the dynamic flag must stay non-dynamic across a round trip: the fix
+     * A fact whose type is not declared dynamic must stay non-dynamic across a round trip: the fix
      * re-registers the listeners that were there, it does not hand one to every fact that happens
      * to expose {@code addPropertyChangeListener}.
      */
@@ -165,11 +166,6 @@ public class DynamicFactMarshallingTest {
         } finally {
             restored.dispose();
         }
-    }
-
-    private static void dynamicInsert(final KieSession session, final DynamicFact fact) {
-        ((WorkingMemoryEntryPoint) session.getEntryPoint(org.drools.base.rule.EntryPointId.DEFAULT.getEntryPointId()))
-                .insert(fact, true);
     }
 
     private static DynamicFact theFactIn(final KieSession session) {
