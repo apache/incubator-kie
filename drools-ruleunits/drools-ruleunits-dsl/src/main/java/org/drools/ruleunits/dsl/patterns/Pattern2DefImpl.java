@@ -75,13 +75,168 @@ public class Pattern2DefImpl<A, B> extends SinglePatternDef<B> implements Patter
     }
 
     @Override
+    public Pattern2DefImpl<A, B> after() {
+        return addTemporalConstraint(DSL.after());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> after(long min, TimeUnit unit) {
+        return addTemporalConstraint(DSL.after(min, unit));
+    }
+
+    @Override
     public Pattern2DefImpl<A, B> after(long min, long max, TimeUnit unit) {
         return addTemporalConstraint(DSL.after(min, unit, max, unit));
     }
 
     @Override
+    public Pattern2DefImpl<A, B> before() {
+        return addTemporalConstraint(DSL.before());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> before(long min, TimeUnit unit) {
+        return addTemporalConstraint(DSL.before(min, unit));
+    }
+
+    @Override
     public Pattern2DefImpl<A, B> before(long min, long max, TimeUnit unit) {
         return addTemporalConstraint(DSL.before(min, unit, max, unit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> coincides() {
+        return addTemporalConstraint(DSL.coincides());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> coincides(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.coincides(dev, devUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> coincides(long startDev, TimeUnit startDevUnit, long endDev, TimeUnit endDevUnit) {
+        return addTemporalConstraint(DSL.coincides(startDev, startDevUnit, endDev, endDevUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> during() {
+        return addTemporalConstraint(DSL.during());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> during(long max, TimeUnit maxUnit) {
+        return addTemporalConstraint(DSL.during(max, maxUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> during(long min, TimeUnit minUnit, long max, TimeUnit maxUnit) {
+        return addTemporalConstraint(DSL.during(min, minUnit, max, maxUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> includes() {
+        return addTemporalConstraint(DSL.includes());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> includes(long max, TimeUnit maxUnit) {
+        return addTemporalConstraint(DSL.includes(max, maxUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> includes(long min, TimeUnit minUnit, long max, TimeUnit maxUnit) {
+        return addTemporalConstraint(DSL.includes(min, minUnit, max, maxUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> overlaps() {
+        return addTemporalConstraint(DSL.overlaps());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> overlaps(long maxDev, TimeUnit maxDevTimeUnit) {
+        return addTemporalConstraint(DSL.overlaps(maxDev, maxDevTimeUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> overlaps(long minDev, TimeUnit minDevTimeUnit, long maxDev, TimeUnit maxDevTimeUnit) {
+        return addTemporalConstraint(DSL.overlaps(minDev, minDevTimeUnit, maxDev, maxDevTimeUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> overlappedby() {
+        return addTemporalConstraint(DSL.overlappedby());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> overlappedby(long maxDev, TimeUnit maxDevTimeUnit) {
+        return addTemporalConstraint(DSL.overlappedby(maxDev, maxDevTimeUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> overlappedby(long minDev, TimeUnit minDevTimeUnit, long maxDev, TimeUnit maxDevTimeUnit) {
+        return addTemporalConstraint(DSL.overlappedby(minDev, minDevTimeUnit, maxDev, maxDevTimeUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> meets() {
+        return addTemporalConstraint(DSL.meets());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> meets(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.meets(dev, devUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> metby() {
+        return addTemporalConstraint(DSL.metby());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> metby(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.metby(dev, devUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> starts() {
+        return addTemporalConstraint(DSL.starts());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> starts(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.starts(dev, devUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> startedby() {
+        return addTemporalConstraint(DSL.startedby());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> startedby(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.startedby(dev, devUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> finishes() {
+        return addTemporalConstraint(DSL.finishes());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> finishes(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.finishes(dev, devUnit));
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> finishedby() {
+        return addTemporalConstraint(DSL.finishedby());
+    }
+
+    @Override
+    public Pattern2DefImpl<A, B> finishedby(long dev, TimeUnit devUnit) {
+        return addTemporalConstraint(DSL.finishedby(dev, devUnit));
     }
 
     protected Pattern2DefImpl<A, B> addTemporalConstraint(TemporalPredicate temporalPredicate) {

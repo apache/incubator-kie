@@ -205,6 +205,40 @@ public class CepTest {
         }
     }
 
+    @Test
+    public void afterNoArg() {
+        StreamAfterNoArgUnit unit = new StreamAfterNoArgUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamAfterNoArgUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO"));
+            clock.advanceTime(1, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME"));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void afterSingleBound() {
+        StreamAfterSingleBoundUnit unit = new StreamAfterSingleBoundUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamAfterSingleBoundUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO"));
+            clock.advanceTime(5, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME"));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
     // --- Temporal constraint: before ---
 
     @Test
@@ -258,6 +292,527 @@ public class CepTest {
 
             assertThat(unit.getResults()).hasSize(1);
             assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void beforeNoArg() {
+        StreamBeforeNoArgUnit unit = new StreamBeforeNoArgUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamBeforeNoArgUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("ACME"));
+            clock.advanceTime(1, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO"));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void beforeSingleBound() {
+        StreamBeforeSingleBoundUnit unit = new StreamBeforeSingleBoundUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamBeforeSingleBoundUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("ACME"));
+            clock.advanceTime(5, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO"));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    // --- Temporal constraint: coincides ---
+
+    @Test
+    public void coincidesExactMatch() {
+        StreamCoincidesUnit unit = new StreamCoincidesUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamCoincidesUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void coincidesDoesNotMatchWhenDifferent() {
+        StreamCoincidesUnit unit = new StreamCoincidesUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamCoincidesUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            clock.advanceTime(100, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void coincidesWithDevMatchesWithinDeviation() {
+        StreamCoincidesDevUnit unit = new StreamCoincidesDevUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamCoincidesDevUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // start deviation 500ms <= 1s dev, duration diff 0 <= 1s dev
+            clock.advanceTime(500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void coincidesWithDevDoesNotMatchWhenExceedingDeviation() {
+        StreamCoincidesDevUnit unit = new StreamCoincidesDevUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamCoincidesDevUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // start deviation 1500ms > 1s dev
+            clock.advanceTime(1500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void coincidesWithStartEndDevMatchesWithinDeviation() {
+        StreamCoincidesStartEndDevUnit unit = new StreamCoincidesStartEndDevUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamCoincidesStartEndDevUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // start dev 500ms <= 1s startDev, end dev 1500ms <= 2s endDev (DROO ends at 5s, ACME ends at 0.5s+6s = 6.5s)
+            clock.advanceTime(500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 6000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void coincidesWithStartEndDevDoesNotMatchWhenExceedingDeviation() {
+        StreamCoincidesStartEndDevUnit unit = new StreamCoincidesStartEndDevUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamCoincidesStartEndDevUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // start dev 500ms <= 1s, but end dev = |(0.5s + 8s) - 5s| = 3.5s > 2s endDev
+            clock.advanceTime(500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 8000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    // --- Temporal constraint: during / includes ---
+
+    @Test
+    public void duringMatches() {
+        StreamDuringUnit unit = new StreamDuringUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamDuringUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A starts at 0, duration 10s (ends at 10s)
+            unit.getStockTicks().append(new StockTick("DROO", 10000));
+            // B starts at 2s, duration 4s (ends at 6s) -> start dist = 2s in [1s, 10s], end dist = 4s in [1s, 10s]
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 4000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void duringDoesNotMatchWhenNotContained() {
+        StreamDuringUnit unit = new StreamDuringUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamDuringUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // B starts at 2s, duration 5s (ends at 7s > end(A)) -> not during A
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void includesMatches() {
+        StreamIncludesUnit unit = new StreamIncludesUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamIncludesUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0 with 10s duration (ends at 10s)
+            unit.getStockTicks().append(new StockTick("ACME", 10000));
+            // A (DROO) starts at 2s with 4s duration (ends at 6s) -> start dist = 2s in [1s, 10s], end dist = 4s in [1s, 10s]
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 4000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void includesDoesNotMatchWhenNotIncluding() {
+        StreamIncludesUnit unit = new StreamIncludesUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamIncludesUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0 with 5s duration (ends at 5s)
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            // A (DROO) starts at 2s with 5s duration (ends at 7s > end(B)) -> B does not include A
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    // --- Temporal constraint: overlaps / overlappedby ---
+
+    @Test
+    public void overlapsMatches() {
+        StreamOverlapsUnit unit = new StreamOverlapsUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamOverlapsUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0s, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            // A (DROO) starts at 3s, duration 5s (ends at 8s)
+            // B starts before A (0 < 3), B ends after A starts but before A ends (3 < 5 < 8)
+            // overlap dist = end(B) - start(A) = 5 - 3 = 2s in [1s, 5s]
+            clock.advanceTime(3, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void overlapsDoesNotMatchWhenNoOverlap() {
+        StreamOverlapsUnit unit = new StreamOverlapsUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamOverlapsUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0s, duration 2s (ends at 2s)
+            unit.getStockTicks().append(new StockTick("ACME", 2000));
+            // A (DROO) starts at 3s, duration 5s (ends at 8s) -> end(B) < start(A), no overlap
+            clock.advanceTime(3, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void overlappedbyMatches() {
+        StreamOverlappedbyUnit unit = new StreamOverlappedbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamOverlappedbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0s, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // B (ACME) starts at 3s, duration 5s (ends at 8s)
+            // B starts after A starts but before A ends (0 < 3 < 5), B ends after A (8 > 5)
+            // overlap dist = end(A) - start(B) = 5 - 3 = 2s in [1s, 5s]
+            clock.advanceTime(3, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void overlappedbyDoesNotMatchWhenNoOverlap() {
+        StreamOverlappedbyUnit unit = new StreamOverlappedbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamOverlappedbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0s, duration 2s (ends at 2s)
+            unit.getStockTicks().append(new StockTick("DROO", 2000));
+            // B (ACME) starts at 3s, duration 5s (ends at 8s) -> start(B) > end(A), no overlap
+            clock.advanceTime(3, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    // --- Temporal constraint: meets / metby ---
+
+    @Test
+    public void meetsMatchesWithinDeviation() {
+        StreamMeetsUnit unit = new StreamMeetsUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamMeetsUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0, duration 3s (ends at 3s)
+            unit.getStockTicks().append(new StockTick("ACME", 3000));
+            // A (DROO) starts at 3.5s -> |start(A) - end(B)| = 500ms <= 1s dev
+            clock.advanceTime(3500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 3000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void meetsDoesNotMatchWhenExceedingDeviation() {
+        StreamMeetsUnit unit = new StreamMeetsUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamMeetsUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0, duration 3s (ends at 3s)
+            unit.getStockTicks().append(new StockTick("ACME", 3000));
+            // A (DROO) starts at 5s -> |start(A) - end(B)| = 2s > 1s dev
+            clock.advanceTime(5, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 3000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void metbyMatchesWithinDeviation() {
+        StreamMetbyUnit unit = new StreamMetbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamMetbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 3s (ends at 3s)
+            unit.getStockTicks().append(new StockTick("DROO", 3000));
+            // B (ACME) starts at 3.5s -> |start(B) - end(A)| = 500ms <= 1s dev
+            clock.advanceTime(3500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 3000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void metbyDoesNotMatchWhenExceedingDeviation() {
+        StreamMetbyUnit unit = new StreamMetbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamMetbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 3s (ends at 3s)
+            unit.getStockTicks().append(new StockTick("DROO", 3000));
+            // B (ACME) starts at 5s -> |start(B) - end(A)| = 2s > 1s dev
+            clock.advanceTime(5, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 3000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    // --- Temporal constraint: starts / startedby ---
+
+    @Test
+    public void startsMatchesWithinDeviation() {
+        StreamStartsUnit unit = new StreamStartsUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamStartsUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // B (ACME) starts at 500ms (diff 500ms <= 1s dev), duration 3s (ends at 3.5s < 5s)
+            clock.advanceTime(500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 3000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void startsDoesNotMatchWhenExceedingDeviation() {
+        StreamStartsUnit unit = new StreamStartsUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamStartsUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // B (ACME) starts at 1.5s (diff 1.5s > 1s dev)
+            clock.advanceTime(1500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 2000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void startedbyMatchesWithinDeviation() {
+        StreamStartedbyUnit unit = new StreamStartedbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamStartedbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 3s (ends at 3s)
+            unit.getStockTicks().append(new StockTick("DROO", 3000));
+            // B (ACME) starts at 500ms (diff 500ms <= 1s dev), duration 5s (ends at 5.5s > 3s)
+            clock.advanceTime(500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void startedbyDoesNotMatchWhenExceedingDeviation() {
+        StreamStartedbyUnit unit = new StreamStartedbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamStartedbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 3s (ends at 3s)
+            unit.getStockTicks().append(new StockTick("DROO", 3000));
+            // B (ACME) starts at 1.5s (diff 1.5s > 1s dev)
+            clock.advanceTime(1500, TimeUnit.MILLISECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    // --- Temporal constraint: finishes / finishedby ---
+
+    @Test
+    public void finishesMatchesWithinDeviation() {
+        StreamFinishesUnit unit = new StreamFinishesUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamFinishesUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // B (ACME) starts at 2s, duration 3.5s (ends at 5.5s, |end(B) - end(A)| = 500ms <= 1s dev)
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 3500));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void finishesDoesNotMatchWhenExceedingDeviation() {
+        StreamFinishesUnit unit = new StreamFinishesUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamFinishesUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // A (DROO) starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            // B (ACME) starts at 2s, duration 5s (ends at 7s, |end(B) - end(A)| = 2s > 1s dev)
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
+        }
+    }
+
+    @Test
+    public void finishedbyMatchesWithinDeviation() {
+        StreamFinishedbyUnit unit = new StreamFinishedbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamFinishedbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            // A (DROO) starts at 2s, duration 3.5s (ends at 5.5s, |end(B) - end(A)| = 500ms <= 1s dev)
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 3500));
+            instance.fire();
+
+            assertThat(unit.getResults()).hasSize(1);
+            assertThat(unit.getResults().get(0).getCompany()).isEqualTo("ACME");
+        }
+    }
+
+    @Test
+    public void finishedbyDoesNotMatchWhenExceedingDeviation() {
+        StreamFinishedbyUnit unit = new StreamFinishedbyUnit();
+        RuleConfig config = RuleUnitProvider.get().newRuleConfig();
+        config.setClockType(ClockType.PSEUDO);
+        try (RuleUnitInstance<StreamFinishedbyUnit> instance = RuleUnitProvider.get().createRuleUnitInstance(unit, config)) {
+            SessionPseudoClock clock = instance.getClock();
+            // B (ACME) starts at 0, duration 5s (ends at 5s)
+            unit.getStockTicks().append(new StockTick("ACME", 5000));
+            // A (DROO) starts at 2s, duration 5s (ends at 7s, |end(B) - end(A)| = 2s > 1s dev)
+            clock.advanceTime(2, TimeUnit.SECONDS);
+            unit.getStockTicks().append(new StockTick("DROO", 5000));
+            instance.fire();
+
+            assertThat(unit.getResults()).isEmpty();
         }
     }
 
@@ -412,6 +967,54 @@ public class CepTest {
     }
 
     @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamAfterNoArgUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamAfterNoArgUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME after DROO no-arg")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .after()
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamAfterSingleBoundUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamAfterSingleBoundUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME after DROO single bound")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .after(4, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
     public static class StreamBeforeUnit implements RuleUnitDefinition {
         private final DataStream<StockTick> stockTicks;
         private final List<StockTick> results = new ArrayList<>();
@@ -434,6 +1037,366 @@ public class CepTest {
                     .join(rule -> rule.on(stockTicks)                    // pattern B
                             .filter(StockTick::getCompany, EQUAL, "ACME"))
                     .before(5, 8, TimeUnit.SECONDS)                      // B before A
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamBeforeNoArgUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamBeforeNoArgUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME before DROO no-arg")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .before()
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamBeforeSingleBoundUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamBeforeSingleBoundUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME before DROO single bound")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .before(4, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamCoincidesUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamCoincidesUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME coincides DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .coincides()
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamCoincidesDevUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamCoincidesDevUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME coincides DROO dev")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .coincides(1, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamCoincidesStartEndDevUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamCoincidesStartEndDevUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME coincides DROO start/end dev")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .coincides(1, TimeUnit.SECONDS, 2, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamDuringUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamDuringUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME during DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .during(1, TimeUnit.SECONDS, 10, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamIncludesUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamIncludesUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME includes DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .includes(1, TimeUnit.SECONDS, 10, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamOverlapsUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamOverlapsUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME overlaps DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .overlaps(1, TimeUnit.SECONDS, 5, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamOverlappedbyUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamOverlappedbyUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME overlappedby DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .overlappedby(1, TimeUnit.SECONDS, 5, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamMeetsUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamMeetsUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME meets DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .meets(1, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamMetbyUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamMetbyUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME metby DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .metby(1, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamStartsUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamStartsUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME starts DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .starts(1, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamStartedbyUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamStartedbyUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME startedby DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .startedby(1, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamFinishesUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamFinishesUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME finishes DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .finishes(1, TimeUnit.SECONDS)
+                    .execute(results, (r, droo, acme) -> r.add(acme));
+        }
+    }
+
+    @EventProcessing(EventProcessingType.STREAM)
+    public static class StreamFinishedbyUnit implements RuleUnitDefinition {
+        private final DataStream<StockTick> stockTicks;
+        private final List<StockTick> results = new ArrayList<>();
+
+        public StreamFinishedbyUnit() {
+            this.stockTicks = DataSource.createStream();
+        }
+
+        public DataStream<StockTick> getStockTicks() { return stockTicks; }
+        public List<StockTick> getResults() { return results; }
+
+        @Override
+        public void defineRules(RulesFactory rulesFactory) {
+            rulesFactory.rule("ACME finishedby DROO")
+                    .on(stockTicks)
+                    .filter(StockTick::getCompany, EQUAL, "DROO")
+                    .join(rule -> rule.on(stockTicks)
+                            .filter(StockTick::getCompany, EQUAL, "ACME"))
+                    .finishedby(1, TimeUnit.SECONDS)
                     .execute(results, (r, droo, acme) -> r.add(acme));
         }
     }

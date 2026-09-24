@@ -511,4 +511,85 @@ public class PatternDSLSequenceEdgeCaseTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("at least one step");
     }
+
+   @Test
+    public void mixedAlphaAndBetaExprsInOneStepBothMustHold() {
+        Variable<Person> personV = declarationOf(Person.class);
+        Variable<Toy>    toyV    = declarationOf(Toy.class);
+
+        Rule rule = rule("mixed-alpha-beta").build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV)
+                                .expr("alpha", t -> "ball".equals(t.getName()))
+                                .expr("beta", personV, (t, p) -> p.getName().equals(t.getOwner()))
+                ),
+                on(personV).execute(p -> results.add("fired:" + p.getName()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        ksession.insert(new Person("alice"));
+        ksession.fireAllRules();
+
+        // Passes beta (owner == "alice") but fails alpha (name "robot" != "ball")
+        // With the isAllowedCachedLeft bug, alpha is skipped because beta exists, so this incorrectly fires!
+        Toy robot = new Toy("robot");
+        robot.setOwner("alice");
+        ksession.insert(robot);
+        ksession.fireAllRules();
+        assertThat(results).isEmpty();
+
+        // Passes alpha (name == "ball") but fails beta (owner "bob" != anchor "alice")
+        Toy bobBall = new Toy("ball");
+        bobBall.setOwner("bob");
+        ksession.insert(bobBall);
+        ksession.fireAllRules();
+        assertThat(results).isEmpty();
+
+        // Passes both alpha ("ball") and beta (owner == "alice")
+        Toy aliceBall = new Toy("ball");
+        aliceBall.setOwner("alice");
+        ksession.insert(aliceBall);
+        ksession.fireAllRules();
+        assertThat(results).containsExactly("fired:alice");
+    }
+
+    @Test
+    public void twoAlphaExprsInOneStepBothMustHold() {
+        Variable<Person> personV = declarationOf(Person.class);
+        Variable<Toy>    toyV    = declarationOf(Toy.class);
+
+        Rule rule = rule("two-alpha-exprs").build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV)
+                                .expr("starts-with-a", t -> t.getName().startsWith("a"))
+                                .expr("ends-with-e",   t -> t.getName().endsWith("e"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.fireAllRules();
+
+        // Fails first alpha ("b…") — must not fire
+        ksession.insert(new Toy("ball"));
+        ksession.fireAllRules();
+        assertThat(results).isEmpty();
+
+        // Passes first alpha but fails second — "arrow" starts with "a" but does not end with "e"
+        ksession.insert(new Toy("arrow"));
+        ksession.fireAllRules();
+        assertThat(results).isEmpty();
+
+        // Passes both: "apple" starts with "a" and ends with "e"
+        ksession.insert(new Toy("apple"));
+        ksession.fireAllRules();
+        assertThat(results).containsExactly("fired");
+    }
 }
