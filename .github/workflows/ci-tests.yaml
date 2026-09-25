@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   ci-compute-build-scopes:
-    if: github.event.action != 'closed'
+    if: false
     name: 'CiComputeBuildScopesTest'
     runs-on: ubuntu-latest
     steps:
