@@ -33,6 +33,7 @@ import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,6 +53,7 @@ import org.jbpm.flow.serialization.impl.ProtobufVariableWriter;
 import org.jbpm.flow.serialization.protobuf.KogitoTypesProtobuf;
 import org.jbpm.process.core.context.variable.Variable;
 import org.jbpm.process.core.context.variable.VariableScope;
+import org.jbpm.process.instance.InternalProcessRuntime;
 import org.jbpm.process.instance.context.variable.VariableScopeInstance;
 import org.jbpm.ruleflow.core.WorkflowElementIdentifierFactory;
 import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
@@ -62,13 +64,18 @@ import org.jbpm.workflow.core.node.EndNode;
 import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.jbpm.workflow.core.node.StartNode;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import org.kie.kogito.Model;
 import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
 import org.kie.kogito.jackson.utils.ObjectMapperFactory;
+import org.kie.kogito.process.ProcessInstanceReadMode;
 import org.kie.kogito.process.impl.AbstractProcess;
+import org.kie.kogito.process.impl.AbstractProcessInstance;
 import org.w3c.dom.Document;
 
 import jakarta.xml.bind.JAXBContext;
@@ -77,6 +84,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess.RULEFLOW_TYPE;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -285,6 +293,59 @@ public class ProcessInstanceMarshallTest {
             return sw.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testUnmarshallProcessInstanceLoadsStateLazily() throws Exception {
+        assertThat(unmarshallProcessInstance(ProcessInstanceReadMode.MUTABLE).internalGetProcessInstance()).isNull();
+    }
+
+    @Test
+    public void testUnmarshallProcessInstanceKeepsStateWhenEager() throws Exception {
+        assertThat(unmarshallProcessInstance(ProcessInstanceReadMode.MUTABLE_EAGER).internalGetProcessInstance()).isNotNull();
+    }
+
+    @SuppressWarnings("unchecked")
+    private AbstractProcessInstance<?> unmarshallProcessInstance(ProcessInstanceReadMode mode) throws Exception {
+        AbstractProcess<TestModel> testProcess = mock(AbstractProcess.class);
+        when(testProcess.get()).thenReturn(workflow);
+        when(testProcess.getProcessRuntime()).thenReturn(mock(KogitoProcessRuntime.class));
+        when(testProcess.createInstance(any(WorkflowProcessInstance.class)))
+                .thenAnswer(invocation -> new TestProcessInstance(testProcess, new TestModel(), mock(InternalProcessRuntime.class), invocation.getArgument(0)));
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ProtobufProcessMarshallerWriteContext ctxOut = new ProtobufProcessMarshallerWriteContext(out);
+        ctxOut.set(MarshallerContextName.OBJECT_MARSHALLING_STRATEGIES, ObjectMarshallerStrategyHelper.defaultStrategies());
+        ctxOut.set(MarshallerContextName.MARSHALLER_PROCESS, testProcess);
+        new ProtobufProcessInstanceWriter(ctxOut).writeProcessInstance(buildInstance(false), out);
+
+        ProcessInstanceMarshallerService marshaller = ProcessInstanceMarshallerService.newBuilder().withDefaultObjectMarshallerStrategies().build();
+        return (AbstractProcessInstance<?>) marshaller.unmarshallProcessInstance(out.toByteArray(), testProcess, mode);
+    }
+
+    static class TestProcessInstance extends AbstractProcessInstance<TestModel> {
+
+        public TestProcessInstance(AbstractProcess<TestModel> process, TestModel variables, InternalProcessRuntime rt, WorkflowProcessInstance wpi) {
+            super(process, variables, rt, wpi);
+        }
+    }
+
+    static class TestModel implements Model {
+
+        @Override
+        public void update(Map<String, Object> params) {
+            fromMap(params);
+        }
+
+        @Override
+        public Map<String, Object> toMap() {
+            return null;
+        }
+
+        @Override
+        public TestModel fromMap(Map<String, Object> params) {
+            return this;
         }
     }
 
