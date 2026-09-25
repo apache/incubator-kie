@@ -34,7 +34,6 @@ pipeline {
         booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Deploy artifacts to Apache Nexus staging')
         string(name: 'STAGING_URL', defaultValue: '', description: 'Custom Nexus staging URL (optional)')
         booleanParam(name: 'PUSH_TAG', defaultValue: true, description: 'Push the git tag to origin')
-        booleanParam(name: 'JITEXECUTOR_NATIVE', defaultValue: false, description: 'Build jitexecutor native binary (requires GraalVM + Docker)')
         string(name: 'EXTRA_MAVEN_OPTS', defaultValue: '', description: 'Extra Maven CLI options to pass to build.sh')
         booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Dry run without making remote git or staging changes')
     }
@@ -66,9 +65,6 @@ pipeline {
                     }
                     if (params.PUSH_TAG) {
                         releaseCmd += ' --push-tag'
-                    }
-                    if (params.JITEXECUTOR_NATIVE) {
-                        releaseCmd += ' --jitexecutor-native'
                     }
                     if (params.EXTRA_MAVEN_OPTS?.trim()) {
                         releaseCmd += " --maven-opts \"${params.EXTRA_MAVEN_OPTS.trim()}\""

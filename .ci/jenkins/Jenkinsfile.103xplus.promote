@@ -44,9 +44,9 @@ pipeline {
         stage('Initialization') {
             steps {
                 script {
-                    cleanWs()
+                    cleanWs(disableDeferredWipeout: true)
 
-                    if (params.DISPLAY_NAME != '') {
+                    if (params.DISPLAY_NAME) {
                         currentBuild.displayName = params.DISPLAY_NAME
                     }
 
@@ -61,45 +61,34 @@ pipeline {
                 script {
                     dir(getRepoName()) {
                         checkoutRepo()
-                        if(githubscm.isReleaseExist(getGitTag(), getGitAuthorCredsId())) {
-                            githubscm.deleteRelease(getGitTag(), getGitAuthorPushCredsId())
+                        withCredentials([usernamePassword(credentialsId: env.MAVEN_REPO_CREDS_ID, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
+                            configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                                String stagingProfileId = env.MAVEN_STAGING_PROFILE_ID ?: ''
+                                echo "Staging profile: ${stagingProfileId}"
+                                getMavenCommand()
+                                    .withProperty('quarkus.version', '3.15.3')
+                                    .withProperty('project.version', getProjectVersion())
+                                    .withProperty('stgRepoId', getStagingRepoId())
+                                    .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
+                                    .run("nexus-staging:release -DstagingRepositoryId=${getStagingRepoId()} -DstagingProfileId=${stagingProfileId} -DnexusUrl=https://repository.apache.org -Ddescription=\"[KIE 10.3+] release ${getProjectVersion()}\"")
+                            }
                         }
-                        githubscm.createReleaseWithGeneratedReleaseNotes(getGitTag(), getBuildBranch(), githubscm.getPreviousTagFromVersion(getGitTag()), getGitAuthorPushCredsId())
-                        githubscm.updateReleaseBody(getGitTag(), getGitAuthorPushCredsId())
                     }
-                }
-            }
-        }
-
-        stage('Upload drools binaries and documentation') {
-            when {
-                expression { return isMainStream() }
-            }
-            steps {
-                script {
-                    configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]){
-                        getMavenCommand()
-                            .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
-                            .withOptions(env.BUILD_MVN_OPTS_CURRENT ? [ env.BUILD_MVN_OPTS_CURRENT ] : [])
-                            .inDirectory(getRepoName())
-                            .skipTests(true)
-                            .withProperty('full')
-                            .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
-                            .run('clean install')
-                    }
-                    uploadFileMgmt(getRepoName())
                 }
             }
         }
     }
     post {
-        unsuccessful {
-            sendNotification()
+        always {
+            cleanWs()
         }
-        cleanup {
+        success {
             script {
-                util.cleanNode()
+                sendNotification()
             }
+        }
+        unsuccessful {
+            sendErrorNotification()
         }
     }
 }
@@ -107,9 +96,12 @@ pipeline {
 void sendNotification() {
     if (params.SEND_NOTIFICATION) {
         mailer.sendMarkdownTestSummaryNotification('Promote', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
-    } else {
-        echo 'No notification sent per configuration'
     }
+}
+
+void sendErrorNotification() {
+    sendNotification()
+    mailer.sendMarkdownErrorNotification('Promote', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -125,11 +117,11 @@ String getProjectVersion() {
 }
 
 String getGitTag() {
-    return params.GIT_TAG != '' ? params.GIT_TAG : getProjectVersion()
+    return params.GIT_TAG
 }
 
 String getBuildBranch() {
-    return params.BUILD_BRANCH_NAME
+    return params.BUILD_BRANCH
 }
 
 String getGitAuthor() {
@@ -151,36 +143,17 @@ String getGitAuthorPushCredsId() {
 void checkoutRepo() {
     deleteDir()
     checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
-    // need to manually checkout branch since on a detached branch after checkout command
+    // Need to checkout after doing changes
     sh "git checkout ${getBuildBranch()}"
 }
 
 MavenCommand getMavenCommand() {
     mvnCmd = new MavenCommand(this, ['-fae', '-ntp'])
                     .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
-    if (env.MAVEN_DEPENDENCIES_REPOSITORY) {
-        mvnCmd.withDependencyRepositoryInSettings('deps-repo', env.MAVEN_DEPENDENCIES_REPOSITORY)
-    }
+                    .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
     return mvnCmd
 }
 
-void uploadFileMgmt(String directory) {
-    if (isNotTestingBuild()) {
-        echo "upload binaries and docs for ${directory}"
-        dir(directory) {
-            sshagent(['drools-filemgmt']) {
-                sh "script/release/upload_filemgmt.sh ${getProjectVersion()}"
-            }
-        }
-    } else {
-        echo 'No uploadFileMgmt due to testing build'
-    }
-}
-
-boolean isNotTestingBuild() {
-    return getGitAuthor() == 'apache'
-}
-
-boolean isMainStream() {
-    return env.DROOLS_STREAM == 'main'
+String getStagingRepoId() {
+    return params.STAGING_REPOSITORY_ID
 }
