@@ -35,6 +35,7 @@
   <properties>
     <java.module.name>org.kie.kogito.index.service.postgresql</java.module.name>
     <disable.quarkus.plugin>false</disable.quarkus.plugin>
+    <skip.quarkus.image.assembly>false</skip.quarkus.image.assembly>
   </properties>
 
   <dependencies>
@@ -157,6 +158,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
+          <skipAssembly>${skip.quarkus.image.assembly}</skipAssembly>
           <descriptors>
             <descriptor>src/assembly/image-build-zip.xml</descriptor>
           </descriptors>

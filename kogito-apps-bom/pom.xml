@@ -302,6 +302,12 @@
       </dependency>
       <dependency>
         <groupId>org.kie.kogito</groupId>
+        <artifactId>explainability-service-messaging</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.kogito</groupId>
         <artifactId>explainability-service-rest</artifactId>
         <version>${project.version}</version>
         <classifier>javadoc</classifier>
@@ -391,6 +397,12 @@
         <artifactId>jobs-service-postgresql</artifactId>
         <version>${project.version}</version>
         <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.kogito</groupId>
+        <artifactId>jobs-service-postgresql</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
       </dependency>
       <dependency>
         <groupId>org.kie.kogito</groupId>
