@@ -29,9 +29,12 @@ import org.kie.api.runtime.rule.StatelessRuleSession;
  * shot method that will internally instantiate a KieSession, add all the user data and execute user commands, call fireAllRules, and then
  * call dispose(). While the main way to work with this class is via the BatchExecution Command as supported by the CommandExecutor interface,
  * two convenience methods are provided for when simple object insertion is all that's required.
+ * Extends RuntimeSession for common session operations.
+ * @apiNote Use this for fire-and-forget rule execution where you don't need to maintain a session state
+ *          between invocations. For stateful sessions with iterative rule execution, use KieSession instead.
  *
  * <p>
- * Simple example showing a stateless session executing for a given collection of java objects using the convenience api. It will iterate the collection inserting
+ * A simple example showing a stateless session executing for a given collection of java objects using the convenience api. It will iterate the collection inserting
  * each element in turn
  * </p>
  * <pre>
@@ -50,7 +53,7 @@ import org.kie.api.runtime.rule.StatelessRuleSession;
  * </pre>
  *
  * <p>
- * Note if you wanted to insert the collection itself, and not the iterate and insert the elements, then kieCommands.newInsert( collection ) would do the job.
+ * Note if you wanted to insert the collection itself and not the iterating and insert the elements, then kieCommands.newInsert( collection ) would do the job.
  * </p>
  *
  * <p>
@@ -62,7 +65,7 @@ import org.kie.api.runtime.rule.StatelessRuleSession;
  * StatelessKieSession support globals, scoped in a number of ways. I'll cover the non-command way first,
  * as commands are scoped to a specific execution call. Globals can be resolved in three ways. The StatelessKieSession
  * supports getGlobals(), which returns a Globals instance. These globals are shared for ALL execution calls, so be especially careful of mutable
- * globals in these cases - as often execution calls can be executing simultaneously in different threads. Globals also supports a delegate, which
+ * globals in these cases - as often execution calls can be executed simultaneously in different threads. Globals also supports a delegate, which
  * adds a second way of resolving globals. Calling of setGlobal(String, Object) will actually be set on an internal Collection, identifiers in this internal
  * Collection will have priority over supplied delegate, if one is added. If an identifier cannot be found in
  * the internal Collection, it will then check the delegate Globals, if one has been set.

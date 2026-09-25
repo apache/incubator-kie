@@ -51,6 +51,7 @@ public enum DeclarativeAgendaOption implements SingleValueRuleBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }
