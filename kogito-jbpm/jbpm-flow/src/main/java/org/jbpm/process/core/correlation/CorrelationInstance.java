@@ -77,11 +77,31 @@ public class CorrelationInstance {
         }
 
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            if (!entry.getValue().equals(other.properties.get(entry.getKey()))) {
+            if (!correlationPropertyEquals(entry.getValue(), other.properties.get(entry.getKey()))) {
                 return false;
             }
         }
         return true;
+    }
+
+    // Compares two correlation property values, unwrapping a single-element Object[] on either
+    // side before comparing — the process-side resolver may wrap scalar values in Object[] for
+    // subprocess nodes, causing a type mismatch against the scalar on the other side.
+    private static boolean correlationPropertyEquals(Object messageCorrelationVal, Object processCorrelationVal) {
+        if (messageCorrelationVal == null || processCorrelationVal == null) {
+            return messageCorrelationVal == processCorrelationVal;
+        }
+        if (messageCorrelationVal.equals(processCorrelationVal)) {
+            return true;
+        }
+        // Unwrap a single-element Object[] on either side and retry
+        if (messageCorrelationVal instanceof Object[] && ((Object[]) messageCorrelationVal).length == 1) {
+            messageCorrelationVal = ((Object[]) messageCorrelationVal)[0];
+        }
+        if (processCorrelationVal instanceof Object[] && ((Object[]) processCorrelationVal).length == 1) {
+            processCorrelationVal = ((Object[]) processCorrelationVal)[0];
+        }
+        return messageCorrelationVal != null && messageCorrelationVal.equals(processCorrelationVal);
     }
 
     @Override
