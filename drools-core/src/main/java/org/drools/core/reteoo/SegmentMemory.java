@@ -853,7 +853,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         }
 
         public void splitEagerProtos(boolean proto1WasEager, SegmentPrototype other, PathEndNode endNode) {
-            if (proto1WasEager) { // if it wasn't eager before, nothing can be eager after
+            if (proto1WasEager) { // proto1 was eager before the split
                 SegmentPrototype[] eager = endNode.getEagerSegmentPrototypes();
                 if (requiresEager() && other.requiresEager()) {
                     // keep proto1 and add proto2
@@ -862,14 +862,24 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
                     newEager[newEager.length - 1] = other; // I don't think order matters, so just add to the end
                     endNode.setEagerSegmentPrototypes(newEager);
                 } else if (other.requiresEager()) {
-                    // proto2 is no longer eager, find proto1 and swap proto1 with proto2
+                    // proto1 is no longer eager, find proto1 and swap proto1 with proto2
                     for (int i = 0; i < eager.length; i++) {
                         if (eager[i] == this) {
                             eager[i] = other;
                             break;
                         }
                     }
-                } // else if ( requiresEager() && !proto2.requiresEager()) do nothing as proto1 already in the array
+                }
+            } else if (other.requiresEager()) {
+                // proto1 was not eager, but the split produced an eager proto2.
+                // This happens when proto1 contained both a NotNode and a JoinNode (suppressing the
+                // eager requirement), and the split removed the JoinNode from proto2's portion.
+                // proto2 must be added to the endNode's eager list so it gets eagerly initialised.
+                SegmentPrototype[] eager = endNode.getEagerSegmentPrototypes();
+                SegmentPrototype[] newEager = new SegmentPrototype[eager.length + 1];
+                System.arraycopy(eager, 0, newEager, 0, eager.length);
+                newEager[newEager.length - 1] = other;
+                endNode.setEagerSegmentPrototypes(newEager);
             }
         }
 
@@ -912,8 +922,8 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
             }
 
             SegmentPrototype[] eager = endNode.getEagerSegmentPrototypes();
-            if (requiresEager() && proto2.requiresEager()) {
-                // keep proto1 and remove proto2
+            if ((!requiresEager() && proto2WasEager) || (requiresEager() && proto2.requiresEager())) {
+                // remove proto2 from the eager array
                 SegmentPrototype[] newEager = new SegmentPrototype[eager.length - 1];
                 copyWithRemoval(eager, newEager, proto2);
                 endNode.setEagerSegmentPrototypes(newEager);
