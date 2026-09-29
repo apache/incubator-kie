@@ -93,6 +93,9 @@ public class EvaluatorHelper {
             return ((Collection)list).contains(item);
         } else if (list instanceof Object[]) {
             return arrayContains( ( Object[] ) list, item );
+        } else if (list instanceof String) {
+            // same check as the interpreted MVEL evaluator
+            return ((String) list).contains( String.valueOf( item ) );
         } else if (item == null) {
             return false;
         } else if (list instanceof int[]) {

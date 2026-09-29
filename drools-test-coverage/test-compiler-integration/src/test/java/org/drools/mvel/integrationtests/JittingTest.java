@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import org.drools.mvel.compiler.Person;
 import org.drools.mvel.integrationtests.facts.AnEnum;
 import org.drools.mvel.integrationtests.facts.FactWithEnum;
+import org.drools.mvel.integrationtests.facts.FactWithMap;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
@@ -255,6 +256,35 @@ public class JittingTest {
         ksession.insert(person);
 
         assertThat(ksession.fireAllRules()).isEqualTo(expectedFires);
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJitContainsOnStringTypedAsObject(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // The build resolves itemsMap.get() to String from the generics; the jitter sees the erased Object
+        checkJitContainsOnStringTypedAsObject(kieBaseTestConfiguration, "itemsMap.get(1) contains \"T80011\"", 1);
+        checkJitContainsOnStringTypedAsObject(kieBaseTestConfiguration, "itemsMap.get(1) contains \"T99999\"", 0);
+        checkJitContainsOnStringTypedAsObject(kieBaseTestConfiguration, "itemsMap.get(1) not contains \"T80011\"", 0);
+        checkJitContainsOnStringTypedAsObject(kieBaseTestConfiguration, "itemsMap.get(1) not contains \"T99999\"", 1);
+    }
+
+    private void checkJitContainsOnStringTypedAsObject(KieBaseTestConfiguration kieBaseTestConfiguration, String constraint, int expectedFires) {
+        String drl =
+                "import " + FactWithMap.class.getCanonicalName() + ";\n" +
+                "rule R when\n" +
+                "    FactWithMap( " + constraint + " )\n" +
+                "then\n" +
+                "end\n";
+
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
+        final KieBase kieBase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(kieModule, kieBaseTestConfiguration, ConstraintJittingThresholdOption.get(0));
+        final KieSession ksession = kieBase.newKieSession();
+        try {
+            ksession.insert(new FactWithMap(1, "FAILURE.T80011,FAILURE.T80012"));
+            assertThat(ksession.fireAllRules()).as(constraint).isEqualTo(expectedFires);
+        } finally {
+            ksession.dispose();
+        }
     }
 
     @ParameterizedTest(name = "KieBase type={0}")
