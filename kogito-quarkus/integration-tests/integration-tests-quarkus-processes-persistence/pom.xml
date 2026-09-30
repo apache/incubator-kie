@@ -29,6 +29,23 @@
   <artifactId>integration-tests-quarkus-processes-persistence</artifactId>
   <name>Kogito :: Integration Tests :: Quarkus :: Processes :: Persistence</name>
 
+  <properties>
+    <allowedPomsList>org.kie.kogito:kogito-quarkus-bom,org.kie.kogito:integration-tests-quarkus-processes-persistence</allowedPomsList>
+    <allowed_GA>org.kie.kogito:kogito-apps-quarkus-bom</allowed_GA>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.kie.kogito</groupId>
+        <artifactId>kogito-apps-quarkus-bom</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <modules>
     <module>integration-tests-processes-persistence-common</module>
     <module>integration-tests-quarkus-processes-postgresql</module>

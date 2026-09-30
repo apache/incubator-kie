@@ -26,14 +26,20 @@ import javax.sql.DataSource;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kie.kogito.internal.process.runtime.HeadersPersistentConfig;
 import org.kie.kogito.persistence.jdbc.AbstractProcessInstancesFactory;
+import org.kie.kogito.persistence.jdbc.JDBCProcessInstances;
+import org.kie.kogito.process.Process;
 import org.kie.kogito.process.Processes;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 
 @ApplicationScoped
 public class JDBCProcessInstancesFactory extends AbstractProcessInstancesFactory {
+
+    @Inject
+    Instance<TransactionSynchronizationRegistry> txSyncRegistry;
 
     @Inject
     public JDBCProcessInstancesFactory(DataSource dataSource,
@@ -46,6 +52,31 @@ public class JDBCProcessInstancesFactory extends AbstractProcessInstancesFactory
     }
 
     public JDBCProcessInstancesFactory() {
+    }
+
+    @Override
+    public JDBCProcessInstances<?> createProcessInstances(Process<?> process) {
+        JDBCProcessInstances<?> instances = super.createProcessInstances(process);
+        if (txSyncRegistry != null && txSyncRegistry.isResolvable()) {
+            TransactionSynchronizationRegistry registry = txSyncRegistry.get();
+            instances.setTransactionRegistrar(unlockAction -> {
+                if (registry.getTransactionStatus() != jakarta.transaction.Status.STATUS_NO_TRANSACTION) {
+                    registry.registerInterposedSynchronization(new jakarta.transaction.Synchronization() {
+                        @Override
+                        public void beforeCompletion() {
+                        }
+
+                        @Override
+                        public void afterCompletion(int status) {
+                            unlockAction.run();
+                        }
+                    });
+                } else {
+                    unlockAction.run();
+                }
+            });
+        }
+        return instances;
     }
 
 }

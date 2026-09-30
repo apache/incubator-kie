@@ -53,6 +53,14 @@
     </dependency>
     <dependency>
       <groupId>org.kie</groupId>
+      <artifactId>kogito-addons-quarkus-embedded-jobs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kie</groupId>
+      <artifactId>kogito-addons-quarkus-embedded-jobs-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kie</groupId>
       <artifactId>kie-addons-quarkus-process-management</artifactId>
     </dependency>
     <dependency>

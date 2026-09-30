@@ -111,6 +111,15 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
 
     private ProcessInstanceLockStrategy processInstanceLockStrategy;
 
+    /**
+     * Replaces the lock strategy for this instance. Called by the persistence layer when a
+     * transaction-aware strategy (e.g. {@link org.kie.kogito.process.impl.lock.TransactionAwareProcessInstanceLockStrategy})
+     * needs to be installed after construction.
+     */
+    public void internalSetProcessInstanceLockStrategy(ProcessInstanceLockStrategy processInstanceLockStrategy) {
+        this.processInstanceLockStrategy = processInstanceLockStrategy;
+    }
+
     public AbstractProcessInstance(AbstractProcess<T> process, T variables, ProcessRuntime rt) {
         this(process, variables, null, rt);
     }
@@ -615,8 +624,22 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
         // Check if this is a reentrant call before entering the lock
         boolean isReentrant = processInstanceLockStrategy.isLockedByCurrentThread(id);
 
-        return processInstanceLockStrategy.executeOperation(id, () -> {
+        return processInstanceLockStrategy.executeWriteOperation(id, () -> {
+            // The process instance (and its optimistic-lock version) may have been loaded from
+            // the DB *before* this lock was acquired (e.g. by JDBCProcessInstances.findById in
+            // ProcessInstanceJobExecutor). Discard that stale snapshot so that the SELECT issued
+            // by reloadSupplier happens *inside* the lock, guaranteeing the version we write back
+            // was read under mutual exclusion with every other writer.
+            // Guards:
+            //   !isReentrant — reentrant callers must not null out the parent's live state.
+            //   reloadSupplier != null — brand-new instances (start path) have no supplier yet;
+            //                           their processInstance was set in the constructor.
+            if (!isReentrant && reloadSupplier != null) {
+                LOG.trace("executeInWorkflowProcessInstance [{}] discarding stale snapshot (version={}) before lock-guarded reload", id, this.version);
+                this.processInstance = null;
+            }
             WorkflowProcessInstanceImpl workflowProcessInstance = internalLoadProcessInstanceState();
+            LOG.trace("executeInWorkflowProcessInstance [{}] state loaded, version={}, reentrant={}", id, this.version, isReentrant);
             if (isProcessInstanceConnected()) {
                 getProcessRuntime().getProcessInstanceManager().addProcessInstance(workflowProcessInstance);
             }
@@ -636,6 +659,7 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
             }
 
             if (isProcessInstanceConnected()) {
+                LOG.trace("executeInWorkflowProcessInstance [{}] about to syncPersistence with version={}", id, this.version);
                 syncPersistence(workflowProcessInstance);
                 getProcessRuntime().getProcessInstanceManager().removeProcessInstance(workflowProcessInstance);
             }

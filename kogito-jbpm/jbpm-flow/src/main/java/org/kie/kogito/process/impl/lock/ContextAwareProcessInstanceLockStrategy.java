@@ -68,6 +68,18 @@ public class ContextAwareProcessInstanceLockStrategy implements ProcessInstanceL
     }
 
     @Override
+    public <T> T executeWriteOperation(String processInstanceId, WorkflowAtomicExecutor<T> operation) {
+        return delegate.executeWriteOperation(processInstanceId, () -> {
+            ProcessInstanceContext.setProcessInstanceId(processInstanceId);
+            try {
+                return operation.execute();
+            } finally {
+                ProcessInstanceContext.clear();
+            }
+        });
+    }
+
+    @Override
     public boolean isLockedByCurrentThread(String processInstanceId) {
         return delegate.isLockedByCurrentThread(processInstanceId);
     }

@@ -32,9 +32,8 @@ import org.kie.kogito.uow.UnitOfWorkManager;
 public class ProcessInstanceJobExecutor implements JobExecutor {
     public static final String SIGNAL = "timerTriggered";
 
-    private Processes processes;
-
-    private UnitOfWorkManager uom;
+    private final Processes processes;
+    private final UnitOfWorkManager uom;
 
     public ProcessInstanceJobExecutor(Processes processes, UnitOfWorkManager unitOfWorkManager) {
         this.processes = processes;
