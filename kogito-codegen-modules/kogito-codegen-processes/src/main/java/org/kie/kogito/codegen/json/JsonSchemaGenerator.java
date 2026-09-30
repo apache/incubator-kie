@@ -165,6 +165,14 @@ public class JsonSchemaGenerator {
     }
 
     private static boolean checkFields(FieldScope fieldScope) {
+        if (Object.class.equals(fieldScope.getDeclaredType().getErasedType())) {
+            logger.warn("Field '{}' in '{}' is declared as java.lang.Object and will be excluded from the " +
+                    "generated JSON schema. The UI cannot render a form widget for an untyped field. " +
+                    "Use a concrete type to enable form rendering.",
+                    fieldScope.getDeclaredName(),
+                    fieldScope.getDeclaringType().getErasedType().getSimpleName());
+            return true;
+        }
         return (fieldScope.getDeclaringType().getErasedType().isAnnotationPresent(UserTask.class) && fieldScope.getAnnotation(UserTaskParam.class) == null)
                 || (fieldScope.getDeclaringType().getErasedType().isAnnotationPresent(ProcessInput.class) && fieldScope.getAnnotation(VariableInfo.class) == null);
     }
