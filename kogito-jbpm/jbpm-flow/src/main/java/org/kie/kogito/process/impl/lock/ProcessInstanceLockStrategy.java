@@ -20,7 +20,22 @@ package org.kie.kogito.process.impl.lock;
 
 public interface ProcessInstanceLockStrategy {
 
-    <T> T executeOperation(String processInstanceId, WorkflowAtomicExecutor<T> empty);
+    <T> T executeOperation(String processInstanceId, WorkflowAtomicExecutor<T> executor);
+
+    /**
+     * Executes a write operation under the lock.
+     * Implementations may align the lock release with the surrounding transaction boundary
+     * (see {@link TransactionAwareProcessInstanceLockStrategy}).
+     * The default delegates to {@link #executeOperation}.
+     *
+     * @param processInstanceId the process instance id
+     * @param executor the operation to execute
+     * @param <T> the return type
+     * @return the result of the operation
+     */
+    default <T> T executeWriteOperation(String processInstanceId, WorkflowAtomicExecutor<T> executor) {
+        return executeOperation(processInstanceId, executor);
+    }
 
     /**
      * Checks if the current thread already holds the lock for the given process instance.
