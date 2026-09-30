@@ -152,6 +152,16 @@ public class JsonSchemaGeneratorTest {
         private Person person;
     }
 
+    @ProcessInput(processName = "objectVarProcess")
+    private static class ProcessInputModelWithObjectVar {
+
+        @VariableInfo
+        private String name;
+
+        @VariableInfo
+        private Object data;
+    }
+
     private static class Person {
 
         @SuppressWarnings("unused")
@@ -414,5 +424,20 @@ public class JsonSchemaGeneratorTest {
 
     private String resolveDefinitionsProperty(SchemaVersion schemaVersion) {
         return SchemaVersion.DRAFT_2019_09.equals(schemaVersion) ? "$defs" : "definitions";
+    }
+
+    @Test
+    public void testObjectTypedFieldIsExcludedFromSchema() throws IOException {
+        Collection<GeneratedFile> files = new JsonSchemaGenerator.ClassBuilder(
+                Stream.of(ProcessInputModelWithObjectVar.class)).build().generate();
+        assertThat(files).hasSize(1);
+
+        ObjectReader reader = new ObjectMapper().reader();
+        JsonNode node = reader.readTree(files.iterator().next().contents());
+
+        JsonNode properties = node.get("properties");
+        assertThat(properties).isNotNull();
+        assertThat(properties.has("name")).isTrue();
+        assertThat(properties.has("data")).isFalse();
     }
 }

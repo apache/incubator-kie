@@ -32,6 +32,8 @@ import org.kie.kogito.codegen.Generated;
 import org.kie.kogito.codegen.VariableInfo;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 import org.kie.kogito.internal.utils.KogitoTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.javaparser.ast.CompilationUnit;
@@ -66,6 +68,8 @@ import static org.drools.util.StringUtils.ucFirst;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
 
 public class ModelMetaData {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModelMetaData.class);
 
     private final String processId;
     private final String packageName;
@@ -222,6 +226,12 @@ public class ModelMetaData {
             String varName = variable.getValue().getName();
             String vtype = variable.getValue().getType().getStringType();
             String sanitizedName = variable.getValue().getSanitizedName();
+
+            if (Object.class.getCanonicalName().equals(vtype)) {
+                LOGGER.warn("Process variable '{}' is declared as java.lang.Object. " +
+                        "Object type variables are persisted using Java serialization. " +
+                        "Make sure the stored value implements java.io.Serializable.", varName);
+            }
 
             FieldDeclaration fd = declareField(sanitizedName, vtype);
             modelClass.addMember(fd);

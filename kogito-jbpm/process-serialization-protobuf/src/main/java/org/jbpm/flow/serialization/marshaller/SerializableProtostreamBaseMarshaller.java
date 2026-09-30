@@ -18,15 +18,11 @@
  */
 package org.jbpm.flow.serialization.marshaller;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.infinispan.protostream.MessageMarshaller;
+import org.jbpm.flow.serialization.JavaSerializationUtils;
 import org.jbpm.flow.serialization.ProcessInstanceMarshallerException;
 
 public class SerializableProtostreamBaseMarshaller implements MessageMarshaller<Serializable> {
@@ -43,24 +39,23 @@ public class SerializableProtostreamBaseMarshaller implements MessageMarshaller<
 
     @Override
     public Serializable readFrom(ProtoStreamReader reader) throws IOException {
-        return (Serializable) readObject(reader.readBytes("data"));
+        byte[] data = reader.readBytes("data");
+        if (data == null || data.length == 0) {
+            return null;
+        }
+        try {
+            return (Serializable) JavaSerializationUtils.deserialize(data);
+        } catch (ClassNotFoundException e) {
+            throw new ProcessInstanceMarshallerException("Unexpected error while trying to unmarshall object", e);
+        }
     }
 
     @Override
     public void writeTo(ProtoStreamWriter writer, Serializable serializable) throws IOException {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(stream)) {
-            out.writeObject(serializable);
-            writer.writeBytes("data", stream.toByteArray());
+        try {
+            writer.writeBytes("data", JavaSerializationUtils.serialize(serializable));
         } catch (IOException e) {
             throw new ProcessInstanceMarshallerException("Not possible to marshall value: " + serializable, e);
-        }
-    }
-
-    private Object readObject(byte[] data) {
-        try (InputStream is = new ByteArrayInputStream(data); ObjectInputStream ois = new ObjectInputStream(is)) {
-            return ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new ProcessInstanceMarshallerException("Unexpected error while trying to unmarshall object", e);
         }
     }
 

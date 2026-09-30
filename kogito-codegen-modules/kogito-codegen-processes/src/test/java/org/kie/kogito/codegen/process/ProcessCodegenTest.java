@@ -48,6 +48,8 @@ class ProcessCodegenTest {
     private static final Path BASE_PATH = Paths.get("src/test/resources/").toAbsolutePath();
     private static final String MESSAGE_USERTASK_SOURCE = "usertask/UserTasksProcess.bpmn2";
     private static final Path MESSAGE_USERTASK_SOURCE_FULL_SOURCE = BASE_PATH.resolve(MESSAGE_USERTASK_SOURCE);
+    private static final String OBJECT_VARIABLE_SOURCE = "objectvariable/ObjectVariableProcess.bpmn2";
+    private static final Path OBJECT_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(OBJECT_VARIABLE_SOURCE);
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
@@ -145,5 +147,17 @@ class ProcessCodegenTest {
     private static Stream<Arguments> contextBuildersNotDI() {
         return Stream.of(
                 Arguments.of(JavaKogitoBuildContext.builder()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void objectVariableProcessGeneratesWithoutError(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, OBJECT_VARIABLE_SOURCE_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
     }
 }
