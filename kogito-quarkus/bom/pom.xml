@@ -31,6 +31,13 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
+    <!--
+      [CVE-2026-45292] opentelemetry-api 1.57.0 pulled in via smallrye-reactive-messaging-otel.
+      Pin to 1.62.0 before quarkus-bom import so this value takes precedence.
+      Should be removed in future Quarkus upgrades that include OpenTelemetry >= 1.62.0
+    -->
+    <version.io.opentelemetry.api>1.62.0</version.io.opentelemetry.api>
+    <version.io.opentelemetry.instrumentation>2.28.1-alpha</version.io.opentelemetry.instrumentation>
     <version.io.quarkus>3.33.3.2</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
@@ -187,6 +194,18 @@
         <groupId>org.mongodb</groupId>
         <artifactId>bson-record-codec</artifactId>
         <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
+        <version>${version.io.opentelemetry.instrumentation}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+        <version>${version.io.opentelemetry.api}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
