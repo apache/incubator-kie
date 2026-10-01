@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,14 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.kie.kogito.codegen.data;
 
+public class ObjectHolder {
 
-String log = new File(basedir, 'build.log').text;
+    private Object value;
 
-log.contains("[INFO] empty .............................................. SUCCESS [  0.179 s]")
-log.contains("[INFO] module1 ............................................ SUCCESS [  0.008 s]")
-log.contains("[INFO] module2 ............................................ FAILURE [  0.009 s]")
-log.contains("[INFO] BUILD FAILURE")
-log.contains("org.kie.noexternalmanageddependencyrule.NoExternalManagedDependencyRule failed with message:")
-log.contains("The current pom org.foo.bar:module2:999-SNAPSHOT-2026-05-14 has the following invalid managed dependencies:")
-log.contains("org.drools:drools-docs")
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+}

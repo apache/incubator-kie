@@ -87,6 +87,7 @@ public class ReflectionProtoGenerator extends AbstractProtoGenerator<Class<?>> {
 
             String fieldTypeString = pd.getPropertyType().getCanonicalName();
             Class<?> fieldType = pd.getPropertyType();
+            LOGGER.debug("Resolving proto type for field '{}' of type '{}' in '{}'", pd.getName(), fieldTypeString, clazz.getName());
             String protoType;
             if (pd.getPropertyType().isArray() && !pd.getPropertyType().getComponentType().isPrimitive()) {
                 fieldTypeString = ARRAY;

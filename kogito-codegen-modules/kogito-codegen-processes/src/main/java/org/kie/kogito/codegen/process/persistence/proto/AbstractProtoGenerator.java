@@ -271,8 +271,8 @@ public abstract class AbstractProtoGenerator<T> implements ProtoGenerator {
                     return null;
                 }
                 if (Object.class.getCanonicalName().equals(type)) {
-                    LOGGER.warn("Process variable is declared as java.lang.Object. " +
-                            "Object type variables are persisted using Java serialization. " +
+                    LOGGER.warn("A field is declared as java.lang.Object. " +
+                            "It will be persisted using Java serialization. " +
                             "Make sure the stored value implements java.io.Serializable.");
                     return KOGITO_SERIALIZABLE;
                 }
