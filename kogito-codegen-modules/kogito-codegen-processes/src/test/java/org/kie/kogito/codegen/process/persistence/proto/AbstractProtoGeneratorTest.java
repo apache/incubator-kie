@@ -19,35 +19,11 @@
 package org.kie.kogito.codegen.process.persistence.proto;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.drools.codegen.common.GeneratedFile;
 import org.junit.jupiter.api.Test;
-import org.kie.kogito.codegen.data.Address;
-import org.kie.kogito.codegen.data.Answer;
-import org.kie.kogito.codegen.data.AnswerBroken;
-import org.kie.kogito.codegen.data.AnswerBrokenV2;
-import org.kie.kogito.codegen.data.AnswerWithAnnotations;
-import org.kie.kogito.codegen.data.GeneratedPOJO;
-import org.kie.kogito.codegen.data.Hello;
-import org.kie.kogito.codegen.data.HelloModel;
-import org.kie.kogito.codegen.data.JacksonData;
-import org.kie.kogito.codegen.data.ListWithoutType;
-import org.kie.kogito.codegen.data.ObjectVariableModel;
-import org.kie.kogito.codegen.data.Person;
-import org.kie.kogito.codegen.data.PersonSubClass;
-import org.kie.kogito.codegen.data.PersonVarInfo;
-import org.kie.kogito.codegen.data.PersonWithAddress;
-import org.kie.kogito.codegen.data.PersonWithAddresses;
-import org.kie.kogito.codegen.data.PersonWithList;
-import org.kie.kogito.codegen.data.Question;
-import org.kie.kogito.codegen.data.QuestionWithAnnotatedEnum;
-import org.kie.kogito.codegen.data.Travels;
+import org.kie.kogito.codegen.data.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -828,6 +804,55 @@ public abstract class AbstractProtoGeneratorTest<T> {
         assertClassIsIncludedInSubclass(person, personSubClass);
     }
 
+    @Test
+    void pojoWithObjectField() {
+        AbstractProtoGenerator<T> generator = protoGeneratorBuilder()
+                .withDataClasses(Collections.singleton(convertToType(ObjectHolder.class)))
+                .build(null);
+
+        Proto proto = generator.protoOfDataClasses("org.kie.kogito.test.persons");
+        assertThat(proto).isNotNull();
+
+        assertThat(proto.getPackageName()).isEqualTo("org.kie.kogito.test.persons");
+        assertThat(proto.getSyntax()).isEqualTo("proto2");
+        assertThat(proto.getMessages()).hasSize(1);
+
+        ProtoMessage protoMessage = proto.getMessages().get(0);
+        assertThat(protoMessage).isNotNull();
+        assertThat(protoMessage.getName()).isEqualTo("ObjectHolder");
+        assertThat(protoMessage.getJavaPackageOption()).isEqualTo("org.kie.kogito.codegen.data");
+        assertThat(protoMessage.getFields()).hasSize(1)
+                .element(0)
+                .hasFieldOrPropertyWithValue("name", "value")
+                .hasFieldOrPropertyWithValue("type", "kogito.Serializable");
+    }
+
+    @Test
+    void modelWithObjectField() {
+        AbstractProtoGenerator<T> generator = protoGeneratorBuilder()
+                .build(Collections.singleton(convertToType(ObjectProcessModel.class)));
+
+        Proto proto = generator.generate("comment", ProtoGenerator.INDEX_COMMENT, "org.kie.kogito.test",
+                convertToType(ObjectProcessModel.class));
+
+        assertThat(proto.getPackageName()).isEqualTo("org.kie.kogito.test");
+        assertThat(proto.getSyntax()).isEqualTo("proto2");
+        assertThat(proto.getMessages()).hasSize(1);
+
+        ProtoMessage message = proto.getMessages().get(0);
+        assertThat(message.getName()).isEqualTo("ObjectProcess");
+        assertThat(message.getJavaPackageOption()).isEqualTo("org.kie.kogito.codegen.data");
+
+        assertThat(message.getFields()).hasSize(2);
+
+        ProtoField valueField = message.getFields().stream()
+                .filter(f -> f.getName().equals("value"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(valueField.getType()).isEqualTo(ProtoGenerator.KOGITO_SERIALIZABLE);
+        assertThat(valueField.getOption()).isEqualTo("[kogito_java_class = \"java.lang.Object\"]");
+    }
+
     private void assertClassIsIncludedInSubclass(ProtoMessage superClass, ProtoMessage subClass) {
         for (ProtoField field : superClass.getFields()) {
             assertThat(field).isNotNull();
@@ -843,28 +868,5 @@ public abstract class AbstractProtoGeneratorTest<T> {
             }
             assertThat(found).withFailMessage("Impossible to find field " + field.getName() + " in subclass").isTrue();
         }
-    }
-
-    @Test
-    void testObjectVariableMapsToKogitoSerializable() {
-        AbstractProtoGenerator<T> generator = protoGeneratorBuilder()
-                .build(Collections.singleton(convertToType(ObjectVariableModel.class)));
-
-        Collection<GeneratedFile> files = generator.generateProtoFiles();
-        assertThat(files).isNotEmpty();
-
-        Proto proto = generator.generate("@Indexed", ProtoGenerator.INDEX_COMMENT, "org.kie.kogito.test",
-                convertToType(ObjectVariableModel.class));
-        assertThat(proto).isNotNull();
-        assertThat(proto.getMessages()).hasSize(1);
-
-        ProtoMessage message = proto.getMessages().get(0);
-        assertThat(message.getName()).isEqualTo("ObjectVarProcess");
-
-        ProtoField myVarField = message.getFields().stream()
-                .filter(f -> "myVar".equals(f.getName()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Field 'myVar' not found in proto message"));
-        assertThat(myVarField.getType()).isEqualTo("kogito.Serializable");
     }
 }
