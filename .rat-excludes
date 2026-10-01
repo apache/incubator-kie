@@ -2354,6 +2354,7 @@ kogito-codegen-modules/kogito-codegen-predictions/src/test/resources/prediction/
 kogito-codegen-modules/kogito-codegen-predictions/src/test/resources/prediction/test_multiplemodels.pmml
 kogito-codegen-modules/kogito-codegen-predictions/src/test/resources/prediction/test_regression.pmml
 kogito-codegen-modules/kogito-codegen-predictions/src/test/resources/prediction/test_scorecard.pmml
+kogito-codegen-modules/kogito-codegen-processes/src/test/resources/objectvariable/ObjectVariableProcess.bpmn2
 kogito-codegen-modules/kogito-codegen-processes-integration-tests/src/test/resources/META-INF/kogito.addon
 kogito-codegen-modules/kogito-codegen-processes-integration-tests/src/test/resources/org/kie/kogito/codegen/process/process-generation-test.skip.txt
 kogito-codegen-modules/kogito-codegen-sample/kogito-codegen-sample-generator/src/test/resources/sampleFile1.txt
