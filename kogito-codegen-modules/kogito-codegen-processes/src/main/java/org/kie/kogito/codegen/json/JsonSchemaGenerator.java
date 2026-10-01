@@ -112,7 +112,7 @@ public class JsonSchemaGenerator {
         builder.forTypesInGeneral()
                 .withStringFormatResolver(target -> target.getSimpleTypeDescription().equals("Date") ? "date-time" : null);
         builder.forFields()
-                .withIgnoreCheck(JsonSchemaGenerator::checkFields)
+                .withIgnoreCheck(JsonSchemaGenerator::shouldIgnoreField)
                 .withCustomDefinitionProvider(this::getInputOutput);
         SchemaGenerator generator = new SchemaGenerator(builder.build());
         ObjectWriter writer = new ObjectMapper().writer();
@@ -164,17 +164,24 @@ public class JsonSchemaGenerator {
         throw new RuntimeException("Cannot create the schema name. Class must be have UserTask or ProcessInput annotation");
     }
 
-    private static boolean checkFields(FieldScope fieldScope) {
+    private static boolean shouldIgnoreField(FieldScope fieldScope) {
+        Class<?> declaringType = fieldScope.getDeclaringType().getErasedType();
+
+        if (declaringType.isAnnotationPresent(UserTask.class) && fieldScope.getAnnotation(UserTaskParam.class) == null
+                || declaringType.isAnnotationPresent(ProcessInput.class) && fieldScope.getAnnotation(VariableInfo.class) == null) {
+            return true;
+        }
+
         if (Object.class.equals(fieldScope.getDeclaredType().getErasedType())) {
             logger.warn("Field '{}' in '{}' is declared as java.lang.Object and will be excluded from the " +
                     "generated JSON schema. The UI cannot render a form widget for an untyped field. " +
                     "Use a concrete type to enable form rendering.",
                     fieldScope.getDeclaredName(),
-                    fieldScope.getDeclaringType().getErasedType().getSimpleName());
+                    declaringType.getSimpleName());
             return true;
         }
-        return (fieldScope.getDeclaringType().getErasedType().isAnnotationPresent(UserTask.class) && fieldScope.getAnnotation(UserTaskParam.class) == null)
-                || (fieldScope.getDeclaringType().getErasedType().isAnnotationPresent(ProcessInput.class) && fieldScope.getAnnotation(VariableInfo.class) == null);
+
+        return false;
     }
 
 }

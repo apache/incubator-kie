@@ -46,6 +46,7 @@ import com.github.victools.jsonschema.generator.SchemaVersion;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.kie.kogito.codegen.json.JsonSchemaGenerator.DEFAULT_SCHEMA_VERSION;
 
 public class JsonSchemaGeneratorTest {
 
@@ -160,6 +161,33 @@ public class JsonSchemaGeneratorTest {
 
         @VariableInfo
         private Object data;
+    }
+
+    @UserTask(taskName = "objectVarTask", processName = "org.jbpm.test")
+    private static class UserTaskWithObjectVar {
+
+        @UserTaskParam(UserTaskParam.ParamType.INPUT)
+        private String name;
+
+        @UserTaskParam(UserTaskParam.ParamType.INPUT)
+        private Object payload;
+    }
+
+    private static class HolderWithObjectField {
+
+        private String label;
+
+        private Object nested;
+    }
+
+    @ProcessInput(processName = "nestedObjectVarProcess")
+    private static class ProcessInputModelWithNestedObjectVar {
+
+        @VariableInfo
+        private String name;
+
+        @VariableInfo
+        private HolderWithObjectField holder;
     }
 
     private static class Person {
@@ -439,5 +467,41 @@ public class JsonSchemaGeneratorTest {
         assertThat(properties).isNotNull();
         assertThat(properties.has("name")).isTrue();
         assertThat(properties.has("data")).isFalse();
+    }
+
+    @Test
+    public void testObjectTypedUserTaskParamIsExcludedFromSchema() throws IOException {
+        Collection<GeneratedFile> files = new JsonSchemaGenerator.ClassBuilder(
+                Stream.of(UserTaskWithObjectVar.class)).build().generate();
+        assertThat(files).hasSize(1);
+
+        ObjectReader reader = new ObjectMapper().reader();
+        JsonNode properties = reader.readTree(files.iterator().next().contents()).get("properties");
+        assertThat(properties).isNotNull();
+        assertThat(properties.has("name")).isTrue();
+        assertThat(properties.has("payload")).isFalse();
+    }
+
+    @Test
+    public void testNestedObjectTypedFieldIsExcludedFromSchema() throws IOException {
+        Collection<GeneratedFile> files = new JsonSchemaGenerator.ClassBuilder(
+                Stream.of(ProcessInputModelWithNestedObjectVar.class)).build().generate();
+        assertThat(files).hasSize(1);
+
+        ObjectReader reader = new ObjectMapper().reader();
+        JsonNode node = reader.readTree(files.iterator().next().contents());
+
+        // top-level: holder present, name present
+        JsonNode properties = node.get("properties");
+        assertThat(properties).isNotNull();
+        assertThat(properties.has("name")).isTrue();
+        assertThat(properties.has("holder")).isTrue();
+
+        // nested: label present, but nested Object field excluded
+        String definitionsKey = resolveDefinitionsProperty(DEFAULT_SCHEMA_VERSION);
+        JsonNode holderDef = node.get(definitionsKey).get("HolderWithObjectField");
+        assertThat(holderDef).isNotNull();
+        assertThat(holderDef.get("properties").has("label")).isTrue();
+        assertThat(holderDef.get("properties").has("nested")).isFalse();
     }
 }
