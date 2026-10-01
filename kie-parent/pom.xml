@@ -87,7 +87,7 @@
     <version.build.helper.maven.plugin>3.4.0</version.build.helper.maven.plugin>
     <version.ch.obermuhlner>2.0.1</version.ch.obermuhlner>
     <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
-    <version.com.fasterxml.jackson>2.22.1</version.com.fasterxml.jackson>
+    <version.com.fasterxml.jackson>2.22.3</version.com.fasterxml.jackson>
     <version.com.fasterxml.jackson.annotations>2.22</version.com.fasterxml.jackson.annotations>
     <version.com.fasterxml.jackson.databind>2.22.2</version.com.fasterxml.jackson.databind>
     <version.com.fasterxml.jackson.datatype>2.22.1</version.com.fasterxml.jackson.datatype>
