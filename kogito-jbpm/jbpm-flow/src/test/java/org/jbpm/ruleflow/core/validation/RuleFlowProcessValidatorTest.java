@@ -32,12 +32,18 @@ import org.jbpm.workflow.core.node.ActionNode;
 import org.jbpm.workflow.core.node.CompositeNode;
 import org.jbpm.workflow.core.node.DynamicNode;
 import org.jbpm.workflow.core.node.EndNode;
+import org.jbpm.workflow.core.node.ForEachNode;
+import org.jbpm.workflow.core.node.RuleSetNode;
 import org.jbpm.workflow.core.node.StartNode;
+import org.jbpm.workflow.core.node.SubProcessNode;
+import org.jbpm.workflow.core.node.WorkItemNode;
+import org.jbpm.workflow.instance.rule.RuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.api.definition.process.WorkflowElementIdentifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jbpm.ruleflow.core.Metadata.CUSTOM_SLA_DUE_DATE;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -241,5 +247,164 @@ public class RuleFlowProcessValidatorTest {
         ProcessValidationError[] errors = validator.validateProcess(process);
         assertThat(errors).isNotNull().hasSize(1);
         assertThat(errors[0].getMessage()).isEqualTo("Node 'ActionNode1' [3] mvel script language is not supported in Kogito.");
+    }
+
+    @Test
+    public void testInvalidSlaDueDateForServiceTask() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+
+        WorkItemNode node = new WorkItemNode();
+        node.setName("Service Task");
+        node.setMetaData("customSLADueDate", "2026-09-18T18:00:00Z");
+
+        process.addNode(node);
+
+        assertInvalidSlaDueDate(process, "Service Task");
+    }
+
+    @Test
+    public void testInvalidSlaDueDateForBusinessRuleTask() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+
+        RuleSetNode node = new RuleSetNode();
+        node.setName("Business Rule Task");
+        node.setRuleType(RuleType.ruleFlowGroup("test-group"));
+        node.setMetaData("customSLADueDate", "2026-09-18T18:00:00Z");
+
+        process.addNode(node);
+
+        assertInvalidSlaDueDate(process, "Business Rule Task");
+    }
+
+    @Test
+    public void testInvalidSlaDueDateForSubProcess() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+
+        SubProcessNode node = new SubProcessNode();
+        node.setName("Sub Process");
+        node.setMetaData("customSLADueDate", "2026-09-18T18:00:00Z");
+
+        process.addNode(node);
+
+        assertInvalidSlaDueDate(process, "Sub Process");
+    }
+
+    @Test
+    public void testInvalidSlaDueDateForForEachNode() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+
+        ForEachNode node = new ForEachNode();
+        node.setName("Multi Instance Sub Process");
+        node.setMetaData("customSLADueDate", "2026-09-18T18:00:00Z");
+
+        process.addNode(node);
+
+        assertInvalidSlaDueDate(process, "Multi Instance Sub Process");
+    }
+
+    @Test
+    public void testValidSlaDueDateForDifferentNodeTypes() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+
+        WorkItemNode humanTask = new WorkItemNode();
+        humanTask.setName("Human Task");
+        humanTask.setMetaData("customSLADueDate", "10s");
+        process.addNode(humanTask);
+
+        RuleSetNode businessRuleTask = new RuleSetNode();
+        businessRuleTask.setName("Business Rule Task");
+        businessRuleTask.setRuleType(RuleType.ruleFlowGroup("test-group"));
+        businessRuleTask.setMetaData("customSLADueDate", "PT10S");
+
+        assertThat(businessRuleTask.getRuleType()).isNotNull();
+
+        SubProcessNode subProcess = new SubProcessNode();
+        subProcess.setName("Sub Process");
+        subProcess.setMetaData("customSLADueDate", "10m");
+        process.addNode(subProcess);
+
+        ForEachNode forEachNode = new ForEachNode();
+        forEachNode.setName("Multi Instance Sub Process");
+        forEachNode.setMetaData("customSLADueDate", "PT10M");
+        process.addNode(forEachNode);
+
+        ProcessValidationError[] errors = RuleFlowProcessValidator.getInstance().validateProcess(process);
+
+        assertThat(errors)
+                .extracting(ProcessValidationError::getMessage)
+                .noneMatch(message -> message.contains("Invalid SLA due date"));
+    }
+
+    @Test
+    public void testInvalidProcessSlaDueDate() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+        process.setMetaData(
+                CUSTOM_SLA_DUE_DATE,
+                "2026-09-18T18:00:00Z");
+
+        ProcessValidationError[] errors = RuleFlowProcessValidator.getInstance().validateProcess(process);
+
+        assertThat(errors)
+                .extracting(ProcessValidationError::getMessage)
+                .anyMatch(message -> message.contains(
+                        "Invalid SLA due date '2026-09-18T18:00:00Z' configured for process 'test'"));
+    }
+
+    @Test
+    public void testValidIsoProcessSlaDueDate() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+        process.setMetaData(
+                CUSTOM_SLA_DUE_DATE,
+                "PT10S");
+
+        ProcessValidationError[] errors =
+                RuleFlowProcessValidator.getInstance().validateProcess(process);
+
+        assertThat(errors)
+                .extracting(ProcessValidationError::getMessage)
+                .noneMatch(message -> message.contains("Invalid SLA due date"));
+    }
+
+    @Test
+    public void testValidProcessSlaDueDate() {
+        RuleFlowProcess process = new RuleFlowProcess();
+        process.setId("test");
+        process.setName("test");
+        process.setMetaData(
+                CUSTOM_SLA_DUE_DATE,
+                "10s");
+
+        ProcessValidationError[] errors =
+                RuleFlowProcessValidator.getInstance().validateProcess(process);
+
+        assertThat(errors)
+                .extracting(ProcessValidationError::getMessage)
+                .noneMatch(message -> message.contains("Invalid SLA due date"));
+    }
+
+    private void assertInvalidSlaDueDate(RuleFlowProcess process,
+            String nodeName) {
+
+        ProcessValidationError[] errors = RuleFlowProcessValidator.getInstance().validateProcess(process);
+
+        assertThat(errors)
+                .extracting(ProcessValidationError::getMessage)
+                .anyMatch(message -> message.contains(
+                        "Invalid SLA due date '2026-09-18T18:00:00Z' configured for node '" +
+                                nodeName + "'"));
     }
 }
