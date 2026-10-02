@@ -34,6 +34,8 @@ import org.kie.api.definition.process.WorkflowElementIdentifier;
 import org.kie.kogito.UserTask;
 import org.kie.kogito.UserTaskParam;
 import org.kie.kogito.UserTaskParam.ParamType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
@@ -70,6 +72,8 @@ import static org.jbpm.ruleflow.core.Metadata.CUSTOM_AUTO_START;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
 
 public class WorkItemModelMetaData {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkItemModelMetaData.class);
 
     private static final String TASK_INTPUT_CLASS_SUFFIX = "TaskInput";
     private static final String TASK_OUTTPUT_CLASS_SUFFIX = "TaskOutput";
@@ -205,9 +209,16 @@ public class WorkItemModelMetaData {
                 }
             }
 
+            String variableType = variable.getType().getStringType();
+            if (Object.class.getCanonicalName().equals(variableType)) {
+                LOGGER.warn("User task input variable '{}' is declared as java.lang.Object. " +
+                        "Object type variables are persisted using Java serialization. " +
+                        "Make sure the stored value implements java.io.Serializable.", entry.getKey());
+            }
+
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
-                            .setType(variable.getType().getStringType())
+                            .setType(variableType)
                             .setName(entry.getKey()))
                     .addModifier(Modifier.Keyword.PRIVATE);
 
@@ -221,7 +232,7 @@ public class WorkItemModelMetaData {
             // from static method body
             FieldAccessExpr field = new FieldAccessExpr(item, entry.getKey());
 
-            ClassOrInterfaceType type = parseClassOrInterfaceType(variable.getType().getStringType());
+            ClassOrInterfaceType type = parseClassOrInterfaceType(variableType);
             staticFromMap.addStatement(new AssignExpr(field, new CastExpr(
                     type,
                     new MethodCallExpr(
@@ -317,9 +328,16 @@ public class WorkItemModelMetaData {
                 }
             }
 
+            String variableType = variable.getType().getStringType();
+            if (Object.class.getCanonicalName().equals(variableType)) {
+                LOGGER.warn("User task output variable '{}' is declared as java.lang.Object. " +
+                        "Object type variables are persisted using Java serialization. " +
+                        "Make sure the stored value implements java.io.Serializable.", entry.getKey());
+            }
+
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
-                            .setType(variable.getType().getStringType())
+                            .setType(variableType)
                             .setName(entry.getKey()))
                     .addModifier(Modifier.Keyword.PRIVATE);
             modelClass.addMember(fd);
@@ -336,7 +354,7 @@ public class WorkItemModelMetaData {
 
             // fromMap method body
             fromMapBody.addStatement(new AssignExpr(new FieldAccessExpr(fromMapReturn, entry.getKey()),
-                    new CastExpr(new ClassOrInterfaceType(null, variable.getType().getStringType()),
+                    new CastExpr(new ClassOrInterfaceType(null, variableType),
                             new MethodCallExpr(params, "get").addArgument(new StringLiteralExpr(entry.getKey()))),
                     Operator.ASSIGN));
 

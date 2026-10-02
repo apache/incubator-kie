@@ -270,11 +270,17 @@ public abstract class AbstractProtoGenerator<T> implements ProtoGenerator {
                 if (cls.isInterface()) {
                     return null;
                 }
+                if (Object.class.getCanonicalName().equals(type)) {
+                    LOGGER.warn("A field is declared as java.lang.Object. " +
+                            "It will be persisted using Java serialization. " +
+                            "Make sure the stored value implements java.io.Serializable.");
+                    return KOGITO_SERIALIZABLE;
+                }
                 boolean assignable = Serializable.class.isAssignableFrom(cls);
                 if (assignable) {
                     return KOGITO_SERIALIZABLE;
                 } else {
-                    throw new IllegalArgumentException(format("Java type %s is no supported by Kogito persistence, please consider using a class that extends java.io.Serializable", type));
+                    throw new IllegalArgumentException(format("Java type %s is not supported by Kogito persistence, please consider using a class that extends java.io.Serializable", type));
                 }
             } catch (ClassNotFoundException e) {
                 return null;

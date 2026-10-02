@@ -137,6 +137,7 @@ public class JandexProtoGenerator extends AbstractProtoGenerator<ClassInfo> {
             String fieldTypeString = pd.type().name().toString();
 
             DotName fieldType = pd.type().name();
+            LOGGER.debug("Resolving proto type for field '{}' of type '{}' in '{}'", pd.name(), fieldTypeString, clazz.name());
             String protoType;
             if (isArray(pd)) {
                 fieldTypeString = ARRAY;
