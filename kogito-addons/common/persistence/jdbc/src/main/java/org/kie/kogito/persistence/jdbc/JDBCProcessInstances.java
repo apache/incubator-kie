@@ -159,6 +159,10 @@ public class JDBCProcessInstances<T extends Model> implements MutableProcessInst
         AbstractProcessInstance<T> instance = (AbstractProcessInstance<T>) marshaller.unmarshallProcessInstance(record.payload(), process, mode);
         instance.setVersion(record.version());
         connectInstance(instance);
+        if (instance.internalGetProcessInstance() != null) {
+            instance.internalGetProcessInstance().setRootProcessId(record.rootProcessId());
+            instance.internalGetProcessInstance().setRootProcessVersion(record.rootProcessVersion());
+        }
         return instance;
     }
 
