@@ -46,6 +46,7 @@
     <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
     <version.org.hibernate>7.2.19.Final</version.org.hibernate>
     <version.org.postgresql>42.7.13</version.org.postgresql>
+    <version.org.jboss.resteasy>6.2.18.Final</version.org.jboss.resteasy>
     <!-- Quarkus 3.33 hard requirements: smallrye-config 3.16 (quarkus-core/junit-config reference io.smallrye.config.Config)
          and jandex 3.5 (arc-processor uses MethodParameterInfo.nameOrDefault). The two smallrye-config properties are one
          artifact family in kie-parent (they map to smallrye-config-core / smallrye-config) and must move together. -->
