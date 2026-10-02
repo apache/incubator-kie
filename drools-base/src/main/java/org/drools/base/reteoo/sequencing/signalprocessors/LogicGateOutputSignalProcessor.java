@@ -46,4 +46,10 @@ public class LogicGateOutputSignalProcessor extends SignalProcessor {
         // by each downstream LogicGate resetting itself via resetPrior(). There is no
         // state held here that needs clearing.
     }
+
+    public void clearParentBit(SequenceMemory memory) {
+        long[] gateMemory = memory.getLogicGateMemory();
+        gateMemory[gate.getGateIndex()] = gateMemory[gate.getGateIndex()] & ~(1L << (index - 1));
+        memory.setLogicGateMatched(gate.getGateIndex(), false);
+    }
 }

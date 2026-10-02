@@ -555,7 +555,7 @@ public class DSL {
 
     // -- Existential operator --
 
-    public static ExprViewItem not( ViewItemBuilder<?> expression, ViewItemBuilder<?>... expressions) {
+    public static ExistentialExprViewItem not( ViewItemBuilder<?> expression, ViewItemBuilder<?>... expressions) {
         return new ExistentialExprViewItem( Condition.Type.NOT, and( expression, expressions) );
     }
 

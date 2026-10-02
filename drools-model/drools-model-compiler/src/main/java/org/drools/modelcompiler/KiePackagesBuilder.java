@@ -139,6 +139,7 @@ import org.drools.base.reteoo.sequencing.signalprocessors.LogicGate;
 import org.drools.base.reteoo.sequencing.signalprocessors.LogicGateOutputSignalProcessor;
 import org.drools.base.reteoo.sequencing.signalprocessors.SignalIndex;
 import org.drools.base.reteoo.sequencing.signalprocessors.TerminatingSignalProcessor;
+import org.drools.base.reteoo.sequencing.signalprocessors.VetoSignalProcessor;
 import org.drools.base.reteoo.sequencing.steps.Step;
 import org.drools.model.view.SelfPatternBiding;
 import org.drools.modelcompiler.attributes.LambdaEnabled;
@@ -535,25 +536,7 @@ public class KiePackagesBuilder {
                 return buildForAll( ctx, group, condition );
             }
             case SEQUENCE: {
-                int seqIdx = ctx.nextSeqIndex();
-                SequenceConditionImpl sc = (SequenceConditionImpl) condition;
-                List<Condition> steps = sc.getSubConditions();
-                int n = steps.size();
-                List<Pattern> filters = new ArrayList<>();
-                Step.StepFactory[] stepFactories = new Step.StepFactory[n];
-                int[] gateCounter = new int[]{0};
-
-                for (int i = 0; i < n; i++) {
-                    List<LogicGate> stepGates = new ArrayList<>();
-                    LogicGate root = buildStepGate(ctx, group, steps.get(i), filters, stepGates, gateCounter, seqIdx);
-                    root.setOutput(TerminatingSignalProcessor.get());
-                    stepFactories[i] = Step.of(new LogicCircuit(stepGates.toArray(new LogicGate[0])));
-                }
-
-                Sequence seq = new Sequence(0, stepFactories);
-                seq.setFilters(filters.toArray(new Pattern[0]));
-                ctx.getRule().addSequence(seq);
-                return null;
+                return buildSequenceElement(ctx, group, (SequenceConditionImpl) condition);
             }
             case CONSEQUENCE:
                 if (condition instanceof NamedConsequenceImpl) {
@@ -564,6 +547,101 @@ public class KiePackagesBuilder {
                 }
         }
         throw new UnsupportedOperationException();
+    }
+
+    private RuleConditionElement buildSequenceElement(RuleContext ctx,
+                                                         GroupElement group,
+                                                         SequenceConditionImpl condition) {
+        final int seqIdx = ctx.nextSeqIndex();
+        final SequenceConditionImpl sc = condition;
+        final List<Condition> steps = sc.getSubConditions();
+        final int n = steps.size();
+        final List<Pattern> filters = new ArrayList<>();
+        final List<Step.StepFactory> stepFactoryList = new ArrayList<>(n);
+        final int[] gateCounter = new int[]{0};
+        // signalAdapterCounter is a compact index for signal adapter slots.
+        // It increments for every PATTERN in a step — including the absence leaf gate
+        // pattern, which registers a live signal adapter so arriving blockers can fire
+        // the VetoSignalProcessor.
+        final int[] signalAdapterCounter = new int[]{0};
+
+        for (int i = 0; i < n; i++) {
+            final Condition step = steps.get(i);
+            if (step.getType() == Condition.Type.XOR || step.getType() == Condition.Type.XNOR) {
+                throw new UnsupportedOperationException(
+                        "sequence(): bare xor()/xnor() at the top level is not allowed.");
+            }
+            if (step.getType() == Condition.Type.NOT || step.getType() == Condition.Type.NOR) {
+                // Continuous absence guard.
+                // Fold the absence pattern(s) with the following positive step into one LogicCircuit.
+                // Each absence leaf gate fires into VetoSignalProcessor (live veto on insert → reset to step 0).
+                // The positive step's gate tree fires into TerminatingSignalProcessor as normal.
+                if (i + 1 >= n) {
+                    // Should have been caught by ViewPatternBuilder; defensive check.
+                    throw new IllegalArgumentException(
+                        "sequence(): trailing not() or nor() requires a following positive step.");
+                }
+
+                final List<Condition> inner = step.getSubConditions();
+                // Validate: all children must be simple PATTERNs.
+                for (Condition child : inner) {
+                    if (child.getType() != Condition.Type.PATTERN) {
+                        throw new UnsupportedOperationException(
+                            "sequence not()/nor() children must all be simple patterns; got " + child.getType());
+                    }
+                }
+
+                List<LogicGate> allGates = new ArrayList<>();
+
+                // Build one veto gate per absence pattern.
+                for (Condition child : inner) {
+
+                    int absenceFilterIdx  = filters.size();
+                    int absenceAdapterIdx = signalAdapterCounter[0]++;
+
+                    PatternImpl absencePattern = (PatternImpl) child;
+                    RuleConditionElement builtAbsence = buildPattern(ctx, group, absencePattern);
+                    if (!(builtAbsence instanceof Pattern)) {
+                        throw new IllegalStateException("NOT/NOR step pattern must compile to Pattern, got " + builtAbsence);
+                    }
+                    filters.add((Pattern) builtAbsence);
+
+                    // Build the absence leaf gate: single filter input, outputs to VetoSignalProcessor.
+                    // Uses Gates::and predicate (allMatched = one bit; predicate fires when that bit is set).
+                    // The veto side-channel is the output — it does NOT wire into a parent AND composite.
+                    LogicGate absenceLeaf = new LogicGate(
+                        Gates::and,
+                        gateCounter[0]++,
+                        new int[]{absenceFilterIdx},
+                        new int[]{absenceAdapterIdx},
+                        0);
+                    absenceLeaf.setOutput(VetoSignalProcessor.get());
+                    allGates.add(absenceLeaf);
+                }
+
+                final List<LogicGate> positiveGates = new ArrayList<>();
+                final Condition positiveStep = steps.get(i + 1);
+                final LogicGate positiveRoot = buildStepGate(ctx, group, positiveStep, filters,
+                                                               positiveGates, gateCounter, seqIdx, signalAdapterCounter);
+                positiveRoot.setOutput(TerminatingSignalProcessor.get());
+
+                // Combine: absence leaf(ves) + all positive gates into one LogicCircuit.
+                allGates.addAll(positiveGates);
+                stepFactoryList.add(Step.of(new LogicCircuit(allGates.toArray(new LogicGate[0]))));
+
+                i++; // skip the consumed positive step
+            } else {
+                final List<LogicGate> stepGates = new ArrayList<>();
+                final LogicGate root = buildStepGate(ctx, group, step, filters, stepGates, gateCounter, seqIdx, signalAdapterCounter);
+                root.setOutput(TerminatingSignalProcessor.get());
+                stepFactoryList.add(Step.of(new LogicCircuit(stepGates.toArray(new LogicGate[0]))));
+            }
+        }
+
+        Sequence seq = new Sequence(0, stepFactoryList.toArray(new Step.StepFactory[0]));
+        seq.setFilters(filters.toArray(new Pattern[0]));
+        ctx.getRule().addSequence(seq);
+        return null;
     }
 
     private ConditionalElement buildForAll( RuleContext ctx, GroupElement group, Condition condition ) {
@@ -606,17 +684,17 @@ public class KiePackagesBuilder {
     }
 
     private static final String DEFERRED_GATE_ERROR =
-            "sequence(...) does not yet support condition type %s. Absence-based " +
-            "gates (nor, nand, xor, xnor, not) and other composites are deferred ";
+            "sequence(...) does not yet support condition type %s as a composite step gate.";
 
     private LogicGate buildStepGate(RuleContext ctx, GroupElement group,
                                     Condition node, List<Pattern> filters,
                                     List<LogicGate> stepGates, int[] gateCounter,
-                                    int seqIdx) {
+                                    int seqIdx, int[] signalAdapterCounter) {
         Condition.Type type = node.getType();
 
         if (type == Condition.Type.PATTERN) {
-            int idx = filters.size();
+            int filterIdx         = filters.size();
+            int signalAdapterIdx  = signalAdapterCounter[0]++;
             PatternImpl patternImpl = (PatternImpl) node;
             RuleConditionElement built = buildPattern(ctx, group, patternImpl);
             if (!(built instanceof Pattern)) {
@@ -628,13 +706,13 @@ public class KiePackagesBuilder {
             // fact from SequencerMemory.getData() at rule-fire time.
             Variable stepVar = patternImpl.getPatternVariable();
             if (stepVar != null) {
-                ctx.addSequenceVarIndex(stepVar, seqIdx, idx);
+                ctx.addSequenceVarIndex(stepVar, seqIdx, filterIdx);
             }
             LogicGate leaf = new LogicGate(
                     Gates::and,
                     gateCounter[0]++,
-                    new int[]{idx},
-                    new int[]{idx},
+                    new int[]{filterIdx},
+                    new int[]{signalAdapterIdx},
                     0);
             stepGates.add(leaf);
             return leaf;
@@ -648,14 +726,16 @@ public class KiePackagesBuilder {
         }
         LogicGate[] inputs = new LogicGate[children.size()];
         for (int i = 0; i < children.size(); i++) {
-            inputs[i] = buildStepGate(ctx, group, children.get(i), filters, stepGates, gateCounter, seqIdx);
+            inputs[i] = buildStepGate(ctx, group, children.get(i), filters, stepGates, gateCounter, seqIdx, signalAdapterCounter);
         }
+        boolean statusCanRevert = (type == Condition.Type.XOR || type == Condition.Type.XNOR);
         LogicGate parent = new LogicGate(
                 pred,
                 gateCounter[0]++,
                 new int[0],
                 new int[0],
-                inputs.length);
+                inputs.length,
+                statusCanRevert);
         parent.setInputGates(inputs);
         for (int k = 0; k < inputs.length; k++) {
             inputs[k].setOutput(new LogicGateOutputSignalProcessor(SignalIndex.of(parent, k + 1)));
@@ -668,6 +748,8 @@ public class KiePackagesBuilder {
         switch (t) {
             case AND: return Gates::and;
             case OR:  return Gates::or;
+            case XOR: return Gates::xor;
+            case XNOR: return Gates::xnor;
             default:
                 throw new UnsupportedOperationException(
                         String.format(DEFERRED_GATE_ERROR, t));

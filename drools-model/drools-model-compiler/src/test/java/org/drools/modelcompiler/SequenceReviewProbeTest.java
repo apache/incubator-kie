@@ -40,6 +40,7 @@ import org.kie.api.runtime.KieSessionsPool;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.model.DSL.declarationOf;
 import static org.drools.model.DSL.execute;
+import static org.drools.model.DSL.not;
 import static org.drools.model.PatternDSL.pattern;
 import static org.drools.model.PatternDSL.rule;
 import static org.drools.model.PatternDSL.sequence;
@@ -220,6 +221,37 @@ public class SequenceReviewProbeTest {
         assertThat(capturedHandleCount.get())
                 .as("match must contain both anchor and observer fact handles")
                 .isEqualTo(2);
+    }
+
+    @Test
+    public void executableApiNotStepBlocksWhenMatchingFactAlreadyExists() {
+        Variable<Person> person = declarationOf(Person.class);
+        Variable<Toy> toy = declarationOf(Toy.class);
+        Variable<Integer> blocker = declarationOf(Integer.class);
+
+        Rule rule = rule("not-step-sanity-check").build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("is-ball", t -> t.getName().equals("ball")),
+                        not(pattern(blocker).expr("is-negative", value -> value < 0)),
+                        pattern(toy).expr("is-bat", t -> t.getName().equals("bat"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule)).newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.insert(new Toy("ball"));
+        ksession.insert(-1);
+        ksession.fireAllRules();
+
+        ksession.insert(new Toy("bat"));
+        ksession.fireAllRules();
+
+        assertThat(results)
+                .as("an existing matching fact must block the executable-model not() step")
+                .isEmpty();
     }
 
     @Test
