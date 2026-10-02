@@ -201,7 +201,7 @@ public class WorkItemModelMetaData {
                 variable.setName(entry.getKey());
                 DataType type = DataTypeResolver.fromType(inputTypes.get(entry.getKey()), Thread.currentThread().getContextClassLoader());
                 variable.setType(type);
-                if (!PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
+                if (entry.getValue() != null && !PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
                     variable.setValue(type.readValue(entry.getValue()));
                 }
             }
@@ -315,7 +315,7 @@ public class WorkItemModelMetaData {
                 variable.setName(entry.getKey());
                 DataType type = DataTypeResolver.fromType(outputTypes.get(entry.getKey()), Thread.currentThread().getContextClassLoader());
                 variable.setType(type);
-                if (!PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
+                if (entry.getValue() != null && !PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
                     variable.setValue(type.readValue(entry.getValue()));
                 }
             }

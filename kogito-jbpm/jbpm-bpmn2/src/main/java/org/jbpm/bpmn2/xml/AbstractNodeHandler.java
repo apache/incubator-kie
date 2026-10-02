@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 
 import org.drools.mvel.java.JavaDialect;
 import org.jbpm.bpmn2.core.Association;
@@ -52,6 +53,7 @@ import org.jbpm.process.instance.impl.MVELInterpretedReturnValueEvaluator;
 import org.jbpm.process.instance.impl.ReturnValueEvaluator;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.ruleflow.core.WorkflowElementIdentifierFactory;
+import org.jbpm.util.PatternConstants;
 import org.jbpm.workflow.core.DroolsAction;
 import org.jbpm.workflow.core.Node;
 import org.jbpm.workflow.core.NodeContainer;
@@ -404,7 +406,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
 
     protected DataDefinition getVariableDataSpec(Parser parser, String propertyIdRef) {
         RuleFlowProcess process = (RuleFlowProcess) ((ProcessBuildData) parser.getData()).getMetaData(ProcessHandler.CURRENT_PROCESS);
-        Optional<Variable> var = process.getVariableScope().getVariables().stream().filter(e -> e.getId().equals(propertyIdRef)).findAny();
+        Optional<Variable> var = process.getVariableScope().getVariables().stream().filter(e -> e.matchByIdOrName(propertyIdRef)).findAny();
         if (var.isEmpty()) {
             return null;
         }
@@ -617,8 +619,8 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
             if (!language.isEmpty()) {
                 assignments.add(new Assignment(language, toDataExpression(sourceId, source), toDataExpression(targetId, target)));
             } else {
-                // Do not clean up / unwrap #{...} expressions here so they remain full expressions
-                // and are evaluated as MVEL expressions at runtime via InputExpressionAssignment.
+                source = cleanUp(source);
+                target = cleanUp(target);
                 DataDefinition sourceDataSpec = isExpr(source) ? toDataExpression(sourceId, source) : sourceResolver.apply(source);
                 if (sourceDataSpec == null) {
                     sourceDataSpec = toDataExpression(sourceId, source); // it is constant source
@@ -632,6 +634,23 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
             }
         });
         return assignments;
+    }
+
+    /**
+     * Simplifies variable expression in order to improve performance.
+     * If the expression contains just one variable, we can skip MVEL expression evaluation.
+     *
+     * @param expression MVEL expression to evaluate
+     * @return Variable name if expression evaluation is not needed, original expression otherwise
+     */
+    private String cleanUp(String expression) {
+        Matcher matcher = PatternConstants.SINGLE_PARAMETER_MATCHER.matcher(expression);
+        if (matcher.matches()) {
+            if (!matcher.group(1).contains(".")) {
+                return matcher.group(1);
+            }
+        }
+        return expression;
     }
 
     private DataDefinition toDataExpression(String id, String expression) {
