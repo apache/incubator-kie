@@ -2991,4 +2991,28 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
                 .isEqualTo(ProcessInstance.STATE_COMPLETED);
     }
 
+    @Test
+    public void testIntermediateCatchEventMessageCorrelationInSubprocess() {
+        Application app = ProcessTestHelper.newApplication();
+        org.kie.kogito.process.Process<IntermediateCatchEventMessageCorrelationInSubprocessModel> processDefinition =
+                IntermediateCatchEventMessageCorrelationInSubprocessProcess.newProcess(app);
+        IntermediateCatchEventMessageCorrelationInSubprocessModel model = processDefinition.createModel();
+        org.kie.kogito.process.ProcessInstance<IntermediateCatchEventMessageCorrelationInSubprocessModel> instance =
+                processDefinition.createInstance(model);
+        instance.start();
+        assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        // Send a message with a WRONG correlation key — must be ignored.
+        instance.send(SignalFactory.of("Message-CorrelationMessage", "wrongCorrelation"));
+        assertThat(instance.status())
+                .as("Process must remain ACTIVE after a non-matching correlation key")
+                .isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        // Send the CORRECT correlation key — process must now complete.
+        instance.send(SignalFactory.of("Message-CorrelationMessage", "testCorrelation"));
+        assertThat(instance.status())
+                .as("Process must complete after the matching correlation key")
+                .isEqualTo(ProcessInstance.STATE_COMPLETED);
+    }
+
 }
