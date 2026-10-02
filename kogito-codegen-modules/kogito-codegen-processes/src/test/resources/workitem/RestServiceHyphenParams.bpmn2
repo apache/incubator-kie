@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<bpmn2:definitions
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+    xmlns:drools="http://www.jboss.org/drools"
+    id="_RestServiceHyphenParams"
+    targetNamespace="http://www.omg.org/bpmn20">
+
+  <bpmn2:itemDefinition id="_StringItem" structureRef="String"/>
+
+  <bpmn2:process id="resthyphenparms" drools:packageName="com.example" drools:version="1.0"
+                 drools:adHoc="false" name="resthyphenparms" isExecutable="true" processType="Public">
+
+    <bpmn2:startEvent id="_Start">
+      <bpmn2:outgoing>_flow1</bpmn2:outgoing>
+    </bpmn2:startEvent>
+
+    <!-- REST work-item task with hyphenated input names (the bug reproducer) -->
+    <bpmn2:task id="_RestTask" name="Rest Service Task" drools:taskName="Rest">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Rest Service Task]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>_flow1</bpmn2:incoming>
+      <bpmn2:outgoing>_flow2</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="_di1" itemSubjectRef="_StringItem" name="HEADER_content-type"/>
+        <bpmn2:dataInput id="_di2" itemSubjectRef="_StringItem" name="QUERY_max-size"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>_di1</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_di2</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet/>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_di1</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[application/json]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_di1]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_di2</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[100]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_di2]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+    </bpmn2:task>
+
+    <bpmn2:endEvent id="_End">
+      <bpmn2:incoming>_flow2</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:sequenceFlow id="_flow1" sourceRef="_Start" targetRef="_RestTask"/>
+    <bpmn2:sequenceFlow id="_flow2" sourceRef="_RestTask" targetRef="_End"/>
+  </bpmn2:process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="resthyphenparms">
+      <bpmndi:BPMNShape id="shape__Start" bpmnElement="_Start">
+        <dc:Bounds height="56" width="56" x="100" y="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__RestTask" bpmnElement="_RestTask">
+        <dc:Bounds height="102" width="154" x="236" y="77"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__End" bpmnElement="_End">
+        <dc:Bounds height="56" width="56" x="470" y="100"/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

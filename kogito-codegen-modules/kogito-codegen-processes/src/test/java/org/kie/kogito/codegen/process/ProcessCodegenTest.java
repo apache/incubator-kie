@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,6 +49,8 @@ class ProcessCodegenTest {
     private static final Path BASE_PATH = Paths.get("src/test/resources/").toAbsolutePath();
     private static final String MESSAGE_USERTASK_SOURCE = "usertask/UserTasksProcess.bpmn2";
     private static final Path MESSAGE_USERTASK_SOURCE_FULL_SOURCE = BASE_PATH.resolve(MESSAGE_USERTASK_SOURCE);
+    private static final String REST_HYPHEN_PARAMS_SOURCE = "workitem/RestServiceHyphenParams.bpmn2";
+    private static final Path REST_HYPHEN_PARAMS_FULL_PATH = BASE_PATH.resolve(REST_HYPHEN_PARAMS_SOURCE);
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
@@ -145,5 +148,51 @@ class ProcessCodegenTest {
     private static Stream<Arguments> contextBuildersNotDI() {
         return Stream.of(
                 Arguments.of(JavaKogitoBuildContext.builder()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void restTaskInputsWithHyphensAreSanitisedToValidJavaIdentifiers(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, REST_HYPHEN_PARAMS_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
+
+        // Find the generated TaskInput source file
+        Optional<GeneratedFile> taskInputFile = generatedFiles.stream()
+                .filter(f -> f.relativePath().contains("TaskInput"))
+                .findFirst();
+
+        assertThat(taskInputFile).as("TaskInput generated file should be present").isPresent();
+
+        String taskInputSource = new String(taskInputFile.get().contents());
+
+        // Field / accessor names must use underscores — hyphens are not valid Java identifiers
+        assertThat(taskInputSource)
+                .as("Sanitised field HEADER_content_type should be present")
+                .contains("HEADER_content_type");
+        assertThat(taskInputSource)
+                .as("Sanitised field QUERY_max_size should be present")
+                .contains("QUERY_max_size");
+
+        // Original hyphenated names must still appear as string literals for the runtime map lookup
+        assertThat(taskInputSource)
+                .as("Original key \"HEADER_content-type\" must be used in params.get()")
+                .contains("\"HEADER_content-type\"");
+        assertThat(taskInputSource)
+                .as("Original key \"QUERY_max-size\" must be used in params.get()")
+                .contains("\"QUERY_max-size\"");
+
+        // The hyphenated names must NOT appear as identifiers (only inside string literals)
+        String noLiterals = taskInputSource.replaceAll("\"[^\"]*\"", "\"\"");
+        assertThat(noLiterals)
+                .as("Hyphenated identifier HEADER_content-type must not appear in generated code")
+                .doesNotContain("HEADER_content-type");
+        assertThat(noLiterals)
+                .as("Hyphenated identifier QUERY_max-size must not appear in generated code")
+                .doesNotContain("QUERY_max-size");
     }
 }

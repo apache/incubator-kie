@@ -68,6 +68,7 @@ import static com.github.javaparser.StaticJavaParser.parse;
 import static com.github.javaparser.StaticJavaParser.parseClassOrInterfaceType;
 import static org.jbpm.ruleflow.core.Metadata.CUSTOM_AUTO_START;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
+import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeJavaName;
 
 public class WorkItemModelMetaData {
 
@@ -205,10 +206,11 @@ public class WorkItemModelMetaData {
                 }
             }
 
+            String fieldName = sanitizeJavaName(entry.getKey());
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
                             .setType(variable.getType().getStringType())
-                            .setName(entry.getKey()))
+                            .setName(fieldName))
                     .addModifier(Modifier.Keyword.PRIVATE);
 
             modelClass.addMember(fd);
@@ -218,8 +220,8 @@ public class WorkItemModelMetaData {
             fd.createGetter();
             fd.createSetter();
 
-            // from static method body
-            FieldAccessExpr field = new FieldAccessExpr(item, entry.getKey());
+            // from static method body — sanitised name for the identifier, original key for the runtime map lookup
+            FieldAccessExpr field = new FieldAccessExpr(item, fieldName);
 
             ClassOrInterfaceType type = parseClassOrInterfaceType(variable.getType().getStringType());
             staticFromMap.addStatement(new AssignExpr(field, new CastExpr(
@@ -237,10 +239,11 @@ public class WorkItemModelMetaData {
                 continue;
             }
 
+            String fieldName = sanitizeJavaName(entry.getKey());
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
                             .setType(entry.getValue().getClass().getCanonicalName())
-                            .setName(entry.getKey()))
+                            .setName(fieldName))
                     .addModifier(Modifier.Keyword.PRIVATE);
             modelClass.addMember(fd);
             addUserTaskParamAnnotation(fd, UserTaskParam.ParamType.INPUT);
@@ -248,8 +251,8 @@ public class WorkItemModelMetaData {
             fd.createGetter();
             fd.createSetter();
 
-            // from static method body
-            FieldAccessExpr field = new FieldAccessExpr(item, entry.getKey());
+            // from static method body — sanitised name for the identifier, original key for the runtime map lookup
+            FieldAccessExpr field = new FieldAccessExpr(item, fieldName);
 
             ClassOrInterfaceType type = parseClassOrInterfaceType(entry.getValue().getClass().getCanonicalName());
             staticFromMap.addStatement(new AssignExpr(field, new CastExpr(
@@ -317,10 +320,11 @@ public class WorkItemModelMetaData {
                 }
             }
 
+            String fieldName = sanitizeJavaName(entry.getKey());
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
                             .setType(variable.getType().getStringType())
-                            .setName(entry.getKey()))
+                            .setName(fieldName))
                     .addModifier(Modifier.Keyword.PRIVATE);
             modelClass.addMember(fd);
             addUserTaskParamAnnotation(fd, UserTaskParam.ParamType.OUTPUT);
@@ -328,14 +332,14 @@ public class WorkItemModelMetaData {
             fd.createGetter();
             fd.createSetter();
 
-            // toMap method body
+            // toMap method body — original key in the map, sanitised name for field access
             MethodCallExpr putVariable = new MethodCallExpr(params, "put");
             putVariable.addArgument(new StringLiteralExpr(entry.getKey()));
-            putVariable.addArgument(new FieldAccessExpr(new ThisExpr(), entry.getKey()));
+            putVariable.addArgument(new FieldAccessExpr(new ThisExpr(), fieldName));
             toMapBody.addStatement(putVariable);
 
-            // fromMap method body
-            fromMapBody.addStatement(new AssignExpr(new FieldAccessExpr(fromMapReturn, entry.getKey()),
+            // fromMap method body — original key for params.get(), sanitised name for field assignment
+            fromMapBody.addStatement(new AssignExpr(new FieldAccessExpr(fromMapReturn, fieldName),
                     new CastExpr(new ClassOrInterfaceType(null, variable.getType().getStringType()),
                             new MethodCallExpr(params, "get").addArgument(new StringLiteralExpr(entry.getKey()))),
                     Operator.ASSIGN));
