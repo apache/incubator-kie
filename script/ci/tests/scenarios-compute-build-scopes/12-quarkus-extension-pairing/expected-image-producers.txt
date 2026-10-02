@@ -1,0 +1,2 @@
+org.kie.kogito:data-index-service-mongodb
+org.kie.kogito:jobs-service-common

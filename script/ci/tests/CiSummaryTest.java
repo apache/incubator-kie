@@ -95,6 +95,39 @@ public class CiSummaryTest {
                 "summary mismatch for scenario " + name);
     }
 
+    @Test
+    void parallelReproductionIncludesImageProducerPhase() throws Exception {
+        Path scenario = Files.createTempDirectory("ci-summary-parallel-");
+        Files.createDirectories(scenario.resolve("root"));
+        Files.writeString(scenario.resolve("env.properties"), """
+                MAVEN_PL_UPSTREAM=g:u,g:a,g:image
+                MAVEN_PL_AFFECTED=g:a
+                MAVEN_PL_CHANGED=g:a
+                MAVEN_PL_IMAGE_PRODUCERS=g:image
+                CI_PARALLEL_BUILD=true
+                """, StandardCharsets.UTF_8);
+        Files.writeString(scenario.resolve("graph.tsv"), """
+                P\tg:u\t{ROOT}/u
+                P\tg:a\t{ROOT}/a
+                P\tg:image\t{ROOT}/image
+                D\tg:a\tg:u
+                D\tg:a\tg:image
+                """, StandardCharsets.UTF_8);
+
+        String actual = runAndCapture(scenario);
+
+        Assertions.assertAll(
+                () -> Assertions.assertTrue(actual.contains("**1 affected**")),
+                () -> Assertions.assertTrue(actual.contains("**2 upstream**")),
+                () -> Assertions.assertTrue(actual.contains("Step 1 — Build upstream dependencies")),
+                () -> Assertions.assertTrue(actual.contains("-Dquarkus.build.skip=true -Ddisable.quarkus.plugin=true -Dskip.quarkus.image.assembly=true")),
+                () -> Assertions.assertTrue(actual.contains("-pl \"g:u,g:a,g:image\" install")),
+                () -> Assertions.assertTrue(actual.contains("Step 2 — Build required image-producing modules")),
+                () -> Assertions.assertTrue(actual.contains("-pl \"g:image\" install")),
+                () -> Assertions.assertTrue(actual.contains("Step 3 — Build changed and affected modules")),
+                () -> Assertions.assertTrue(actual.contains("-Dfull -Dreproducible -pl \"g:a\" install")));
+    }
+
     private static void updateGoldens() throws Exception {
         List<Path> scenarios;
         try (Stream<Path> s = Files.list(SCENARIOS_DIR)) {

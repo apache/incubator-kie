@@ -42,6 +42,8 @@ import java.util.stream.*;
  *   MAVEN_PL_UPSTREAM           Comma-separated upstream groupId:artifactId list (from CiComputeBuildScopes)
  *   MAVEN_PL_AFFECTED           Comma-separated affected groupId:artifactId list (changed + transitive downstream)
  *   MAVEN_PL_CHANGED            Comma-separated directly-changed groupId:artifactId list (subset of affected)
+ *   MAVEN_PL_IMAGE_PRODUCERS    Comma-separated image-producing groupId:artifactId list (parallel build only)
+ *   CI_PARALLEL_BUILD           true when reproducing the parallel build's three-phase strategy
  *   DEP_GRAPH_EXTRACTOR__OUTPUT_FILE TSV dump produced by the dep-graph-extractor Maven extension via CiComputeBuildScopes.
  *                                    Lines: `P<TAB>ga<TAB>abs-basedir` (one per reactor project)
  *                                           `D<TAB>dependent-ga<TAB>dependency-ga` (one per direct edge)
@@ -135,19 +137,23 @@ class CiSummary {
             {{/hasMatrix}}
             {{#isPr}}
             {{#hasUpstreamGa}}
-            **Step 1 — Build upstream dependencies (tests skipped):**
+            **{{upstreamHeading}}**
 
             ```bash
             {{upstreamCmd}}
             ```
 
-            **Step 2 — Build changed and affected modules (with tests):**
-
             {{/hasUpstreamGa}}
-            {{^hasUpstreamGa}}
-            **Build changed and affected modules (with tests):**
+            {{#hasImageProducersGa}}
+            **{{imageProducersHeading}}**
 
-            {{/hasUpstreamGa}}
+            ```bash
+            {{imageProducersCmd}}
+            ```
+
+            {{/hasImageProducersGa}}
+            **{{affectedHeading}}**
+
             ```bash
             {{affectedCmd}}
             ```
@@ -169,6 +175,8 @@ class CiSummary {
         var upstreamGa  = env("MAVEN_PL_UPSTREAM",   "");
         var affectedGa  = env("MAVEN_PL_AFFECTED",   "");
         var changedGa   = env("MAVEN_PL_CHANGED",    "");
+        var imageProducersGa = env("MAVEN_PL_IMAGE_PRODUCERS", "");
+        var parallelBuild = "true".equalsIgnoreCase(env("CI_PARALLEL_BUILD", "false"));
         var graphPath   = env("DEP_GRAPH_EXTRACTOR__OUTPUT_FILE", null);
         mermaidExpanded = "true".equalsIgnoreCase(env("MERMAID_EXPANDED", "false"));
         matrixOs        = env("MATRIX_OS",   "");
@@ -188,6 +196,11 @@ class CiSummary {
         var upstream = resolveGas(upstreamGa);
         var affected = resolveGas(affectedGa);
         var changed  = resolveGas(changedGa);
+
+        // A partition's phase-1 list intentionally contains its affected modules so
+        // cross-partition upstream dependencies can resolve them. Keep the raw GA list
+        // for the reproduction command, but show each module in only one scope category.
+        upstream.removeAll(affected);
 
         var xmlFiles = new ArrayList<Path>();
         try (var walk = Files.walk(root)) {
@@ -213,6 +226,7 @@ class CiSummary {
         int passed  = total - failed - errored - skipped;
 
         var ctx = buildContext(upstream, affected, changed, upstreamGa, affectedGa,
+                               imageProducersGa, parallelBuild,
                                suites, total, failed, errored, skipped, passed);
 
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(TEMPLATE);
@@ -232,7 +246,8 @@ class CiSummary {
     // ── Context builder ──────────────────────────────────────────────────────
 
     static Map<String, Object> buildContext(Set<String> upstream, Set<String> affected, Set<String> changed,
-                                             String upstreamGa, String affectedGa,
+                                             String upstreamGa, String affectedGa, String imageProducersGa,
+                                             boolean parallelBuild,
                                              List<Suite> suites,
                                              int total, int failed, int errored, int skipped, int passed) {
         var ctx = new HashMap<String, Object>();
@@ -278,21 +293,48 @@ class CiSummary {
         ctx.put("matrixJava", matrixJava.isBlank() ? "?" : matrixJava);
 
         boolean isPr = !affectedGa.isBlank();
+        boolean hasUpstreamGa = !upstreamGa.isBlank();
+        boolean hasImageProducersGa = !imageProducersGa.isBlank();
         ctx.put("isPr", isPr);
-        ctx.put("hasUpstreamGa", !upstreamGa.isBlank());
+        ctx.put("hasUpstreamGa", hasUpstreamGa);
+        ctx.put("hasImageProducersGa", hasImageProducersGa);
+
+        int step = 1;
+        if (hasUpstreamGa) {
+            ctx.put("upstreamHeading", "Step " + step++ + " — Build upstream dependencies (tests skipped):");
+        }
+        if (hasImageProducersGa) {
+            ctx.put("imageProducersHeading", "Step " + step++ + " — Build required image-producing modules (tests skipped):");
+        }
+        ctx.put("affectedHeading", step == 1
+                ? "Build changed and affected modules (with tests):"
+                : "Step " + step + " — Build changed and affected modules (with tests):");
+
+        String parallelUpstreamFlags = parallelBuild
+                ? " -Dquarkus.build.skip=true -Ddisable.quarkus.plugin=true -Dskip.quarkus.image.assembly=true"
+                : "";
         ctx.put("upstreamCmd",
+            "mvn -T 1C --batch-mode --no-transfer-progress -fae"
+            + " -DskipTests -DskipITs" + parallelUpstreamFlags
+            + " -Denforcer.skip=true -Dcheckstyle.skip=true"
+            + " -Dformatter.skip=true -Darchunit.skip=true"
+            + " -Dsurefire.redirectTestOutputToFile=true"
+            + " -pl \"" + upstreamGa + "\" install");
+        ctx.put("imageProducersCmd",
             "mvn -T 1C --batch-mode --no-transfer-progress -fae"
             + " -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true"
             + " -Dformatter.skip=true -Darchunit.skip=true"
             + " -Dsurefire.redirectTestOutputToFile=true"
-            + " -pl \"" + upstreamGa + "\" install");
+            + " -pl \"" + imageProducersGa + "\" install");
         ctx.put("affectedCmd",
             "mvn --batch-mode --no-transfer-progress -fae"
             + " -Dsurefire.redirectTestOutputToFile=true"
+            + " -Dfull -Dreproducible"
             + " -pl \"" + affectedGa + "\" install");
         ctx.put("fullCmd",
             "mvn --batch-mode --no-transfer-progress -fae"
-            + " -Dsurefire.redirectTestOutputToFile=true install");
+            + " -Dsurefire.redirectTestOutputToFile=true"
+            + " -Dfull -Dreproducible install");
 
         return ctx;
     }

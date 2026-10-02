@@ -27,7 +27,8 @@ Layout:
 <scenario>/
   env.properties        KEY=VALUE lines, passed as env vars to CiSummary.
                         Common keys: MAVEN_PL_UPSTREAM, MAVEN_PL_AFFECTED,
-                        MAVEN_PL_CHANGED, MERMAID_EXPANDED, MATRIX_OS, MATRIX_JAVA.
+                        MAVEN_PL_CHANGED, MAVEN_PL_IMAGE_PRODUCERS,
+                        CI_PARALLEL_BUILD, MERMAID_EXPANDED, MATRIX_OS, MATRIX_JAVA.
   graph.tsv             (optional) Dep-graph TSV. The token {ROOT} is replaced with
                         the absolute path to this scenario's root/ before being passed
                         to CiSummary via DEP_GRAPH_EXTRACTOR__OUTPUT_FILE.
