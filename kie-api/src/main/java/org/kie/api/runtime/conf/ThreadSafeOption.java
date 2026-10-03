@@ -56,6 +56,7 @@ public enum ThreadSafeOption implements SingleValueRuleRuntimeOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

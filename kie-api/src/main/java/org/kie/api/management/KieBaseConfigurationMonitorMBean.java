@@ -20,42 +20,82 @@ package org.kie.api.management;
 
 public interface KieBaseConfigurationMonitorMBean {
 
-    @Deprecated
+    /**
+     * @return the alpha node hashing threshold
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public int getAlphaNodeHashingThreshold();
 
     public String getAssertBehaviour();
 
-    @Deprecated
+    /**
+     * @return the composite key depth
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public int getCompositeKeyDepth();
 
     public String getEventProcessingMode();
 
-    @Deprecated
+    /**
+     * @return the maximum number of threads
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public int getMaxThreads();
 
-    @Deprecated
+    /**
+     * @return the sequential agenda setting
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public String getSequentialAgenda();
 
-    @Deprecated
+    /**
+     * @return whether left beta memory is indexed
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public boolean isIndexLeftBetaMemory();
 
-    @Deprecated
+    /**
+     * @return whether right beta memory is indexed
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public boolean isIndexRightBetaMemory();
 
-    @Deprecated
+    /**
+     * @return whether TMS is maintained
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public boolean isMaintainTms();
 
     public boolean isMBeansEnabled();
 
     public boolean isRemoveIdentities();
 
-    @Deprecated
+    /**
+     * @return whether sequential mode is enabled
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public boolean isSequential();
 
-    @Deprecated
+    /**
+     * @return whether alpha nodes are shared
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public boolean isShareAlphaNodes();
 
-    @Deprecated
+    /**
+     * @return whether beta nodes are shared
+     * @deprecated since 8.35.0, this configuration option is no longer used. Will be removed in a future version.
+     */
+    @Deprecated(since = "8.35.0", forRemoval = true)
     public boolean isShareBetaNodes();
 
 }

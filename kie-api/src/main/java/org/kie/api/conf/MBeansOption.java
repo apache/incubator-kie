@@ -46,6 +46,7 @@ public enum MBeansOption implements SingleValueKieBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }
