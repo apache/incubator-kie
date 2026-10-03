@@ -23,6 +23,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.util.FastIterator;
 import org.drools.core.common.BaseNode;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.PropagationContext;
@@ -120,17 +121,31 @@ public class SingleObjectSinkAdapter implements ObjectSinkPropagator {
     
     public static void staticDoUnlinkSubnetwork(ObjectSink sink, ReteEvaluator reteEvaluator) {
         BetaMemory bm;
+        BetaNode betaNode;
         if ( sink.getType() == NodeTypeEnums.AccumulateRightAdapterNode ) {
             AccumulateNode accnode = ((AccumulateRight)sink).getBetaNode();
             AccumulateMemory accMem = ( AccumulateMemory ) reteEvaluator.getNodeMemory( accnode );
             bm = accMem.getBetaMemory();
-        }  else {
-            BetaNode betaNode = ((RightInputAdapterNode) sink).getBetaNode();
+            betaNode = accnode;
+        } else {
+            betaNode = ((RightInputAdapterNode) sink).getBetaNode();
             bm = RightInputAdapterNode.getBetaMemoryFromRightInput(betaNode, reteEvaluator);
         }
 
-        if (sink.getType() == NodeTypeEnums.NotNode) {
-            bm.linkNode( ( BetaNode ) sink, reteEvaluator );
+        if (betaNode.getType() == NodeTypeEnums.NotNode) {
+            bm.linkNode(betaNode, reteEvaluator);
+            SegmentMemory smem = bm.getSegmentMemory();
+            if (smem != null) {
+                TupleMemory ltm = bm.getLeftTupleMemory();
+                if (ltm != null && ltm.size() > 0) {
+                    FastIterator<TupleImpl> it = ltm.fullFastIterator();
+                    for (TupleImpl lt = BetaNode.getFirstTuple(ltm, it); lt != null; lt = it.next(lt)) {
+                        if (lt.getStagedType() == Tuple.NONE) {
+                            smem.getStagedLeftTuples().addUpdate(lt);
+                        }
+                    }
+                }
+            }
         } else {
             bm.unlinkNode();
         }

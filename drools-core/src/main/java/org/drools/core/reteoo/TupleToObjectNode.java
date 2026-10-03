@@ -326,6 +326,25 @@ public class TupleToObjectNode extends ObjectSource
             getTupleToObjectNode().getObjectSinkPropagator().doUnlinkSubnetwork(reteEvaluator);
         }
 
+        /**
+         * When an upstream segment (e.g. the join node that feeds this subnetwork) unlinks because
+         * its last right input fact was retracted, {@link PathMemory#unlinkedSegment} might not call
+         * {@link #doUnlinkRule()} if {@code linkedRule && !isRuleLinked()} is not met (e.g. when
+         * {@code allLinkedMaskTest} only checks a non-unlinked segment, or remains linked).
+         *
+         * We therefore call {@link #doUnlinkRule()} explicitly whenever a segment with a non-zero
+         * mask unlinks. This triggers {@link #doUnlinkSubnetwork}, which in turn re-links the
+         * downstream NotNode and stages any existing left tuples as updates so that it is scheduled
+         * for re-evaluation and can detect that the subnetwork is now empty and fire the rule.
+         */
+        @Override
+        public void unlinkedSegment(long mask) {
+            super.unlinkedSegment(mask);
+            if (mask != 0) {
+                doUnlinkRule();
+            }
+        }
+
         @Override
         public int getNodeType() {
             return NodeTypeEnums.TupleToObjectNode;
