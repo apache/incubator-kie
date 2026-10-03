@@ -81,7 +81,8 @@ public class IOSpecification implements Serializable {
             if (da.getAssignments().isEmpty()) {
                 mapping.put(da.getTarget().getLabel(), da.getSources().get(0).getLabel());
             } else if (da.getAssignments().get(0).getDialect() == null) {
-                mapping.put(da.getAssignments().get(0).getTo().getLabel(), da.getAssignments().get(0).getFrom().getExpression());
+                DataDefinition from = da.getAssignments().get(0).getFrom();
+                mapping.put(da.getAssignments().get(0).getTo().getLabel(), from.hasExpression() ? from.getExpression() : from.getLabel());
             }
         }
         return mapping;
@@ -93,7 +94,8 @@ public class IOSpecification implements Serializable {
             if (da.getAssignments().isEmpty()) {
                 mapping.put(da.getTarget().getLabel(), da.getSources().get(0).getLabel());
             } else if (da.getAssignments().get(0).getDialect() == null) {
-                mapping.put(da.getAssignments().get(0).getTo().getExpression(), da.getAssignments().get(0).getFrom().getLabel());
+                DataDefinition to = da.getAssignments().get(0).getTo();
+                mapping.put(to.hasExpression() ? to.getExpression() : to.getLabel(), da.getAssignments().get(0).getFrom().getLabel());
             }
         }
         return mapping;
@@ -105,7 +107,8 @@ public class IOSpecification implements Serializable {
             if (da.getAssignments().isEmpty()) {
                 mapping.put(da.getSources().get(0).getLabel(), da.getTarget().getLabel());
             } else if (da.getAssignments().get(0).getDialect() == null) {
-                mapping.put(da.getAssignments().get(0).getFrom().getLabel(), da.getAssignments().get(0).getTo().getExpression());
+                DataDefinition to = da.getAssignments().get(0).getTo();
+                mapping.put(da.getAssignments().get(0).getFrom().getLabel(), to.hasExpression() ? to.getExpression() : to.getLabel());
             }
         }
         return mapping;

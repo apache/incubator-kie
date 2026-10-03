@@ -61,25 +61,31 @@ public class InputExpressionAssignment implements AssignmentAction {
     }
 
     private Object evalInput(ImmutableDefaultFactory factory, String expression) {
-        String outcome = expression;
         Matcher matcher = PatternConstants.PARAMETER_MATCHER.matcher(expression);
+        // keyed by the full #{token} string so we can do a direct lookup below
         Map<String, Object> values = new HashMap<>();
-        if (matcher.find()) {
-            matcher.reset();
-            while (matcher.find()) {
-                String paramName = matcher.group(1);
+        while (matcher.find()) {
+            String paramName = matcher.group(1);
+            try {
                 Object value = MVELProcessHelper.evaluator().eval(paramName, factory);
                 if (value != null) {
-                    values.put(paramName, value);
+                    values.put("#{" + paramName + "}", value);
                 }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Cannot resolve expression variable '" + paramName + "' in '" + expression + "'", e);
             }
         }
-        if (values.size() == 1) {
-            return values.values().iterator().next();
+
+        // Sole-token passthrough: return the typed value directly to avoid toString() coercion.
+        // Template expressions (e.g. {"message-value": "#{token}"}) fall through to string replacement.
+        Object result = values.get(expression);
+        if (result != null) {
+            return result;
         }
 
+        String outcome = expression;
         for (Map.Entry<String, Object> entry : values.entrySet()) {
-            outcome = outcome.replace("#{" + entry.getKey() + "}", entry.getValue().toString());
+            outcome = outcome.replace(entry.getKey(), entry.getValue().toString());
         }
         return outcome;
     }

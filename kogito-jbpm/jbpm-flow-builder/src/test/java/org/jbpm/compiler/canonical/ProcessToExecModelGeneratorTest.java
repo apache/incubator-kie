@@ -19,6 +19,7 @@
 package org.jbpm.compiler.canonical;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.jbpm.process.core.datatype.impl.type.IntegerDataType;
 import org.jbpm.process.core.datatype.impl.type.ObjectDataType;
@@ -33,7 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 
@@ -249,5 +252,64 @@ public class ProcessToExecModelGeneratorTest {
                 .asStringLiteralExpr()
                 .asString())
                         .isEqualTo("FirstName");
+    }
+
+    @Test
+    public void testWorkItemModelHyphenatedParamsSanitization() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.test");
+        factory
+                .name("test-process")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .workItemNode(one)
+                .name("RestService")
+                .workName("Rest")
+                .inMapping("contentType", "HEADER_content-type")
+                .inMapping("maxSize", "QUERY_max-size")
+                .outMapping("Result", "result")
+                .done()
+                .startNode(two)
+                .name("start")
+                .done()
+                .endNode(three)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(two, one)
+                .connection(one, three);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
+        assertThat(workItemModels).hasSize(1);
+
+        WorkItemModelMetaData metaData = workItemModels.get(0);
+        String inputSource = metaData.generateInput();
+        String outputSource = metaData.generateOutput();
+
+        CompilationUnit inputUnit = StaticJavaParser.parse(inputSource);
+        CompilationUnit outputUnit = StaticJavaParser.parse(outputSource);
+
+        // Check input model field names are sanitized
+        List<FieldDeclaration> inputFields = inputUnit.findAll(FieldDeclaration.class);
+        List<String> inputFieldNames = inputFields.stream()
+                .flatMap(f -> f.getVariables().stream())
+                .map(v -> v.getNameAsString())
+                .toList();
+        assertThat(inputFieldNames).contains("HEADER_content_type", "QUERY_max_size");
+        assertThat(inputFieldNames).doesNotContain("HEADER_content-type", "QUERY_max-size");
+
+        // Verify that the original hyphenated name is preserved as string literal for map lookups
+        assertThat(inputSource).contains("\"HEADER_content-type\"");
+        assertThat(inputSource).contains("\"QUERY_max-size\"");
+
+        // Check output model field names
+        List<FieldDeclaration> outputFields = outputUnit.findAll(FieldDeclaration.class);
+        List<String> outputFieldNames = outputFields.stream()
+                .flatMap(f -> f.getVariables().stream())
+                .map(v -> v.getNameAsString())
+                .toList();
+        assertThat(outputFieldNames).contains("Result");
     }
 }
