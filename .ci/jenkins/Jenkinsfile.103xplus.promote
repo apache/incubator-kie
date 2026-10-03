@@ -1,0 +1,159 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.jenkinsci.plugins.workflow.libs.Library
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+
+pipeline {
+    agent {
+        docker { 
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+            label util.avoidFaultyNodes()
+        }
+    }
+
+    options {
+        timestamps()
+        timeout(time: 180, unit: 'MINUTES')
+    }
+
+    environment {
+        DROOLS_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
+
+    stages {
+        stage('Initialization') {
+            steps {
+                script {
+                    cleanWs(disableDeferredWipeout: true)
+
+                    if (params.DISPLAY_NAME) {
+                        currentBuild.displayName = params.DISPLAY_NAME
+                    }
+
+                    assert getProjectVersion()
+                    assert getBuildBranch() == util.getReleaseBranchFromVersion(getProjectVersion())
+                }
+            }
+        }
+
+        stage('Create release') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        checkoutRepo()
+                        withCredentials([usernamePassword(credentialsId: env.MAVEN_REPO_CREDS_ID, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
+                            configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                                String stagingProfileId = env.MAVEN_STAGING_PROFILE_ID ?: ''
+                                echo "Staging profile: ${stagingProfileId}"
+                                getMavenCommand()
+                                    .withProperty('quarkus.version', '3.15.3')
+                                    .withProperty('project.version', getProjectVersion())
+                                    .withProperty('stgRepoId', getStagingRepoId())
+                                    .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
+                                    .run("nexus-staging:release -DstagingRepositoryId=${getStagingRepoId()} -DstagingProfileId=${stagingProfileId} -DnexusUrl=https://repository.apache.org -Ddescription=\"[KIE 10.3+] release ${getProjectVersion()}\"")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            script {
+                sendNotification()
+            }
+        }
+        unsuccessful {
+            sendErrorNotification()
+        }
+    }
+}
+
+void sendNotification() {
+    if (params.SEND_NOTIFICATION) {
+        mailer.sendMarkdownTestSummaryNotification('Promote', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
+    }
+}
+
+void sendErrorNotification() {
+    sendNotification()
+    mailer.sendMarkdownErrorNotification('Promote', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Getter / Setter
+//////////////////////////////////////////////////////////////////////////////
+
+String getRepoName() {
+    return env.REPO_NAME
+}
+
+String getProjectVersion() {
+    return params.PROJECT_VERSION
+}
+
+String getGitTag() {
+    return params.GIT_TAG
+}
+
+String getBuildBranch() {
+    return params.BUILD_BRANCH
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsId() {
+    return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getGitAuthorPushCredsId() {
+    return env.GIT_AUTHOR_PUSH_CREDS_ID
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Git
+//////////////////////////////////////////////////////////////////////////////
+
+void checkoutRepo() {
+    deleteDir()
+    checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
+    // Need to checkout after doing changes
+    sh "git checkout ${getBuildBranch()}"
+}
+
+MavenCommand getMavenCommand() {
+    mvnCmd = new MavenCommand(this, ['-fae', '-ntp'])
+                    .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
+                    .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
+    return mvnCmd
+}
+
+String getStagingRepoId() {
+    return params.STAGING_REPOSITORY_ID
+}

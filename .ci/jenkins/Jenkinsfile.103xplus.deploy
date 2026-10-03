@@ -1,0 +1,242 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.jenkinsci.plugins.workflow.libs.Library
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+
+deployProperties = [:]
+
+pipeline {
+    agent {
+        docker {
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+            label util.avoidFaultyNodes()
+        }
+    }
+
+    options {
+        timestamps()
+        timeout(time: 180, unit: 'MINUTES')
+    }
+
+    environment {
+        DROOLS_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        PR_BRANCH_HASH = "${util.generateHash(10)}"
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    cleanWs(disableDeferredWipeout: true)
+
+                    if (params.DISPLAY_NAME) {
+                        currentBuild.displayName = params.DISPLAY_NAME
+                    }
+
+                    if (isCreatePr()) {
+                        // Verify version is set
+                        assert getProjectVersion()
+                    }
+
+                    dir(getRepoName()) {
+                        checkoutRepo()
+
+                        setDeployPropertyIfNeeded('git.branch', getBuildBranch())
+                        setDeployPropertyIfNeeded('git.author', getGitAuthor())
+                        setDeployPropertyIfNeeded('project.version', getProjectVersion())
+                    }
+                }
+            }
+        }
+
+        stage('Update project version') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        if (getProjectVersion()) {
+                            maven.mvnVersionsSet(
+                                getMavenCommand(),
+                                getProjectVersion(),
+                                !isStreamDevVersion(),
+                                false,
+                                getRootPomPath()
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build & Deploy repo') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        withCredentials([usernamePassword(credentialsId: env.MAVEN_REPO_CREDS_ID, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
+                            configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                                String installOrDeploy = shouldDeployToRepository() ? 'deploy' : 'install'
+                                mavenCommand = getMavenCommand()
+                                    .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
+                                    .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
+                                    .withProperty('quickTests')
+                                    .withProperty('maven.test.failure.ignore', true)
+                                    .skipTests(params.SKIP_TESTS)
+
+                                configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                                    mavenCommand.withSettingsXmlFile(MAVEN_SETTINGS_FILE).run("clean $installOrDeploy")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    script {
+                        dir(getRepoName()) {
+                            junit testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml', allowEmptyResults: true
+                            util.archiveConsoleLog()
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Create PR') {
+            when {
+                expression {
+                    return isCreatePr()
+                }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        String prTitle = "[${getBuildBranch()}] Update version to ${getProjectVersion()}"
+                        String prBody = "Generated by build ${BUILD_TAG}: ${BUILD_URL}"
+                        githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
+                        githubscm.createPR(getPRBranch(), prTitle, prBody, getBuildBranch())
+                        setDeployPropertyIfNeeded("${getRepoName()}.pr.link", githubscm.getPRUrl(getPRBranch(), getBuildBranch()))
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                setDeployPropertyIfNeeded("${getRepoName()}.deploy.build.run", true)
+                saveDeployProperties()
+            }
+        }
+        cleanup {
+            cleanWs(filter: 'deploy.properties', includeEmptyDirs: false, notFailBuild: true, deleteDirs: true)
+        }
+        success {
+            script {
+                sendNotification()
+            }
+        }
+        unsuccessful {
+            sendErrorNotification()
+        }
+    }
+}
+
+void sendNotification() {
+    if (params.SEND_NOTIFICATION) {
+        mailer.sendMarkdownTestSummaryNotification('Deploy', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
+    }
+}
+
+void sendErrorNotification() {
+    sendNotification()
+    mailer.sendMarkdownErrorNotification('Deploy', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Deployment properties
+//////////////////////////////////////////////////////////////////////////////
+
+void setDeployPropertyIfNeeded(String key, def value) {
+    if (value != null && value != '') {
+        deployProperties[key] = value
+    }
+}
+
+void saveDeployProperties(String propertiesFileName = 'deploy.properties') {
+    def propertiesStr = deployProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    writeFile(file: propertiesFileName, text: propertiesStr)
+    archiveArtifacts artifacts: propertiesFileName
+}
+
+boolean shouldDeployToRepository() {
+    return env.MAVEN_DEPLOY_REPOSITORY || getGitAuthor() == 'apache'
+}
+
+boolean isCreatePr() {
+    return params.CREATE_PR
+}
+
+boolean isStreamDevVersion() {
+    return params.STREAM_DEV_VERSION
+}
+
+String getGitAuthor() {
+    return params.GIT_AUTHOR
+}
+
+String getGitAuthorPushCredsId() {
+    return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getBuildBranch() {
+    return params.BUILD_BRANCH
+}
+
+String getPRBranch() {
+    return "${params.PR_BRANCH_PREFIX}_${PR_BRANCH_HASH}"
+}
+
+String getRepoName() {
+    return env.REPO_NAME
+}
+
+String getProjectVersion() {
+    return params.PROJECT_VERSION
+}
+
+String getRootPomPath() {
+    return env.ROOT_POM_PATH ?: 'pom.xml'
+}
+
+MavenCommand getMavenCommand(String directory = '') {
+    directory = directory ?: getRepoName()
+    mvnCmd = new MavenCommand(this, ['-fae', '-ntp'])
+                .inDirectory(directory)
+                .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
+    return mvnCmd
+}
+
+String getGitTagName() {
+    return params.GIT_TAG_NAME
+}

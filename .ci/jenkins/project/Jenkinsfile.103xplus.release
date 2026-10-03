@@ -1,0 +1,91 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+pipeline {
+    agent {
+        label 'ubuntu'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 360, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(name: 'RELEASE_VERSION', defaultValue: '10.3.0', description: 'Exact release version, e.g. 10.3.0', trim: true)
+        string(name: 'TAG_NAME', defaultValue: '10.3.0-rc1', description: 'RC or Release tag name, e.g. 10.3.0-rc1', trim: true)
+        booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip running tests during reactor build')
+        booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Deploy artifacts to Apache Nexus staging')
+        string(name: 'STAGING_URL', defaultValue: '', description: 'Custom Nexus staging URL (optional)')
+        booleanParam(name: 'PUSH_TAG', defaultValue: true, description: 'Push the git tag to origin')
+        string(name: 'EXTRA_MAVEN_OPTS', defaultValue: '', description: 'Extra Maven CLI options to pass to build.sh')
+        booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Dry run without making remote git or staging changes')
+    }
+
+    stages {
+        stage('Initialize & Validate') {
+            steps {
+                script {
+                    assert params.RELEASE_VERSION : 'RELEASE_VERSION parameter is mandatory'
+                    assert params.TAG_NAME : 'TAG_NAME parameter is mandatory'
+                    currentBuild.displayName = "Release ${params.RELEASE_VERSION} (${params.TAG_NAME})"
+                }
+            }
+        }
+
+        stage('Execute Release Scripts') {
+            steps {
+                script {
+                    def releaseCmd = "./script/release/release-all.sh --version ${params.RELEASE_VERSION} --tag ${params.TAG_NAME}"
+
+                    if (params.SKIP_TESTS) {
+                        releaseCmd += ' --skip-tests'
+                    }
+                    if (params.DEPLOY) {
+                        releaseCmd += ' --deploy'
+                    }
+                    if (params.STAGING_URL?.trim()) {
+                        releaseCmd += " --staging-url \"${params.STAGING_URL.trim()}\""
+                    }
+                    if (params.PUSH_TAG) {
+                        releaseCmd += ' --push-tag'
+                    }
+                    if (params.EXTRA_MAVEN_OPTS?.trim()) {
+                        releaseCmd += " --maven-opts \"${params.EXTRA_MAVEN_OPTS.trim()}\""
+                    }
+                    if (params.DRY_RUN) {
+                        releaseCmd += ' --dry-run'
+                    }
+
+                    sh """#!/usr/bin/env bash
+                    set -euo pipefail
+                    chmod +x script/release/*.sh
+                    ${releaseCmd}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
