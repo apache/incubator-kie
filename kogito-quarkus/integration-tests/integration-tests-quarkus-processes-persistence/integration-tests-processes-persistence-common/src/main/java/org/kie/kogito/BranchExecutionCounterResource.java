@@ -16,16 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.kie.kogito.wih;
-
-import org.kie.kogito.process.impl.DefaultWorkItemHandlerConfig;
+package org.kie.kogito;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @ApplicationScoped
-public class WIHRegister extends DefaultWorkItemHandlerConfig {
-    {
-        register("CustomTask", new CustomWorkItemHandler());
-        register("BranchCounter", new BranchCounterWorkItemHandler());
+@Path("/branch-counter")
+public class BranchExecutionCounterResource {
+
+    @Inject
+    BranchExecutionCounter counter;
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public int get() {
+        return counter.get();
+    }
+
+    @DELETE
+    public void reset() {
+        counter.reset();
     }
 }

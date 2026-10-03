@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<!--
+  Reproducer for the parallel-async-split stale-lock bug:
+
+  Start → async TimerReplacement → parallel split → async Branch1 + async Branch2
+  (both sleep waitTime ms and increment a non-transactional counter) → parallel join → End
+
+  With waitTime=100 both branches finish nearly simultaneously and race to signal the joining
+  gateway. The non-transactional BranchExecutionCounter reflects every execution attempt,
+  including those whose JTA transaction was later rolled back. The test asserts counter == 2,
+  meaning each branch ran exactly once with no retries.
+-->
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.omg.org/bpmn20"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:bpsim="http://www.bpsim.org/schemas/1.0"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+    xmlns:drools="http://www.jboss.org/drools"
+    id="_asyncsplit"
+    xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd"
+    exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+
+  <bpmn2:itemDefinition id="_waitTimeItem" structureRef="Long" />
+
+  <bpmn2:collaboration id="_collaboration" name="Default Collaboration">
+    <bpmn2:participant id="_participant" name="Pool Participant" processRef="asyncsplit"/>
+  </bpmn2:collaboration>
+
+  <bpmn2:process id="asyncsplit" drools:packageName="org.kie.kogito" drools:version="1.0" drools:adHoc="false"
+      name="asyncsplit" isExecutable="true" processType="Public">
+
+    <bpmn2:property id="waitTime" itemSubjectRef="_waitTimeItem" name="waitTime" />
+
+    <bpmn2:startEvent id="_Start">
+      <bpmn2:outgoing>_f1</bpmn2:outgoing>
+    </bpmn2:startEvent>
+
+    <!-- Async script that initialises nothing — kept async to reproduce the job-scheduling pattern -->
+    <bpmn2:scriptTask id="_Timer" name="TimerReplacement" scriptFormat="http://www.java.com/java">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname"><drools:metaValue><![CDATA[TimerReplacement]]></drools:metaValue></drools:metaData>
+        <drools:metaData name="customAsync"><drools:metaValue><![CDATA[true]]></drools:metaValue></drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>_f1</bpmn2:incoming>
+      <bpmn2:outgoing>_f2</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[// intentionally empty]]></bpmn2:script>
+    </bpmn2:scriptTask>
+
+    <bpmn2:parallelGateway id="_Split" gatewayDirection="Diverging">
+      <bpmn2:incoming>_f2</bpmn2:incoming>
+      <bpmn2:outgoing>_f3</bpmn2:outgoing>
+      <bpmn2:outgoing>_f4</bpmn2:outgoing>
+    </bpmn2:parallelGateway>
+
+    <!--
+      Branch1: async work item that sleeps waitTime ms then increments the non-transactional counter.
+      customAsync=true causes this to be scheduled as a separate job, creating the race condition.
+    -->
+    <bpmn2:task id="_Branch1" drools:taskName="BranchCounter" name="Branch1">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname"><drools:metaValue><![CDATA[Branch1]]></drools:metaValue></drools:metaData>
+        <drools:metaData name="customAsync"><drools:metaValue><![CDATA[true]]></drools:metaValue></drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>_f3</bpmn2:incoming>
+      <bpmn2:outgoing>_f5a</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="_Branch1_waitTimeInput" drools:dtype="Long" name="waitTime"/>
+        <bpmn2:dataInput id="_Branch1_TaskNameInput" drools:dtype="Object" name="TaskName"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>_Branch1_waitTimeInput</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_Branch1_TaskNameInput</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet/>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>waitTime</bpmn2:sourceRef>
+        <bpmn2:targetRef>_Branch1_waitTimeInput</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_Branch1_TaskNameInput</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[BranchCounter]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_Branch1_TaskNameInput]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+    </bpmn2:task>
+
+    <!-- Branch2: identical to Branch1, races it to the parallel join -->
+    <bpmn2:task id="_Branch2" drools:taskName="BranchCounter" name="Branch2">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname"><drools:metaValue><![CDATA[Branch2]]></drools:metaValue></drools:metaData>
+        <drools:metaData name="customAsync"><drools:metaValue><![CDATA[true]]></drools:metaValue></drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>_f4</bpmn2:incoming>
+      <bpmn2:outgoing>_f5b</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="_Branch2_waitTimeInput" drools:dtype="Long" name="waitTime"/>
+        <bpmn2:dataInput id="_Branch2_TaskNameInput" drools:dtype="Object" name="TaskName"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>_Branch2_waitTimeInput</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_Branch2_TaskNameInput</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet/>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>waitTime</bpmn2:sourceRef>
+        <bpmn2:targetRef>_Branch2_waitTimeInput</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_Branch2_TaskNameInput</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[BranchCounter]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_Branch2_TaskNameInput]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+    </bpmn2:task>
+
+    <bpmn2:parallelGateway id="_Join" gatewayDirection="Converging">
+      <bpmn2:incoming>_f5a</bpmn2:incoming>
+      <bpmn2:incoming>_f5b</bpmn2:incoming>
+      <bpmn2:outgoing>_f6</bpmn2:outgoing>
+    </bpmn2:parallelGateway>
+
+    <bpmn2:endEvent id="_End">
+      <bpmn2:incoming>_f6</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:sequenceFlow id="_f1" sourceRef="_Start" targetRef="_Timer" />
+    <bpmn2:sequenceFlow id="_f2" sourceRef="_Timer" targetRef="_Split" />
+    <bpmn2:sequenceFlow id="_f3" sourceRef="_Split" targetRef="_Branch1" />
+    <bpmn2:sequenceFlow id="_f4" sourceRef="_Split" targetRef="_Branch2" />
+    <bpmn2:sequenceFlow id="_f5a" sourceRef="_Branch1" targetRef="_Join" />
+    <bpmn2:sequenceFlow id="_f5b" sourceRef="_Branch2" targetRef="_Join" />
+    <bpmn2:sequenceFlow id="_f6" sourceRef="_Join" targetRef="_End" />
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="asyncsplit">
+      <bpmndi:BPMNShape id="shape__Start" bpmnElement="_Start">
+        <dc:Bounds height="56" width="56" x="100" y="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__Timer" bpmnElement="_Timer">
+        <dc:Bounds height="102" width="154" x="200" y="117"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__Split" bpmnElement="_Split">
+        <dc:Bounds height="56" width="56" x="400" y="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__Branch1" bpmnElement="_Branch1">
+        <dc:Bounds height="102" width="154" x="500" y="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__Branch2" bpmnElement="_Branch2">
+        <dc:Bounds height="102" width="154" x="500" y="210"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__Join" bpmnElement="_Join">
+        <dc:Bounds height="56" width="56" x="700" y="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__End" bpmnElement="_End">
+        <dc:Bounds height="56" width="56" x="800" y="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge__f1" bpmnElement="_f1">
+        <di:waypoint x="156" y="168"/>
+        <di:waypoint x="200" y="168"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge__f2" bpmnElement="_f2">
+        <di:waypoint x="354" y="168"/>
+        <di:waypoint x="400" y="168"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge__f3" bpmnElement="_f3">
+        <di:waypoint x="428" y="140"/>
+        <di:waypoint x="428" y="121"/>
+        <di:waypoint x="500" y="121"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge__f4" bpmnElement="_f4">
+        <di:waypoint x="428" y="196"/>
+        <di:waypoint x="428" y="261"/>
+        <di:waypoint x="500" y="261"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge__f5a" bpmnElement="_f5a">
+        <di:waypoint x="654" y="121"/>
+        <di:waypoint x="728" y="121"/>
+        <di:waypoint x="728" y="140"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge__f5b" bpmnElement="_f5b">
+        <di:waypoint x="654" y="261"/>
+        <di:waypoint x="728" y="261"/>
+        <di:waypoint x="728" y="196"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge__f6" bpmnElement="_f6">
+        <di:waypoint x="756" y="168"/>
+        <di:waypoint x="800" y="168"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmn2:relationship type="BPSimData">
+    <bpmn2:extensionElements>
+      <bpsim:BPSimData>
+        <bpsim:Scenario id="default" name="Simulationscenario">
+          <bpsim:ScenarioParameters/>
+        </bpsim:Scenario>
+      </bpsim:BPSimData>
+    </bpmn2:extensionElements>
+    <bpmn2:source>_asyncsplit</bpmn2:source>
+    <bpmn2:target>_asyncsplit</bpmn2:target>
+  </bpmn2:relationship>
+</bpmn2:definitions>

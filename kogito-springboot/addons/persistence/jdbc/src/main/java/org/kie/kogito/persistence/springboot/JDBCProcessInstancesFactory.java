@@ -24,12 +24,16 @@ import javax.sql.DataSource;
 
 import org.kie.kogito.internal.process.runtime.HeadersPersistentConfig;
 import org.kie.kogito.persistence.jdbc.AbstractProcessInstancesFactory;
+import org.kie.kogito.persistence.jdbc.JDBCProcessInstances;
+import org.kie.kogito.process.Process;
 import org.kie.kogito.process.Processes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
 public class JDBCProcessInstancesFactory extends AbstractProcessInstancesFactory {
@@ -47,6 +51,24 @@ public class JDBCProcessInstancesFactory extends AbstractProcessInstancesFactory
 
         // Wrap the original DataSource so operations use the transactional Connection
         super(new TransactionAwareDataSourceProxy(dataSource), lock, new HeadersPersistentConfig(headersEnabled, headersExcluded), dataIsolationEnabled ? processes : null);
+    }
+
+    @Override
+    public JDBCProcessInstances<?> createProcessInstances(Process<?> process) {
+        JDBCProcessInstances<?> instances = super.createProcessInstances(process);
+        instances.setTransactionRegistrar(unlockAction -> {
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        unlockAction.run();
+                    }
+                });
+            } else {
+                unlockAction.run();
+            }
+        });
+        return instances;
     }
 
 }

@@ -22,7 +22,6 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.jbpm.process.instance.InternalProcessRuntime;
 import org.jbpm.workflow.instance.NodeInstanceContainer;
@@ -112,7 +111,7 @@ public class AsyncEventNodeInstance extends EventNodeInstance {
                                     .processVersion(instance.getProcessInstance().getProcessVersion())
                                     .rootProcessId(instance.getProcessInstance().getRootProcessId())
                                     .rootProcessVersion(instance.getProcessInstance().getRootProcessVersion())
-                                    .nodeInstanceId(Optional.ofNullable(from).map(KogitoNodeInstance::getStringId).orElse(null))
+                                    .nodeInstanceId(this.getStringId())
                                     .build();
                     JobsService jobService = processRuntime.getJobsService();
                     String jobId = jobService.scheduleJob(jobDescription);
