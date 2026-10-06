@@ -95,6 +95,13 @@
     <version.com.github.eirslett>1.15.1</version.com.github.eirslett>
     <version.com.github.haifengl.smile>1.5.2</version.com.github.haifengl.smile>
     <version.com.github.javaparser>3.27.0</version.com.github.javaparser>
+    <!-- Override zstd-jni to match quarkus-bom:3.33.4 (1.5.7-16).
+         kafka-clients:4.1.2 bundles zstd-jni:1.5.6-10 directly. Quarkus modules receive
+         1.5.7-16 via the Quarkus BOM, but Spring Boot modules (no Quarkus BOM import),
+         the Maven Plugin, and jBPM Tools Maven resolve the older bundled version instead.
+         Pinning here enforces a consistent version across all module types in this build.
+         Remove when kafka-clients bundles zstd-jni >= 1.5.7-16. -->
+    <version.com.github.luben.zstd-jni>1.5.7-16</version.com.github.luben.zstd-jni>
     <!-- replaces findbugs-maven-plugin -->
     <version.com.github.spotbugs-maven-plugin>4.9.8.3</version.com.github.spotbugs-maven-plugin>
     <version.com.github.victools>4.37.0</version.com.github.victools>
@@ -230,7 +237,7 @@
     <version.org.apache.maven.resolver>1.9.27</version.org.apache.maven.resolver>
     <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
     <version.org.apache.openjpa>4.0.0</version.org.apache.openjpa>
-    <version.org.apache.opennlp>2.5.11</version.org.apache.opennlp>
+    <version.org.apache.opennlp>2.5.12</version.org.apache.opennlp>
     <version.org.apache.pdfbox>2.0.28</version.org.apache.pdfbox>
     <version.org.apache.poi>5.4.1</version.org.apache.poi>
     <version.org.apache.tomcat>6.0.53</version.org.apache.tomcat>
@@ -292,6 +299,13 @@
     <version.org.w3c.dom>2.3.0-jaxb-1.0.6</version.org.w3c.dom>
     <version.org.webjars.bootstrap>5.1.3</version.org.webjars.bootstrap>
     <version.org.webjars.jquery>3.6.0</version.org.webjars.jquery>
+    <!-- Override wildfly-elytron family to 2.8.5.Final.
+         infinispan-client-hotrod:16.0.x (all patches) and 16.1.x ship wildfly-elytron at 2.7.0.Final/2.7.1.Final.
+         Quarkus modules resolve 2.8.5.Final via the Quarkus BOM, but non-Quarkus modules
+         (Spring Boot Infinispan persistence, Drools Reliability Infinispan, KIE Add-Ons Persistence
+         Infinispan) get 2.7.0.Final without these pins.
+         Remove when infinispan is upgraded to >= 16.2.0 (first line to bundle Elytron >= 2.9.1.Final). -->
+    <version.org.wildfly.elytron>2.8.5.Final</version.org.wildfly.elytron>
     <version.org.wiremock>3.13.2</version.org.wiremock>
     <version.org.wiremock.webhooks>3.0.4</version.org.wiremock.webhooks>
     <version.org.xmlunit>2.10.4</version.org.xmlunit>
@@ -317,7 +331,7 @@
     <version.simple-jndi>0.11.4.1</version.simple-jndi>
     <version.sisu.inject>1.4.2</version.sisu.inject>
     <version.sonar-maven-plugin>3.6.0.1398</version.sonar-maven-plugin>
-    <version.tomcat.embed.core>11.0.25</version.tomcat.embed.core>
+    <version.tomcat.embed.core>11.0.26</version.tomcat.embed.core>
     <version.versions-maven-plugin>2.10.0</version.versions-maven-plugin>
     <version.wildfly-maven-plugin>1.2.0.Final</version.wildfly-maven-plugin>
     <version.xerces>2.12.2</version.xerces>
@@ -470,6 +484,17 @@
         <groupId>com.github.javaparser</groupId>
         <artifactId>javaparser-symbol-solver-core</artifactId>
         <version>${version.com.github.javaparser}</version>
+      </dependency>
+      <dependency>
+        <!-- Override zstd-jni to match quarkus-bom:3.33.4 (1.5.7-16).
+             kafka-clients:4.1.2 bundles zstd-jni:1.5.6-10 directly. Quarkus modules receive
+             1.5.7-16 via the Quarkus BOM, but Spring Boot modules (no Quarkus BOM import),
+             the Maven Plugin, and jBPM Tools Maven resolve the older bundled version instead.
+             Pinning here enforces a consistent version across all module types in this build.
+             Remove when kafka-clients bundles zstd-jni >= 1.5.7-16. -->
+        <groupId>com.github.luben</groupId>
+        <artifactId>zstd-jni</artifactId>
+        <version>${version.com.github.luben.zstd-jni}</version>
       </dependency>
       <dependency>
         <groupId>com.github.victools</groupId>
@@ -2223,6 +2248,24 @@
         <groupId>org.webjars</groupId>
         <artifactId>jquery</artifactId>
         <version>${version.org.webjars.jquery}</version>
+      </dependency>
+      <dependency>
+        <!-- Override wildfly-elytron-asn1 to 2.8.5.Final.
+             infinispan-client-hotrod:16.0.x/16.1.x transitively pulls wildfly-elytron-asn1:2.7.0.Final
+             via wildfly-elytron-sasl-gs2. See version.org.wildfly.elytron property comment above.
+             Remove when infinispan is upgraded to >= 16.2.0. -->
+        <groupId>org.wildfly.security</groupId>
+        <artifactId>wildfly-elytron-asn1</artifactId>
+        <version>${version.org.wildfly.elytron}</version>
+      </dependency>
+      <dependency>
+        <!-- Override wildfly-elytron-password-impl to 2.8.5.Final.
+             infinispan-client-hotrod:16.0.x/16.1.x transitively pulls wildfly-elytron-password-impl:2.7.0.Final
+             via wildfly-elytron-sasl-digest. See version.org.wildfly.elytron property comment above.
+             Remove when infinispan is upgraded to >= 16.2.0. -->
+        <groupId>org.wildfly.security</groupId>
+        <artifactId>wildfly-elytron-password-impl</artifactId>
+        <version>${version.org.wildfly.elytron}</version>
       </dependency>
       <dependency>
         <groupId>org.wiremock</groupId>
