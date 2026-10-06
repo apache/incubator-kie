@@ -406,7 +406,7 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
 
     protected DataDefinition getVariableDataSpec(Parser parser, String propertyIdRef) {
         RuleFlowProcess process = (RuleFlowProcess) ((ProcessBuildData) parser.getData()).getMetaData(ProcessHandler.CURRENT_PROCESS);
-        Optional<Variable> var = process.getVariableScope().getVariables().stream().filter(e -> e.getId().equals(propertyIdRef)).findAny();
+        Optional<Variable> var = process.getVariableScope().getVariables().stream().filter(e -> e.matchByIdOrName(propertyIdRef)).findAny();
         if (var.isEmpty()) {
             return null;
         }
@@ -637,10 +637,9 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
     }
 
     /**
-     * Simplifies variable expression in order to improve performance
+     * Simplifies variable expression in order to improve performance.
+     * If the expression contains just one variable, we can skip MVEL expression evaluation.
      *
-     * If the expression contains just once variable, we can skip MVEL expression evaluation
-     * 
      * @param expression MVEL expression to evaluate
      * @return Variable name if expression evaluation is not needed, original expression otherwise
      */
@@ -651,7 +650,6 @@ public abstract class AbstractNodeHandler extends BaseAbstractHandler implements
                 return matcher.group(1);
             }
         }
-
         return expression;
     }
 

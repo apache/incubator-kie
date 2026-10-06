@@ -19,6 +19,7 @@
 package org.kie.kogito.process;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.kie.kogito.config.ConfigBean;
 import org.kie.kogito.correlation.CorrelationService;
@@ -34,6 +35,7 @@ import org.kie.kogito.uow.UnitOfWorkManager;
 import org.kie.kogito.usertask.UserTasks;
 import org.kogito.workitem.rest.RestWorkItemHandlerUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -80,8 +82,10 @@ public class KogitoBeanProducer {
 
     @Bean
     @ConditionalOnMissingBean(WebClientOptions.class)
-    WebClientOptions sslDefaultOptions() {
-        return RestWorkItemHandlerUtils.sslWebClientOptions();
+    WebClientOptions sslDefaultOptions(@Value("${" + RestWorkItemHandlerUtils.MAX_POOL_SIZE_PROPERTY + ":#{null}}") Optional<Integer> maxPoolSize) {
+        WebClientOptions options = RestWorkItemHandlerUtils.sslWebClientOptions();
+        maxPoolSize.ifPresent(options::setMaxPoolSize);
+        return options;
     }
 
     @Bean

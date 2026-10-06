@@ -44,6 +44,8 @@ import org.jbpm.bpmn2.data.DataInputAssociationsStringNoQuotesProcess;
 import org.jbpm.bpmn2.data.DataInputAssociationsStringObjectModel;
 import org.jbpm.bpmn2.data.DataInputAssociationsStringObjectProcess;
 import org.jbpm.bpmn2.data.DataInputAssociationsStringProcess;
+import org.jbpm.bpmn2.data.DataInputAssociationsVariableModel;
+import org.jbpm.bpmn2.data.DataInputAssociationsVariableProcess;
 import org.jbpm.bpmn2.data.DataInputAssociationsXmlLiteralModel;
 import org.jbpm.bpmn2.data.DataInputAssociationsXmlLiteralProcess;
 import org.jbpm.bpmn2.data.DataObjectModel;
@@ -321,6 +323,26 @@ public class DataTest extends JbpmBpmn2TestCase {
         DataInputAssociationsStringNoQuotesModel model = processDefinition.createModel();
 
         org.kie.kogito.process.ProcessInstance<DataInputAssociationsStringNoQuotesModel> instance = processDefinition.createInstance(model);
+        instance.start();
+        assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+    }
+
+    @Test
+    public void testDataInputAssociationsWithVariable() {
+        Application app = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(app, "Human Task", new DefaultKogitoWorkItemHandler() {
+            @Override
+            public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
+                assertThat(workItem.getParameter("taskInput")).isEqualTo("variableValue123");
+                return Optional.empty();
+            }
+        });
+
+        org.kie.kogito.process.Process<DataInputAssociationsVariableModel> processDefinition = DataInputAssociationsVariableProcess.newProcess(app);
+        DataInputAssociationsVariableModel model = processDefinition.createModel();
+        model.setMyVar("variableValue123");
+
+        org.kie.kogito.process.ProcessInstance<DataInputAssociationsVariableModel> instance = processDefinition.createInstance(model);
         instance.start();
         assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
     }

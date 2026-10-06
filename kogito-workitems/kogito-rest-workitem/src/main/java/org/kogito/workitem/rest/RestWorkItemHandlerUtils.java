@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.kie.api.annotations.KieProperty;
 import org.kie.kogito.internal.process.workitem.WorkItemExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,13 @@ import static org.kie.kogito.internal.utils.ConversionUtils.convert;
 
 public class RestWorkItemHandlerUtils {
 
+    /**
+     * Maximum number of HTTP connections the REST work item handler keeps open per target host.
+     * When not set, the Vert.x default applies.
+     */
+    @KieProperty(type = "integer")
+    public static final String MAX_POOL_SIZE_PROPERTY = "kogito.workitem.rest.max-pool-size";
+
     private final static Logger logger = LoggerFactory.getLogger(RestWorkItemHandlerUtils.class);
 
     private RestWorkItemHandlerUtils() {
@@ -44,6 +52,15 @@ public class RestWorkItemHandlerUtils {
 
     public static WebClientOptions sslWebClientOptions() {
         return new WebClientOptions().setSsl(true).setVerifyHost(false).setTrustAll(true);
+    }
+
+    /**
+     * Options for the plain HTTP client, copying every setting from the given SSL options so that
+     * one setting (e.g. the pool size) sizes both the HTTP and the HTTPS client, regardless of what
+     * else {@link #sslWebClientOptions()} configures.
+     */
+    public static WebClientOptions httpWebClientOptions(WebClientOptions sslOptions) {
+        return new WebClientOptions(sslOptions).setSsl(false);
     }
 
     public static String getParam(Map<String, Object> parameters, String paramName) {

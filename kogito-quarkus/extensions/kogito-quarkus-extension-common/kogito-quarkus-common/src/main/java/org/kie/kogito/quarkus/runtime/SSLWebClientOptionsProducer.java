@@ -18,20 +18,35 @@
  */
 package org.kie.kogito.quarkus.runtime;
 
+import java.util.Optional;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import io.quarkus.arc.DefaultBean;
 import io.vertx.ext.web.client.WebClientOptions;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 
+import static org.kogito.workitem.rest.RestWorkItemHandlerUtils.MAX_POOL_SIZE_PROPERTY;
 import static org.kogito.workitem.rest.RestWorkItemHandlerUtils.sslWebClientOptions;
 
 @ApplicationScoped
 public class SSLWebClientOptionsProducer {
 
+    private final Optional<Integer> maxPoolSize;
+
+    @Inject
+    public SSLWebClientOptionsProducer(@ConfigProperty(name = MAX_POOL_SIZE_PROPERTY) Optional<Integer> maxPoolSize) {
+        this.maxPoolSize = maxPoolSize;
+    }
+
     @Produces
     @DefaultBean
     public WebClientOptions webClientOptions() {
-        return sslWebClientOptions();
+        WebClientOptions options = sslWebClientOptions();
+        maxPoolSize.ifPresent(options::setMaxPoolSize);
+        return options;
     }
 }

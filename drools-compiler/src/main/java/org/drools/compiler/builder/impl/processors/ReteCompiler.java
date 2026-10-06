@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.drools.base.RuleBase;
-import org.drools.compiler.builder.impl.AssetFilter;
-import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.compiler.builder.impl.AssetFilter;
+import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.drl.ast.descr.RuleDescr;
 import org.kie.internal.builder.ResourceChange;

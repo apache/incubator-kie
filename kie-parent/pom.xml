@@ -87,9 +87,9 @@
     <version.build.helper.maven.plugin>3.4.0</version.build.helper.maven.plugin>
     <version.ch.obermuhlner>2.0.1</version.ch.obermuhlner>
     <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
-    <version.com.fasterxml.jackson>2.22.1</version.com.fasterxml.jackson>
+    <version.com.fasterxml.jackson>2.22.3</version.com.fasterxml.jackson>
     <version.com.fasterxml.jackson.annotations>2.22</version.com.fasterxml.jackson.annotations>
-    <version.com.fasterxml.jackson.databind>2.22.2</version.com.fasterxml.jackson.databind>
+    <version.com.fasterxml.jackson.databind>2.22.3</version.com.fasterxml.jackson.databind>
     <version.com.fasterxml.jackson.datatype>2.22.1</version.com.fasterxml.jackson.datatype>
     <version.com.github.docker-java>3.7.1</version.com.github.docker-java><!-- align with testcontainers ABI; Quarkus BOM pins older docker-java missing ImageHistoryCmd -->
     <version.com.github.eirslett>1.15.1</version.com.github.eirslett>
@@ -144,7 +144,7 @@
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
     <version.io.micrometer>1.16.7</version.io.micrometer>
-    <version.io.netty>4.1.137.Final</version.io.netty>
+    <version.io.netty>4.1.138.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
     <version.io.smallrye-config>3.13.4</version.io.smallrye-config>
@@ -154,12 +154,12 @@
     <version.io.smallrye.mutiny>2.9.5</version.io.smallrye.mutiny>
     <version.io.smallrye.openapi.core>4.0.12</version.io.smallrye.openapi.core>
     <version.io.smallrye.reactive.messaging.in.memory>4.28.0</version.io.smallrye.reactive.messaging.in.memory>
-    <version.io.smallrye.reactive.mutiny-vertx-web-client>3.21.6</version.io.smallrye.reactive.mutiny-vertx-web-client>
+    <version.io.smallrye.reactive.mutiny-vertx-web-client>3.23.1</version.io.smallrye.reactive.mutiny-vertx-web-client>
     <!-- Mutiny Zero Flow Adapters -->
     <version.io.smallrye.reactive.mutiny-zero>1.1.1</version.io.smallrye.reactive.mutiny-zero>
     <version.io.swagger.core.v3>2.2.38</version.io.swagger.core.v3>
     <version.io.swagger.parser.v3>2.1.34</version.io.swagger.parser.v3>
-    <version.io.vertx>4.5.31</version.io.vertx>
+    <version.io.vertx>4.5.34</version.io.vertx>
     <version.it.unimi.dsi.fastutil>8.5.11</version.it.unimi.dsi.fastutil>
     <version.jacoco.plugin>0.8.11</version.jacoco.plugin>
     <version.jakarta.activation>2.0.3</version.jakarta.activation>
@@ -197,7 +197,7 @@
     <version.maven.plugin>3.15.1</version.maven.plugin>
     <version.maven.project>2.2.1</version.maven.project>
     <version.maven.resolver.api>1.9.27</version.maven.resolver.api>
-    <version.mongodb-driver-sync>5.9.2</version.mongodb-driver-sync>
+    <version.mongodb-driver-sync>5.11.1</version.mongodb-driver-sync>
     <version.nashorn>15.3</version.nashorn>
     <version.native2ascii-maven-plugin>1.0-beta-1</version.native2ascii-maven-plugin>
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
@@ -222,12 +222,10 @@
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
     <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
     <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
-         quarkus-bom:3.33.3.2 promotes it to 2.25.3. Both are below the minimum safe version 2.25.5.
+         quarkus-bom:3.33.4 promotes it to 2.25.3. Both are below the minimum safe version 2.25.5.
          This managed entry forces 2.26.1 across all modules inheriting kie-parent.
          https://logging.apache.org/security.html#CVE-2026-49844 -->
     <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
-    <!-- CVE-2026-56624: Apache MINA SSHD fixed version -->
-    <version.org.apache.sshd>2.19.0</version.org.apache.sshd>
     <version.org.apache.maven>3.9.16</version.org.apache.maven>
     <version.org.apache.maven.resolver>1.9.27</version.org.apache.maven.resolver>
     <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
@@ -1321,7 +1319,7 @@
       </dependency>
       <dependency>
         <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
-             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.33.3.2 (to 2.25.3).
+             (via log4j-bom:2.24.3) and promoted by quarkus-bom:3.33.4 (to 2.25.3).
              Both are vulnerable; this pins the version to 2.26.1 for all inheriting modules. -->
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
@@ -1809,16 +1807,6 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-server-testdriver-core</artifactId>
         <version>${version.org.infinispan}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.sshd</groupId>
-        <artifactId>sshd-common</artifactId>
-        <version>${version.org.apache.sshd}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.sshd</groupId>
-        <artifactId>sshd-core</artifactId>
-        <version>${version.org.apache.sshd}</version>
       </dependency>
       <dependency>
         <groupId>org.infinispan.protostream</groupId>

@@ -89,9 +89,9 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- CVE fix: spring-boot-dependencies:4.1.1 imports mongodb-driver-bom:5.8.1 which pins
-           mongodb-driver-core and bson to 5.8.1. Override to match mongodb-driver-sync:5.9.2.
-           https://jira.mongodb.org/browse/JAVA-6266 -->
+      <!-- CVE-2026-18710 (JAVA-6266): spring-boot-dependencies:4.1.1 imports mongodb-driver-bom:5.8.1
+           which pins mongodb-driver-core and bson to 5.8.1. Override to 5.11.1 (version.mongodb-driver-sync).
+           Remove when spring-boot-dependencies imports mongodb-driver-bom >= 5.11.1. -->
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>mongodb-driver-core</artifactId>

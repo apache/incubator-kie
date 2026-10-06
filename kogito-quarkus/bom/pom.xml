@@ -31,7 +31,14 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
-    <version.io.quarkus>3.33.3.2</version.io.quarkus>
+    <!--
+      [CVE-2026-45292] opentelemetry-api 1.57.0 pulled in via smallrye-reactive-messaging-otel.
+      Pin to 1.62.0 before quarkus-bom import so this value takes precedence.
+      Should be removed in future Quarkus upgrades that include OpenTelemetry >= 1.62.0
+    -->
+    <version.io.opentelemetry.api>1.62.0</version.io.opentelemetry.api>
+    <version.io.opentelemetry.instrumentation>2.28.1-alpha</version.io.opentelemetry.instrumentation>
+    <version.io.quarkus>3.33.4</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
     <version.io.quarkiverse.openapi.generator>2.17.0-lts</version.io.quarkiverse.openapi.generator>
@@ -55,8 +62,6 @@
     <!-- quarkus-bom alignment; smallrye-open-api 4.2.4 requires jandex 3.5, so it is pinned in the same scope as jandex. -->
     <version.io.smallrye-open-api>4.2.4</version.io.smallrye-open-api>
     <version.io.smallrye.openapi.core>4.2.4</version.io.smallrye.openapi.core>
-   <!-- Override: quarkus-bom 3.33.3.2 ships MongoDB driver 5.6.4; pin to 5.9.2. -->
-    <version.mongodb-driver-sync>5.9.2</version.mongodb-driver-sync>
     <!-- Framework-specific pins moved out of kie-parent: only this tree declares these artifacts. -->
     <version.io.smallrye-health>4.3.0</version.io.smallrye-health>
     <version.com.github.stephenc.jcip>1.0-1</version.com.github.stephenc.jcip>
@@ -149,20 +154,15 @@
         <artifactId>quarkus-reactive-messaging-http-deployment</artifactId>
         <version>${version.io.quarkiverse.reactivemessaging.http}</version>
       </dependency>
-      <!-- CVE-2026-59296: micrometer-registry-statsd 1.16.6 (via Quarkus 3.33.x) -->
-      <dependency>
-        <groupId>io.micrometer</groupId>
-        <artifactId>micrometer-registry-statsd</artifactId>
-        <version>${version.io.micrometer}</version>
-      </dependency>
       <dependency>
         <groupId>io.projectreactor</groupId>
         <artifactId>reactor-core</artifactId>
         <version>${version.io.projectreactor}</version>
       </dependency>
-      <!-- Override: quarkus-bom:3.33.3.2 ships MongoDB driver artifacts at 5.6.4.
-           Pin to 5.9.2 (version.mongodb-driver-sync). Must appear before the quarkus-bom
-           import to take precedence (first explicit entry wins in Maven dependencyManagement). -->
+      <!-- CVE-2026-18710 (JAVA-6266): quarkus-bom:3.33.4 ships MongoDB driver artifacts at 5.6.4.
+           Pin to 5.11.1 (version.mongodb-driver-sync). Remove when quarkus-bom ships >= 5.11.1.
+           Must appear before the quarkus-bom import to take precedence
+           (first explicit entry wins in Maven dependencyManagement). -->
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>mongodb-driver-sync</artifactId>
@@ -187,6 +187,18 @@
         <groupId>org.mongodb</groupId>
         <artifactId>bson-record-codec</artifactId>
         <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
+        <version>${version.io.opentelemetry.instrumentation}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+        <version>${version.io.opentelemetry.api}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>

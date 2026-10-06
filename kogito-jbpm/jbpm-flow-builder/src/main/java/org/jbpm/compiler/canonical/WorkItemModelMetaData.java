@@ -34,6 +34,8 @@ import org.kie.api.definition.process.WorkflowElementIdentifier;
 import org.kie.kogito.UserTask;
 import org.kie.kogito.UserTaskParam;
 import org.kie.kogito.UserTaskParam.ParamType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
@@ -68,8 +70,11 @@ import static com.github.javaparser.StaticJavaParser.parse;
 import static com.github.javaparser.StaticJavaParser.parseClassOrInterfaceType;
 import static org.jbpm.ruleflow.core.Metadata.CUSTOM_AUTO_START;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
+import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeJavaName;
 
 public class WorkItemModelMetaData {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkItemModelMetaData.class);
 
     private static final String TASK_INTPUT_CLASS_SUFFIX = "TaskInput";
     private static final String TASK_OUTTPUT_CLASS_SUFFIX = "TaskOutput";
@@ -200,15 +205,23 @@ public class WorkItemModelMetaData {
                 variable.setName(entry.getKey());
                 DataType type = DataTypeResolver.fromType(inputTypes.get(entry.getKey()), Thread.currentThread().getContextClassLoader());
                 variable.setType(type);
-                if (!PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
+                if (entry.getValue() != null && !PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
                     variable.setValue(type.readValue(entry.getValue()));
                 }
             }
 
+            String variableType = variable.getType().getStringType();
+            if (Object.class.getCanonicalName().equals(variableType)) {
+                LOGGER.warn("User task input variable '{}' is declared as java.lang.Object. " +
+                        "Object type variables are persisted using Java serialization. " +
+                        "Make sure the stored value implements java.io.Serializable.", entry.getKey());
+            }
+
+            String fieldName = sanitizeJavaName(entry.getKey());
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
-                            .setType(variable.getType().getStringType())
-                            .setName(entry.getKey()))
+                            .setType(variableType)
+                            .setName(fieldName))
                     .addModifier(Modifier.Keyword.PRIVATE);
 
             modelClass.addMember(fd);
@@ -218,10 +231,10 @@ public class WorkItemModelMetaData {
             fd.createGetter();
             fd.createSetter();
 
-            // from static method body
-            FieldAccessExpr field = new FieldAccessExpr(item, entry.getKey());
+            // from static method body — sanitised name for the identifier, original key for the runtime map lookup
+            FieldAccessExpr field = new FieldAccessExpr(item, fieldName);
 
-            ClassOrInterfaceType type = parseClassOrInterfaceType(variable.getType().getStringType());
+            ClassOrInterfaceType type = parseClassOrInterfaceType(variableType);
             staticFromMap.addStatement(new AssignExpr(field, new CastExpr(
                     type,
                     new MethodCallExpr(
@@ -237,10 +250,11 @@ public class WorkItemModelMetaData {
                 continue;
             }
 
+            String fieldName = sanitizeJavaName(entry.getKey());
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
                             .setType(entry.getValue().getClass().getCanonicalName())
-                            .setName(entry.getKey()))
+                            .setName(fieldName))
                     .addModifier(Modifier.Keyword.PRIVATE);
             modelClass.addMember(fd);
             addUserTaskParamAnnotation(fd, UserTaskParam.ParamType.INPUT);
@@ -248,8 +262,8 @@ public class WorkItemModelMetaData {
             fd.createGetter();
             fd.createSetter();
 
-            // from static method body
-            FieldAccessExpr field = new FieldAccessExpr(item, entry.getKey());
+            // from static method body — sanitised name for the identifier, original key for the runtime map lookup
+            FieldAccessExpr field = new FieldAccessExpr(item, fieldName);
 
             ClassOrInterfaceType type = parseClassOrInterfaceType(entry.getValue().getClass().getCanonicalName());
             staticFromMap.addStatement(new AssignExpr(field, new CastExpr(
@@ -312,15 +326,23 @@ public class WorkItemModelMetaData {
                 variable.setName(entry.getKey());
                 DataType type = DataTypeResolver.fromType(outputTypes.get(entry.getKey()), Thread.currentThread().getContextClassLoader());
                 variable.setType(type);
-                if (!PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
+                if (entry.getValue() != null && !PatternConstants.PARAMETER_MATCHER.matcher(entry.getValue()).find()) {
                     variable.setValue(type.readValue(entry.getValue()));
                 }
             }
 
+            String variableType = variable.getType().getStringType();
+            if (Object.class.getCanonicalName().equals(variableType)) {
+                LOGGER.warn("User task output variable '{}' is declared as java.lang.Object. " +
+                        "Object type variables are persisted using Java serialization. " +
+                        "Make sure the stored value implements java.io.Serializable.", entry.getKey());
+            }
+
+            String fieldName = sanitizeJavaName(entry.getKey());
             FieldDeclaration fd = new FieldDeclaration().addVariable(
                     new VariableDeclarator()
-                            .setType(variable.getType().getStringType())
-                            .setName(entry.getKey()))
+                            .setType(variableType)
+                            .setName(fieldName))
                     .addModifier(Modifier.Keyword.PRIVATE);
             modelClass.addMember(fd);
             addUserTaskParamAnnotation(fd, UserTaskParam.ParamType.OUTPUT);
@@ -328,15 +350,15 @@ public class WorkItemModelMetaData {
             fd.createGetter();
             fd.createSetter();
 
-            // toMap method body
+            // toMap method body — original key in the map, sanitised name for field access
             MethodCallExpr putVariable = new MethodCallExpr(params, "put");
             putVariable.addArgument(new StringLiteralExpr(entry.getKey()));
-            putVariable.addArgument(new FieldAccessExpr(new ThisExpr(), entry.getKey()));
+            putVariable.addArgument(new FieldAccessExpr(new ThisExpr(), fieldName));
             toMapBody.addStatement(putVariable);
 
-            // fromMap method body
-            fromMapBody.addStatement(new AssignExpr(new FieldAccessExpr(fromMapReturn, entry.getKey()),
-                    new CastExpr(new ClassOrInterfaceType(null, variable.getType().getStringType()),
+            // fromMap method body — original key for params.get(), sanitised name for field assignment
+            fromMapBody.addStatement(new AssignExpr(new FieldAccessExpr(fromMapReturn, fieldName),
+                    new CastExpr(new ClassOrInterfaceType(null, variableType),
                             new MethodCallExpr(params, "get").addArgument(new StringLiteralExpr(entry.getKey()))),
                     Operator.ASSIGN));
 
