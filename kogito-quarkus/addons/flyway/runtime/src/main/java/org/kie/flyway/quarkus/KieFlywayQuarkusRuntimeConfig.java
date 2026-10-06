@@ -24,7 +24,6 @@ import java.util.Map;
 import io.quarkus.runtime.annotations.*;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
-import io.smallrye.config.WithParentName;
 
 /**
  * Configuration for the Kie Flyway initializer
@@ -40,10 +39,8 @@ public interface KieFlywayQuarkusRuntimeConfig {
     boolean enabled();
 
     /**
-     * List of {@link KieQuarkusFlywayNamedModuleConfig} that allow to enable or disable a given modul
+     * List of {@link KieQuarkusFlywayNamedModuleConfig} that allow to enable or disable a given module
      */
-
-    @WithParentName
     Map<String, KieQuarkusFlywayNamedModuleConfig> modules();
 
 }
