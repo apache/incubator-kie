@@ -22,14 +22,32 @@ import java.util.Optional;
 
 import org.kie.kogito.auth.IdentityProvider;
 
+/**
+ * <b>User Task Assignment Strategy</b> extension point.
+ *
+ * <p>
+ * Computes user task assignments dynamically when human tasks are created or reassigned.
+ */
 public interface UserTaskAssignmentStrategy {
 
     static final String DEFAULT_NAME = "default";
 
+    /**
+     * Returns the unique strategy name identifying this assignment implementation.
+     *
+     * @return the non-null strategy identifier; defaults to the fully qualified class name
+     */
     default String getName() {
         return getClass().getName();
     }
 
+    /**
+     * Computes the assigned user for the specified user task instance.
+     *
+     * @param userTaskInstance the non-null user task instance requiring assignment
+     * @param identityProvider the non-null caller security identity
+     * @return an {@link Optional} containing the assigned username, or {@link Optional#empty()} if no assignment is resolved
+     */
     Optional<String> computeAssignment(UserTaskInstance userTaskInstance, IdentityProvider identityProvider);
 
 }

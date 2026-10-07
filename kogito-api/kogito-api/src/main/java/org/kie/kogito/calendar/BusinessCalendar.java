@@ -21,27 +21,28 @@ package org.kie.kogito.calendar;
 import java.util.Date;
 
 /**
- * BusinessCalendar allows for defining custom definitions of working days, hours and holidays
- * to be taken under consideration when scheduling time based activities such as timers or deadlines.
+ * <b>Business Calendar</b> extension point.
+ *
+ * <p>
+ * Calculates business working hours, weekend exclusions, and corporate holiday schedules
+ * for workflow timer nodes, SLA tracking, and user task deadline escalations.
  */
 public interface BusinessCalendar {
 
     /**
-     * Returns the difference, in milliseconds, between the <b>business date</b> that matches the given
-     * <code>timeExpression</code>, and the current time.
-     * See {@link #calculateBusinessTimeAsDate} for <b>business date</b> calculation
+     * Calculates the duration in milliseconds from the current time to the business time matching the expression.
      *
      * @param timeExpression time expression that is supported by business calendar implementation.
-     * @return duration expressed in milliseconds
+     * @return duration expressed in milliseconds; always &gt;= 0
+     * @see #calculateBusinessTimeAsDate(String)
      */
     long calculateBusinessTimeAsDuration(String timeExpression);
 
     /**
-     * Returns the first <code>Date</code> that matches the given <code>timeExpression</code> and falls
-     * into the business calendar working hours.
-     * 
-     * @param timeExpression time expression that is supported by business calendar implementation.
-     * @return date when given time expression will match in the future
+     * Calculates the future date matching the expression within valid business calendar hours.
+     *
+     * @param timeExpression the non-null ISO-8601 or custom cron/interval time expression
+     * @return the future {@link Date} when the time expression matches; never {@code null}
      */
     Date calculateBusinessTimeAsDate(String timeExpression);
 }

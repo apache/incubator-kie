@@ -21,122 +21,138 @@ package org.kie.api.event.process;
 import java.util.EventListener;
 
 /**
- * A listener for events related to process instance execution.
+ * <b>Process Event Listener</b> extension point.
+ *
+ * <p>Listens for process execution lifecycle events, including process start and completion,
+ * node entry and exit, variable mutations, SLA violations, signals, and error boundaries.
  */
 public interface ProcessEventListener
     extends
     EventListener {
 
     /**
-     * This listener method is invoked right before a process instance is being started.
-     * @param event
+     * Invoked immediately before a process instance is started.
+     *
+     * @param event the non-null {@link ProcessStartedEvent}
      */
     void beforeProcessStarted(ProcessStartedEvent event);
 
     /**
-     * This listener method is invoked right after a process instance has been started.
-     * @param event
+     * Invoked immediately after a process instance is started.
+     *
+     * @param event the non-null {@link ProcessStartedEvent}
      */
     void afterProcessStarted(ProcessStartedEvent event);
 
     /**
-     * This listener method is invoked right before a process instance is being completed (or aborted).
-     * @param event
+     * Invoked immediately before a process instance is completed or aborted.
+     *
+     * @param event the non-null {@link ProcessCompletedEvent}
      */
     void beforeProcessCompleted(ProcessCompletedEvent event);
 
     /**
-     * This listener method is invoked right after a process instance has been completed (or aborted).
-     * @param event
+     * Invoked immediately after a process instance is completed or aborted.
+     *
+     * @param event the non-null {@link ProcessCompletedEvent}
      */
     void afterProcessCompleted(ProcessCompletedEvent event);
 
     /**
-     * This listener method is invoked right before a node in a process instance is being triggered
-     * (which is when the node is being entered, for example when an incoming connection triggers it).
-     * @param event
+     * Invoked immediately before a node instance is triggered (node entry).
+     *
+     * @param event the non-null {@link ProcessNodeTriggeredEvent}
      */
     void beforeNodeTriggered(ProcessNodeTriggeredEvent event);
 
     /**
-     * This listener method is invoked right after a node in a process instance has been triggered
-     * (which is when the node was entered, for example when an incoming connection triggered it).
-     * @param event
+     * Invoked immediately after a node instance is triggered (node entry).
+     *
+     * @param event the non-null {@link ProcessNodeTriggeredEvent}
      */
     void afterNodeTriggered(ProcessNodeTriggeredEvent event);
 
     /**
-     * This listener method is invoked right before a node in a process instance is being left
-     * (which is when the node is completed, for example when it has performed the task it was
-     * designed for).
-     * @param event
+     * Invoked immediately before a node instance is left (node exit).
+     *
+     * @param event the non-null {@link ProcessNodeLeftEvent}
      */
     void beforeNodeLeft(ProcessNodeLeftEvent event);
 
     /**
-     * This listener method is invoked right after a node in a process instance has been left
-     * (which is when the node was completed, for example when it performed the task it was
-     * designed for).
-     * @param event
+     * Invoked immediately after a node instance is left (node exit).
+     *
+     * @param event the non-null {@link ProcessNodeLeftEvent}
      */
     void afterNodeLeft(ProcessNodeLeftEvent event);
 
     /**
-     * This listener method is invoked right before the value of a process variable is being changed.
-     * @param event
+     * Invoked immediately before a process variable value is modified.
+     *
+     * @param event the non-null {@link ProcessVariableChangedEvent}
      */
     void beforeVariableChanged(ProcessVariableChangedEvent event);
 
     /**
-     * This listener method is invoked right after the value of a process variable has been changed.
-     * @param event
+     * Invoked immediately after a process variable value has been modified.
+     *
+     * @param event the non-null {@link ProcessVariableChangedEvent}
      */
     void afterVariableChanged(ProcessVariableChangedEvent event);
     
     /**
-     * This listener method is invoked right before a process/node instance's SLA has been violated.
-     * @param event
+     * Invoked immediately before an SLA deadline on a process or node instance is violated.
+     *
+     * @param event the non-null {@link SLAViolatedEvent}
      */
     default void beforeSLAViolated(SLAViolatedEvent event) {}
 
     /**
-     * This listener method is invoked right after a process/node instance's SLA has been violated.
-     * @param event
+     * Invoked immediately after an SLA deadline on a process or node instance is violated.
+     *
+     * @param event the non-null {@link SLAViolatedEvent}
      */
     default void afterSLAViolated(SLAViolatedEvent event) {}
 
     /**
-     * This listener method is invoked when a signal is sent
-     * @param event
+     * Invoked when a signal is dispatched.
+     *
+     * @param event the non-null {@link SignalEvent}
      */
     default void onSignal(SignalEvent event) {}
 
     /**
-     * This listeners is triggered when a migration occurs
-     * @param event
+     * Invoked when a process instance migration occurs across.
+     *
+     * @param event the non-null {@link ProcessMigrationEvent}
      */
     default void onMigration(ProcessMigrationEvent event) { }
+
     /**
-     * This listener method is invoked when a message is sent
-     * @param event
+     * Invoked when a message event is sent.
+     *
+     * @param event the non-null {@link MessageEvent}
      */
     default void onMessage(MessageEvent event) {}
     
     /**
-     * This listener method is invoked when an error is captured
-     * @param event
+     * Invoked when an error is captured during process execution.
+     *
+     * @param event the non-null {@link ErrorEvent}
      */
     default void onError (ErrorEvent event) {}
 
     /**
-     * This listener method is invoked right after a process instance is modified.
-     * @param event
+     * Invoked right after a process instance is modified.
+     *
+     * @param event the non-null {@link ProcessStateChangeEvent}
      */
     default void onProcessStateChanged(ProcessStateChangeEvent event) {}
 
     /**
-     * This listener method is invoked right after a node in a process instance is modified.
-     * @param event
+     * Invoked right after a node in a process instance is modified.
+     *
+     * @param event the non-null {@link ProcessNodeStateChangeEvent}
      */
     default void onNodeStateChanged(ProcessNodeStateChangeEvent event) {}
 }

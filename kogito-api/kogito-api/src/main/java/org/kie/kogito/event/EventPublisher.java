@@ -21,13 +21,11 @@ package org.kie.kogito.event;
 import java.util.Collection;
 
 /**
- * Responsible for publishing events for consumption to the "outside world"
- * 
- * Depending on the implementation it can be to push over the wire or use an
- * in memory queue to notify other parties about particular events.
- * 
- * In case any filtering needs to take place, this is where it should happen.
+ * <b>Event Publisher</b> extension point.
  *
+ * <p>
+ * Publishes workflow engine lifecycle events (such as process instance state changes, user task events,
+ * and definition updates) for consumption to the "outside world".
  */
 public interface EventPublisher {
 
@@ -36,17 +34,16 @@ public interface EventPublisher {
     String PROCESS_DEFINITIONS_TOPIC_NAME = "kogito-processdefinitions-events";
 
     /**
-     * Publishes individual event
-     * 
-     * @param event event to be published
+     * Publishes a single workflow data event.
+     *
+     * @param event the non-null {@link DataEvent} to publish
      */
     void publish(DataEvent<?> event);
 
     /**
-     * Publish collection of events. It's up to implementation to publish them
-     * individually or as complete collection.
-     * 
-     * @param events events to be published
+     * Publishes a collection of workflow data events.
+     *
+     * @param events the non-null {@link Collection} of {@link DataEvent} instances to publish
      */
     void publish(Collection<DataEvent<?>> events);
 }
