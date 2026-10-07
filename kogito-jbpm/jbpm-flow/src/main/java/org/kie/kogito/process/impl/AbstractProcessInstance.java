@@ -112,12 +112,20 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
     private ProcessInstanceLockStrategy processInstanceLockStrategy;
 
     /**
-     * Replaces the lock strategy for this instance. Called by the persistence layer when a
-     * transaction-aware strategy (e.g. {@link org.kie.kogito.process.impl.lock.TransactionAwareProcessInstanceLockStrategy})
-     * needs to be installed after construction.
+     * Transaction registrar for deferred lock release. When non-null (set by
+     * {@link JDBCProcessInstances#connectInstance} via {@link #internalSetTransactionRegistrar}),
+     * write operations defer the JVM-level lock release until after the surrounding transaction
+     * commits, preventing other threads from reading a stale optimistic-lock version.
      */
-    public void internalSetProcessInstanceLockStrategy(ProcessInstanceLockStrategy processInstanceLockStrategy) {
-        this.processInstanceLockStrategy = processInstanceLockStrategy;
+    private Consumer<Runnable> transactionRegistrar;
+
+    /**
+     * Sets the transaction registrar so that write operations release the JVM lock only after
+     * the surrounding transaction commits. Called by the persistence layer after the instance
+     * is unmarshalled from the DB. A {@code null} value (the default) means unlock immediately.
+     */
+    public void internalSetTransactionRegistrar(Consumer<Runnable> transactionRegistrar) {
+        this.transactionRegistrar = transactionRegistrar;
     }
 
     public AbstractProcessInstance(AbstractProcess<T> process, T variables, ProcessRuntime rt) {
@@ -621,10 +629,9 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
     }
 
     private <R> R executeInWorkflowProcessInstance(Function<WorkflowProcessInstanceImpl, R> execution) {
-        // Check if this is a reentrant call before entering the lock
-        boolean isReentrant = processInstanceLockStrategy.isLockedByCurrentThread(id);
-
         return processInstanceLockStrategy.executeWriteOperation(id, () -> {
+            // Check reentrance *inside* the lock so the answer is stable.
+            boolean isReentrant = processInstanceLockStrategy.isLockedByCurrentThread(id);
             // The process instance (and its optimistic-lock version) may have been loaded from
             // the DB *before* this lock was acquired (e.g. by JDBCProcessInstances.findById in
             // ProcessInstanceJobExecutor). Discard that stale snapshot so that the SELECT issued
@@ -670,7 +677,7 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
             }
 
             return outcome;
-        });
+        }, transactionRegistrar);
     }
 
     @Override

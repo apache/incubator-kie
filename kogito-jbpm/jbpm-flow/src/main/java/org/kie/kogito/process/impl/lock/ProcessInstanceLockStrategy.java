@@ -18,22 +18,36 @@
  */
 package org.kie.kogito.process.impl.lock;
 
+import java.util.function.Consumer;
+
 public interface ProcessInstanceLockStrategy {
 
     <T> T executeOperation(String processInstanceId, WorkflowAtomicExecutor<T> executor);
 
     /**
-     * Executes a write operation under the lock.
-     * Implementations may align the lock release with the surrounding transaction boundary
-     * (see {@link TransactionAwareProcessInstanceLockStrategy}).
-     * The default delegates to {@link #executeOperation}.
+     * Executes a write operation under the lock, optionally deferring the lock release to after
+     * the surrounding transaction commits.
+     *
+     * <p>
+     * When {@code transactionRegistrar} is non-null, implementations should arrange for the
+     * lock to be released only after the surrounding transaction commits, by passing an unlock
+     * {@link Runnable} to the registrar. The registrar must run the action immediately when no
+     * active transaction is present, so this is safe in non-transactional environments too.
+     *
+     * <p>
+     * The default implementation ignores {@code transactionRegistrar} and delegates to
+     * {@link #executeOperation}, making it safe for non-transactional or test environments.
      *
      * @param processInstanceId the process instance id
      * @param executor the operation to execute
+     * @param transactionRegistrar accepts an unlock {@link Runnable} and arranges for it to run
+     *        after the surrounding transaction commits; {@code null} means
+     *        unlock immediately in the {@code finally} block
      * @param <T> the return type
      * @return the result of the operation
      */
-    default <T> T executeWriteOperation(String processInstanceId, WorkflowAtomicExecutor<T> executor) {
+    default <T> T executeWriteOperation(String processInstanceId, WorkflowAtomicExecutor<T> executor,
+            Consumer<Runnable> transactionRegistrar) {
         return executeOperation(processInstanceId, executor);
     }
 

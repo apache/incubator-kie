@@ -38,9 +38,6 @@ import org.kie.kogito.process.ProcessInstanceOptimisticLockingException;
 import org.kie.kogito.process.ProcessInstanceReadMode;
 import org.kie.kogito.process.Processes;
 import org.kie.kogito.process.impl.AbstractProcessInstance;
-import org.kie.kogito.process.impl.lock.ContextAwareProcessInstanceLockStrategy;
-import org.kie.kogito.process.impl.lock.ProcessInstanceAtomicLockStrategy;
-import org.kie.kogito.process.impl.lock.TransactionAwareProcessInstanceLockStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +51,10 @@ public class JDBCProcessInstances<T extends Model> implements MutableProcessInst
     private final Repository repository;
 
     /**
-     * Optional transaction registrar: when set, {@link #connectInstance} wraps the process
-     * instance's lock strategy with a {@link TransactionAwareProcessInstanceLockStrategy} so
-     * the per-instance lock is released only after the surrounding transaction commits.
-     * Null means "unlock immediately" — safe for non-transactional or test environments.
+     * Optional transaction registrar: when set, {@link #connectInstance} passes it to the
+     * process instance so write operations release the JVM lock only after the surrounding
+     * transaction commits. Null means "unlock immediately" — safe for non-transactional or
+     * test environments.
      */
     private Consumer<Runnable> transactionRegistrar;
 
@@ -201,10 +198,7 @@ public class JDBCProcessInstances<T extends Model> implements MutableProcessInst
             pi.internalGetProcessInstance().setRootProcessVersion(r.rootProcessVersion());
         });
         if (transactionRegistrar != null) {
-            ProcessInstanceAtomicLockStrategy atomic = ProcessInstanceAtomicLockStrategy.instance();
-            api.internalSetProcessInstanceLockStrategy(
-                    new ContextAwareProcessInstanceLockStrategy(
-                            new TransactionAwareProcessInstanceLockStrategy(atomic, transactionRegistrar)));
+            api.internalSetTransactionRegistrar(transactionRegistrar);
         }
     }
 }
