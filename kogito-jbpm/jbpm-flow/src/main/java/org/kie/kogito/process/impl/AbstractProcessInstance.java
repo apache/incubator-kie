@@ -629,9 +629,11 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
     }
 
     private <R> R executeInWorkflowProcessInstance(Function<WorkflowProcessInstanceImpl, R> execution) {
+        // Check reentrance before acquiring the lock: isLockedByCurrentThread returns true only
+        // when the current thread *already* holds the lock, so it must be read before
+        // executeWriteOperation acquires it — otherwise every outermost call looks reentrant.
+        boolean isReentrant = processInstanceLockStrategy.isLockedByCurrentThread(id);
         return processInstanceLockStrategy.executeWriteOperation(id, () -> {
-            // Check reentrance *inside* the lock so the answer is stable.
-            boolean isReentrant = processInstanceLockStrategy.isLockedByCurrentThread(id);
             // The process instance (and its optimistic-lock version) may have been loaded from
             // the DB *before* this lock was acquired (e.g. by JDBCProcessInstances.findById in
             // ProcessInstanceJobExecutor). Discard that stale snapshot so that the SELECT issued
