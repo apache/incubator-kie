@@ -99,7 +99,7 @@ public class SpringbootJobsService implements JobsService {
     @Autowired
     protected TransactionRollbackMarker transactionRollbackMarker;
 
-    @Autowired
+    @Autowired(required = false)
     protected Vertx vertx;
 
     @PostConstruct
