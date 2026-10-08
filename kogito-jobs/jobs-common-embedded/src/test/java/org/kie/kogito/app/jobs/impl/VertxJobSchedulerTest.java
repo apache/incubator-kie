@@ -48,7 +48,7 @@ public class VertxJobSchedulerTest {
 
     /**
      * Verifies that when a platform-managed Vert.x instance is supplied via
-     * {@link VertxJobScheduler.VertxJobSchedulerBuilder#withVertx(Vertx)}, the scheduler uses it instead of
+     * {@link JobSchedulerBuilder#withVertx(Vertx)}, the scheduler uses it instead of
      * creating a standalone instance. The supplied Vert.x is closed by the caller, not
      * by the scheduler — verified by asserting the scheduler completes normally and the
      * external instance is still running after {@code jobScheduler.close()}.
