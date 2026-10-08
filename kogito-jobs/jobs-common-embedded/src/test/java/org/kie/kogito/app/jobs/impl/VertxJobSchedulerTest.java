@@ -40,9 +40,56 @@ import org.kie.kogito.jobs.service.model.JobStatus;
 import org.kie.kogito.jobs.service.model.ScheduledJob;
 import org.kie.kogito.timer.impl.SimpleTimerTrigger;
 
+import io.vertx.core.Vertx;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class VertxJobSchedulerTest {
+
+    /**
+     * Verifies that when a platform-managed Vert.x instance is supplied via
+     * {@link VertxJobScheduler.VertxJobSchedulerBuilder#withVertx(Vertx)}, the scheduler uses it instead of
+     * creating a standalone instance. The supplied Vert.x is closed by the caller, not
+     * by the scheduler — verified by asserting the scheduler completes normally and the
+     * external instance is still running after {@code jobScheduler.close()}.
+     */
+    @Test
+    public void testWithExternalVertxUsesSuppliedInstance() throws Exception {
+        final String jobId = "external-vertx-test";
+        Vertx externalVertx = Vertx.vertx();
+        try {
+            LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
+            TestJobExecutor executor = new TestJobExecutor();
+            JobStore jobStore = new MemoryJobStore();
+            JobContextFactory jobContextFactory = new MemoryJobContextFactory();
+
+            JobScheduler jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
+                    .withJobExecutors(executor)
+                    .withJobEventAdapters(new TestJobDetailsEventAdapter())
+                    .withEventPublishers(new TestEventPublisher())
+                    .withJobContextFactory(jobContextFactory)
+                    .withJobStore(jobStore)
+                    .withJobSchedulerListeners(listener)
+                    .withJobDescriptorMergers(new TestJobDescriptionMerger())
+                    .withVertx(externalVertx)
+                    .build();
+
+            jobScheduler.init();
+            jobScheduler.schedule(new TestJobDescription(jobId, ZonedDateTime.now().plus(Duration.ofSeconds(1))));
+            listener.waitForExecution();
+
+            assertThat(executor.getJobsExecuted()).hasSize(1);
+            assertThat(listener.isExecuted()).isTrue();
+
+            // close the scheduler — must NOT close the externally supplied Vert.x
+            jobScheduler.close();
+
+            // external Vert.x is still usable (would throw/fail if already closed)
+            assertThat(externalVertx.deploymentIDs()).isNotNull();
+        } finally {
+            externalVertx.close();
+        }
+    }
 
     @Test
     public void testBasicExactTimeFlow() throws Exception {

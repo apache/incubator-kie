@@ -91,6 +91,8 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
     private Vertx vertx;
 
+    private boolean ownsVertx;
+
     private WorkerExecutor workerExecutor;
 
     private JobContextFactory jobContextFactory;
@@ -119,70 +121,70 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
     private TransactionRollbackMarker transactionRollbackMarker;
 
-    public class VertxJobSchedulerBuilder implements JobSchedulerBuilder {
+    public class VertxJobSchedulerBuilder implements JobSchedulerBuilder<VertxJobSchedulerBuilder> {
 
         @Override
-        public JobSchedulerBuilder withRetryInterval(Long retryInterval) {
+        public VertxJobSchedulerBuilder withRetryInterval(Long retryInterval) {
             VertxJobScheduler.this.retryInterval = retryInterval;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withJobSynchronization(JobSynchronization jobSynchronization) {
+        public VertxJobSchedulerBuilder withJobSynchronization(JobSynchronization jobSynchronization) {
             VertxJobScheduler.this.jobSynchronization = jobSynchronization;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withJobSchedulerListeners(JobSchedulerListener... jobSchedulerListeners) {
+        public VertxJobSchedulerBuilder withJobSchedulerListeners(JobSchedulerListener... jobSchedulerListeners) {
             VertxJobScheduler.this.jobSchedulerListeners.addAll(List.of(jobSchedulerListeners));
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withMaxRefreshJobsIntervalWindow(Long maxRefreshJobsIntervalWindow) {
+        public VertxJobSchedulerBuilder withMaxRefreshJobsIntervalWindow(Long maxRefreshJobsIntervalWindow) {
             VertxJobScheduler.this.maxRefreshJobsIntervalWindow = maxRefreshJobsIntervalWindow;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withRefreshJobsInterval(Long refreshJobsInterval) {
+        public VertxJobSchedulerBuilder withRefreshJobsInterval(Long refreshJobsInterval) {
             VertxJobScheduler.this.refreshJobsInterval = refreshJobsInterval;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withMaxNumberOfRetries(Integer maxNumberOfRetries) {
+        public VertxJobSchedulerBuilder withMaxNumberOfRetries(Integer maxNumberOfRetries) {
             VertxJobScheduler.this.maxNumberOfRetries = maxNumberOfRetries;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withJobEventAdapters(JobDetailsEventAdapter... jobEventAdapters) {
+        public VertxJobSchedulerBuilder withJobEventAdapters(JobDetailsEventAdapter... jobEventAdapters) {
             VertxJobScheduler.this.jobEventAdapters.addAll(List.of(jobEventAdapters));
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withEventPublishers(EventPublisher... eventPublishers) {
+        public VertxJobSchedulerBuilder withEventPublishers(EventPublisher... eventPublishers) {
             VertxJobScheduler.this.eventPublishers.addAll(List.of(eventPublishers));
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withJobContextFactory(JobContextFactory jobContextFactory) {
+        public VertxJobSchedulerBuilder withJobContextFactory(JobContextFactory jobContextFactory) {
             VertxJobScheduler.this.jobContextFactory = jobContextFactory;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withJobExecutors(JobExecutor... jobExecutors) {
+        public VertxJobSchedulerBuilder withJobExecutors(JobExecutor... jobExecutors) {
             VertxJobScheduler.this.jobExecutors.addAll(List.of(jobExecutors));
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withJobStore(JobStore jobStore) {
+        public VertxJobSchedulerBuilder withJobStore(JobStore jobStore) {
             VertxJobScheduler.this.jobStore = jobStore;
             return this;
         }
@@ -194,31 +196,36 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         }
 
         @Override
-        public JobSchedulerBuilder withTimeoutInterceptor(JobTimeoutInterceptor... interceptors) {
+        public VertxJobSchedulerBuilder withTimeoutInterceptor(JobTimeoutInterceptor... interceptors) {
             VertxJobScheduler.this.interceptors.addAll(List.of(interceptors));
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withNumberOfWorkerThreads(Integer numberOfWorkerThreads) {
+        public VertxJobSchedulerBuilder withNumberOfWorkerThreads(Integer numberOfWorkerThreads) {
             VertxJobScheduler.this.numberOfWorkerThreads = numberOfWorkerThreads;
             return this;
         }
 
+        public VertxJobSchedulerBuilder withVertx(Vertx vertx) {
+            VertxJobScheduler.this.vertx = vertx;
+            return this;
+        }
+
         @Override
-        public JobSchedulerBuilder withJobDescriptorMergers(JobDescriptionMerger... jobDescriptionMergers) {
+        public VertxJobSchedulerBuilder withJobDescriptorMergers(JobDescriptionMerger... jobDescriptionMergers) {
             VertxJobScheduler.this.jobDescriptionMergers.addAll(List.of(jobDescriptionMergers));
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withExceptionDetailsExtractor(JobExceptionDetailsExtractor exceptionDetailsExtractor) {
+        public VertxJobSchedulerBuilder withExceptionDetailsExtractor(JobExceptionDetailsExtractor exceptionDetailsExtractor) {
             VertxJobScheduler.this.exceptionDetailsExtractor = exceptionDetailsExtractor;
             return this;
         }
 
         @Override
-        public JobSchedulerBuilder withTransactionRollbackMarker(TransactionRollbackMarker transactionRollbackMarker) {
+        public VertxJobSchedulerBuilder withTransactionRollbackMarker(TransactionRollbackMarker transactionRollbackMarker) {
             VertxJobScheduler.this.transactionRollbackMarker = transactionRollbackMarker;
             return this;
         }
@@ -326,7 +333,11 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
     @Override
     public void init() {
-        this.vertx = Vertx.builder().build();
+        if (this.vertx == null) {
+            LOG.warn("No Vert.x instance provided — creating a standalone one. Inject the platform Vert.x via withVertx() for production use.");
+            this.vertx = Vertx.builder().build();
+            this.ownsVertx = true;
+        }
         this.workerExecutor = this.vertx.createSharedWorkerExecutor("Jobs", numberOfWorkerThreads);
         this.maxRefreshJobsIntervalWindow = Math.max(maxRefreshJobsIntervalWindow, refreshJobsInterval);
         this.refreshJobsIntervalTimerId = this.vertx.setPeriodic(0L, refreshJobsInterval, this);
@@ -352,12 +363,15 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
         // clean up
         this.workerExecutor.close();
-        this.vertx.close();
+        if (this.ownsVertx) {
+            this.vertx.close();
+        }
         this.jobsScheduled.clear();
 
         this.refreshJobsIntervalTimerId = null;
         this.workerExecutor = null;
         this.vertx = null;
+        this.ownsVertx = false;
     }
 
     @Override

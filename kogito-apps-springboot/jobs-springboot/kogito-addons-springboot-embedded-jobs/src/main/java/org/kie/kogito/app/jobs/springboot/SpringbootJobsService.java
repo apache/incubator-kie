@@ -46,6 +46,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import io.vertx.core.Vertx;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
@@ -97,6 +99,9 @@ public class SpringbootJobsService implements JobsService {
     @Autowired
     protected TransactionRollbackMarker transactionRollbackMarker;
 
+    @Autowired
+    protected Vertx vertx;
+
     @PostConstruct
     public void init() {
         this.jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
@@ -116,6 +121,7 @@ public class SpringbootJobsService implements JobsService {
                 .withTimeoutInterceptor(
                         new ErrorHandlingJobTimeoutInterceptor(ofNullable(exceptionHandlers).stream().toList()),
                         new TransactionJobTimeoutInterceptor(transactionManager))
+                .withVertx(vertx)
                 .withExceptionDetailsExtractor(exceptionDetailsExtractor)
                 .withTransactionRollbackMarker(transactionRollbackMarker)
                 .withNumberOfWorkerThreads(numberOfWorkerThreads)

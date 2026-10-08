@@ -25,43 +25,53 @@ import org.kie.kogito.app.jobs.spi.JobStore;
 import org.kie.kogito.app.jobs.spi.TransactionRollbackMarker;
 import org.kie.kogito.event.EventPublisher;
 
-public interface JobSchedulerBuilder {
+/**
+ * Fluent builder for configuring a {@link JobScheduler}.
+ * <p>
+ * The type parameter {@code B} is the concrete builder type, enabling every
+ * method to return the concrete subtype so callers get a fully fluent chain
+ * regardless of method call order — including implementation-specific methods
+ * such as {@link VertxJobScheduler.VertxJobSchedulerBuilder#withVertx}.
+ * <p>
+ * Use {@link #newJobSchedulerBuilder()} to obtain the default Vert.x-based builder.
+ */
+public interface JobSchedulerBuilder<B extends JobSchedulerBuilder<B>> {
 
-    static JobSchedulerBuilder newJobSchedulerBuilder() {
+    static VertxJobScheduler.VertxJobSchedulerBuilder newJobSchedulerBuilder() {
         return new VertxJobScheduler().new VertxJobSchedulerBuilder();
     }
 
     JobScheduler build();
 
-    JobSchedulerBuilder withJobStore(JobStore jobStore);
+    B withJobStore(JobStore jobStore);
 
-    JobSchedulerBuilder withJobExecutors(JobExecutor... jobExecutors);
+    B withJobExecutors(JobExecutor... jobExecutors);
 
-    JobSchedulerBuilder withJobContextFactory(JobContextFactory jobContextFactory);
+    B withJobContextFactory(JobContextFactory jobContextFactory);
 
-    JobSchedulerBuilder withEventPublishers(EventPublisher... eventPublishers);
+    B withEventPublishers(EventPublisher... eventPublishers);
 
-    JobSchedulerBuilder withJobEventAdapters(JobDetailsEventAdapter... jobEventAdapters);
+    B withJobEventAdapters(JobDetailsEventAdapter... jobEventAdapters);
 
-    JobSchedulerBuilder withMaxNumberOfRetries(Integer maxNumberOfRetries);
+    B withMaxNumberOfRetries(Integer maxNumberOfRetries);
 
-    JobSchedulerBuilder withRefreshJobsInterval(Long refreshJobsInterval);
+    B withRefreshJobsInterval(Long refreshJobsInterval);
 
-    JobSchedulerBuilder withMaxRefreshJobsIntervalWindow(Long maxRefreshsJobsIntervalWindow);
+    B withMaxRefreshJobsIntervalWindow(Long maxRefreshsJobsIntervalWindow);
 
-    JobSchedulerBuilder withJobSchedulerListeners(JobSchedulerListener... jobSchedulerListeners);
+    B withJobSchedulerListeners(JobSchedulerListener... jobSchedulerListeners);
 
-    JobSchedulerBuilder withRetryInterval(Long retryInterval);
+    B withRetryInterval(Long retryInterval);
 
-    JobSchedulerBuilder withTimeoutInterceptor(JobTimeoutInterceptor... interceptors);
+    B withTimeoutInterceptor(JobTimeoutInterceptor... interceptors);
 
-    JobSchedulerBuilder withNumberOfWorkerThreads(Integer numberOfWorkerThreads);
+    B withNumberOfWorkerThreads(Integer numberOfWorkerThreads);
 
-    JobSchedulerBuilder withJobSynchronization(JobSynchronization jobSynchronization);
+    B withJobSynchronization(JobSynchronization jobSynchronization);
 
-    JobSchedulerBuilder withJobDescriptorMergers(JobDescriptionMerger... jobDescriptionMergers);
+    B withJobDescriptorMergers(JobDescriptionMerger... jobDescriptionMergers);
 
-    JobSchedulerBuilder withExceptionDetailsExtractor(JobExceptionDetailsExtractor exceptionDetailsExtractor);
+    B withExceptionDetailsExtractor(JobExceptionDetailsExtractor exceptionDetailsExtractor);
 
-    JobSchedulerBuilder withTransactionRollbackMarker(TransactionRollbackMarker transactionRollbackMarker);
+    B withTransactionRollbackMarker(TransactionRollbackMarker transactionRollbackMarker);
 }

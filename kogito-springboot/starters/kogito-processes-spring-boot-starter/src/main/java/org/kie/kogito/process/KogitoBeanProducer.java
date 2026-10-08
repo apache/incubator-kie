@@ -90,7 +90,13 @@ public class KogitoBeanProducer {
 
     @Bean
     @ConditionalOnMissingBean(Vertx.class)
-    Vertx vertx() {
+    Vertx vertxMutiny() {
         return Vertx.vertx();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(io.vertx.core.Vertx.class)
+    io.vertx.core.Vertx vertx() {
+        return io.vertx.core.Vertx.vertx();
     }
 }

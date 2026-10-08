@@ -38,6 +38,7 @@ import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.JobsService;
 
 import io.quarkus.runtime.Startup;
+import io.vertx.core.Vertx;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -98,6 +99,9 @@ public class QuarkusJobsService implements JobsService {
     @Inject
     TransactionRollbackMarker transactionRollbackMarker;
 
+    @Inject
+    Vertx vertx;
+
     @PostConstruct
     public void init() {
         this.jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
@@ -117,6 +121,7 @@ public class QuarkusJobsService implements JobsService {
                 .withTimeoutInterceptor(
                         new TransactionJobTimeoutInterceptor(),
                         new ErrorHandlingJobTimeoutInterceptor(exceptionHandlers.stream().toList()))
+                .withVertx(vertx)
                 .withExceptionDetailsExtractor(exceptionDetailsExtractor)
                 .withTransactionRollbackMarker(transactionRollbackMarker)
                 .withNumberOfWorkerThreads(numberOfWorkerThreads)
