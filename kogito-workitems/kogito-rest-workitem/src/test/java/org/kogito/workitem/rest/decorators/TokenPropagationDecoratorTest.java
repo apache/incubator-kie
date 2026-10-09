@@ -33,8 +33,8 @@ import org.kie.kogito.auth.AuthTokenProvider;
 import org.kie.kogito.internal.process.runtime.KogitoNodeInstance;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
 import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
 import org.kie.kogito.process.ProcessConfig;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

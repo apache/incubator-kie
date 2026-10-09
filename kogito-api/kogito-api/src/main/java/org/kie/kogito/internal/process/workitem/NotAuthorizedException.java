@@ -19,10 +19,12 @@
 package org.kie.kogito.internal.process.workitem;
 
 /**
- * Thrown when there is security violation, usually due to policy enforcement
- *
+ * @deprecated Use {@link org.kie.kogito.process.workitem.NotAuthorizedException} instead.
+ *             This type will be removed in a future release.
  */
-public class NotAuthorizedException extends RuntimeException {
+@Deprecated(since = "9.1", forRemoval = true)
+public class NotAuthorizedException extends org.kie.kogito.process.workitem.NotAuthorizedException {
+
     private static final long serialVersionUID = -40827773509603874L;
 
     public NotAuthorizedException(String message) {

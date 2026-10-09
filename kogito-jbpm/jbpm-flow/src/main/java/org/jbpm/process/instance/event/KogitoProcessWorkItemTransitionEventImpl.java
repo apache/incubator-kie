@@ -21,8 +21,8 @@ package org.jbpm.process.instance.event;
 import org.kie.api.runtime.KieRuntime;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.kogito.internal.process.event.ProcessWorkItemTransitionEvent;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 
 public class KogitoProcessWorkItemTransitionEventImpl extends ProcessEvent
         implements ProcessWorkItemTransitionEvent {

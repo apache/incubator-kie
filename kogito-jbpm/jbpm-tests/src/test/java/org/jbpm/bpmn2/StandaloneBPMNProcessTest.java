@@ -126,7 +126,7 @@ import org.kie.kogito.auth.SecurityPolicy;
 import org.kie.kogito.event.impl.MessageProducer;
 import org.kie.kogito.internal.process.event.DefaultKogitoProcessEventListener;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 import org.kie.kogito.process.ProcessInstance;
 import org.kie.kogito.process.SignalFactory;
 import org.kie.kogito.process.workitems.impl.KogitoWorkItemImpl;

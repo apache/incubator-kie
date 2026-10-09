@@ -51,7 +51,7 @@ import org.kie.internal.io.ResourceFactory;
 import org.kie.kogito.Application;
 import org.kie.kogito.internal.process.event.DefaultKogitoProcessEventListener;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 import org.kie.kogito.process.Process;
 import org.kie.kogito.process.SignalFactory;
 import org.kie.kogito.process.workitems.InternalKogitoWorkItem;

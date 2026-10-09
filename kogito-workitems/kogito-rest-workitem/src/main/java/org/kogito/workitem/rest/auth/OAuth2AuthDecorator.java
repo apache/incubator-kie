@@ -20,7 +20,7 @@ package org.kogito.workitem.rest.auth;
 
 import java.util.Map;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 

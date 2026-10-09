@@ -23,9 +23,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.NotAuthorizedException;
-import org.kie.kogito.internal.process.workitem.Policy;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.NotAuthorizedException;
+import org.kie.kogito.process.workitem.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,17 +18,15 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-public class KogitoWorkItemHandlerNotFoundException extends RuntimeException {
-
-    private final String workItemName;
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.KogitoWorkItemHandlerNotFoundException} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public class KogitoWorkItemHandlerNotFoundException
+        extends org.kie.kogito.process.workitem.KogitoWorkItemHandlerNotFoundException {
 
     public KogitoWorkItemHandlerNotFoundException(String workItemName) {
-        super("Could not find work item handler for " + workItemName);
-        this.workItemName = workItemName;
+        super(workItemName);
     }
-
-    public String getWorkItemName() {
-        return workItemName;
-    }
-
 }

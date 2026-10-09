@@ -18,40 +18,10 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-import java.util.Optional;
-
 /**
- * Definition of the life cycle phase that work item can be connected to.
- *
+ * @deprecated Use {@link org.kie.kogito.process.workitem.WorkItemLifeCyclePhase} instead.
+ *             This type will be removed in a future release.
  */
-public interface WorkItemLifeCyclePhase {
-
-    /**
-     * Returns unique id of this life cycle phase
-     *
-     * @return phase id
-     */
-    String id();
-
-    /**
-     * The work item status source from which this transition can start
-     * 
-     * @return
-     */
-    WorkItemPhaseState sourceStatus();
-
-    /**
-     * the target source in which this transition will end
-     *
-     * @return phase status
-     */
-    WorkItemPhaseState targetStatus();
-
-    boolean isStartingPhase();
-
-    /**
-     * execute this life cycle phase
-     *
-     */
-    Optional<WorkItemTransition> execute(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workitem, WorkItemTransition transition);
+@Deprecated(since = "9.1", forRemoval = true)
+public interface WorkItemLifeCyclePhase extends org.kie.kogito.process.workitem.WorkItemLifeCyclePhase {
 }

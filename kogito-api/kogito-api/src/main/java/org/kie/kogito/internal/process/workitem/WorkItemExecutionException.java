@@ -18,39 +18,28 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-public class WorkItemExecutionException extends RuntimeException {
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.WorkItemExecutionException} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public class WorkItemExecutionException extends org.kie.kogito.process.workitem.WorkItemExecutionException {
 
     private static final long serialVersionUID = 4739415822214766299L;
 
-    private final String errorCode;
-
     public WorkItemExecutionException(String errorCode) {
-        super("WorkItem execution failed with error code " + errorCode);
-        this.errorCode = errorCode;
+        super(errorCode);
     }
 
     public WorkItemExecutionException(String errorCode, Throwable e) {
-        super("WorkItem execution failed with error code " + errorCode, e);
-        this.errorCode = errorCode;
+        super(errorCode, e);
     }
 
     public WorkItemExecutionException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
+        super(errorCode, message);
     }
 
     public WorkItemExecutionException(String errorCode, String message, Throwable ex) {
-        super(message, ex);
-        this.errorCode = errorCode;
+        super(errorCode, message, ex);
     }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    @Override
-    public String toString() {
-        return "WorkItemExecutionError [errorCode=" + errorCode + "]";
-    }
-
 }

@@ -30,7 +30,7 @@ import org.kie.kogito.handlers.StatusTrackerService_createStatusTracker__657C59C
 import org.kie.kogito.handlers.StatusTrackerService_createStatusTracker__6CC31E0B_5FDE_40E0_927B_978EB98C5406_Handler;
 import org.kie.kogito.handlers.StatusTrackerService_createStatusTracker__F0324356_BD8B_433F_AAB4_4959E21F6163_Handler;
 import org.kie.kogito.handlers.StatusTrackerService_createStatusTracker__F2291D5C_7BD6_4FE0_A7A1_A1A411F00AA9_Handler;
-import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.DefaultKogitoWorkItemHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
