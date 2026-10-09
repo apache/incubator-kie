@@ -28,8 +28,8 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.AgendaFilter;
 import org.kie.kogito.Application;
 import org.kie.kogito.internal.process.event.KogitoProcessEventSupport;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
 import org.kie.kogito.jobs.JobsService;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
 
 public interface KogitoProcessRuntime {
 

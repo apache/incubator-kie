@@ -18,69 +18,35 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
-public interface KogitoWorkItemManager {
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.KogitoWorkItemManager} instead.
+ */
+@Deprecated(since = "9.1.1-SNAPSHOT", forRemoval = true)
+public interface KogitoWorkItemManager extends org.kie.kogito.process.workitem.KogitoWorkItemManager {
 
-    /**
-     * Notifies the work item manager that the work item with the given
-     * id has been completed. Results related to the execution of this
-     * work item can be passed.
-     *
-     * @param id the id of the work item that has been completed
-     * @param results the results related to this work item, or <code>null</code> if there are no results
-     */
-    void completeWorkItem(String id, Map<String, Object> results, Policy... policies);
+    default void completeWorkItem(String id, Map<String, Object> results, Policy... policies) {
+        completeWorkItem(id, results, (org.kie.kogito.process.workitem.Policy[]) policies);
+    }
 
-    /**
-     * Notifies the work item manager that the work item with the given
-     * id could not be executed and should be aborted.
-     *
-     * @param id the id of the work item that should be aborted
-     */
-    void abortWorkItem(String id, Policy... policies);
+    default void abortWorkItem(String id, Policy... policies) {
+        abortWorkItem(id, (org.kie.kogito.process.workitem.Policy[]) policies);
+    }
 
-    /**
-     * Updates work item, performing operation indicated by updater
-     * 
-     * @param id the id of the work item that has been completed
-     * @param updater consumer implementation that contains the logic to update workitem
-     * @param policies optional security information
-     * @return result of the operation performed by updater consumer
-     */
-    <T> T updateWorkItem(String id, Function<KogitoWorkItem, T> updater, Policy... policies);
+    default <T> T updateWorkItem(String id, Function<KogitoWorkItem, T> updater, Policy... policies) {
+        return updateWorkItem(id, (org.kie.kogito.process.workitem.KogitoWorkItem item) -> updater.apply((KogitoWorkItem) item), (org.kie.kogito.process.workitem.Policy[]) policies);
+    }
 
-    /**
-     * Register the given handler for all work items of the given
-     * type of work
-     *
-     * @param workItemName the type of work this work item handler can execute
-     * @param handler the handler for executing work items
-     */
-    void registerWorkItemHandler(String workItemName, KogitoWorkItemHandler handler);
+    default void registerWorkItemHandler(String workItemName, KogitoWorkItemHandler handler) {
+        registerWorkItemHandler(workItemName, (org.kie.kogito.process.workitem.KogitoWorkItemHandler) handler);
+    }
 
-    /**
-     * Transition work item with given id into the next life cycle phase.
-     *
-     * @param id work item id to be transitioned
-     * @param transition actual transition to apply to work item
-     */
-    void transitionWorkItem(String id, WorkItemTransition transition);
+    default void transitionWorkItem(String id, WorkItemTransition transition) {
+        transitionWorkItem(id, (org.kie.kogito.process.workitem.WorkItemTransition) transition);
+    }
 
-    /**
-     * retrieves the handlers names registered in the work item handler
-     * 
-     * @return
-     */
-    Collection<String> getHandlerIds();
-
-    /**
-     * retrieeves the handle registered by the name
-     * 
-     * @param name
-     * @return
-     */
+    @Override
     KogitoWorkItemHandler getKogitoWorkItemHandler(String name);
 }

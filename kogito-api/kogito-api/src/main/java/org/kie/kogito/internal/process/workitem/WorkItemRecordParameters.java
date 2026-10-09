@@ -26,6 +26,7 @@ import org.kie.api.definition.process.NodeContainer;
 import org.kie.api.definition.process.Process;
 import org.kie.kogito.internal.process.runtime.KogitoNode;
 import org.kie.kogito.internal.process.runtime.KogitoNodeInstance;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 
 public class WorkItemRecordParameters {
 

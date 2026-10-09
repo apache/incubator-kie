@@ -58,9 +58,9 @@ import org.kie.kogito.calendar.BusinessCalendar;
 import org.kie.kogito.internal.process.event.KogitoProcessEventSupport;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
 import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
 import org.kie.kogito.jobs.JobsService;
 import org.kie.kogito.process.ProcessConfig;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
 
 import static org.jbpm.process.core.constants.CalendarConstants.BUSINESS_CALENDAR_ENVIRONMENT_KEY;
 import static org.jbpm.workflow.instance.impl.NodeInstanceFactoryRegistry.NODE_INSTANCE_FACTORY_REGISTRY_KEY;

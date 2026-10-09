@@ -19,38 +19,14 @@
 package org.kie.kogito.internal.process.workitem;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
- * Defines work item life cycle phase transition.
- * Including data and policies to be enforced during transition.
- *
- * @param <T> type of data the transition is carrying
+ * @deprecated Use {@link org.kie.kogito.process.workitem.WorkItemTransition} instead.
  */
-public interface WorkItemTransition {
+@Deprecated(since = "9.1.1-SNAPSHOT", forRemoval = true)
+public interface WorkItemTransition extends org.kie.kogito.process.workitem.WorkItemTransition {
 
-    /**
-     * Returns id phase where work item should be transitioned
-     * 
-     * @return target life cycle phase
-     */
-    String id();
-
-    /**
-     * Optional data to be associated with the transition.
-     * This usually means appending given data into the work item.
-     * 
-     * @return data if given otherwise null
-     */
-    Map<String, Object> data();
-
-    /**
-     * Optional list of policies to be enforced during transition
-     * 
-     * @return list of policies or an empty list, should never be null
-     */
-    List<Policy> policies();
-
-    Optional<WorkItemTerminationType> termination();
+    @Override
+    @SuppressWarnings("rawtypes")
+    List policies();
 }
