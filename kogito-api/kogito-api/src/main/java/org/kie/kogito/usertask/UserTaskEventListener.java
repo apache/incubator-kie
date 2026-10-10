@@ -25,48 +25,110 @@ import org.kie.kogito.usertask.events.UserTaskDeadlineEvent;
 import org.kie.kogito.usertask.events.UserTaskStateEvent;
 import org.kie.kogito.usertask.events.UserTaskVariableEvent;
 
+/**
+ * <b>User Task Event Listener</b> extension point.
+ *
+ * <p>
+ * Listens for human task lifecycle events, including state transitions,
+ * assignment changes, input/output variable updates, comments, attachments, and deadline expirations.
+ */
 public interface UserTaskEventListener {
 
+    /**
+     * Invoked when a user task deadline or notification timer triggers.
+     *
+     * @param event the non-null {@link UserTaskDeadlineEvent}
+     */
     default void onUserTaskDeadline(UserTaskDeadlineEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when a user task undergoes a state transition.
+     *
+     * @param event the non-null {@link UserTaskStateEvent}
+     */
     default void onUserTaskState(UserTaskStateEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when a user task assignment or ownership changes.
+     *
+     * @param event the non-null {@link UserTaskAssignmentEvent}
+     */
     default void onUserTaskAssignment(UserTaskAssignmentEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when an input variable is assigned to or modified on a user task.
+     *
+     * @param event the non-null {@link UserTaskVariableEvent}
+     */
     default void onUserTaskInputVariable(UserTaskVariableEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when an output variable is set or modified on a user task.
+     *
+     * @param event the non-null {@link UserTaskVariableEvent}
+     */
     default void onUserTaskOutputVariable(UserTaskVariableEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when an attachment is added to a user task.
+     *
+     * @param event the non-null {@link UserTaskAttachmentEvent}
+     */
     default void onUserTaskAttachmentAdded(UserTaskAttachmentEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when an attachment is removed from a user task.
+     *
+     * @param event the non-null {@link UserTaskAttachmentEvent}
+     */
     default void onUserTaskAttachmentDeleted(UserTaskAttachmentEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when an attachment on a user task is updated.
+     *
+     * @param event the non-null {@link UserTaskAttachmentEvent}
+     */
     default void onUserTaskAttachmentChange(UserTaskAttachmentEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when a comment on a user task is updated.
+     *
+     * @param event the non-null {@link UserTaskCommentEvent}
+     */
     default void onUserTaskCommentChange(UserTaskCommentEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when a comment is added to a user task.
+     *
+     * @param event the non-null {@link UserTaskCommentEvent}
+     */
     default void onUserTaskCommentAdded(UserTaskCommentEvent event) {
         // nothing
     }
 
+    /**
+     * Invoked when a comment is deleted from a user task.
+     *
+     * @param event the non-null {@link UserTaskCommentEvent}
+     */
     default void onUserTaskCommentDeleted(UserTaskCommentEvent event) {
         // nothing
     }
