@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+<!--
+  Regression fixture: tUnaryTests extends tExpression in DMN 1.3+ so typeRef
+  is schema-valid on inputValues/outputValues. This model exercises unmarshal
+  and re-marshal of that attribute (the round-trip must preserve it).
+-->
+<semantic:definitions
+        xmlns:semantic="https://www.omg.org/spec/DMN/20240513/MODEL/"
+        xmlns:feel="https://www.omg.org/spec/DMN/20240513/FEEL/"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        id="_inputValuesTypeRef"
+        name="inputValuesTypeRef"
+        namespace="https://kie.org/dmn/inputValuesTypeRef">
+    <semantic:decision id="_approval" name="Approval">
+        <semantic:variable name="Approval" typeRef="string"/>
+        <semantic:informationRequirement id="_ir1">
+            <semantic:requiredInput href="#_riskCategory"/>
+        </semantic:informationRequirement>
+        <semantic:decisionTable hitPolicy="UNIQUE" outputLabel="Approval">
+            <semantic:input id="_input1">
+                <semantic:inputExpression typeRef="string">
+                    <semantic:text>RiskCategory</semantic:text>
+                </semantic:inputExpression>
+                <semantic:inputValues id="_inputValues1" typeRef="string">
+                    <semantic:text>"High","Medium","Low"</semantic:text>
+                </semantic:inputValues>
+            </semantic:input>
+            <semantic:output id="_output1" typeRef="string">
+                <semantic:outputValues id="_outputValues1" typeRef="string">
+                    <semantic:text>"Approved","Review","Declined"</semantic:text>
+                </semantic:outputValues>
+            </semantic:output>
+            <semantic:rule id="_rule1">
+                <semantic:inputEntry id="_ie1"><semantic:text>"High"</semantic:text></semantic:inputEntry>
+                <semantic:outputEntry id="_oe1"><semantic:text>"Review"</semantic:text></semantic:outputEntry>
+            </semantic:rule>
+            <semantic:rule id="_rule2">
+                <semantic:inputEntry id="_ie2"><semantic:text>"Medium","Low"</semantic:text></semantic:inputEntry>
+                <semantic:outputEntry id="_oe2"><semantic:text>"Approved"</semantic:text></semantic:outputEntry>
+            </semantic:rule>
+        </semantic:decisionTable>
+    </semantic:decision>
+    <semantic:inputData id="_riskCategory" name="RiskCategory">
+        <semantic:variable name="RiskCategory" typeRef="string"/>
+    </semantic:inputData>
+</semantic:definitions>

@@ -22,7 +22,6 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.kie.dmn.model.api.Expression;
-import org.kie.dmn.model.api.UnaryTests;
 
 public abstract class ExpressionConverter
         extends DMNElementConverter {
@@ -48,7 +47,7 @@ public abstract class ExpressionConverter
         super.writeAttributes(writer, parent);
         Expression e = (Expression) parent;
         
-        if (!(e instanceof UnaryTests) && e.getTypeRef() != null) {
+        if (e.getTypeRef() != null) {
             writer.addAttribute(TYPE_REF, MarshallingUtils.formatQName(e.getTypeRef(), e));
         }
     }
