@@ -194,7 +194,6 @@ class DMNEvaluatorCompilerTest {
 
     /**
      * DMN 1.6 models with typeRef on inputValues must load without UnsupportedOperationException from AbstractTUnaryTests.setTypeRef.
-     * See: https://github.com/apache/incubator-kie-issues/issues/...
      */
     @Test
     void inputValuesWithTypeRefLoadsOnDMNv1_6() {
