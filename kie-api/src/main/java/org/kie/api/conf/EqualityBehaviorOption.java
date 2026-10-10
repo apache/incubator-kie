@@ -41,6 +41,7 @@ public enum EqualityBehaviorOption implements SingleValueRuleBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

@@ -59,6 +59,7 @@ public enum EventProcessingOption
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }
