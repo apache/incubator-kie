@@ -16,35 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.kie.kogito.internal.process.event;
-
-import org.kie.api.event.process.ProcessEvent;
-import org.kie.kogito.process.workitem.KogitoWorkItem;
-import org.kie.kogito.process.workitem.WorkItemTransition;
+package org.kie.kogito.process.workitem;
 
 /**
- * An event when a work item has transition between life cycle phases
+ * Top level of a policy that should be applied to work items.
+ * Most of the cases it is used to restrict access or operations on
+ * top of the work item.
+ *
+ * @param <T> type of the policy object to be used to react to it.
  */
-public interface ProcessWorkItemTransitionEvent extends ProcessEvent {
+public interface Policy {
 
     /**
-     * Returns work item being transitioned
-     *
-     * @return work item
+     * enforce the policy over this work item handler
      */
-    KogitoWorkItem getWorkItem();
-
-    /**
-     * Returns transition that is applied to the work item
-     *
-     * @return transition
-     */
-    WorkItemTransition getTransition();
-
-    /**
-     * Indicated is the transition has already been done.
-     * 
-     * @return true if transition has already been done, otherwise false
-     */
-    boolean isTransitioned();
+    void enforce(KogitoWorkItem workItem);
 }

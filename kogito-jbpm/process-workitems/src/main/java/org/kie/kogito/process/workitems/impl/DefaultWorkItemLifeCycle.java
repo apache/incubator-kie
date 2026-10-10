@@ -24,13 +24,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.kie.kogito.internal.process.workitem.InvalidTransitionException;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
-import org.kie.kogito.internal.process.workitem.Policy;
 import org.kie.kogito.internal.process.workitem.WorkItemLifeCycle;
 import org.kie.kogito.internal.process.workitem.WorkItemLifeCyclePhase;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 
 public class DefaultWorkItemLifeCycle implements WorkItemLifeCycle {
 

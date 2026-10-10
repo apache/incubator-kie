@@ -24,11 +24,17 @@ package org.kie.kogito.internal.process.workitem;
  * top of the work item.
  *
  * @param <T> type of the policy object to be used to react to it.
+ * @deprecated Use {@link org.kie.kogito.process.workitem.Policy} instead.
  */
-public interface Policy {
+@Deprecated(since = "9.1.1-SNAPSHOT", forRemoval = true)
+public interface Policy extends org.kie.kogito.process.workitem.Policy {
 
-    /**
-     * enforce the policy over this work item handler
-     */
+    @Override
+    default void enforce(org.kie.kogito.process.workitem.KogitoWorkItem workItem) {
+        if (workItem instanceof KogitoWorkItem) {
+            enforce((KogitoWorkItem) workItem);
+        }
+    }
+
     void enforce(KogitoWorkItem workItem);
 }

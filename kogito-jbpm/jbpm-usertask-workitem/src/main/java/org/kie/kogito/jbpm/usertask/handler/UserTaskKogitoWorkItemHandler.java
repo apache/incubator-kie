@@ -23,12 +23,12 @@ import java.util.*;
 import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.kie.kogito.Application;
 import org.kie.kogito.auth.IdentityProviders;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitems.DefaultKogitoWorkItemHandler;
 import org.kie.kogito.process.workitems.InternalKogitoWorkItem;
-import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 import org.kie.kogito.usertask.UserTask;
 import org.kie.kogito.usertask.UserTaskConfig;
 import org.kie.kogito.usertask.UserTasks;
@@ -45,7 +45,7 @@ import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.WO
 /**
  * Default Work Item handler based on the standard life cycle
  */
-public class UserTaskKogitoWorkItemHandler extends DefaultKogitoWorkItemHandler {
+public class UserTaskKogitoWorkItemHandler extends DefaultKogitoWorkItemHandler implements org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler {
 
     private static String UT_SEPARATOR = System.getProperty("org.jbpm.ht.user.separator", ",");
 
