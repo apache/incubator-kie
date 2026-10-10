@@ -166,10 +166,15 @@ public class ProcessInstanceMarshallerService {
     }
 
     public ProcessInstance<?> unmarshallProcessInstance(byte[] data, Process<?> process, boolean readOnly) {
+        return unmarshallProcessInstance(data, process, readOnly, false);
+    }
+
+    private ProcessInstance<?> unmarshallProcessInstance(byte[] data, Process<?> process, boolean readOnly, boolean eager) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
             MarshallerReaderContext context = processInstanceMarshallerFactory.newReaderContext(bais);
             context.set(MarshallerContextName.MARSHALLER_PROCESS, process);
             context.set(MarshallerContextName.MARSHALLER_INSTANCE_READ_ONLY, readOnly);
+            context.set(MarshallerContextName.MARSHALLER_INSTANCE_EAGER, eager);
             context.set(MarshallerContextName.MARSHALLER_INSTANCE_LISTENER, listeners.toArray(ProcessInstanceMarshallerListener[]::new));
             context.set(MarshallerContextName.MARSHALLER_NODE_INSTANCE_READER, this.readers.toArray(NodeInstanceReader[]::new));
             setupEnvironment(context);
@@ -215,6 +220,6 @@ public class ProcessInstanceMarshallerService {
     }
 
     public ProcessInstance<?> unmarshallProcessInstance(byte[] data, Process<?> process, ProcessInstanceReadMode mode) {
-        return unmarshallProcessInstance(data, process, mode.isReadOnly());
+        return unmarshallProcessInstance(data, process, mode.isReadOnly(), mode.isEager());
     }
 }

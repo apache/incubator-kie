@@ -46,8 +46,17 @@ public class ProtobufProcessInstanceMarshaller implements ProcessInstanceMarshal
     public ProcessInstance<?> readProcessInstance(MarshallerReaderContext context) throws IOException {
         ProtobufProcessInstanceReader reader = new ProtobufProcessInstanceReader(context);
         boolean readOnly = context.get(MarshallerContextName.MARSHALLER_INSTANCE_READ_ONLY);
+        boolean eager = context.get(MarshallerContextName.MARSHALLER_INSTANCE_EAGER);
         AbstractProcess<?> process = (AbstractProcess<?>) context.get(MarshallerContextName.MARSHALLER_PROCESS);
-        return readOnly ? process.createReadOnlyInstance(reader.read(context.input())) : process.createInstance(reader.read(context.input()));
+        RuleFlowProcessInstance wpi = reader.read(context.input());
+        if (readOnly) {
+            return process.createReadOnlyInstance(wpi);
+        }
+        ProcessInstance<?> processInstance = process.createInstance(wpi);
+        if (eager) {
+            ((AbstractProcessInstance<?>) processInstance).internalSetProcessInstance(wpi);
+        }
+        return processInstance;
     }
 
     @Override
