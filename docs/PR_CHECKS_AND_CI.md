@@ -24,12 +24,12 @@ CI runs on GitHub Actions. Workflows live in
 [`script/ci/`](../script/ci/) as [JBang](https://www.jbang.dev) scripts, plus
 local composite actions in [`.github/actions/`](../.github/actions/).
 
-## `CI :: Build` — the main PR check
+## `CI :: Build (Java 21)` — the main PR check
 
 Defined in [ci.yaml](../.github/workflows/ci.yaml). Runs on every pull request
-against `main`, and on every push to `main`. Documentation-only changes
-(Markdown/AsciiDoc files, `LICENSE`, text files, images under `docsimg/`) do
-not trigger it.
+against `main`, and on every push to `main`. Documentation-only pull requests
+(Markdown/AsciiDoc files, `LICENSE`, text files, images under `docsimg/`,
+`.ci/jenkins/`) do not trigger it.
 
 On a pull request it builds **only what the PR can affect**, instead of the
 whole reactor:
@@ -61,26 +61,45 @@ JARs) and `-Dreproducible`.
 
 Notes:
 
-- The build matrix currently runs on Linux with Java 17 and 21; macOS and
-  Windows are temporarily excluded because of Docker-dependent tests failing
-  on non-Linux runners.
+- The build runs on Linux with Java 21 only; Java 17 is covered by
+  [`CI :: Build (Java 17)`](#ci--build-java-17--java-17-compatibility-check).
+  macOS and Windows are temporarily excluded because of Docker-dependent tests
+  failing on non-Linux runners.
 - The `apache.snapshots` Maven repository is blocked via a mirror in
   `settings.xml`, so builds cannot silently depend on snapshot artifacts.
-- A new push to a PR cancels that PR's in-progress run, and so does closing
-  or merging the PR. Runs for pushes to `main` are never canceled.
-  `CI :: CI Tests` and `Dev :: Tests` follow the same rules.
-- After the build, a Surefire report step fails the job on test failures, and
-  the build logs (`build.log`) plus the reproducibility outputs
-  (`*.buildcompare`, `*.buildinfo`) are uploaded as workflow artifacts.
+- A new push to a PR cancels that PR's in-progress run. Runs for pushes to
+  `main` are never canceled. `CI :: Build (Java 17)`, `CI :: CI Tests` and
+  `Dev :: Tests` follow the same rule.
+- After the build, the build logs (`build.log`) plus the reproducibility
+  outputs (`*.buildcompare`, `*.buildinfo`) are uploaded as workflow
+  artifacts.
 
 To re-run the checks, push a new commit to the PR — an empty commit is enough:
 `git commit --allow-empty -m "re-trigger CI"`.
+
+## `CI :: Build (Java 17)` — Java 17 compatibility check
+
+Defined in [ci_java17_compat.yml](../.github/workflows/ci_java17_compat.yml).
+Same steps as `CI :: Build (Java 21)`, but on Java 17, to keep the codebase
+compatible with Java 17:
+
+- On a pull request it runs the same **scoped** build (upstream + affected
+  modules, computed by `CiComputeBuildScopes.java`) — not a full reactor
+  build.
+- On a push to `main` it runs a full `mvn install` with `-Dfull` and
+  `-Dreproducible`.
+
+Unlike `CI :: Build (Java 21)`, it triggers on **every** pull request, so it
+can be configured as a required check (a workflow skipped by `paths-ignore`
+never reports a status, which would block the merge). Documentation-only PRs
+are detected inside the workflow and finish successfully without building.
+Pushes to `main` that only touch documentation do not trigger it.
 
 ## `CI :: Examples` — downstream check
 
 Defined in [pr-downstream.yml](../.github/workflows/pr-downstream.yml). Runs
 on every pull request against `main` (same documentation-only exclusions as
-`CI :: Build`). It verifies that the PR does not break the
+`CI :: Build (Java 21)`). It verifies that the PR does not break the
 [apache/incubator-kie-kogito-examples](https://github.com/apache/incubator-kie-kogito-examples)
 repository:
 

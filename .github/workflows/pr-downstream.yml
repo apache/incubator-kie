@@ -61,10 +61,10 @@ jobs:
         with:
           path: incubator-kie
 
-      - name: 'SETUP :: Java 17'
+      - name: 'SETUP :: Java 21'
         uses: actions/setup-java@v6
         with:
-          java-version: 17
+          java-version: 21
           distribution: temurin
           cache: maven
 

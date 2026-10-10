@@ -104,6 +104,6 @@ jenkins:
         image: docker.io/apache/incubator-kie-kogito-ci-build:main-latest
         args: --privileged --group-add docker
   default_tools:
-    jdk: jdk_17_latest
+    jdk: jdk_21_latest
     maven: maven_3.9.16
-    sonar_jdk: jdk_17_latest
+    sonar_jdk: jdk_21_latest

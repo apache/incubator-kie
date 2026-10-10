@@ -17,11 +17,13 @@
 # under the License.
 #
 
-name: 'CI :: Build (Java 21)'
+name: "CI :: Build (Java 17)"
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches: [main]
+  push:
     branches: [main]
     paths-ignore:
       - 'LICENSE'
@@ -31,8 +33,6 @@ on:
       - '*.txt'
       - 'docsimg/**'
       - '.ci/jenkins/**'
-  push:
-    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -41,11 +41,8 @@ concurrency:
 jobs:
 
   build:
-    name: 'ubuntu-latest, Java 21'
+    name: 'Java 17'
     runs-on: ubuntu-latest
-    # macOS and Windows are temporarily excluded due to Docker-dependent tests
-    # introduced by the kogito-runtimes merge failing on non-Linux runners.
-    # Re-enable by restoring the matrix strategy once resolved.
 
     steps:
       - name: 'SETUP :: Set paths for temporary files'
@@ -62,18 +59,10 @@ jobs:
           touch "${{ runner.temp }}/maven-pl-changed.txt"
 
       - name: 'SETUP :: Free disk space (Ubuntu)'
-        if: runner.os == 'Linux'
         shell: bash
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           df -h
-
-      - name: 'SETUP :: Enable long file paths (Windows)'
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          git config --system core.longpaths true
-          reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
 
       - name: "SETUP :: Checkout to load local actions"
         uses: actions/checkout@v7
@@ -85,14 +74,12 @@ jobs:
           ref: ${{ github.base_ref }}
 
       - uses: actions/setup-java@v6
-        name: 'SETUP :: Java 21'
+        name: 'SETUP :: Java 17'
         with:
-          java-version: 21
+          java-version: 17
           distribution: temurin
           cache: maven
 
-      # Temporary workaround while jbangdev/setup-jbang action doesn't include checksum verification.
-      # See https://github.com/apache/infrastructure-actions/pull/806
       - name: 'SETUP :: Install JBang'
         shell: bash
         run: |
@@ -120,8 +107,8 @@ jobs:
           </settings>
           EOF
 
-      # Three-dot diff (A...B = diff B against the merge-base of A and B)
-      # gives exactly the files changed in this PR branch.
+      # Mirrors the paths-ignore list of the push trigger: if every changed file
+      # matches it, the PR is documentation-only and the build steps are skipped.
       - name: 'SETUP :: Collect changed files'
         if: github.event_name == 'pull_request'
         shell: bash
@@ -131,9 +118,15 @@ jobs:
           git diff --name-only "${BASE_REF}...HEAD" > "$CHANGED_FILES_FILE"
           echo "Changed files:"
           cat "$CHANGED_FILES_FILE"
+          if grep -vE '^LICENSE$|(^|/)\.gitignore$|\.md$|\.adoc$|^[^/]*\.txt$|^docsimg/|^\.ci/jenkins/' "$CHANGED_FILES_FILE" > /dev/null; then
+            echo "DOCS_ONLY=false" >> "$GITHUB_ENV"
+          else
+            echo "Documentation-only change. Build steps will be skipped."
+            echo "DOCS_ONLY=true" >> "$GITHUB_ENV"
+          fi
 
       - name: 'SETUP :: Compute build scopes'
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.DOCS_ONLY != 'true'
         shell: bash
         run: |
           jbang script/ci/CiComputeBuildScopes.java \
@@ -142,29 +135,8 @@ jobs:
             "$MAVEN_PL_AFFECTED_FILE" \
             "$MAVEN_PL_CHANGED_FILE"
 
-      # Flag glossary:
-      #   --no-transfer-progress                    silence download progress bars (critical for 800+ modules)
-      #   -fae / --fail-at-end                      continue past failures so all broken modules are reported
-      #   -Dsurefire.redirectTestOutputToFile=true  redirect test JVM stdout/stderr to surefire-reports files
-      #   -Denforcer.skip=true                      skip Enforcer plugin
-      #   -Dcheckstyle.skip=true                    skip Checkstyle plugin
-      #   -Dformatter.skip=true                     skip formatter plugin     
-      #   -Darchunit.skip=true                      skip ArchUnit plugin     
-      #
-      # CiComputeBuildScopes writes one groupId:artifactId per line; we join
-      # them with commas for the -pl argument. Passing -pl on the command line
-      # (rather than via .mvn/maven.config) avoids polluting nested Maven runs
-      # spawned by integration tests — those walk up the filesystem looking for
-      # a .mvn directory and would otherwise inherit our -pl filter.
-      #
-      # Both sets are pre-computed and disjoint, so no -am / -amd flags are needed:
-      #   Upstream pass  (-pl upstream -DskipTests): builds intra-reactor deps of affected modules,
-      #                                              skipping tests.
-      #   Affected pass  (-pl affected):             builds exactly the affected modules (changed +
-      #                                              transitive downstream), running tests.
-
       - name: "PR CHECK :: BUILD :: Upstream modules"
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.DOCS_ONLY != 'true'
         shell: bash
         run: |
           pl=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
@@ -172,7 +144,7 @@ jobs:
           mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
 
       - name: "PR CHECK :: BUILD :: Changed and affected modules"
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.DOCS_ONLY != 'true'
         shell: bash
         run: |
           pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
@@ -188,9 +160,9 @@ jobs:
         if: always()
         shell: bash
         env:
-          MERMAID_EXPANDED: 'true'
-          MATRIX_OS: ubuntu-latest
-          MATRIX_JAVA: 21
+          MERMAID_EXPANDED: ${{ runner.os == 'Linux' }}
+          MATRIX_OS: ${{ runner.os }}
+          MATRIX_JAVA: 17
         run: |
           MAVEN_PL_AFFECTED=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE" 2>/dev/null || true) \
           MAVEN_PL_UPSTREAM=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE" 2>/dev/null || true) \
@@ -201,14 +173,14 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ always() }}
         with:
-          name: build-logs_ubuntu-latest_java-21
+          name: build-logs_ubuntu-latest_java-17
           path: '**/build.log'
 
       - name: Upload Build Compare
         uses: actions/upload-artifact@v7
         if: ${{ always() }}
         with:
-          name: build-compare_ubuntu-latest_java-21
+          name: build-compare_ubuntu-latest_java-17
           path: |
             **/*.buildcompare
             **/*.buildinfo
