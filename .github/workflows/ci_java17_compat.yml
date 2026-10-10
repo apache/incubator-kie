@@ -23,14 +23,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main]
-    paths-ignore:
-      - 'LICENSE'
-      - '**/.gitignore'
-      - '**.md'
-      - '**.adoc'
-      - '*.txt'
-      - 'docsimg/**'
-      - '.ci/jenkins/**'
   push:
     branches: [main]
     paths-ignore:
@@ -115,6 +107,8 @@ jobs:
           </settings>
           EOF
 
+      # Mirrors the paths-ignore list of the push trigger: if every changed file
+      # matches it, the PR is documentation-only and the build steps are skipped.
       - name: 'SETUP :: Collect changed files'
         if: github.event_name == 'pull_request'
         shell: bash
@@ -124,9 +118,15 @@ jobs:
           git diff --name-only "${BASE_REF}...HEAD" > "$CHANGED_FILES_FILE"
           echo "Changed files:"
           cat "$CHANGED_FILES_FILE"
+          if grep -vE '^LICENSE$|(^|/)\.gitignore$|\.md$|\.adoc$|^[^/]*\.txt$|^docsimg/|^\.ci/jenkins/' "$CHANGED_FILES_FILE" > /dev/null; then
+            echo "DOCS_ONLY=false" >> "$GITHUB_ENV"
+          else
+            echo "Documentation-only change. Build steps will be skipped."
+            echo "DOCS_ONLY=true" >> "$GITHUB_ENV"
+          fi
 
       - name: 'SETUP :: Compute build scopes'
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.DOCS_ONLY != 'true'
         shell: bash
         run: |
           jbang script/ci/CiComputeBuildScopes.java \
@@ -136,7 +136,7 @@ jobs:
             "$MAVEN_PL_CHANGED_FILE"
 
       - name: "PR CHECK :: BUILD :: Upstream modules"
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.DOCS_ONLY != 'true'
         shell: bash
         run: |
           pl=$(paste -sd, "$MAVEN_PL_UPSTREAM_FILE")
@@ -144,7 +144,7 @@ jobs:
           mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
 
       - name: "PR CHECK :: BUILD :: Changed and affected modules"
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.DOCS_ONLY != 'true'
         shell: bash
         run: |
           pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
