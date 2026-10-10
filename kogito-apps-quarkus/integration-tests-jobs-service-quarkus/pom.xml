@@ -46,8 +46,6 @@
   </modules>
 
   <dependencies>
-    <!-- It seems this one is needed because, somehow, the tests requires the presence of the
-org.kie.kogito/jobs-service-postgresql:999-SNAPSHOT image, which is built as part of the jobs-service-quarkus, even if it's not used directly. -->
     <!-- ensure jobs-service module was built, but not added in the classpath -->
     <dependency>
       <groupId>org.kie.kogito</groupId>
@@ -64,6 +62,38 @@ org.kie.kogito/jobs-service-postgresql:999-SNAPSHOT image, which is built as par
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>jobs-service-postgresql-common</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Ensure jobs-service-postgresql binary is built before running integration tests.
+         Build-ordering sentinel only: type=pom + full exclusions adds nothing to classpath.
+         Without this direct edge the partial CI build can include the jobs-service-quarkus
+         aggregator while skipping the image-producing service module. -->
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>jobs-service-postgresql</artifactId>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Ensure data-index-service-postgresql binary is built before running integration tests.
+         Build-ordering sentinel only: type=pom + full exclusions adds nothing to classpath.
+         Without this edge the partial CI build skips the service module and the
+         DataIndexPostgreSqlContainer image is missing at runtime. -->
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>data-index-service-postgresql</artifactId>
       <type>pom</type>
       <scope>provided</scope>
       <exclusions>

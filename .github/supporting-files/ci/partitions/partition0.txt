@@ -1,0 +1,15 @@
+# optaplanner
+optaplanner-examples
+optaplanner-persistence/optaplanner-persistence-jpa
+optaplanner-persistence/optaplanner-persistence-xstream
+optaplanner-quarkus-integration/optaplanner-quarkus-benchmark/deployment
+optaplanner-quarkus-integration/optaplanner-quarkus-benchmark/integration-test
+optaplanner-quarkus-integration/optaplanner-quarkus-jackson/deployment
+optaplanner-quarkus-integration/optaplanner-quarkus-jackson/integration-test
+optaplanner-quarkus-integration/optaplanner-quarkus-jsonb/deployment
+optaplanner-quarkus-integration/optaplanner-quarkus-jsonb/integration-test
+optaplanner-quarkus-integration/optaplanner-quarkus/devui-integration-test
+optaplanner-quarkus-integration/optaplanner-quarkus/drl-integration-test
+optaplanner-quarkus-integration/optaplanner-quarkus/integration-test
+optaplanner-quarkus-integration/optaplanner-quarkus/reflection-integration-test
+optaplanner-spring-integration/optaplanner-spring-boot-starter
