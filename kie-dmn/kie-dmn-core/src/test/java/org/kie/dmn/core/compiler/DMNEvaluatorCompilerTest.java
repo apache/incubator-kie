@@ -192,6 +192,21 @@ class DMNEvaluatorCompilerTest {
         assertThat(elseEvaluatorIdentifier).isEqualTo(elseIdentifier);
     }
 
+    /**
+     * Regression test: DMN 1.6 models with typeRef on inputValues (as written by the KIE DMN editor 10.1)
+     * must load without UnsupportedOperationException from AbstractTUnaryTests.setTypeRef.
+     * See: https://github.com/apache/incubator-kie-issues/issues/...
+     */
+    @Test
+    void inputValuesWithTypeRefLoadsOnDMNv1_6() {
+        Resource resource = ResourceFactory.newClassPathResource("valid_models/DMNv1_6/inputValuesTypeRef.dmn");
+        DMNRuntime dmnRuntime = DMNRuntimeBuilder.fromDefaults().buildConfiguration()
+                .fromResources(Collections.singletonList(resource)).getOrElseThrow(RuntimeException::new);
+        assertThat(dmnRuntime).isNotNull();
+        assertThat(dmnRuntime.getModels()).hasSize(1);
+        assertThat(dmnRuntime.getModels().get(0).hasErrors()).isFalse();
+    }
+
     @Test
     void testCompileConditional() {
         String exprName = "testExpression";

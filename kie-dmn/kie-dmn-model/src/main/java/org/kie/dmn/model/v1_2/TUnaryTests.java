@@ -18,8 +18,19 @@
  */
 package org.kie.dmn.model.v1_2;
 
+import javax.xml.namespace.QName;
+
 import org.kie.dmn.model.impl.AbstractTUnaryTests;
 
 public class TUnaryTests extends AbstractTUnaryTests implements URIFEELed {
 
+    @Override
+    public QName getTypeRef() {
+        throw new UnsupportedOperationException("Not on DMN v1.2");
+    }
+
+    @Override
+    public void setTypeRef(QName value) {
+        throw new UnsupportedOperationException("Not on DMN v1.2");
+    }
 }
