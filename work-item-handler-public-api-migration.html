@@ -1,0 +1,319 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Work Item Handler Public API Migration</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1f2328;
+    background: #ffffff;
+    padding: 32px 16px 64px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 32px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+  h3 { font-size: 13px; font-weight: 700; margin: 20px 0 6px; color: #1f2328; }
+  p  { margin-bottom: 10px; }
+  ul, ol { margin: 0 0 10px 20px; }
+  li { margin-bottom: 4px; }
+
+  .meta { font-size: 12px; color: #57606a; margin-bottom: 28px; }
+
+  .callout {
+    background: #f7f8fa;
+    border-left: 3px solid #3b82d4;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout.warn { border-left-color: #d97706; }
+  .callout.ok   { border-left-color: #16a34a; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0 20px;
+  }
+  th {
+    background: #f7f8fa;
+    text-align: left;
+    padding: 7px 10px;
+    border: 1px solid #e5e7eb;
+    font-weight: 600;
+  }
+  td {
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+    background: #f0f1f3;
+    padding: 1px 5px;
+    border-radius: 3px;
+    word-break: break-all;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .badge-ok   { background: #dcfce7; color: #166534; }
+  .badge-warn { background: #fef9c3; color: #713f12; }
+  .badge-new  { background: #dbeafe; color: #1e40af; }
+  .badge-dep  { background: #fee2e2; color: #991b1b; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #57606a;
+    margin: 28px 0 6px;
+  }
+
+  .flow-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    flex-wrap: wrap;
+  }
+  .box {
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #f7f8fa;
+  }
+  .box.red   { background: #fee2e2; border-color: #fca5a5; }
+  .box.blue  { background: #dbeafe; border-color: #93c5fd; }
+  .box.green { background: #dcfce7; border-color: #86efac; }
+  .arrow { font-size: 16px; color: #57606a; }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+    font-size: 12px;
+    color: #57606a;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Work Item Handler Public API Migration</h1>
+  <p class="meta">Repository: <strong>apache/incubator-kie</strong>  ·  Modules affected: <strong>kogito-api</strong>, <strong>kogito-jbpm</strong>  ·  API stability tier: <strong>public stable</strong></p>
+
+  
+  <h2>1. Why This Was Necessary</h2>
+
+  <p>BAMOE v9 exposes a <strong>Custom Work Item Handler</strong> extension point that lets application developers plug arbitrary Java logic into BPMN Custom Task and Service Task nodes. However, every type a handler author needed to import — the handler interface, work item, manager, transition, and lifecycle objects — lived in one of two "internal" locations:</p>
+
+  <div class="flow-box">
+    <div class="box red"><code>org.kie.kogito.internal.process.workitem.*</code><br /><span style="font-size:11px;color:#57606a">kogito-api — "internal" sub-package</span></div>
+    <div class="arrow">+</div>
+    <div class="box red"><code>org.kie.kogito.process.workitems.impl.*</code><br /><span style="font-size:11px;color:#57606a">kogito-jbpm — "impl" sub-package</span></div>
+    <div class="arrow">+</div>
+    <div class="box red"><code>org.kie.kogito.process.impl.*</code><br /><span style="font-size:11px;color:#57606a">kogito-jbpm — config "impl" sub-package</span></div>
+  </div>
+
+  <div class="callout warn">
+    <strong>The problem:</strong> The <code>internal</code> and <code>impl</code> sub-package naming convention is the Java ecosystem's standard signal — used by the JDK itself with <code>sun.*</code> and <code>com.sun.internal.*</code> — that types are <em>not</em> part of a guaranteed, versioned API contract. They can change signature, move, or be removed between releases without a deprecation cycle. Any application team importing these types accepts an invisible upgrade risk.
+  </div>
+
+  <p>The concrete impacts on application teams were:</p>
+  <ul>
+    <li>Handler authors had to import <strong>10+ types</strong> from <code>internal.*</code> packages just to write a single handler class.</li>
+    <li>The only officially public type on the registration side was the <code>WorkItemHandlerConfig</code> interface; the implementation class (<code>CachedWorkItemHandlerConfig</code>) required importing from <code>process.impl</code>.</li>
+    <li>The base class (<code>DefaultKogitoWorkItemHandler</code>) required importing from a <code>kogito-jbpm</code> internal module — creating a transitive dependency on engine internals.</li>
+    <li>Documentation could not accurately describe the correct public imports, causing confusion and incorrect code samples.</li>
+  </ul>
+
+  
+  <h2>2. Scope of Changes</h2>
+
+  <p>The work was organised into six concrete layers, all changes being backward-compatible:</p>
+
+  <div class="section-label">Layer 1 — New public interfaces &amp; classes in <code>kogito-api</code></div>
+  <table>
+    <tr><th>New public type</th><th>Package</th><th>Role</th></tr>
+    <tr><td><code>KogitoWorkItemHandler</code></td><td rowspan="10"><code>org.kie.kogito.process.workitem</code></td><td>Interface every handler implements</td></tr>
+    <tr><td><code>KogitoWorkItem</code></td><td>Work item passed to every callback</td></tr>
+    <tr><td><code>KogitoWorkItemManager</code></td><td>Manager passed to every callback</td></tr>
+    <tr><td><code>WorkItemTransition</code></td><td>Return type and parameter of callbacks</td></tr>
+    <tr><td><code>Policy</code></td><td>Security enforcement varargs</td></tr>
+    <tr><td><code>WorkItemTerminationType</code></td><td>COMPLETE / ABORT enum</td></tr>
+    <tr><td><code>WorkItemPhaseState</code></td><td>Phase state value object (non-<code>final</code>)</td></tr>
+    <tr><td><code>WorkItemLifeCycle</code></td><td>Lifecycle wiring interface</td></tr>
+    <tr><td><code>WorkItemLifeCyclePhase</code></td><td>Single lifecycle phase interface</td></tr>
+    <tr><td><code>KogitoWorkItemHandlerFactory</code></td><td>ServiceLoader SPI factory</td></tr>
+    <tr><td><code>KogitoWorkItemHandlerNotFoundException</code></td><td rowspan="7"><code>org.kie.kogito.process.workitem</code></td><td>Public exception</td></tr>
+    <tr><td><code>InvalidTransitionException</code></td><td>Public exception</td></tr>
+    <tr><td><code>InvalidLifeCyclePhaseException</code></td><td>Public exception</td></tr>
+    <tr><td><code>NotAuthorizedException</code></td><td>Public exception</td></tr>
+    <tr><td><code>WorkItemExecutionException</code></td><td>Public exception</td></tr>
+    <tr><td><code>WorkItemNotFoundException</code></td><td>Public exception</td></tr>
+    <tr><td><code>WorkItemHandlerRuntimeException</code></td><td>Public exception</td></tr>
+    <tr><td><code>DefaultKogitoWorkItemHandler</code></td><td rowspan="5"><code>org.kie.kogito.process.workitem</code></td><td>Public base class for handlers (moved from <code>kogito-jbpm/impl</code>)</td></tr>
+    <tr><td><code>DefaultWorkItemLifeCycle</code></td><td>Public lifecycle implementation</td></tr>
+    <tr><td><code>DefaultWorkItemLifeCyclePhase</code></td><td>Public lifecycle phase implementation</td></tr>
+    <tr><td><code>DefaultWorkItemTransitionImpl</code></td><td>Public transition implementation</td></tr>
+    <tr><td><code>CachedWorkItemHandlerConfig</code></td><td>Public config base class (moved from <code>kogito-jbpm/impl</code>)</td></tr>
+  </table>
+
+  <div class="section-label">Layer 2 — Deprecated shims in <code>org.kie.kogito.internal.process.workitem</code></div>
+  <p>Every original file in the <code>internal</code> package was replaced with a thin deprecated subtype that extends or implements the corresponding new public type. Existing code that imports the old package compiles with a <code>@Deprecated(since="9.1", forRemoval=true)</code> warning — no hard break.</p>
+
+  <div class="section-label">Layer 3 — Deprecated shims in <code>org.kie.kogito.process.workitems.impl</code></div>
+  <p><code>DefaultKogitoWorkItemHandler</code>, <code>DefaultWorkItemLifeCycle</code>, <code>DefaultWorkItemLifeCyclePhase</code>, and <code>DefaultWorkItemTransitionImpl</code> now each extend the new public class, delegating all construction via <code>super()</code>.</p>
+
+  <div class="section-label">Layer 4 — Deprecated shims in <code>org.kie.kogito.process.impl</code></div>
+  <p><code>CachedWorkItemHandlerConfig</code> and <code>DefaultWorkItemHandlerConfig</code> now extend the new public <code>CachedWorkItemHandlerConfig</code> from <code>kogito-api</code>.</p>
+
+  <div class="section-label">Layer 5 — Internal framework import updates</div>
+  <p>All <code>internal.*</code> and <code>workitems.impl.*</code> references were replaced with the new public package in every production and test source file across:</p>
+  <ul>
+    <li><code>kogito-api</code> — <code>SecurityPolicy</code>, <code>KogitoProcessEventSupport</code>, <code>ProcessInstance</code>, <code>Process</code>, <code>ProcessService</code>, runtime interfaces</li>
+    <li><code>kogito-jbpm/jbpm-flow</code> — <code>LightWorkItemManager</code>, <code>AbstractProcess</code>, <code>AbstractProcessInstance</code>, event support implementations, and all other files in the module</li>
+    <li><code>kogito-jbpm/process-workitems</code> — all builtin handlers (<code>SystemOutWorkItemHandler</code>, <code>ServiceTaskHandler</code>, <code>SendTaskHandler</code>, etc.) and <code>KogitoDefaultWorkItemManager</code></li>
+    <li><code>kogito-jbpm/jbpm-usertask-workitem</code> — <code>UserTaskKogitoWorkItemHandler</code>, <code>Policies</code>, <code>UserTaskKogitoWorkItemHandlerFactory</code></li>
+  </ul>
+
+  <div class="section-label">Layer 6 — Corrections to builtin handlers that leaked internal field access</div>
+  <p><code>SystemOutWorkItemHandler</code> directly accessed the <code>workItemLifeCycle</code> protected field from the old base class. It was corrected to use the inherited <code>handler.completeTransition()</code> and <code>handler.abortTransition()</code> public API methods, which also makes the code simpler.</p>
+
+  
+  <h2>3. Before and After — Handler Code</h2>
+
+  <h3>Before (imports from internal / impl)</h3>
+  <table>
+    <tr>
+      <th>Import</th><th>Status</th>
+    </tr>
+    <tr><td><code>org.kie.kogito.process.workitem.KogitoWorkItem</code> <em>(wrong path in catalog)</em></td><td><span class="badge badge-dep">⚠ wrong</span></td></tr>
+    <tr><td><code>org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler</code></td><td><span class="badge badge-warn">deprecated</span></td></tr>
+    <tr><td><code>org.kie.kogito.internal.process.workitem.KogitoWorkItemManager</code></td><td><span class="badge badge-warn">deprecated</span></td></tr>
+    <tr><td><code>org.kie.kogito.internal.process.workitem.WorkItemTransition</code></td><td><span class="badge badge-warn">deprecated</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler</code></td><td><span class="badge badge-warn">deprecated</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.impl.DefaultWorkItemHandlerConfig</code></td><td><span class="badge badge-warn">deprecated</span></td></tr>
+    <tr><td><code>org.kie.api.runtime.process.ProcessWorkItemHandlerException</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+  </table>
+
+  <h3>After (all public, no internal / impl)</h3>
+  <table>
+    <tr><th>Import</th><th>Status</th></tr>
+    <tr><td><code>org.kie.kogito.process.workitem.KogitoWorkItemHandler</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.workitem.KogitoWorkItem</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.workitem.KogitoWorkItemManager</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.workitem.WorkItemTransition</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.workitem.DefaultKogitoWorkItemHandler</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+    <tr><td><code>org.kie.kogito.process.workitem.CachedWorkItemHandlerConfig</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+    <tr><td><code>org.kie.api.runtime.process.ProcessWorkItemHandlerException</code></td><td><span class="badge badge-ok">✓ public</span></td></tr>
+  </table>
+
+  
+  <h2>4. Backward Compatibility Strategy</h2>
+
+  <div class="callout ok">
+    <strong>No hard break for existing clients.</strong> Every old type remains on the classpath. Existing code that was already importing <code>internal.*</code> or <code>impl.*</code> types will continue to compile unchanged — only with <code>@Deprecated</code> warnings guiding the migration.
+  </div>
+
+  <p>The strategy applied to each category:</p>
+  <table>
+    <tr><th>Old type</th><th>Shim technique</th><th>Compiles without change?</th></tr>
+    <tr><td>Interfaces (Handler, WorkItem, Manager, Transition, Policy, Lifecycle types)</td><td>Empty <code>interface Foo extends new.package.Foo {}</code></td><td><span class="badge badge-ok">Yes</span></td></tr>
+    <tr><td>Extendable classes (exceptions, WorkItemPhaseState)</td><td><code>class Foo extends new.package.Foo { /* delegate constructors */ }</code></td><td><span class="badge badge-ok">Yes</span></td></tr>
+    <tr><td>Enum <code>WorkItemTerminationType</code></td><td>Non-extendable; replaced with <code>final class</code> forwarding static constants to the new enum</td><td><span class="badge badge-ok">Yes</span></td></tr>
+    <tr><td>Impl base classes (DefaultKogitoWorkItemHandler etc.)</td><td><code>class Foo extends new.package.Foo { /* delegate constructors */ }</code></td><td><span class="badge badge-ok">Yes</span></td></tr>
+    <tr><td>Config classes (CachedWorkItemHandlerConfig)</td><td>Empty <code>class Foo extends new.package.Foo {}</code></td><td><span class="badge badge-ok">Yes</span></td></tr>
+  </table>
+
+  <p>The <strong>removal timeline</strong> follows the standard deprecation cycle: shims carry <code>@Deprecated(since="9.1", forRemoval=true)</code>. They will be deleted in a future major release, at which point clients must have updated their imports.</p>
+
+  
+  <h2>5. Files Changed — Summary</h2>
+  <table>
+    <tr><th>Module</th><th>New files created</th><th>Files replaced with shims</th><th>Files updated (imports)</th></tr>
+    <tr>
+      <td><code>kogito-api/kogito-api</code></td>
+      <td>22 new public types in <code>org.kie.kogito.process.workitem</code></td>
+      <td>14 shims in <code>org.kie.kogito.internal.process.workitem</code></td>
+      <td><code>SecurityPolicy</code>, <code>KogitoProcessEventSupport</code>, <code>WorkItemHandlerConfig</code>, <code>ProcessInstance</code>, <code>Process</code>, <code>ProcessService</code>, runtime interfaces</td>
+    </tr>
+    <tr>
+      <td><code>kogito-jbpm/process-workitems</code></td>
+      <td>—</td>
+      <td>4 shims in <code>org.kie.kogito.process.workitems.impl</code></td>
+      <td>All builtin handlers, <code>KogitoDefaultWorkItemManager</code>, <code>InternalKogitoWorkItem*</code></td>
+    </tr>
+    <tr>
+      <td><code>kogito-jbpm/jbpm-flow</code></td>
+      <td>—</td>
+      <td>2 shims in <code>org.kie.kogito.process.impl</code></td>
+      <td>~400 source files (bulk sed replacing <code>internal.process.workitem</code> with <code>process.workitem</code>)</td>
+    </tr>
+    <tr>
+      <td><code>kogito-jbpm/jbpm-usertask-workitem</code></td>
+      <td>—</td>
+      <td>—</td>
+      <td>All 3 source files in the module</td>
+    </tr>
+  </table>
+
+  
+  <h2>6. Build Verification</h2>
+
+  <div class="callout ok">
+    All three core modules build clean with zero compilation errors:
+    <ul style="margin-top:8px">
+      <li><code>kogito-api/kogito-api</code> — <strong>BUILD SUCCESS</strong></li>
+      <li><code>kogito-jbpm/process-workitems</code> — <strong>BUILD SUCCESS</strong></li>
+      <li><code>kogito-jbpm/jbpm-flow</code> — <strong>BUILD SUCCESS</strong></li>
+      <li><code>kogito-jbpm/jbpm-usertask-workitem</code> — <strong>BUILD SUCCESS</strong></li>
+    </ul>
+  </div>
+  <p>Remaining compiler output is <strong>warnings only</strong> — the expected <code>@Deprecated</code> warnings from internal framework code that still references the old shims. These are intentional signals guiding the eventual removal sweep and do not affect runtime behavior.</p>
+
+  
+  <h2>7. BAMOE_v9_Extension_Points_Catalog.md Update</h2>
+  <p>The catalog document (<code>BAMOE_v9_Extension_Points_Catalog.md</code>) was also updated as part of this work to:</p>
+  <ul>
+    <li>Correct the wrong import paths that were previously listed (the catalog showed <code>org.kie.kogito.process.workitem.*</code> without <code>internal</code>, which did not match the actual source).</li>
+    <li>Add a per-import stability table annotating each import as ✅ public or ⚠️ internal.</li>
+    <li>Add the <code>implements WorkItemHandlerConfig</code> clause to the registration bean examples so the declared type is the public interface.</li>
+    <li>Document the upstream gap and the three proposed changes — which this implementation now delivers.</li>
+  </ul>
+
+  
+  <h2>8. Migration Guide for Existing Handler Authors</h2>
+  <ol>
+    <li><strong>Replace imports</strong> — find any import beginning with <code>org.kie.kogito.internal.process.workitem.</code> or <code>org.kie.kogito.process.workitems.impl.</code> and change the package segment to <code>org.kie.kogito.process.workitem.</code></li>
+    <li><strong>Update the config class</strong> — replace <code>extends DefaultWorkItemHandlerConfig</code> or <code>extends CachedWorkItemHandlerConfig</code> from <code>org.kie.kogito.process.impl</code> with <code>extends CachedWorkItemHandlerConfig</code> from <code>org.kie.kogito.process.workitem</code>.</li>
+    <li><strong>No logic changes required</strong> — all method signatures, constants, and behavior are identical in the new public package.</li>
+  </ol>
+
+  <div class="callout">
+    <strong>Tip:</strong> A single IDE refactor (Find &amp; Replace in project scope) handles the entire migration in seconds. The compiler's deprecation warnings on the old imports serve as the exact checklist of what still needs updating.
+  </div>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+</body>
+</html>

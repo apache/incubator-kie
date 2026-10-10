@@ -19,16 +19,9 @@
 package org.kie.kogito.internal.process.workitem;
 
 /**
- * Top level of a policy that should be applied to work items.
- * Most of the cases it is used to restrict access or operations on
- * top of the work item.
- *
- * @param <T> type of the policy object to be used to react to it.
+ * @deprecated Use {@link org.kie.kogito.process.workitem.Policy} instead.
+ *             This type will be removed in a future release.
  */
-public interface Policy {
-
-    /**
-     * enforce the policy over this work item handler
-     */
-    void enforce(KogitoWorkItem workItem);
+@Deprecated(since = "9.1", forRemoval = true)
+public interface Policy extends org.kie.kogito.process.workitem.Policy {
 }

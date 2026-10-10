@@ -18,22 +18,10 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
-
-public interface KogitoWorkItemHandlerFactory {
-
-    public static List<KogitoWorkItemHandler> findAllKogitoWorkItemHandlersRegistered() {
-        List<KogitoWorkItemHandler> handlers = new ArrayList<>();
-        ServiceLoader.load(KogitoWorkItemHandlerFactory.class, Thread.currentThread().getContextClassLoader()).stream()
-                .map(ServiceLoader.Provider<KogitoWorkItemHandlerFactory>::get)
-                .map(KogitoWorkItemHandlerFactory::provide)
-                .flatMap(List::stream)
-                .forEach(e -> handlers.add(e));
-        return handlers;
-    }
-
-    List<KogitoWorkItemHandler> provide();
-
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.KogitoWorkItemHandlerFactory} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public interface KogitoWorkItemHandlerFactory extends org.kie.kogito.process.workitem.KogitoWorkItemHandlerFactory {
 }

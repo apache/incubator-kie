@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 
 import org.jbpm.process.core.Context;
 import org.jbpm.process.core.context.AbstractContext;
-import org.kie.kogito.internal.process.workitem.WorkItemExecutionException;
+import org.kie.kogito.process.workitem.WorkItemExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

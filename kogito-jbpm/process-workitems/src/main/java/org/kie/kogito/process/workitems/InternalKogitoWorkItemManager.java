@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.kie.api.runtime.process.WorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
 
-public interface InternalKogitoWorkItemManager extends org.drools.core.process.WorkItemManager, org.kie.kogito.internal.process.workitem.KogitoWorkItemManager {
+public interface InternalKogitoWorkItemManager extends org.drools.core.process.WorkItemManager, org.kie.kogito.process.workitem.KogitoWorkItemManager {
 
     void internalExecuteWorkItem(InternalKogitoWorkItem workItem);
 
