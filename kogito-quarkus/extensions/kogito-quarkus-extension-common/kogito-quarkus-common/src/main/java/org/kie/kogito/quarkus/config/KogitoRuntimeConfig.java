@@ -55,4 +55,11 @@ public interface KogitoRuntimeConfig {
      */
     @WithName("security.auth")
     KogitoAuthRuntimeConfig authConfig();
+
+    /**
+     * Maximum number of HTTP connections the REST work item handler keeps open per target host.
+     * When not set, the Vert.x default applies.
+     */
+    @WithName("workitem.rest.max-pool-size")
+    Optional<Integer> workitemRestMaxPoolSize();
 }
