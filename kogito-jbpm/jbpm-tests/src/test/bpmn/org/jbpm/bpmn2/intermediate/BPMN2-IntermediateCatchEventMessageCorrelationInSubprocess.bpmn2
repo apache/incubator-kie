@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<!--
+  Regression test BPMN for:
+    "IntermediateCatchEvent with message correlation inside an embedded subprocess fails
+     because the process-side correlation value is resolved as Object[] instead of String"
+
+  Flow:
+    Start → ScriptTask (sets correlationKey = "testCorrelation") → SubProcess
+              └─ SubStart → IntermediateCatchEvent[Message-CorrelationMessage, correlated] → SubEnd
+            → End
+
+  CorrelationSubscription binds correlationProperty "corrProp" to process variable "correlationKey".
+  The incoming message must carry the same value in its "key" field.
+-->
+<bpmn2:definitions
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+    xmlns:tns="http://www.jboss.org/drools"
+    xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd"
+    id="Definition"
+    expressionLanguage="http://www.mvel.org/2.0"
+    targetNamespace="http://www.jboss.org/drools"
+    typeLanguage="http://www.java.com/javaTypes">
+
+  <!-- item definitions — message type must be fully qualified for classloader check in CorrelationManager -->
+  <bpmn2:itemDefinition id="_correlationKeyItem" structureRef="java.lang.String"/>
+  <bpmn2:itemDefinition id="_msgPayloadItem"     structureRef="java.lang.String"/>
+  <bpmn2:itemDefinition id="_corrPropTypeItem"   structureRef="java.lang.String"/>
+
+  <!-- message carrying the correlation key as its payload -->
+  <bpmn2:message id="CorrelationMessage" itemRef="_msgPayloadItem" name="CorrelationMessage"/>
+
+  <!-- correlation property: the message payload IS the correlation key — return it as-is via MVEL -->
+  <bpmn2:correlationProperty id="corrProp" name="corrProp" type="_corrPropTypeItem">
+    <bpmn2:correlationPropertyRetrievalExpression messageRef="CorrelationMessage">
+      <!-- "this" in MVEL returns the root object itself, i.e. the String payload -->
+      <bpmn2:messagePath evaluatesToTypeRef="_corrPropTypeItem" language="java">this</bpmn2:messagePath>
+    </bpmn2:correlationPropertyRetrievalExpression>
+  </bpmn2:correlationProperty>
+
+  <!-- collaboration wrapping the correlation key -->
+  <bpmn2:collaboration id="_collaboration">
+    <bpmn2:participant id="_participant" processRef="IntermediateCatchEventMessageCorrelationInSubprocess"/>
+    <bpmn2:correlationKey id="corrKey" name="corrProp">
+      <bpmn2:correlationPropertyRef>corrProp</bpmn2:correlationPropertyRef>
+    </bpmn2:correlationKey>
+  </bpmn2:collaboration>
+
+  <bpmn2:process
+      id="IntermediateCatchEventMessageCorrelationInSubprocess"
+      tns:packageName="org.jbpm.bpmn2.intermediate"
+      tns:version="1"
+      name="IntermediateCatchEventMessageCorrelationInSubprocess"
+      isExecutable="true"
+      processType="Private">
+
+    <!-- process variables -->
+    <bpmn2:property id="correlationKey" itemSubjectRef="_correlationKeyItem" name="correlationKey"/>
+    <bpmn2:property id="receivedValue"  itemSubjectRef="_msgPayloadItem"     name="receivedValue"/>
+
+    <!-- correlation subscription: the process-side value comes from "correlationKey" variable -->
+    <bpmn2:correlationSubscription correlationKeyRef="corrKey">
+      <bpmn2:correlationPropertyBinding correlationPropertyRef="corrProp">
+        <bpmn2:dataPath evaluatesToTypeRef="_corrPropTypeItem" language="java">correlationKey</bpmn2:dataPath>
+      </bpmn2:correlationPropertyBinding>
+    </bpmn2:correlationSubscription>
+
+    <!-- nodes -->
+    <bpmn2:startEvent id="StartEvent_1" name="Start">
+      <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>
+    </bpmn2:startEvent>
+
+    <!-- Script task sets the correlation variable before entering the subprocess -->
+    <bpmn2:scriptTask id="ScriptTask_setCorrelation" name="Set Correlation" scriptFormat="http://www.java.com/java">
+      <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
+      <bpmn2:script>kcontext.setVariable("correlationKey", "testCorrelation");</bpmn2:script>
+    </bpmn2:scriptTask>
+
+    <!-- Embedded subprocess containing the IntermediateCatchEvent -->
+    <bpmn2:subProcess id="SubProcess_1" name="Wait for correlated message">
+      <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_3</bpmn2:outgoing>
+
+      <bpmn2:startEvent id="SubStart" name="SubStart">
+        <bpmn2:outgoing>SubFlow_1</bpmn2:outgoing>
+      </bpmn2:startEvent>
+
+      <bpmn2:intermediateCatchEvent id="CatchMsg" name="Catch Correlated Message">
+        <bpmn2:incoming>SubFlow_1</bpmn2:incoming>
+        <bpmn2:outgoing>SubFlow_2</bpmn2:outgoing>
+        <bpmn2:dataOutput id="CatchMsg_output" itemSubjectRef="_msgPayloadItem" name="event"/>
+        <bpmn2:dataOutputAssociation>
+          <bpmn2:sourceRef>CatchMsg_output</bpmn2:sourceRef>
+          <bpmn2:targetRef>receivedValue</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+        <bpmn2:outputSet>
+          <bpmn2:dataOutputRefs>CatchMsg_output</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
+        <bpmn2:messageEventDefinition messageRef="CorrelationMessage"/>
+      </bpmn2:intermediateCatchEvent>
+
+      <bpmn2:endEvent id="SubEnd" name="SubEnd">
+        <bpmn2:incoming>SubFlow_2</bpmn2:incoming>
+      </bpmn2:endEvent>
+
+      <bpmn2:sequenceFlow id="SubFlow_1" sourceRef="SubStart" targetRef="CatchMsg"/>
+      <bpmn2:sequenceFlow id="SubFlow_2" sourceRef="CatchMsg"  targetRef="SubEnd"/>
+    </bpmn2:subProcess>
+
+    <bpmn2:endEvent id="EndEvent_1" name="End">
+      <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1"          targetRef="ScriptTask_setCorrelation"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_2" sourceRef="ScriptTask_setCorrelation" targetRef="SubProcess_1"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_3" sourceRef="SubProcess_1"           targetRef="EndEvent_1"/>
+
+  </bpmn2:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="IntermediateCatchEventMessageCorrelationInSubprocess">
+      <bpmndi:BPMNShape id="Shape_StartEvent_1" bpmnElement="StartEvent_1">
+        <dc:Bounds x="50" y="100" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_ScriptTask_setCorrelation" bpmnElement="ScriptTask_setCorrelation">
+        <dc:Bounds x="140" y="78" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SubProcess_1" bpmnElement="SubProcess_1" isExpanded="true">
+        <dc:Bounds x="300" y="40" width="400" height="160"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SubStart" bpmnElement="SubStart">
+        <dc:Bounds x="330" y="102" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_CatchMsg" bpmnElement="CatchMsg">
+        <dc:Bounds x="430" y="102" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SubEnd" bpmnElement="SubEnd">
+        <dc:Bounds x="600" y="102" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_1" bpmnElement="EndEvent_1">
+        <dc:Bounds x="760" y="100" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_SequenceFlow_1" bpmnElement="SequenceFlow_1">
+        <di:waypoint x="86" y="118"/>
+        <di:waypoint x="140" y="118"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SequenceFlow_2" bpmnElement="SequenceFlow_2">
+        <di:waypoint x="240" y="118"/>
+        <di:waypoint x="300" y="120"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SequenceFlow_3" bpmnElement="SequenceFlow_3">
+        <di:waypoint x="700" y="120"/>
+        <di:waypoint x="760" y="118"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SubFlow_1" bpmnElement="SubFlow_1">
+        <di:waypoint x="366" y="120"/>
+        <di:waypoint x="430" y="120"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SubFlow_2" bpmnElement="SubFlow_2">
+        <di:waypoint x="466" y="120"/>
+        <di:waypoint x="600" y="120"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn2:definitions>
