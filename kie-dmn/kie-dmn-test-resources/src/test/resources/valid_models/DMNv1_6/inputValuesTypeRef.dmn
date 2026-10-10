@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+
+<dmn:definitions xmlns:dmn="https://www.omg.org/spec/DMN/20240513/MODEL/" xmlns="jurisdiction-rules" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:kie="https://kie.org/dmn/extensions/1.0" xmlns:feel="https://www.omg.org/spec/DMN/20240513/FEEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20230324/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="_4d416cc1-1d3d-429d-9360-98e8340e1551" name="jurisdiction-rules" expressionLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/" namespace="jurisdiction-rules">
+  <dmn:description>jurisdiction-rules</dmn:description>
+  <dmn:extensionElements>
+    <x-gw-dmn:visibility xmlns:x-gw-dmn="https://www.guidewire.com/rules/1.0" />
+  </dmn:extensionElements>
+  <dmn:itemDefinition id="_6E43707E-EAA9-458E-A5CA-E7FB781084C0" name="Policy Info" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+    <dmn:itemComponent id="_50922129-2C62-4834-960D-851095F734D3" name="Total Loss" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_D9E52622-3651-4213-B251-6C5F419DE6B0" name="Jurisdiction" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_F788B8AD-68DC-48BA-AA6A-A465247C3951" name="UW Questions" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+    <dmn:itemComponent id="_5726F584-7D73-4502-8916-3ECFA2DC6C6B" name="Questions" isCollection="true" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_E3EB33F3-4836-4617-BADB-A56CE26AE11F" name="Processing Date" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+      <dmn:typeRef>date and time</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:decision name="Questions" id="_AEDE88F0-9D5A-4569-AE7B-70FC44FCABBA">
+    <dmn:variable name="Questions" id="_8B0C547F-DBE0-4261-B100-1D54B10DBC28" typeRef="UW Questions" />
+    <dmn:informationRequirement id="_AD17F32A-68B5-4EE2-9DA2-DC3746B0A9DB">
+      <dmn:requiredInput href="#_B292D9B8-370B-49BA-B8F3-278A61A7BC22" />
+    </dmn:informationRequirement>
+    <dmn:context id="_AE97790B-10DB-4A92-9798-F0CF5D643FCB" typeRef="UW Questions" label="Questions">
+      <dmn:contextEntry id="_DA586786-81A9-456A-8024-2F0FDA967933">
+        <dmn:variable id="_EC06E9CD-5A7B-4980-AC7D-0667AF98ED77" name="Questions" typeRef="Any" />
+        <dmn:decisionTable id="_2298BCDA-9D67-4301-A817-1BDB9C5AD200" typeRef="Any" hitPolicy="COLLECT" label="Questions">
+          <dmn:input id="_0459985D-B03B-40E6-8C69-011E6454AABE">
+            <dmn:inputExpression id="_A1785E87-6ECC-4C75-A098-8BE83361926E" typeRef="boolean">
+              <dmn:text>Policy Info.Total Loss</dmn:text>
+            </dmn:inputExpression>
+          </dmn:input>
+          <dmn:input id="_48DBFD12-8AEA-4754-9B9D-2D0781C9185B">
+            <dmn:inputExpression id="_95012A8C-D3A1-4E37-B8AD-A4691E7579D7" typeRef="string" expressionLanguage="https://www.omg.org/spec/DMN/20240513/B-FEEL/">
+              <dmn:text>Policy Info.Jurisdiction</dmn:text>
+            </dmn:inputExpression>
+            <dmn:inputValues id="_152EE573-A0AC-4D65-9E44-27D495BFBF99" typeRef="string">
+              <dmn:text></dmn:text>
+            </dmn:inputValues>
+          </dmn:input>
+          <dmn:output id="_D6FA5003-AEBF-49C9-BF5E-81C6180AE945" />
+          <dmn:annotation name="Annotations" />
+          <dmn:rule id="_00DE08BD-1D3E-4FD6-852C-75EDBB90E574">
+            <dmn:inputEntry id="_C0BDB2D1-DB39-4D93-82A9-817E6460F919">
+              <dmn:text>true</dmn:text>
+            </dmn:inputEntry>
+            <dmn:inputEntry id="_8E2EDB74-9D2B-4612-8175-D7967D5C1EA7">
+              <dmn:text>&quot;CA&quot;</dmn:text>
+            </dmn:inputEntry>
+            <dmn:outputEntry id="_5961AD26-5A89-4365-99DB-A829B81BF40A">
+              <dmn:text>&quot;Please complete the loss evaulation questionnarie for total loss claims.&quot;</dmn:text>
+            </dmn:outputEntry>
+            <dmn:annotationEntry>
+              <dmn:text>// Your annotations here</dmn:text>
+            </dmn:annotationEntry>
+          </dmn:rule>
+          <dmn:rule id="_7BA156AE-4264-4AEC-9C89-A97264697F45">
+            <dmn:inputEntry id="_B45C051C-F7B6-4CC0-888B-5DB7395882AC">
+              <dmn:text>true</dmn:text>
+            </dmn:inputEntry>
+            <dmn:inputEntry id="_A789ABF8-DD19-4805-996C-68CF8A0466AD">
+              <dmn:text>&quot;&quot;</dmn:text>
+            </dmn:inputEntry>
+            <dmn:outputEntry id="_AF35DABD-ECB3-4E21-8A2A-61146CDC3A77">
+              <dmn:text>&quot;IS there special equipment installed or included in the samage to the commercial vehicle?&quot;</dmn:text>
+            </dmn:outputEntry>
+            <dmn:annotationEntry>
+              <dmn:text></dmn:text>
+            </dmn:annotationEntry>
+          </dmn:rule>
+          <dmn:rule id="_DABCDE4A-EF36-4013-8AC8-744249516792">
+            <dmn:inputEntry id="_B9322D33-99CE-4600-8AE7-0B6DB047E5F2">
+              <dmn:text>true</dmn:text>
+            </dmn:inputEntry>
+            <dmn:inputEntry id="_4125B926-E4E2-4FD8-906D-C3FDA57924CB">
+              <dmn:text>&quot;&quot;</dmn:text>
+            </dmn:inputEntry>
+            <dmn:outputEntry id="_6E063DA6-4D02-42BD-9A6E-3E07C6E59D87">
+              <dmn:text>&quot;Please compelte the loss evaulation questionnarie for total claims&quot;</dmn:text>
+            </dmn:outputEntry>
+            <dmn:annotationEntry>
+              <dmn:text></dmn:text>
+            </dmn:annotationEntry>
+          </dmn:rule>
+          <dmn:rule id="_C61379DD-15D6-475C-A4A0-3B2535AA4233">
+            <dmn:inputEntry id="_4BCCF7E5-D3E1-45B5-8352-6D39B57F3C9A">
+              <dmn:text>true</dmn:text>
+            </dmn:inputEntry>
+            <dmn:inputEntry id="_8A636C9F-00AE-4A0D-9ABF-ADD880061E77">
+              <dmn:text>&quot;&quot;</dmn:text>
+            </dmn:inputEntry>
+            <dmn:outputEntry id="_ED029832-316E-4E4C-8F6B-5B9921E7D4AF">
+              <dmn:text>&quot;Was this a commercial verhicle licensed in Colorado?&quot;</dmn:text>
+            </dmn:outputEntry>
+            <dmn:annotationEntry>
+              <dmn:text></dmn:text>
+            </dmn:annotationEntry>
+          </dmn:rule>
+          <dmn:rule id="_C5A0B660-D6C9-4B75-9626-D090299B3F55">
+            <dmn:inputEntry id="_DF0AAEDA-2C45-4FEB-97F8-C539B0B4B92D">
+              <dmn:text>false</dmn:text>
+            </dmn:inputEntry>
+            <dmn:inputEntry id="_F9FA44DC-73B1-457C-B12A-892F0280A399">
+              <dmn:text>-</dmn:text>
+            </dmn:inputEntry>
+            <dmn:outputEntry id="_69CA537A-66B3-45CC-8985-2044221B6E0A">
+              <dmn:text></dmn:text>
+            </dmn:outputEntry>
+            <dmn:annotationEntry>
+              <dmn:text></dmn:text>
+            </dmn:annotationEntry>
+          </dmn:rule>
+        </dmn:decisionTable>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_1976A876-E8E4-4AA6-985C-168D7FA21FAA">
+        <dmn:variable id="_E35BB9D2-B9F3-4CA1-AC54-D6B2454075F4" name="Processing Date" typeRef="date and time" />
+        <dmn:literalExpression id="_8957D16B-96C4-4A17-BC20-17DC679A154F" typeRef="date and time" label="Processing Date" expressionLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+          <dmn:text>now()</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_25CE5588-3821-46A1-BC29-E2B5A15F16BF">
+        <dmn:literalExpression id="_0E73C8A3-76CF-4BD5-9F1C-04BBEE1E9C47" typeRef="UW Questions" label="Questions">
+          <dmn:text>{ &quot;Questions&quot;: Questions, &quot;Processing Date&quot; : Processing Date }</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+  <dmn:inputData name="Policy Info" id="_B292D9B8-370B-49BA-B8F3-278A61A7BC22">
+    <dmn:variable name="Policy Info" id="_0AD96AA2-AEEB-47B6-92FB-CFDA91BC3249" typeRef="Policy Info" />
+  </dmn:inputData>
+  <dmn:decisionService name="Jurisdictionspecificqns" id="_D1AEAA87-21DF-4E13-BFAA-B0CC360B9DB6">
+    <dmn:variable name="Jurisdictionspecificqns" id="_2814B9CD-3F89-4DE0-842C-D9BE624A6ED7" typeRef="UW Questions" />
+    <dmn:outputDecision href="#_AEDE88F0-9D5A-4569-AE7B-70FC44FCABBA" />
+    <dmn:inputData href="#_B292D9B8-370B-49BA-B8F3-278A61A7BC22" />
+  </dmn:decisionService>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_3B9B10C0-B37C-4846-8E1E-AEAE8D8F42C3" name="Default DRD" useAlternativeInputDataShape="false">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths dmnElementRef="_AE97790B-10DB-4A92-9798-F0CF5D643FCB">
+            <kie:width>120</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_0E73C8A3-76CF-4BD5-9F1C-04BBEE1E9C47">
+            <kie:width>1262</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_2298BCDA-9D67-4301-A817-1BDB9C5AD200">
+            <kie:width>60</kie:width>
+            <kie:width>181</kie:width>
+            <kie:width>117</kie:width>
+            <kie:width>554</kie:width>
+            <kie:width>370</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_8957D16B-96C4-4A17-BC20-17DC679A154F">
+            <kie:width>190</kie:width>
+          </kie:ComponentWidths>
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="_B1829D3D-4415-4A38-8D37-386AD7B36723" dmnElementRef="_D1AEAA87-21DF-4E13-BFAA-B0CC360B9DB6" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="560" y="100" width="320" height="320" />
+        <dmndi:DMNDecisionServiceDividerLine id="_E3A97D25-84EA-456D-AC54-F5B1F575C23E">
+          <di:waypoint x="560" y="260" />
+          <di:waypoint x="880" y="260" />
+        </dmndi:DMNDecisionServiceDividerLine>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_8FE40767-DAAC-4FB8-81B5-82BDBEBE64AF" dmnElementRef="_AEDE88F0-9D5A-4569-AE7B-70FC44FCABBA" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="640" y="160" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_65CF5115-6EF2-446D-9B28-C0315F803F42" dmnElementRef="_B292D9B8-370B-49BA-B8F3-278A61A7BC22" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="320" y="180" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="_BE264634-A2C4-4BFB-8F04-99305D9164E6" dmnElementRef="_AD17F32A-68B5-4EE2-9DA2-DC3746B0A9DB" sourceElement="_65CF5115-6EF2-446D-9B28-C0315F803F42" targetElement="_8FE40767-DAAC-4FB8-81B5-82BDBEBE64AF">
+        <di:waypoint x="400" y="220" />
+        <di:waypoint x="640" y="200" />
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

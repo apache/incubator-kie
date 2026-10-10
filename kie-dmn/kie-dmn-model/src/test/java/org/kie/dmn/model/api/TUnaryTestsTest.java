@@ -18,44 +18,64 @@
  */
 package org.kie.dmn.model.api;
 
-import org.junit.jupiter.api.Test;
-import org.kie.dmn.model.v1_2.TDMNElement;
+import javax.xml.namespace.QName;
 
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 class TUnaryTestsTest {
 
+    /**
+     * DMN v1.1 and v1.2: tUnaryTests does not extend tExpression, so typeRef must throw.
+     */
     @Test
-    void smokeTest() {
-        UnaryTests ut = new STUnaryTests();
-        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> ut.getTypeRef());
+    void typeRefThrowsOnDMNv1_1() {
+        UnaryTests ut = new org.kie.dmn.model.v1_1.TUnaryTests();
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(ut::getTypeRef);
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> ut.setTypeRef(null));
+    }
+
+    @Test
+    void typeRefThrowsOnDMNv1_2() {
+        UnaryTests ut = new org.kie.dmn.model.v1_2.TUnaryTests();
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(ut::getTypeRef);
         assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> ut.setTypeRef(null));
     }
 
     /**
-     * Up to DMNv1.2.
+     * DMN v1.3+: tUnaryTests extends tExpression, so typeRef must be readable/writable.
      */
-    private static class STUnaryTests extends TDMNElement implements UnaryTests {
+    @Test
+    void typeRefWorksOnDMNv1_3() {
+        UnaryTests ut = new org.kie.dmn.model.v1_3.TUnaryTests();
+        QName qname = new QName("string");
+        ut.setTypeRef(qname);
+        assertThat(ut.getTypeRef()).isEqualTo(qname);
+    }
 
-        @Override
-        public String getText() {
-            throw new UnsupportedOperationException();
-        }
+    @Test
+    void typeRefWorksOnDMNv1_4() {
+        UnaryTests ut = new org.kie.dmn.model.v1_4.TUnaryTests();
+        QName qname = new QName("string");
+        ut.setTypeRef(qname);
+        assertThat(ut.getTypeRef()).isEqualTo(qname);
+    }
 
-        @Override
-        public void setText(String value) {
-            throw new UnsupportedOperationException();
-        }
+    @Test
+    void typeRefWorksOnDMNv1_5() {
+        UnaryTests ut = new org.kie.dmn.model.v1_5.TUnaryTests();
+        QName qname = new QName("string");
+        ut.setTypeRef(qname);
+        assertThat(ut.getTypeRef()).isEqualTo(qname);
+    }
 
-        @Override
-        public String getExpressionLanguage() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setExpressionLanguage(String value) {
-            throw new UnsupportedOperationException();
-        }
-
+    @Test
+    void typeRefWorksOnDMNv1_6() {
+        UnaryTests ut = new org.kie.dmn.model.v1_6.TUnaryTests();
+        QName qname = new QName("string");
+        ut.setTypeRef(qname);
+        assertThat(ut.getTypeRef()).isEqualTo(qname);
     }
 }

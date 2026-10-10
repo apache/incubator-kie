@@ -18,8 +18,6 @@
  */
 package org.kie.dmn.model.impl;
 
-import javax.xml.namespace.QName;
-
 import org.kie.dmn.model.api.UnaryTests;
 
 public abstract class AbstractTUnaryTests extends AbstractTExpression implements UnaryTests {
@@ -45,15 +43,5 @@ public abstract class AbstractTUnaryTests extends AbstractTExpression implements
     @Override
     public void setExpressionLanguage(String value) {
         this.expressionLanguage = value;
-    }
-
-    @Override
-    public QName getTypeRef() {
-        throw new UnsupportedOperationException("Not on DMN v1.2");
-    }
-
-    @Override
-    public void setTypeRef(QName value) {
-        throw new UnsupportedOperationException("Not on DMN v1.2");
     }
 }

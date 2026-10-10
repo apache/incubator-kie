@@ -106,6 +106,11 @@ public class UnmarshalMarshalTest {
         testRoundTripV16("org/kie/dmn/backend/marshalling/v1_6/", "sampleFilter.dmn");
     }
 
+    @Test
+    void testv16_inputValuesTypeRef() throws Exception {
+        testRoundTripV16("org/kie/dmn/backend/marshalling/v1_6/", "inputValuesTypeRef.dmn");
+    }
+
     public void testRoundTripV16(String subdir, String xmlfile) throws Exception {
         testRoundTrip(subdir, xmlfile, MARSHALLER, DMN16_SCHEMA_SOURCE);
     }
