@@ -299,7 +299,7 @@ void createSetupBranchJob() {
 }
 
 void setupDeployJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'drools-deploy', JobType.RELEASE, "${jenkins_path}/Jenkinsfile.deploy", 'Drools Deploy')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'drools-deploy', JobType.RELEASE, "${jenkins_path}/Jenkinsfile.103xplus.deploy", 'Drools Deploy')
     JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     jobParams.env.putAll([
             PROPERTIES_FILE_NAME: 'deployment.properties',
