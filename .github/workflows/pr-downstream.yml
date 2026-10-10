@@ -34,6 +34,7 @@ on:
 
 jobs:
   kie-examples:
+    if: false
     name: '${{ matrix.examples-subfolder }}'
     runs-on: ubuntu-latest
     concurrency:

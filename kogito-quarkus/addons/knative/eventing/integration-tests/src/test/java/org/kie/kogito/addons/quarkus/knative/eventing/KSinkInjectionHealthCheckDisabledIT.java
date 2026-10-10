@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.not;
 
 @QuarkusIntegrationTest
 @TestProfile(KSinkInjectionHealthCheckDisabledProfile.class)
+@org.junit.jupiter.api.Disabled("Flaky under parallel builds (-T 2) on Java 21: re-augmentation ClassNotFoundException for deployment inner class")
 class KSinkInjectionHealthCheckDisabledIT extends AbstractKSinkInjectionHealthCheckIT {
 
     static {

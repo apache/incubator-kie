@@ -186,13 +186,21 @@ jobs:
           [ -z "$pl" ] && echo "No upstream modules. Skipping." && exit 0
           mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true -Dsurefire.redirectTestOutputToFile=true -pl "$pl" install
 
-      - name: "PR CHECK :: BUILD :: Changed and affected modules${{ github.event_name == 'push' && ' (skipped)' || '' }}"
+      - name: "PR CHECK :: BUILD :: Changed and affected modules (install)${{ github.event_name == 'push' && ' (skipped)' || '' }}"
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
           pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
           [ -z "$pl" ] && echo "No affected modules. Skipping." && exit 0
-          mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+          mvn --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "$pl" install
+
+      - name: "PR CHECK :: TEST :: Changed and affected modules${{ github.event_name == 'push' && ' (skipped)' || '' }}"
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          pl=$(paste -sd, "$MAVEN_PL_AFFECTED_FILE")
+          [ -z "$pl" ] && echo "No affected modules. Skipping." && exit 0
+          mvn -T 4 --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dquarkus.http.test-port=0 -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Dimpsort.skip=true -Dmaven.javadoc.skip=true -Dsource.skip=true -Darchunit.skip=true -Darchetype.test.skip=true -Dinvoker.skip=true -Dexec.skip=true -pl "$pl" verify
 
       - name: "CI :: BUILD :: Full${{ github.event_name == 'pull_request' && ' (skipped)' || '' }}"
         if: github.event_name == 'push'
