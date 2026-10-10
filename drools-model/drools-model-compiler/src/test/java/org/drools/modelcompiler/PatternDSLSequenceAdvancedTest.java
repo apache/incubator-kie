@@ -479,6 +479,61 @@ public class PatternDSLSequenceAdvancedTest {
     }
 
     @Test
+    public void anchorlessBatchInsertFiresViaReplay() {
+        // Anchorless rule: the sequencer starts on the first fireAllRules() via InitialFact
+        // activation. replayExistingFacts() then feeds pre-inserted facts through the active
+        // filters, so a batch insert before fireAllRules() DOES complete the sequence.
+        Variable<Toy>          toyV = declarationOf(Toy.class);
+        Variable<Relationship> relV = declarationOf(Relationship.class);
+
+        Rule rule = rule("anchorless-batch-rule").build(
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball")),
+                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule)).newKieSession();
+
+        // Insert both step facts before fireAllRules() — replay will capture them
+        ksession.insert(new Toy("ball"));
+        ksession.insert(new Relationship("go", "done"));
+
+        ksession.fireAllRules();
+
+        // Sequence fires: replayExistingFacts() replayed the Toy through the step-1 filter,
+        // advancing the sequencer to step 2, which then matched the Relationship in the same cycle.
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void anchorlessSameTypeInFirstAndThirdStepViaReplay() {
+        Variable<Toy>          toyV1 = declarationOf(Toy.class);
+        Variable<Relationship> relV  = declarationOf(Relationship.class);
+        Variable<Toy>          toyV2 = declarationOf(Toy.class);
+
+        Rule rule = rule("anchorless-type-reuse-replay").build(
+                sequence(
+                        pattern(toyV1).expr("is-ball", t -> t.getName().equals("ball")),
+                        pattern(relV).expr("is-go",    r -> r.getStart().equals("go")),
+                        pattern(toyV2).expr("is-doll",  t -> t.getName().equals("doll"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule)).newKieSession();
+
+        ksession.insert(new Toy("ball"));
+        ksession.insert(new Relationship("go", "done"));
+        ksession.insert(new Toy("doll"));
+
+        ksession.fireAllRules();
+
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
     public void orGateWithFiveInputsFiresOnAnyBranch() {
 
         final Variable<MonitoringStation>    stationV     = declarationOf(MonitoringStation.class);
