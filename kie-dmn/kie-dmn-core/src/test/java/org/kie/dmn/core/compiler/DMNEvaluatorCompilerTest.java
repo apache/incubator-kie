@@ -193,8 +193,7 @@ class DMNEvaluatorCompilerTest {
     }
 
     /**
-     * Regression test: DMN 1.6 models with typeRef on inputValues (as written by the KIE DMN editor 10.1)
-     * must load without UnsupportedOperationException from AbstractTUnaryTests.setTypeRef.
+     * DMN 1.6 models with typeRef on inputValues must load without UnsupportedOperationException from AbstractTUnaryTests.setTypeRef.
      * See: https://github.com/apache/incubator-kie-issues/issues/...
      */
     @Test
