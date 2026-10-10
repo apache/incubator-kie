@@ -18,6 +18,7 @@
  */
 package org.jbpm.ruleflow.core.validation;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,6 +87,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.lang.String.format;
+import static org.jbpm.ruleflow.core.Metadata.CUSTOM_SLA_DUE_DATE;
 import static org.jbpm.ruleflow.core.Metadata.EVENT_TYPE;
 import static org.jbpm.ruleflow.core.Metadata.EVENT_TYPE_MESSAGE;
 import static org.jbpm.ruleflow.core.Metadata.EVENT_TYPE_SIGNAL;
@@ -138,6 +140,8 @@ public class RuleFlowProcessValidator implements ProcessValidator {
                     "Process has no end node."));
         }
 
+        validateProcessSlaDueDate(process, errors);
+
         validateNodes(process.getNodes(), errors, process);
 
         validateVariables(errors, process);
@@ -164,6 +168,7 @@ public class RuleFlowProcessValidator implements ProcessValidator {
         String isForCompensation = "isForCompensation";
         for (int i = 0; i < nodes.length; i++) {
             final org.kie.api.definition.process.Node node = nodes[i];
+            validateSlaDueDate(node, process, errors);
             if (node instanceof StartNode) {
                 final StartNode startNode = (StartNode) node;
                 if (startNode.getTo() == null) {
@@ -760,6 +765,64 @@ public class RuleFlowProcessValidator implements ProcessValidator {
                 errors.add(new ProcessValidationErrorImpl(process,
                         "Unknown node type '" + node.getClass().getName() + "'"));
             }
+        }
+    }
+
+    private void validateSlaDueDate(org.kie.api.definition.process.Node node,
+            RuleFlowProcess process,
+            List<ProcessValidationError> errors) {
+
+        Object slaDueDateObj = node.getMetaData().get(CUSTOM_SLA_DUE_DATE);
+
+        if (slaDueDateObj == null) {
+            return;
+        }
+
+        String slaDueDate = slaDueDateObj.toString().trim();
+        if (!isValidSlaDueDate(slaDueDate)) {
+            addErrorMessage(process,
+                    node,
+                    errors,
+                    "Invalid SLA due date '" + slaDueDate +
+                            "' configured for node '" + node.getName() + "'.");
+        }
+    }
+
+    private void validateProcessSlaDueDate(RuleFlowProcess process,
+            List<ProcessValidationError> errors) {
+
+        Object slaDueDateObj = process.getMetaData().get(CUSTOM_SLA_DUE_DATE);
+        if (slaDueDateObj == null) {
+            return;
+        }
+
+        String slaDueDate = slaDueDateObj.toString().trim();
+        if (!isValidSlaDueDate(slaDueDate)) {
+            errors.add(new ProcessValidationErrorImpl(
+                    process,
+                    "Invalid SLA due date '" + slaDueDate +
+                            "' configured for process '" + process.getName() + "'."));
+        }
+    }
+
+    private boolean isValidSlaDueDate(String slaDueDate) {
+        if (slaDueDate == null || slaDueDate.isEmpty()) {
+            return true;
+        }
+
+        if (slaDueDate.startsWith("#{")) {
+            return true;
+        }
+
+        try {
+            if (slaDueDate.startsWith("P")) {
+                Duration.parse(slaDueDate);
+            } else {
+                DateTimeUtils.parseDuration(slaDueDate);
+            }
+            return true;
+        } catch (RuntimeException e) {
+            return false;
         }
     }
 
