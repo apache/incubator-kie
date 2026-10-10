@@ -480,9 +480,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
 
         final ObjectTypeConf typeConf = getObjectTypeConfigurationRegistry().getObjectTypeConf( object );
 
-        if( typeConf.isDynamic() ) {
-            removePropertyChangeListener( handle, true );
-        }
+        removeDynamicPropertyChangeListener( handle, typeConf );
 
         PropagationContext propagationContext = delete( handle, object, typeConf, rule, terminalNode );
 
@@ -543,7 +541,21 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
     public void removeFromObjectStore(InternalFactHandle handle) {
         this.objectStore.removeHandle( handle );
         ObjectTypeConf typeConf = getObjectTypeConfigurationRegistry().getObjectTypeConf( handle.getObject() );
+        // expiration reaches here without the entry point lock, which guards dynamicFacts
+        lock();
+        try {
+            removeDynamicPropertyChangeListener( handle, typeConf );
+        } finally {
+            unlock();
+        }
         deleteFromTMS( handle, handle.getEqualityKey(), typeConf, null );
+    }
+
+    private void removeDynamicPropertyChangeListener( InternalFactHandle handle, ObjectTypeConf typeConf ) {
+        // a fact is dynamic either because its type is, or because it was inserted with the dynamic flag
+        if ( typeConf.isDynamic() || ( dynamicFacts != null && dynamicFacts.contains( handle ) ) ) {
+            removePropertyChangeListener( handle, true );
+        }
     }
 
     public void addPropertyChangeListener(final InternalFactHandle handle, final boolean dynamicFlag ) {
