@@ -213,14 +213,16 @@ public class SegmentMemorySupportImpl implements SegmentMemorySupport {
     @Override
     public void initializeChildSegmentsIfNeeded(SegmentMemory smem) {
         LeftTupleSinkPropagator sinkPropagator = smem.getTipNode().getSinkPropagator();
-        if (!smem.isEmpty()) {
-            return; // this can happen when multiple threads are trying to initialize the segment
+        if (!smem.isEmpty() && sinkPropagator.size() == 1) {
+            return; // threading guard: single-sink child already initialized
         }
         for (LeftTupleSinkNode sink = sinkPropagator.getFirstLeftTupleSink(); sink != null; sink = sink
                 .getNextLeftTupleSinkNode()) {
             SegmentMemory childSmem = PhreakBuilder.isEagerSegmentCreation() ? createChildSegment(sink)
                     : createChildSegmentLazily(sink);
-            smem.add(childSmem);
+            if (childSmem != null && !smem.contains(childSmem)) {
+                smem.add(childSmem);
+            }
         }
     }
 

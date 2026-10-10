@@ -120,17 +120,19 @@ public class SingleObjectSinkAdapter implements ObjectSinkPropagator {
     
     public static void staticDoUnlinkSubnetwork(ObjectSink sink, ReteEvaluator reteEvaluator) {
         BetaMemory bm;
+        BetaNode betaNode;
         if ( sink.getType() == NodeTypeEnums.AccumulateRightAdapterNode ) {
             AccumulateNode accnode = ((AccumulateRight)sink).getBetaNode();
             AccumulateMemory accMem = ( AccumulateMemory ) reteEvaluator.getNodeMemory( accnode );
             bm = accMem.getBetaMemory();
-        }  else {
-            BetaNode betaNode = ((RightInputAdapterNode) sink).getBetaNode();
+            betaNode = accnode;
+        } else {
+            betaNode = ((RightInputAdapterNode) sink).getBetaNode();
             bm = RightInputAdapterNode.getBetaMemoryFromRightInput(betaNode, reteEvaluator);
         }
 
-        if (sink.getType() == NodeTypeEnums.NotNode) {
-            bm.linkNode( ( BetaNode ) sink, reteEvaluator );
+        if (betaNode.getType() == NodeTypeEnums.NotNode) {
+            bm.linkNode(betaNode, reteEvaluator);
         } else {
             bm.unlinkNode();
         }
