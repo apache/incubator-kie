@@ -30,6 +30,14 @@ public class LogicGateOutputSignalProcessor extends SignalProcessor {
         this.index = signalIndex.getBitIndex();
     }
 
+    public LogicGate getGate() {
+        return gate;
+    }
+
+    public int getBitIndex() {
+        return index;
+    }
+
     @Override
     public void consume(SequenceMemory memory, ValueResolver valueResolver) {
         gate.consume(index, memory, valueResolver);
@@ -45,5 +53,19 @@ public class LogicGateOutputSignalProcessor extends SignalProcessor {
         // No-op: LogicGateOutputSignalProcessor is a fan-out node whose reset is driven
         // by each downstream LogicGate resetting itself via resetPrior(). There is no
         // state held here that needs clearing.
+    }
+
+    public void clearParentBit(SequenceMemory memory) {
+        long[] gateMemory = memory.getLogicGateMemory();
+        long before = gateMemory[gate.getGateIndex()];
+        gateMemory[gate.getGateIndex()] = before & ~(1L << (index - 1));
+        memory.setLogicGateMatched(gate.getGateIndex(), false);
+        if (gate.getOutput() instanceof LogicGateOutputSignalProcessor) {
+            LogicGateOutputSignalProcessor grandparentSlot = (LogicGateOutputSignalProcessor) gate.getOutput();
+            long gpBitMask = 1L << (grandparentSlot.getBitIndex() - 1);
+            if ((gateMemory[grandparentSlot.getGate().getGateIndex()] & gpBitMask) != 0) {
+                grandparentSlot.clearParentBit(memory);
+            }
+        }
     }
 }

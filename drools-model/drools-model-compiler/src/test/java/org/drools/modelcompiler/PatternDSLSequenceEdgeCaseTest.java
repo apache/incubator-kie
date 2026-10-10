@@ -512,7 +512,7 @@ public class PatternDSLSequenceEdgeCaseTest {
                 .hasMessageContaining("at least one step");
     }
 
-   @Test
+    @Test
     public void mixedAlphaAndBetaExprsInOneStepBothMustHold() {
         Variable<Person> personV = declarationOf(Person.class);
         Variable<Toy>    toyV    = declarationOf(Toy.class);
@@ -590,6 +590,39 @@ public class PatternDSLSequenceEdgeCaseTest {
         // Passes both: "apple" starts with "a" and ends with "e"
         ksession.insert(new Toy("apple"));
         ksession.fireAllRules();
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void twoSequencesInOneRuleBothCompleteWithInterleavedInserts() {
+        Variable<String>  anchor = declarationOf(String.class);
+        Variable<Integer> a      = declarationOf(Integer.class);
+        Variable<Long>    b      = declarationOf(Long.class);
+
+        Rule rule = rule("two-sequences")
+                .build(
+                    pattern(anchor).expr("isStart", s -> s.equals("start")),
+                    sequence(
+                        pattern(a).expr("isOne", i -> i == 1)
+                    ),
+                    sequence(
+                        pattern(b).expr("isTwo", l -> l == 2L)
+                    ),
+                    execute(() -> results.add("fired"))
+                );
+
+        KieBase kb = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kb.newKieSession();
+
+        ksession.insert("start");
+        ksession.fireAllRules();
+
+        ksession.insert(1);
+        ksession.fireAllRules();
+
+        ksession.insert(2L);
+        ksession.fireAllRules();
+
         assertThat(results).containsExactly("fired");
     }
 }

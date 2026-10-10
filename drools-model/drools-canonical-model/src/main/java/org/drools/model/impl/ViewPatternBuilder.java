@@ -185,7 +185,17 @@ public class ViewPatternBuilder implements ViewBuilder {
 
         if (ruleItem instanceof SequenceViewItem) {
             SequenceViewItem sv = (SequenceViewItem) ruleItem;
-            List<Condition> steps = Arrays.stream(sv.getSteps())
+            org.drools.model.SequenceStep[] rawSteps = rewriteXorSteps(sv.getSteps());
+            if (rawSteps.length > 0) {
+                org.drools.model.SequenceStep last = rawSteps[rawSteps.length - 1];
+                if (!hasPositiveTrigger(last)) {
+                    throw new IllegalArgumentException(
+                        "sequence(): trailing not()/nor()/xor()/xnor() requires a following positive step " +
+                        "or a completeWithin(...) deadline. " +
+                        "Trailing absence with completeWithin is planned but not yet implemented.");
+                }
+            }
+            List<Condition> steps = Arrays.stream(rawSteps)
                     .map(s -> ruleItem2Condition((RuleItem) s))
                     .collect(toList());
             return new SequenceConditionImpl(steps);
@@ -193,6 +203,149 @@ public class ViewPatternBuilder implements ViewBuilder {
 
         throw new UnsupportedOperationException( "Unknown " + ruleItem );
     }
+
+    private static boolean hasPositiveTrigger(org.drools.model.SequenceStep step) {
+        if (step instanceof ExistentialExprViewItem) {
+            ExistentialExprViewItem ex = (ExistentialExprViewItem) step;
+            if (ex.getType() == Condition.Type.NOT) {
+                return false;
+            }
+            return true;
+        }
+        if (step instanceof CombinedExprViewItem) {
+            CombinedExprViewItem comb = (CombinedExprViewItem) step;
+            Condition.Type type = comb.getType();
+            if (type == Condition.Type.NOT || type == Condition.Type.NOR
+                    || type == Condition.Type.XOR || type == Condition.Type.XNOR) {
+                return false;
+            }
+            if (type == Condition.Type.AND) {
+                // In an AND composite, at least one child must be a positive trigger
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (expr instanceof org.drools.model.SequenceStep) {
+                        if (hasPositiveTrigger((org.drools.model.SequenceStep) expr)) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (type == Condition.Type.OR) {
+                // In an OR composite, all branches must have a positive trigger
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (expr instanceof org.drools.model.SequenceStep) {
+                        if (!hasPositiveTrigger((org.drools.model.SequenceStep) expr)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Rewrites bare xor()/xnor() steps in a sequence by folding each consecutive run of
+     * such steps together with the single following positive step into one and(...) composite.
+     * <p>
+     * {@code sequence(xor(a, b), c)} → {@code sequence(and(xor(a, b), c))}<br>
+     * {@code sequence(xor(a, b), xor(c, d), e)} → {@code sequence(and(xor(a, b), xor(c, d), e))}
+     * <p>
+     * A consecutive run whose immediately-following step is also a revertible gate (XOR, XNOR, or
+     * NOT) with no positive step between them is rejected with {@link IllegalArgumentException}.
+     * The trailing-XOR check in the caller catches {@code sequence(xor(a, b))} with no following
+     * step at all.
+     */
+    private static org.drools.model.SequenceStep[] rewriteXorSteps(org.drools.model.SequenceStep[] steps) {
+        boolean hasXor = false;
+        for (int i = 0; i < steps.length; i++) {
+            org.drools.model.SequenceStep step = steps[i];
+            if (step instanceof CombinedExprViewItem) {
+                Condition.Type t = ((CombinedExprViewItem) step).getType();
+                if ((t == Condition.Type.XOR || t == Condition.Type.XNOR) && i + 1 < steps.length) {
+                    hasXor = true;
+                    break;
+                }
+            }
+        }
+        if (!hasXor) {
+            return steps;
+        }
+        List<org.drools.model.SequenceStep> result = new ArrayList<>();
+        for (int i = 0; i < steps.length; i++) {
+            org.drools.model.SequenceStep step = steps[i];
+            if (step instanceof CombinedExprViewItem) {
+                Condition.Type t = ((CombinedExprViewItem) step).getType();
+                if (t == Condition.Type.XOR || t == Condition.Type.XNOR) {
+                    // Collect the full run of consecutive XOR/XNOR gate steps.
+                    // Interleaved not()/nor() absence guards are held in a separate list —
+                    // they will be emitted BEFORE the folded and(...) composite so that
+                    // KiePackagesBuilder's top-level NOT accumulation loop handles them as
+                    // independent veto side-channels, which is the same circuit it builds for
+                    // standalone not() steps.
+                    List<ViewItem> xorRun = new ArrayList<>();
+                    List<org.drools.model.SequenceStep> absenceGuards = new ArrayList<>();
+                    xorRun.add((ViewItem) step);
+                    while (i + 1 < steps.length) {
+                        org.drools.model.SequenceStep next = steps[i + 1];
+                        if (next instanceof CombinedExprViewItem) {
+                            Condition.Type nt = ((CombinedExprViewItem) next).getType();
+                            if (nt == Condition.Type.XOR || nt == Condition.Type.XNOR) {
+                                xorRun.add((ViewItem) next);
+                                i++;
+                                continue;
+                            }
+                            if (nt == Condition.Type.NOT || nt == Condition.Type.NOR) {
+                                absenceGuards.add(next);
+                                i++;
+                                continue;
+                            }
+                        } else if (next instanceof ExistentialExprViewItem
+                                && ((ExistentialExprViewItem) next).getType() == Condition.Type.NOT) {
+                            absenceGuards.add(next);
+                            i++;
+                            continue;
+                        }
+                        break;
+                    }
+                    // The step that follows the run must be a positive trigger.
+                    if (i + 1 >= steps.length) {
+                        // No following step at all — the trailing-gate check in the caller handles this.
+                        result.addAll(xorRun.stream().map(v -> (org.drools.model.SequenceStep) v).collect(java.util.stream.Collectors.toList()));
+                        result.addAll(absenceGuards);
+                        continue;
+                    }
+                    org.drools.model.SequenceStep trigger = steps[i + 1];
+                    if (!hasPositiveTrigger(trigger)) {
+                        throw new IllegalArgumentException(
+                                "sequence(): consecutive bare xor()/xnor() steps require a positive " +
+                                "pattern step between them. Found " + xorRun.size() + " consecutive " +
+                                "xor/xnor step(s) followed by another revertible guard. " +
+                                "Each xor()/xnor() run must be immediately followed by a positive step.");
+                    }
+                    // Emit absence guards first so KiePackagesBuilder's NOT accumulation loop
+                    // picks them up as veto side-channels before the positive trigger.
+                    result.addAll(absenceGuards);
+                    // Fold the xor/xnor run + trigger into and(xor(...), ..., trigger).
+                    List<ViewItem> run = new ArrayList<>(xorRun);
+                    run.add((ViewItem) trigger);
+                    CombinedExprViewItem wrapped = new CombinedExprViewItem(
+                            Condition.Type.AND,
+                            run.toArray(new ViewItem[0]));
+                    result.add(wrapped);
+                    i++; // consume the trigger
+                    continue;
+                }
+            }
+            result.add(step);
+        }
+        return result.toArray(new org.drools.model.SequenceStep[0]);
+    }
+
+
 
     private static ConditionalNamedConsequenceImpl createConditionalNamedConsequence( Map<String, Consequence> consequences, ConditionalConsequence cond) {
         return new ConditionalNamedConsequenceImpl( createConstraint( cond.getExpr() ),

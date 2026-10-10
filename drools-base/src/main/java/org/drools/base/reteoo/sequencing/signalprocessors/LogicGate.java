@@ -37,6 +37,8 @@ public class LogicGate extends SignalProcessor {
 
     private int[] signalAdapterIndexes;
 
+    private boolean statusCanRevert;
+
     private static final LogicGate[] EMPTY_INPUT_GATES = new LogicGate[0];
 
     public LogicGate(LongBiPredicate predicate, int gateIndex, int[] filterIndexes, int[] signalAdapterIndexes, int nbrOfInputGates) {
@@ -57,6 +59,12 @@ public class LogicGate extends SignalProcessor {
         this.gateIndex = gateIndex;
     }
 
+    public LogicGate(LongBiPredicate predicate, int gateIndex, int[] filterIndexes,
+                     int[] signalAdapterIndexes, int nbrOfInputGates, boolean statusCanRevert) {
+        this(predicate, gateIndex, filterIndexes, signalAdapterIndexes, nbrOfInputGates);
+        this.statusCanRevert = statusCanRevert;
+    }
+
     public int[] getSignalAdapterIndexes() {
         return signalAdapterIndexes;
     }
@@ -67,6 +75,14 @@ public class LogicGate extends SignalProcessor {
 
     public void setOutput(SignalProcessor output) {
         this.output = output;
+    }
+
+    public SignalProcessor getOutput() {
+        return output;
+    }
+
+    public int getGateIndex() {
+        return gateIndex;
     }
 
     @Override
@@ -84,6 +100,15 @@ public class LogicGate extends SignalProcessor {
         if (matched && !memory.isLogicGateMatched(gateIndex)) {
             memory.setLogicGateMatched(gateIndex, true);
             propagate(memory, valueResolver);
+        } else if (!matched && statusCanRevert) {
+            if (memory.isLogicGateMatched(gateIndex)) {
+                // Gate was previously MATCHED and is now reverting — clear the parent gate's
+                // contribution bit so the parent AND/OR gate no longer sees this gate as matched.
+                memory.setLogicGateMatched(gateIndex, false);
+                if (output instanceof LogicGateOutputSignalProcessor) {
+                    ((LogicGateOutputSignalProcessor) output).clearParentBit(memory);
+                }
+            }
         }
     }
 
@@ -97,7 +122,9 @@ public class LogicGate extends SignalProcessor {
             gate.reset(memory, valueResolver);
         }
 
-        memory.resetLogicGateMemory(gateIndex, valueResolver);
+        if (!statusCanRevert) {
+            memory.resetLogicGateMemory(gateIndex, valueResolver);
+        }
     }
 
     public void reset(SequenceMemory memory, ValueResolver valueResolver) {
@@ -105,11 +132,14 @@ public class LogicGate extends SignalProcessor {
         output.reset(memory, valueResolver);
     }
 
-    public void activate(SequenceMemory memory) {
+    public void activate(SequenceMemory memory, ValueResolver valueResolver) {
         for (int i = 0; i < filterIndexes.length; i++) {
             memory.activateSignalAdapter(filterIndexes[i], this, signalAdapterIndexes[i], i + 1); // bit indexes start at 1
         }
-
+        if (predicate.test(0L, allMatched)) {
+            memory.setLogicGateMatched(gateIndex, true);
+            propagate(memory, valueResolver);
+        }
     }
 
     public void deactivate(SequenceMemory memory, ValueResolver valueResolver) {
