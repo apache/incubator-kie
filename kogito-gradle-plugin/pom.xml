@@ -126,33 +126,6 @@
     <dependency>
       <groupId>dev.gradleplugins</groupId>
       <artifactId>gradle-api</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.codehaus.groovy</groupId>
-          <artifactId>groovy-testng</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.groovy</groupId>
-          <artifactId>groovy</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.groovy</groupId>
-          <artifactId>groovy-all</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy-json</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy-ant</artifactId>
     </dependency>
 
     <dependency>
@@ -195,16 +168,6 @@
       <groupId>dev.gradleplugins</groupId>
       <artifactId>gradle-test-kit</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.codehaus.groovy</groupId>
-          <artifactId>groovy</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.groovy</groupId>
-          <artifactId>groovy-all</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
