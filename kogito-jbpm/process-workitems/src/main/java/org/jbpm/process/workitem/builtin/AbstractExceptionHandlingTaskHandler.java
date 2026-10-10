@@ -18,12 +18,16 @@
  */
 package org.jbpm.process.workitem.builtin;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.kie.api.runtime.process.WorkItemHandler;
+import org.kie.kogito.Application;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.internal.process.workitem.Policy;
 import org.kie.kogito.internal.process.workitem.WorkItemTransition;
 import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 
@@ -46,6 +50,16 @@ public abstract class AbstractExceptionHandlingTaskHandler extends DefaultKogito
     }
 
     @Override
+    public Application getApplication() {
+        return originalTaskHandler.getApplication();
+    }
+
+    @Override
+    public void setApplication(Application app) {
+        originalTaskHandler.setApplication(app);
+    }
+
+    @Override
     public Optional<WorkItemTransition> transitionToPhase(KogitoWorkItemManager manager, KogitoWorkItem workItem, WorkItemTransition transition) {
         try {
             return this.originalTaskHandler.transitionToPhase(manager, workItem, transition);
@@ -57,6 +71,40 @@ public abstract class AbstractExceptionHandlingTaskHandler extends DefaultKogito
 
     public KogitoWorkItemHandler getOriginalTaskHandler() {
         return originalTaskHandler;
+    }
+
+    /**
+     * Delegates to the wrapped handler so that the decorator registers under
+     * the same task name that the manager and BPMN engine use for lookup.
+     */
+    @Override
+    public String getName() {
+        return originalTaskHandler.getName();
+    }
+
+    @Override
+    public Set<String> allowedTransitions(String phaseStatus) {
+        return originalTaskHandler.allowedTransitions(phaseStatus);
+    }
+
+    @Override
+    public WorkItemTransition newTransition(String phaseId, String phaseStatus, Map<String, Object> map, Policy... policy) {
+        return originalTaskHandler.newTransition(phaseId, phaseStatus, map, policy);
+    }
+
+    @Override
+    public WorkItemTransition startingTransition(Map<String, Object> data, Policy... policies) {
+        return originalTaskHandler.startingTransition(data, policies);
+    }
+
+    @Override
+    public WorkItemTransition completeTransition(String phaseStatus, Map<String, Object> data, Policy... policies) {
+        return originalTaskHandler.completeTransition(phaseStatus, data, policies);
+    }
+
+    @Override
+    public WorkItemTransition abortTransition(String phaseStatus, Policy... policies) {
+        return originalTaskHandler.abortTransition(phaseStatus, policies);
     }
 
     public abstract void handleException(KogitoWorkItemManager manager, KogitoWorkItemHandler originalTaskHandler, KogitoWorkItem workItem, WorkItemTransition transition, Throwable cause);

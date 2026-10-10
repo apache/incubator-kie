@@ -20,9 +20,11 @@ package org.jbpm.bpmn2.handler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.jbpm.bpmn2.objects.TestWorkItemHandler;
 import org.jbpm.process.core.context.variable.VariableScope;
+import org.jbpm.process.workitem.builtin.ProcessWorkItemHandlerExceptionHandler;
 import org.jbpm.test.utils.ProcessTestHelper;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.junit.jupiter.api.AfterAll;
@@ -35,6 +37,10 @@ import org.kie.kogito.internal.process.event.DefaultKogitoProcessEventListener;
 import org.kie.kogito.internal.process.event.KogitoProcessEventListener;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jbpm.process.core.context.variable.VariableScope.VARIABLE_STRICT_ENABLED_PROPERTY;
@@ -231,5 +237,117 @@ public class WorkItemHandlerExceptionHandlingTest {
         assertThat(exception).isNotNull();
         ProcessTestHelper.completeWorkItem(exception, results);
 
+    }
+
+    @Test
+    public void testDecoratorWithStrategyComplete() throws Exception {
+        DefaultKogitoWorkItemHandler plainHandler = new DefaultKogitoWorkItemHandler() {
+            @Override
+            public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLER_PROCESS_ID, "ScriptTask");
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLING_STRATEGY, "COMPLETE");
+                if (workItem.getParameter("isCheckedCheckbox") != null) {
+                    return Optional.of(this.workItemLifeCycle.newTransition("complete", workItem.getPhaseStatus(), workItem.getParameters()));
+                }
+                throw new RuntimeException("Simulated failure in wrapped WIH");
+            }
+        };
+
+        ProcessWorkItemHandlerExceptionHandler decoratedHandler = new ProcessWorkItemHandlerExceptionHandler(plainHandler);
+
+        Application application = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(application, "Human Task", decoratedHandler);
+        org.kie.kogito.process.Process<UserTaskWithBooleanOutputModel> processDefinition = UserTaskWithBooleanOutputProcess.newProcess(application);
+        ScriptTaskProcess.newProcess(application);
+
+        UserTaskWithBooleanOutputModel model = processDefinition.createModel();
+        model.setIsChecked(false);
+        org.kie.kogito.process.ProcessInstance<UserTaskWithBooleanOutputModel> instance = processDefinition.createInstance(model);
+        instance.start();
+
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
+        assertThat(instance.variables().getIsChecked()).isTrue();
+    }
+
+    @Test
+    public void testDecoratorWithStrategyRetry() throws Exception {
+        DefaultKogitoWorkItemHandler plainHandler = new DefaultKogitoWorkItemHandler() {
+            @Override
+            public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLER_PROCESS_ID, "ScriptTask");
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLING_STRATEGY, "RETRY");
+                if (workItem.getParameter("isCheckedCheckbox") != null) {
+                    return Optional.of(this.workItemLifeCycle.newTransition("complete", workItem.getPhaseStatus(), workItem.getParameters()));
+                }
+                throw new RuntimeException("Simulated failure in wrapped WIH");
+            }
+        };
+
+        ProcessWorkItemHandlerExceptionHandler decoratedHandler = new ProcessWorkItemHandlerExceptionHandler(plainHandler);
+
+        Application application = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(application, "Human Task", decoratedHandler);
+        org.kie.kogito.process.Process<UserTaskWithBooleanOutputModel> processDefinition = UserTaskWithBooleanOutputProcess.newProcess(application);
+        ScriptTaskProcess.newProcess(application);
+
+        org.kie.kogito.process.ProcessInstance<UserTaskWithBooleanOutputModel> instance = processDefinition.createInstance(processDefinition.createModel());
+        instance.start();
+
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
+        assertThat(instance.variables().getIsChecked()).isTrue();
+    }
+
+    @Test
+    public void testDecoratorWithStrategyAbort() throws Exception {
+        DefaultKogitoWorkItemHandler plainHandler = new DefaultKogitoWorkItemHandler() {
+            @Override
+            public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLER_PROCESS_ID, "ScriptTask");
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLING_STRATEGY, "ABORT");
+                throw new RuntimeException("Simulated failure in wrapped WIH");
+            }
+        };
+
+        ProcessWorkItemHandlerExceptionHandler decoratedHandler = new ProcessWorkItemHandlerExceptionHandler(plainHandler);
+
+        Application application = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(application, "Human Task", decoratedHandler);
+        org.kie.kogito.process.Process<UserTaskWithBooleanOutputModel> processDefinition = UserTaskWithBooleanOutputProcess.newProcess(application);
+        ScriptTaskProcess.newProcess(application);
+
+        UserTaskWithBooleanOutputModel model = processDefinition.createModel();
+        model.setIsChecked(false);
+        org.kie.kogito.process.ProcessInstance<UserTaskWithBooleanOutputModel> instance = processDefinition.createInstance(model);
+        instance.start();
+
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
+        assertThat(instance.variables().getIsChecked()).isFalse();
+    }
+
+    @Test
+    public void testDecoratorWithStrategyRethrow() throws Exception {
+        DefaultKogitoWorkItemHandler plainHandler = new DefaultKogitoWorkItemHandler() {
+            @Override
+            public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLER_PROCESS_ID, "ScriptTask");
+                workItem.getParameters().put(ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLING_STRATEGY, "RETHROW");
+                throw new RuntimeException("Simulated failure in wrapped WIH");
+            }
+        };
+
+        ProcessWorkItemHandlerExceptionHandler decoratedHandler = new ProcessWorkItemHandlerExceptionHandler(plainHandler);
+
+        Application application = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(application, "Human Task", decoratedHandler);
+        org.kie.kogito.process.Process<UserTaskWithBooleanOutputModel> processDefinition = UserTaskWithBooleanOutputProcess.newProcess(application);
+        ScriptTaskProcess.newProcess(application);
+
+        UserTaskWithBooleanOutputModel model = processDefinition.createModel();
+        model.setIsChecked(false);
+        org.kie.kogito.process.ProcessInstance<UserTaskWithBooleanOutputModel> instance = processDefinition.createInstance(model);
+        instance.start();
+
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_ERROR);
+        assertThat(instance.variables().getIsChecked()).isFalse();
     }
 }
