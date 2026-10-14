@@ -20,23 +20,24 @@ package org.jbpm.process.workitem.builtin;
 
 import java.util.Optional;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
-import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.DefaultKogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 
 public class SystemOutWorkItemHandler extends DefaultKogitoWorkItemHandler {
 
     @Override
     public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
         System.out.println("Executing work item " + workItem);
-        return Optional.of(this.workItemLifeCycle.newTransition("complete", workItem.getPhaseStatus(), workItem.getResults()));
+        return Optional.of(handler.completeTransition(workItem.getPhaseStatus(), workItem.getResults()));
     }
 
+    @Override
     public Optional<WorkItemTransition> abortWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
         System.out.println("Aborting work item " + workItem);
-        return Optional.of(this.workItemLifeCycle.newTransition("abort", workItem.getPhaseStatus(), workItem.getResults()));
+        return Optional.of(handler.abortTransition(workItem.getPhaseStatus()));
     }
 
     @Override

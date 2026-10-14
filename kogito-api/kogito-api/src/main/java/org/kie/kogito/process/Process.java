@@ -26,9 +26,9 @@ import org.kie.kogito.Model;
 import org.kie.kogito.correlation.CompositeCorrelation;
 import org.kie.kogito.correlation.CorrelationService;
 import org.kie.kogito.internal.process.runtime.KogitoNode;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.Policy;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 
 public interface Process<T> {
 

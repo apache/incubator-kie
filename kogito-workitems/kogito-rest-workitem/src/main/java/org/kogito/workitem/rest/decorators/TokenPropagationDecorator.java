@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.kie.kogito.auth.AuthTokenProvider;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
 import org.kie.kogito.process.ProcessConfig;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 import org.kie.kogito.process.workitems.impl.ConfigResolverHolder;
 import org.kogito.workitem.rest.auth.AuthDecorator;
 import org.slf4j.Logger;

@@ -43,7 +43,7 @@ import org.kie.kogito.StaticConfig;
 import org.kie.kogito.auth.SecurityPolicy;
 import org.kie.kogito.internal.process.event.KogitoEventListener;
 import org.kie.kogito.internal.process.event.KogitoProcessEventListener;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
 import org.kie.kogito.process.ProcessConfig;
 import org.kie.kogito.process.ProcessInstance;
 import org.kie.kogito.process.WorkItem;

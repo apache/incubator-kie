@@ -18,6 +18,10 @@
  */
 package org.kie.kogito.process.impl;
 
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.CachedWorkItemHandlerConfig} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
 public class DefaultWorkItemHandlerConfig extends CachedWorkItemHandlerConfig {
-
 }

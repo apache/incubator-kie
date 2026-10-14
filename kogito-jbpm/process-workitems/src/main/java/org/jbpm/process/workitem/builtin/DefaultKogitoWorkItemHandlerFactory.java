@@ -20,8 +20,8 @@ package org.jbpm.process.workitem.builtin;
 
 import java.util.List;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandlerFactory;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandlerFactory;
 
 public class DefaultKogitoWorkItemHandlerFactory implements KogitoWorkItemHandlerFactory {
 

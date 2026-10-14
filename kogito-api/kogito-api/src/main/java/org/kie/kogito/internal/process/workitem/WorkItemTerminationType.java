@@ -18,7 +18,20 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-public enum WorkItemTerminationType {
-    COMPLETE,
-    ABORT
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.WorkItemTerminationType} instead.
+ *             Existing code using this enum still compiles as long as you only reference
+ *             the static constants {@code COMPLETE} and {@code ABORT} via the new type.
+ *             Update your import to remove this deprecation warning.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public final class WorkItemTerminationType {
+
+    private WorkItemTerminationType() {
+    }
+
+    public static final org.kie.kogito.process.workitem.WorkItemTerminationType COMPLETE =
+            org.kie.kogito.process.workitem.WorkItemTerminationType.COMPLETE;
+    public static final org.kie.kogito.process.workitem.WorkItemTerminationType ABORT =
+            org.kie.kogito.process.workitem.WorkItemTerminationType.ABORT;
 }

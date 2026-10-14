@@ -19,15 +19,15 @@
 package org.kie.kogito.internal.process.workitem;
 
 /**
- * Thrown when given work item transition cannot be performed
- *
+ * @deprecated Use {@link org.kie.kogito.process.workitem.InvalidTransitionException} instead.
+ *             This type will be removed in a future release.
  */
-public class InvalidTransitionException extends RuntimeException {
+@Deprecated(since = "9.1", forRemoval = true)
+public class InvalidTransitionException extends org.kie.kogito.process.workitem.InvalidTransitionException {
 
     private static final long serialVersionUID = -40827773509603874L;
 
     public InvalidTransitionException(String message) {
         super(message);
     }
-
 }

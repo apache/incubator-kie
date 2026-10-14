@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.kie.api.event.process.ProcessVariableChangedEvent;
 import org.kie.kogito.Application;
 import org.kie.kogito.internal.process.event.DefaultKogitoProcessEventListener;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 import org.kie.kogito.process.ProcessInstance;
 import org.kie.kogito.process.VariableViolationException;
 import org.kie.kogito.process.bpmn2.BpmnProcess;

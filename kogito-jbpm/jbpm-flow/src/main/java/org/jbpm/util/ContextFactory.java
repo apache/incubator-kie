@@ -21,7 +21,7 @@ package org.jbpm.util;
 import org.jbpm.process.instance.KogitoProcessContextImpl;
 import org.jbpm.process.instance.ProcessInstance;
 import org.kie.kogito.internal.process.runtime.KogitoNodeInstance;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 
 public class ContextFactory {
 

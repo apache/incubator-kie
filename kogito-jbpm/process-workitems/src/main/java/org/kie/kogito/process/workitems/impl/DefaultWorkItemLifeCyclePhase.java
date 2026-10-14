@@ -18,61 +18,17 @@
  */
 package org.kie.kogito.process.workitems.impl;
 
-import java.util.Optional;
+import org.kie.kogito.process.workitem.WorkItemPhaseState;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
-import org.kie.kogito.internal.process.workitem.WorkItemLifeCyclePhase;
-import org.kie.kogito.internal.process.workitem.WorkItemPhaseState;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.DefaultWorkItemLifeCyclePhase} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public class DefaultWorkItemLifeCyclePhase extends org.kie.kogito.process.workitem.DefaultWorkItemLifeCyclePhase {
 
-public class DefaultWorkItemLifeCyclePhase implements WorkItemLifeCyclePhase {
-
-    public interface WorkItemLifeCyclePhaseExecutor {
-        Optional<WorkItemTransition> execute(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workitem, WorkItemTransition transition);
+    public DefaultWorkItemLifeCyclePhase(String id, WorkItemPhaseState sourceStatus, WorkItemPhaseState targetStatus,
+            WorkItemLifeCyclePhaseExecutor execution) {
+        super(id, sourceStatus, targetStatus, execution);
     }
-
-    private String id;
-    private WorkItemPhaseState sourceStatus;
-    private WorkItemPhaseState targetStatus;
-    private WorkItemLifeCyclePhaseExecutor execution;
-
-    public DefaultWorkItemLifeCyclePhase(String id, WorkItemPhaseState sourceStatus, WorkItemPhaseState targetStatus, WorkItemLifeCyclePhaseExecutor execution) {
-        this.id = id;
-        this.sourceStatus = sourceStatus;
-        this.targetStatus = targetStatus;
-        this.execution = execution;
-    }
-
-    @Override
-    public String id() {
-        return id;
-    }
-
-    @Override
-    public WorkItemPhaseState sourceStatus() {
-        return sourceStatus;
-    }
-
-    @Override
-    public WorkItemPhaseState targetStatus() {
-        return targetStatus;
-    }
-
-    @Override
-    public Optional<WorkItemTransition> execute(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workitem, WorkItemTransition transition) {
-        return this.execution.execute(manager, handler, workitem, transition);
-    }
-
-    @Override
-    public boolean isStartingPhase() {
-        return sourceStatus != null;
-    }
-
-    @Override
-    public String toString() {
-        return "DefaultWorkItemLifeCyclePhase[transition=" + id + ", oldStatus=" + sourceStatus + ", newStatus=" + targetStatus + ", isStarting=" + isStartingPhase() + "]";
-    }
-
 }

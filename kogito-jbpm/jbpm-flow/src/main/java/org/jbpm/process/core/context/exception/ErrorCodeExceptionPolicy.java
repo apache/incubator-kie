@@ -18,7 +18,7 @@
  */
 package org.jbpm.process.core.context.exception;
 
-import org.kie.kogito.internal.process.workitem.WorkItemExecutionException;
+import org.kie.kogito.process.workitem.WorkItemExecutionException;
 
 public class ErrorCodeExceptionPolicy extends AbstractRootCauseExceptionPolicy {
 

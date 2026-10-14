@@ -18,7 +18,7 @@
  */
 package org.kie.kogito.process.workitems.impl;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 
 public class ConfigWorkItemResolver<T> implements WorkItemParamResolver<T> {
 

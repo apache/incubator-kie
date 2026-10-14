@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
 import org.kie.kogito.process.ProcessConfig;
 import org.kie.kogito.process.WorkItemHandlerConfig;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;

@@ -46,10 +46,6 @@ import org.kie.kogito.event.correlation.DefaultCorrelationService;
 import org.kie.kogito.internal.process.runtime.KogitoNode;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
 import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
-import org.kie.kogito.internal.process.workitem.Policy;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
 import org.kie.kogito.internal.utils.ConversionUtils;
 import org.kie.kogito.jobs.DurationExpirationTime;
 import org.kie.kogito.jobs.ExactExpirationTime;
@@ -65,10 +61,14 @@ import org.kie.kogito.process.ProcessVersionResolver;
 import org.kie.kogito.process.Signal;
 import org.kie.kogito.process.SignalFactory;
 import org.kie.kogito.process.WorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 import org.kie.kogito.signal.ProcessInstanceResolver;
 import org.kie.kogito.signal.SignalManagerHub;
 
-import static org.kie.kogito.internal.process.workitem.KogitoWorkItemHandlerFactory.findAllKogitoWorkItemHandlersRegistered;
+import static org.kie.kogito.process.workitem.KogitoWorkItemHandlerFactory.findAllKogitoWorkItemHandlersRegistered;
 
 @SuppressWarnings("unchecked")
 public abstract class AbstractProcess<T extends Model> implements Process<T>, ProcessSupplier {

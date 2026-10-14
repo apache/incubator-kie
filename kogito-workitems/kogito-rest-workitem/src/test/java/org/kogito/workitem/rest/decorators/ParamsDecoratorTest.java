@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.vertx.mutiny.ext.web.client.HttpRequest;

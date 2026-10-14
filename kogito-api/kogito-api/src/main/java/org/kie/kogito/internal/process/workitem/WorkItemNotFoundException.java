@@ -18,23 +18,20 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-public class WorkItemNotFoundException extends RuntimeException {
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.WorkItemNotFoundException} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public class WorkItemNotFoundException extends org.kie.kogito.process.workitem.WorkItemNotFoundException {
 
     private static final long serialVersionUID = 4684154420113683086L;
-    private final String workItemId;
 
     public WorkItemNotFoundException(String workItemId) {
-        this("Cannot find work item " + workItemId, workItemId);
+        super(workItemId);
     }
 
-    public WorkItemNotFoundException(String message,
-            String workItemId) {
-        super(message);
-        this.workItemId = workItemId;
+    public WorkItemNotFoundException(String message, String workItemId) {
+        super(message, workItemId);
     }
-
-    public String getWorkItemId() {
-        return workItemId;
-    }
-
 }

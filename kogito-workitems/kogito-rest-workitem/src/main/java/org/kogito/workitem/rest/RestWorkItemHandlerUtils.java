@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.kie.api.annotations.KieProperty;
-import org.kie.kogito.internal.process.workitem.WorkItemExecutionException;
+import org.kie.kogito.process.workitem.WorkItemExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

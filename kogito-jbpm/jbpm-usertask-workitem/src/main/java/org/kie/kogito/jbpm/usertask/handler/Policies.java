@@ -23,7 +23,7 @@ import java.util.Collections;
 
 import org.kie.kogito.auth.IdentityProviders;
 import org.kie.kogito.auth.SecurityPolicy;
-import org.kie.kogito.internal.process.workitem.Policy;
+import org.kie.kogito.process.workitem.Policy;
 
 public class Policies {
 

@@ -19,15 +19,15 @@
 package org.kie.kogito.internal.process.workitem;
 
 /**
- * Thrown when there is no such life cycle phase
- *
+ * @deprecated Use {@link org.kie.kogito.process.workitem.InvalidLifeCyclePhaseException} instead.
+ *             This type will be removed in a future release.
  */
-public class InvalidLifeCyclePhaseException extends RuntimeException {
+@Deprecated(since = "9.1", forRemoval = true)
+public class InvalidLifeCyclePhaseException extends org.kie.kogito.process.workitem.InvalidLifeCyclePhaseException {
 
     private static final long serialVersionUID = -40827773509603874L;
 
     public InvalidLifeCyclePhaseException(String message) {
         super(message);
     }
-
 }

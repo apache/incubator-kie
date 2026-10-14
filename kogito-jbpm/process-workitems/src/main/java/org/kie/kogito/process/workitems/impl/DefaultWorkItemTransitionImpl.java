@@ -18,59 +18,19 @@
  */
 package org.kie.kogito.process.workitems.impl;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import org.kie.kogito.internal.process.workitem.Policy;
-import org.kie.kogito.internal.process.workitem.WorkItemTerminationType;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTerminationType;
 
-public class DefaultWorkItemTransitionImpl implements WorkItemTransition {
-
-    private String id;
-    private Map<String, Object> data;
-    private List<Policy> policies;
-    private WorkItemTerminationType termination;
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.DefaultWorkItemTransitionImpl} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public class DefaultWorkItemTransitionImpl extends org.kie.kogito.process.workitem.DefaultWorkItemTransitionImpl {
 
     public DefaultWorkItemTransitionImpl(String id, WorkItemTerminationType termination, Map<String, Object> data, Policy... policies) {
-        this.id = id;
-        this.data = new HashMap<>();
-        this.policies = List.of(policies);
-        this.termination = termination;
-        if (data != null) {
-            this.data.putAll(data);
-        }
+        super(id, termination, data, policies);
     }
-
-    @Override
-    public String id() {
-        return id;
-    }
-
-    @Override
-    public Map<String, Object> data() {
-        return data;
-    }
-
-    @Override
-    public List<Policy> policies() {
-        return policies;
-    }
-
-    public void setTermination(WorkItemTerminationType termination) {
-        this.termination = termination;
-    }
-
-    @Override
-    public Optional<WorkItemTerminationType> termination() {
-        return Optional.ofNullable(this.termination);
-    }
-
-    @Override
-    public String toString() {
-        return "DefaultWorkItemTransitionImpl [id=" + id + ", data=" + data + ", policies=" + policies + ", termination=" + termination + "]";
-    }
-
 }

@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
 import org.kie.kogito.process.WorkItemHandlerConfig;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
 
 public class MultiWorkItemHandlerConfig implements WorkItemHandlerConfig {
 

@@ -18,33 +18,23 @@
  */
 package org.kie.kogito.internal.process.workitem;
 
-import java.util.Optional;
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.WorkItemPhaseState} instead.
+ *             This type will be removed in a future release.
+ */
+@Deprecated(since = "9.1", forRemoval = true)
+public class WorkItemPhaseState extends org.kie.kogito.process.workitem.WorkItemPhaseState {
 
-public final class WorkItemPhaseState {
-
-    private String name;
-
-    private Optional<WorkItemTerminationType> termination;
-
-    private WorkItemPhaseState(String name, WorkItemTerminationType termination) {
-        this.name = name;
-        this.termination = Optional.ofNullable(termination);
+    protected WorkItemPhaseState(String name, org.kie.kogito.process.workitem.WorkItemTerminationType termination) {
+        super(name, termination);
     }
 
     public static WorkItemPhaseState of(String name) {
         return new WorkItemPhaseState(name, null);
     }
 
-    public static WorkItemPhaseState of(String name, WorkItemTerminationType termination) {
+    public static WorkItemPhaseState of(String name, org.kie.kogito.process.workitem.WorkItemTerminationType termination) {
         return new WorkItemPhaseState(name, termination);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Optional<WorkItemTerminationType> getTermination() {
-        return termination;
     }
 
     public static WorkItemPhaseState initialized() {
