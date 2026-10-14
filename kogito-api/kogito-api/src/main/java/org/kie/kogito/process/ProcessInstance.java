@@ -30,12 +30,12 @@ import java.util.function.Predicate;
 
 import org.kie.kogito.correlation.Correlation;
 import org.kie.kogito.internal.process.runtime.KogitoNodeInstance;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.Policy;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
 import org.kie.kogito.jobs.TimerDescription;
 import org.kie.kogito.process.flexible.AdHocFragment;
 import org.kie.kogito.process.flexible.Milestone;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 
 public interface ProcessInstance<T> {
 

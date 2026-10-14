@@ -20,13 +20,13 @@ package org.jbpm.process.workitem.builtin;
 
 import java.util.Optional;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
-import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitems.DefaultKogitoWorkItemHandler;
 
-public class SystemOutWorkItemHandler extends DefaultKogitoWorkItemHandler {
+public class SystemOutWorkItemHandler extends DefaultKogitoWorkItemHandler implements org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler {
 
     @Override
     public Optional<WorkItemTransition> activateWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {

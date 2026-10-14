@@ -18,10 +18,10 @@
  */
 package org.jbpm.process.workitem.builtin;
 
-import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
+import org.kie.kogito.process.workitems.DefaultKogitoWorkItemHandler;
 
 /**
- * 
+ *
  */
 public class DoNothingWorkItemHandler extends DefaultKogitoWorkItemHandler {
 

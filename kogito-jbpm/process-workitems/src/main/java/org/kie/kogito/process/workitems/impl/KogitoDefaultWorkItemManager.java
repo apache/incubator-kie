@@ -32,12 +32,12 @@ import java.util.stream.Stream;
 import org.drools.core.process.WorkItem;
 import org.kie.internal.runtime.Closeable;
 import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandlerNotFoundException;
-import org.kie.kogito.internal.process.workitem.Policy;
 import org.kie.kogito.internal.process.workitem.WorkItemNotFoundException;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 import org.kie.kogito.process.workitems.InternalKogitoWorkItem;
 import org.kie.kogito.process.workitems.InternalKogitoWorkItemManager;
 

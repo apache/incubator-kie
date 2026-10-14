@@ -20,49 +20,32 @@ package org.kie.kogito.internal.process.workitem;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-import org.kie.kogito.Application;
+/**
+ * @deprecated Use {@link org.kie.kogito.process.workitem.KogitoWorkItemHandler} instead.
+ */
+@Deprecated(since = "9.1.1-SNAPSHOT", forRemoval = true)
+public interface KogitoWorkItemHandler extends org.kie.kogito.process.workitem.KogitoWorkItemHandler {
 
-public interface KogitoWorkItemHandler {
-
-    /**
-     * This will allow access other part of the system.
-     * 
-     * @return
-     */
-    Application getApplication();
-
-    void setApplication(Application app);
-
-    /**
-     * Returns name that it should be registered with, by default simple class name;
-     *
-     * @return name that should this handler be registered with
-     */
-    default String getName() {
-        return getClass().getSimpleName();
+    default Optional<WorkItemTransition> transitionToPhase(KogitoWorkItemManager manager, KogitoWorkItem workItem, WorkItemTransition transition) {
+        return transitionToPhase((org.kie.kogito.process.workitem.KogitoWorkItemManager) manager, (org.kie.kogito.process.workitem.KogitoWorkItem) workItem,
+                (org.kie.kogito.process.workitem.WorkItemTransition) transition)
+                        .map(t -> (WorkItemTransition) t);
     }
 
-    /*
-     * Transition to another phase from initial
-     */
-    Optional<WorkItemTransition> transitionToPhase(KogitoWorkItemManager manager, KogitoWorkItem workItem, WorkItemTransition transition);
+    default WorkItemTransition newTransition(String phaseId, String phaseStatus, Map<String, Object> map, Policy... policy) {
+        return (WorkItemTransition) newTransition(phaseId, phaseStatus, map, (org.kie.kogito.process.workitem.Policy[]) policy);
+    }
 
-    Set<String> allowedTransitions(String phaseStatus);
+    default WorkItemTransition startingTransition(Map<String, Object> data, Policy... policies) {
+        return (WorkItemTransition) startingTransition(data, (org.kie.kogito.process.workitem.Policy[]) policies);
+    }
 
-    WorkItemTransition newTransition(String phaseId, String phaseStatus, Map<String, Object> map, Policy... policy);
+    default WorkItemTransition completeTransition(String phaseStatus, Map<String, Object> data, Policy... policies) {
+        return (WorkItemTransition) completeTransition(phaseStatus, data, (org.kie.kogito.process.workitem.Policy[]) policies);
+    }
 
-    /**
-     * The given work item should be activate.
-     *
-     * @param workItem the work item that should be executed
-     * @param manager the manager that requested the work item to be executed
-     */
-    WorkItemTransition startingTransition(Map<String, Object> data, Policy... policies);
-
-    WorkItemTransition completeTransition(String phaseStatus, Map<String, Object> data, Policy... policies);
-
-    WorkItemTransition abortTransition(String phaseStatus, Policy... policies);
-
+    default WorkItemTransition abortTransition(String phaseStatus, Policy... policies) {
+        return (WorkItemTransition) abortTransition(phaseStatus, (org.kie.kogito.process.workitem.Policy[]) policies);
+    }
 }

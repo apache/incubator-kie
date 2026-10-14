@@ -20,12 +20,12 @@ package org.kie.kogito.process.workitems.impl;
 
 import java.util.Optional;
 
-import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
 import org.kie.kogito.internal.process.workitem.WorkItemLifeCyclePhase;
 import org.kie.kogito.internal.process.workitem.WorkItemPhaseState;
-import org.kie.kogito.internal.process.workitem.WorkItemTransition;
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.WorkItemTransition;
 
 public class DefaultWorkItemLifeCyclePhase implements WorkItemLifeCyclePhase {
 
@@ -61,18 +61,12 @@ public class DefaultWorkItemLifeCyclePhase implements WorkItemLifeCyclePhase {
     }
 
     @Override
-    public Optional<WorkItemTransition> execute(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workitem, WorkItemTransition transition) {
-        return this.execution.execute(manager, handler, workitem, transition);
-    }
-
-    @Override
     public boolean isStartingPhase() {
-        return sourceStatus != null;
+        return sourceStatus == null;
     }
 
     @Override
-    public String toString() {
-        return "DefaultWorkItemLifeCyclePhase[transition=" + id + ", oldStatus=" + sourceStatus + ", newStatus=" + targetStatus + ", isStarting=" + isStartingPhase() + "]";
+    public Optional<WorkItemTransition> execute(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workitem, WorkItemTransition transition) {
+        return execution.execute(manager, handler, workitem, transition);
     }
-
 }

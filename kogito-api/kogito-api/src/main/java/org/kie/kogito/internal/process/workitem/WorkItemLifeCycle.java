@@ -25,6 +25,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.WorkItemTransition;
+
 import static java.util.stream.Collectors.toSet;
 
 /**

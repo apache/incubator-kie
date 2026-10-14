@@ -20,6 +20,11 @@ package org.kie.kogito.internal.process.workitem;
 
 import java.util.Optional;
 
+import org.kie.kogito.process.workitem.KogitoWorkItem;
+import org.kie.kogito.process.workitem.KogitoWorkItemHandler;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
+import org.kie.kogito.process.workitem.WorkItemTransition;
+
 /**
  * Definition of the life cycle phase that work item can be connected to.
  *

@@ -28,7 +28,7 @@ import org.kie.kogito.MapOutput;
 import org.kie.kogito.MappableToModel;
 import org.kie.kogito.Model;
 import org.kie.kogito.correlation.CompositeCorrelation;
-import org.kie.kogito.internal.process.workitem.Policy;
+import org.kie.kogito.process.workitem.Policy;
 
 public interface ProcessService {
 

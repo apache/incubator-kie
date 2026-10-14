@@ -30,8 +30,8 @@ import org.kie.kogito.Application;
 import org.kie.kogito.internal.process.event.KogitoProcessEventSupport;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
 import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
-import org.kie.kogito.internal.process.workitem.KogitoWorkItemManager;
 import org.kie.kogito.jobs.JobsService;
+import org.kie.kogito.process.workitem.KogitoWorkItemManager;
 
 public class KogitoProcessRuntimeImpl implements KogitoProcessRuntime {
 
