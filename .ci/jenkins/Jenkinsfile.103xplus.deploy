@@ -17,25 +17,23 @@
  * under the License.
  */
 
-// 10.3.x+ deploy pipeline — mirrors Jenkinsfile.deploy with 10.3+ specifics:
-//   - no RELEASE env-var path (tagging/signing handled by Jenkinsfile.103xplus.release)
-//   - PR creation mode retained for stream-snapshot version bumps
-//   - deployment.properties filename to match DSL PROPERTIES_FILE_NAME
-
-import org.jenkinsci.plugins.workflow.libs.Library
-@Library('jenkins-pipeline-shared-libraries')_
-
-import org.kie.jenkins.MavenCommand
+// 10.3.x+ deploy pipeline — no kogito-pipelines dependency.
+//   - agent { label 'ubuntu' } + tools block instead of docker { image AGENT_DOCKER_BUILDER_IMAGE }
+//   - Maven invoked directly (no MavenCommand shared-library helper)
+//   - PR creation via 'gh' CLI instead of githubscm shared-library helpers
+//   - @Library removed entirely
 
 deployProperties = [:]
+prBranchHash     = ''
 
 pipeline {
     agent {
-        docker {
-            image env.AGENT_DOCKER_BUILDER_IMAGE
-            args env.AGENT_DOCKER_BUILDER_ARGS
-            label util.avoidFaultyNodes()
-        }
+        label 'ubuntu'
+    }
+
+    tools {
+        maven 'maven_3.9.16'
+        jdk   'jdk_17_latest'
     }
 
     options {
@@ -45,8 +43,6 @@ pipeline {
 
     environment {
         DROOLS_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
-
-        PR_BRANCH_HASH = "${util.generateHash(10)}"
     }
 
     stages {
@@ -55,13 +51,14 @@ pipeline {
                 script {
                     cleanWs(disableDeferredWipeout: true)
 
+                    prBranchHash = sh(script: 'openssl rand -hex 5', returnStdout: true).trim()
+
                     if (params.DISPLAY_NAME) {
                         currentBuild.displayName = params.DISPLAY_NAME
                     }
 
                     if (isCreatePr()) {
-                        // Verify version is set
-                        assert getProjectVersion()
+                        assert getProjectVersion() : 'PROJECT_VERSION is required when CREATE_PR is true'
                     }
 
                     dir(getRepoName()) {
@@ -87,10 +84,18 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        if (githubscm.isBranchExist('origin', getPRBranch())) {
-                            githubscm.removeRemoteBranch('origin', getPRBranch(), getGitAuthorPushCredsId())
+                        withCredentials([usernamePassword(credentialsId: getGitAuthorPushCredsId(), usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+                            sh """#!/usr/bin/env bash
+                            set -euo pipefail
+                            git config user.email "${env.GIT_AUTHOR_EMAIL ?: 'dev@kie.apache.org'}"
+                            git config user.name  "${env.GIT_AUTHOR ?: 'Apache KIE Release Bot'}"
+                            git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+                            if git ls-remote --exit-code origin '${getPRBranch()}'; then
+                                git push origin --delete '${getPRBranch()}' || true
+                            fi
+                            git checkout -b '${getPRBranch()}'
+                            """
                         }
-                        githubscm.createBranch(getPRBranch())
                     }
                 }
             }
@@ -104,11 +109,14 @@ pipeline {
                 script {
                     dir(getRepoName()) {
                         configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
-                            maven.mvnVersionsSet(
-                                getMavenCommand().withSettingsXmlFile(MAVEN_SETTINGS_FILE),
-                                getProjectVersion(),
-                                !isStreamDevVersion()
-                            )
+                            def snapshotFlag = isStreamDevVersion() ? '' : '-DgenerateBackupPoms=false'
+                            sh """#!/usr/bin/env bash
+                            set -euo pipefail
+                            mvn -s "\${MAVEN_SETTINGS_FILE}" -B -ntp \
+                                versions:set \
+                                -DnewVersion='${getProjectVersion()}' \
+                                ${snapshotFlag}
+                            """
                         }
                     }
                 }
@@ -119,22 +127,32 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        withCredentials([usernamePassword(credentialsId: env.MAVEN_REPO_CREDS_ID, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
-                            def installOrDeploy
-                            if (shouldDeployToRepository()) {
-                                installOrDeploy = "deploy -DdeployAtEnd -Dapache.repository.username=${REPOSITORY_USER} -Dapache.repository.password=${REPOSITORY_TOKEN} -DretryFailedDeploymentCount=5"
-                            } else {
-                                installOrDeploy = 'install'
-                            }
-                            def mavenCommand = getMavenCommand()
-                                .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
-                                .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
-                                .withOptions(env.BUILD_MVN_OPTS_CURRENT ? [ env.BUILD_MVN_OPTS_CURRENT ] : [])
-                                .withProperty('maven.test.failure.ignore', true)
-                                .skipTests(params.SKIP_TESTS)
+                        configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                            withCredentials([usernamePassword(credentialsId: env.MAVEN_REPO_CREDS_ID, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
+                                def goal
+                                if (shouldDeployToRepository()) {
+                                    goal = "deploy -DdeployAtEnd -Dapache.repository.username=\${REPOSITORY_USER} -Dapache.repository.password=\${REPOSITORY_TOKEN} -DretryFailedDeploymentCount=5"
+                                } else {
+                                    goal = 'install'
+                                }
 
-                            configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
-                                mavenCommand.withSettingsXmlFile(MAVEN_SETTINGS_FILE).run("clean ${installOrDeploy}")
+                                def extraOpts = [
+                                    env.BUILD_MVN_OPTS,
+                                    env.DROOLS_BUILD_MVN_OPTS,
+                                    env.BUILD_MVN_OPTS_CURRENT
+                                ].findAll { it }.join(' ')
+
+                                def skipTestsFlag = params.SKIP_TESTS ? '-DskipTests' : ''
+
+                                sh """#!/usr/bin/env bash
+                                set -euo pipefail
+                                mvn -s "\${MAVEN_SETTINGS_FILE}" -B -ntp -fae \
+                                    -Dfull \
+                                    ${skipTestsFlag} \
+                                    -Dmaven.test.failure.ignore=true \
+                                    ${extraOpts} \
+                                    clean ${goal}
+                                """
                             }
                         }
                     }
@@ -145,7 +163,7 @@ pipeline {
                     script {
                         dir(getRepoName()) {
                             saveReports()
-                            util.archiveConsoleLog()
+                            archiveArtifacts(artifacts: 'build_logs/**', allowEmptyArchive: true)
                         }
                     }
                 }
@@ -159,10 +177,36 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        if (githubscm.isThereAnyChanges()) {
-                            commitAndCreatePR()
-                        } else {
-                            println '[WARN] no changes to commit'
+                        withCredentials([usernamePassword(credentialsId: getGitAuthorPushCredsId(), usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+                            def prLink = sh(script: """#!/usr/bin/env bash
+                            set -euo pipefail
+                            git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+
+                            # Stage only pom.xml and antora.yml changes (version bump files)
+                            git add -A -- '*.xml' '*/antora.yml' 2>/dev/null || true
+                            if git diff --cached --quiet; then
+                                echo '[WARN] no changes to commit' >&2
+                                echo ''
+                                exit 0
+                            fi
+
+                            COMMIT_MSG="[${getBuildBranch()}] Update version to ${getProjectVersion()}"
+                            git commit -m "\${COMMIT_MSG}"
+                            git push origin '${getPRBranch()}'
+
+                            PR_BODY="Generated by build ${BUILD_TAG}: ${BUILD_URL}.\\nPlease do not merge, it should be merged automatically."
+                            gh pr create \
+                                --repo '${getGitAuthor()}/${getRepoName()}' \
+                                --head '${getPRBranch()}' \
+                                --base '${getBuildBranch()}' \
+                                --title "\${COMMIT_MSG}" \
+                                --body "\${PR_BODY}" \
+                                --label 'skip-ci'
+                            """, returnStdout: true).trim()
+
+                            if (prLink) {
+                                deployProperties["${getRepoName()}.pr.link"] = prLink
+                            }
                         }
                     }
                 }
@@ -192,9 +236,7 @@ pipeline {
             sendNotification()
         }
         cleanup {
-            script {
-                util.cleanNode()
-            }
+            cleanWs()
         }
     }
 }
@@ -205,26 +247,23 @@ void saveReports() {
 
 void checkoutRepo() {
     deleteDir()
-    checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
-    // need to manually checkout branch since on a detached branch after checkout command
+    checkout([$class: 'GitSCM',
+        branches: [[name: "*/${getBuildBranch()}"]],
+        userRemoteConfigs: [[
+            url: "https://github.com/${getGitAuthor()}/${getRepoName()}.git",
+            credentialsId: getGitAuthorCredsId()
+        ]]
+    ])
     sh "git checkout ${getBuildBranch()}"
-}
-
-void commitAndCreatePR() {
-    def commitMsg = "[${getBuildBranch()}] Update version to ${getProjectVersion()}"
-    def prBody = "Generated by build ${BUILD_TAG}: ${BUILD_URL}.\nPlease do not merge, it should be merged automatically."
-    githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
-    githubscm.commitChanges(commitMsg, {
-        githubscm.findAndStageNotIgnoredFiles('pom.xml')
-        githubscm.findAndStageNotIgnoredFiles('antora.yml')
-    })
-    githubscm.pushObject('origin', getPRBranch(), getGitAuthorPushCredsId())
-    deployProperties["${getRepoName()}.pr.link"] = githubscm.createPRWithLabels(commitMsg, prBody, getBuildBranch(), ['skip-ci'] as String[], getGitAuthorCredsId())
 }
 
 void sendNotification() {
     if (params.SEND_NOTIFICATION) {
-        mailer.sendMarkdownTestSummaryNotification('Deploy', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
+        mail(
+            to: env.DROOLS_CI_EMAIL_TO,
+            subject: "[FAILURE] Deploy [${getBuildBranch()}] Drools - Build ${BUILD_TAG}",
+            body: "Deploy pipeline failed.\n\nBuild URL: ${BUILD_URL}"
+        )
     } else {
         echo 'No notification sent per configuration'
     }
@@ -239,9 +278,6 @@ boolean isCreatePr() {
 }
 
 boolean isStreamDevVersion() {
-    // STREAM_DEV_VERSION is not a DSL param for the 103xplus deploy job.
-    // A "stream dev" version is any snapshot version (contains -SNAPSHOT),
-    // mirroring the old Jenkinsfile.deploy's !isRelease() logic.
     return getProjectVersion()?.contains('-SNAPSHOT') ?: false
 }
 
@@ -250,7 +286,6 @@ String getRepoName() {
 }
 
 String getGitAuthor() {
-    // GIT_AUTHOR can be env or param
     return "${GIT_AUTHOR}"
 }
 
@@ -263,8 +298,7 @@ String getProjectVersion() {
 }
 
 String getPRBranch() {
-    // PR_BRANCH_PREFIX is not a DSL param; fall back to a safe generated name.
-    return params.DROOLS_PR_BRANCH ?: "drools-${getProjectVersion()}_${PR_BRANCH_HASH}"
+    return params.DROOLS_PR_BRANCH ?: "drools-${getProjectVersion()}_${prBranchHash}"
 }
 
 String getGitAuthorCredsId() {
@@ -279,15 +313,4 @@ void setDeployPropertyIfNeeded(String key, def value) {
     if (value) {
         deployProperties[key] = value
     }
-}
-
-MavenCommand getMavenCommand() {
-    def mvnCmd = new MavenCommand(this, ['-fae', '-ntp'])
-                .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
-                .withProperty('full')
-    return mvnCmd
-}
-
-String getGitTagName() {
-    return params.GIT_TAG_NAME
 }

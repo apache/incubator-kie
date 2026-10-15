@@ -126,13 +126,22 @@ pipeline {
 
 void sendNotification() {
     if (params.SEND_NOTIFICATION) {
-        mailer.sendMarkdownTestSummaryNotification('Release', "[${params.TAG_NAME}] Drools", [env.DROOLS_CI_EMAIL_TO])
+        mail(
+            to: env.DROOLS_CI_EMAIL_TO,
+            subject: "[${params.TAG_NAME}] Drools Release",
+            body: "Release pipeline finished.\n\nBuild URL: ${BUILD_URL}"
+        )
     } else {
         echo 'No notification sent per configuration'
     }
 }
 
 void sendErrorNotification() {
-    sendNotification()
-    mailer.sendMarkdownErrorNotification('Release', "[${params.TAG_NAME}] Drools", [env.DROOLS_CI_EMAIL_TO])
+    if (params.SEND_NOTIFICATION) {
+        mail(
+            to: env.DROOLS_CI_EMAIL_TO,
+            subject: "[FAILURE] [${params.TAG_NAME}] Drools Release",
+            body: "Release pipeline failed.\n\nBuild URL: ${BUILD_URL}"
+        )
+    }
 }
