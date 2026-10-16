@@ -148,6 +148,10 @@ public class PhreakFromNode {
             PropagationContext propagationContext = leftTuple.getPropagationContext();
 
             final Map<Object, RightTuple> previousMatches = (Map<Object, RightTuple>) leftTuple.getContextObject();
+            if (previousMatches == null) {
+                throw new IllegalStateException(
+                        "update()/modify() propagation through a from binding is unsupported when tuple memory is disabled by sequential mode");
+            }
             final Map<Object, RightTuple> newMatches      = new HashMap<>();
             leftTuple.setContextObject( newMatches );
 

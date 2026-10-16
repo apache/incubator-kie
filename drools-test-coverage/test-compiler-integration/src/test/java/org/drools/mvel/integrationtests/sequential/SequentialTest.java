@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.drools.drl.parser.DroolsParserException;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
+import org.drools.mvel.compiler.Address;
 import org.drools.mvel.compiler.Cheese;
 import org.drools.mvel.compiler.Message;
 import org.drools.mvel.compiler.Person;
@@ -62,6 +63,7 @@ import org.kie.api.runtime.StatelessKieSession;
 import org.kie.internal.command.CommandFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class SequentialTest {
 
@@ -594,5 +596,60 @@ public class SequentialTest {
         StatelessKieSession ksession = kbase.newStatelessKieSession();
 
         ksession.execute( CommandFactory.newInsertElements(Arrays.asList("test", new Message(), 3, 5)));
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSequentialFromNodeUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // Immediate propagation flushes the from insert before update(). @watch(*) lets that
+        // update reach the from node when property reactivity is enabled.
+        String str =
+                "package org.drools.mvel.compiler.test\n" +
+                "import " + Person.class.getCanonicalName() + "\n" +
+                "import " + Address.class.getCanonicalName() + "\n" +
+                "global " + List.class.getCanonicalName() + " list\n" +
+                "rule \"from-binding\" @Propagation(IMMEDIATE) when\n" +
+                "    $p : Person() @watch(*)\n" +
+                "    $a : Address() from $p.addresses\n" +
+                "then\n" +
+                "    list.add( $a.getStreet() );\n" +
+                "end\n" +
+                "rule \"update-person\" salience 100 when\n" +
+                "    $p : Person( happy == false )\n" +
+                "then\n" +
+                "    $p.setHappy( true );\n" +
+                "    update( $p );\n" +
+                "    list.add( \"updated\" );\n" +
+                "end\n";
+
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, str);
+
+        Person sequentialUpdate = new Person("updated");
+        sequentialUpdate.addAddress(new Address("London"));
+        final KieBase sequentialKbase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(kieModule, kieBaseTestConfiguration, SequentialOption.YES);
+        StatelessKieSession sequentialSession = sequentialKbase.newStatelessKieSession();
+        sequentialSession.setGlobal("list", new ArrayList());
+        assertThatThrownBy(() -> sequentialSession.execute(sequentialUpdate))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("update()/modify() propagation through a from binding is unsupported when tuple memory is disabled by sequential mode");
+
+        Person nonSequential = new Person("non-sequential");
+        nonSequential.addAddress(new Address("London"));
+        final KieBase nonSequentialKbase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(kieModule, kieBaseTestConfiguration, SequentialOption.NO);
+        StatelessKieSession nonSequentialSession = nonSequentialKbase.newStatelessKieSession();
+        final List nonSequentialList = new ArrayList();
+        nonSequentialSession.setGlobal("list", nonSequentialList);
+        nonSequentialSession.execute(nonSequential);
+        assertThat(nonSequential.isHappy()).isTrue();
+        assertThat(nonSequentialList).contains("updated", "London");
+
+        Person insertOnly = new Person("insert-only");
+        insertOnly.setHappy(true);
+        insertOnly.addAddress(new Address("London"));
+        StatelessKieSession insertOnlySession = sequentialKbase.newStatelessKieSession();
+        final List insertOnlyList = new ArrayList();
+        insertOnlySession.setGlobal("list", insertOnlyList);
+        insertOnlySession.execute(insertOnly);
+        assertThat(insertOnlyList).containsExactly("London");
     }
 }
