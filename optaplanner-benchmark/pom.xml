@@ -43,7 +43,20 @@
 
   <properties>
     <java.module.name>org.optaplanner.benchmark</java.module.name>
+    <!-- Bootstrap 4.3.1 is required by the benchmark report; the global managed version is 5.1.3. -->
+    <version.org.webjars.bootstrap.benchmark>4.3.1</version.org.webjars.bootstrap.benchmark>
   </properties>
+
+  <!-- Override the globally managed Bootstrap 5.1.3 with 4.3.1 for the benchmark report. -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>bootstrap</artifactId>
+        <version>${version.org.webjars.bootstrap.benchmark}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Internal dependencies -->
@@ -103,6 +116,12 @@
       <groupId>org.glassfish.jaxb</groupId>
       <artifactId>jaxb-runtime</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <!-- Benchmarker report resources: Bootstrap 4.3.1 unpacked at build time by maven-dependency-plugin. -->
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>bootstrap</artifactId>
+      <scope>provided</scope>
     </dependency>
     <!-- Benchmarker statistics -->
     <dependency>
@@ -250,8 +269,43 @@
           </ignoredUsedUndeclaredDependencies>
           <ignoredUnusedDeclaredDependencies>
             <dependency>org.optaplanner:optaplanner-core:jar</dependency>
+            <dependency>org.webjars:bootstrap:jar</dependency>
           </ignoredUnusedDeclaredDependencies>
         </configuration>
+        <executions>
+          <execution>
+            <!-- Unpack Bootstrap CSS and JS from the WebJar into the classpath location expected by WebsiteResourceUtils. -->
+            <id>unpack-bootstrap-webjar</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.webjars</groupId>
+                  <artifactId>bootstrap</artifactId>
+                  <version>${version.org.webjars.bootstrap.benchmark}</version>
+                  <includes>META-INF/resources/webjars/bootstrap/${version.org.webjars.bootstrap.benchmark}/css/bootstrap.css</includes>
+                  <outputDirectory>${project.build.outputDirectory}/org/optaplanner/benchmark/impl/report/twitterbootstrap/css</outputDirectory>
+                  <fileMappers>
+                    <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper/>
+                  </fileMappers>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.webjars</groupId>
+                  <artifactId>bootstrap</artifactId>
+                  <version>${version.org.webjars.bootstrap.benchmark}</version>
+                  <includes>META-INF/resources/webjars/bootstrap/${version.org.webjars.bootstrap.benchmark}/js/bootstrap.js</includes>
+                  <outputDirectory>${project.build.outputDirectory}/org/optaplanner/benchmark/impl/report/twitterbootstrap/js</outputDirectory>
+                  <fileMappers>
+                    <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper/>
+                  </fileMappers>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

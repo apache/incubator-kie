@@ -53,7 +53,7 @@
     <!-- CVE-2026-59889: force-pin jackson-databind to 3.1.6.
          spring-boot-dependencies:4.1.1 carries the vulnerable jackson-databind:3.1.5.
          Remove this pin once spring-boot-dependencies imports jackson-databind >= 3.1.6. -->
-    <version.tools.jackson.core>3.1.6</version.tools.jackson.core>
+    <version.tools.jackson.core>3.1.7</version.tools.jackson.core>
     <!-- Framework-specific pins moved out of kie-parent: only this tree declares these artifacts. -->
     <version.org.spockframework>2.2-groovy-4.0</version.org.spockframework>
 </properties>
@@ -76,6 +76,11 @@
         <version>${version.org.infinispan}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>tools.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${version.tools.jackson.core}</version>
       </dependency>
       <dependency>
         <groupId>tools.jackson.core</groupId>

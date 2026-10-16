@@ -165,6 +165,11 @@
            (first explicit entry wins in Maven dependencyManagement). -->
       <dependency>
         <groupId>org.mongodb</groupId>
+        <artifactId>mongodb</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
         <artifactId>mongodb-driver-sync</artifactId>
         <version>${version.mongodb-driver-sync}</version>
       </dependency>
@@ -186,6 +191,11 @@
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>bson-record-codec</artifactId>
+        <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-crypt</artifactId>
         <version>${version.mongodb-driver-sync}</version>
       </dependency>
       <dependency>
