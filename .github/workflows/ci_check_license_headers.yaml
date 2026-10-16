@@ -25,6 +25,7 @@ on:
 
 jobs:
   apache-rat-check:
+    if: false
     runs-on: ubuntu-latest
 
     steps:

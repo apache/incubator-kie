@@ -38,6 +38,8 @@ import static org.drools.core.phreak.PhreakNodeOperations.useLeftMemory;
 
 public class PhreakJoinNode {
 
+    // change to trigger PR check
+
     private final ReteEvaluator reteEvaluator;
 
     public PhreakJoinNode(ReteEvaluator reteEvaluator) {

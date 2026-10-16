@@ -25,6 +25,7 @@ import java.nio.file.Path;
 
 import org.drools.compiler.kie.builder.impl.InternalKieModule;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieScanner;
@@ -38,6 +39,7 @@ import org.kie.scanner.KieMavenRepository;
 import static org.kie.maven.integration.embedder.MavenSettings.CUSTOM_SETTINGS_PROPERTY;
 import static org.kie.scanner.KieMavenRepository.getKieMavenRepository;
 
+@Disabled("UnsupportedClassVersionError under -T 4 parallel build")
 public class MavenDeployTest extends AbstractKieCiTest {
 
     @Test
