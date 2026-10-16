@@ -51,6 +51,9 @@ public interface NodeInstanceContainer extends KogitoNodeInstanceContainer {
 
     void nodeInstanceCompleted(NodeInstance nodeInstance, String outType);
 
+    default void nodeInstanceCancelled(NodeInstance nodeInstance) {
+    }
+
     int getState();
 
     void setState(int state);
