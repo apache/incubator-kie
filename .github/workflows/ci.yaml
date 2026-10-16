@@ -21,7 +21,7 @@ name: 'CI :: Build'
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     branches: [main]
     paths-ignore:
       - 'LICENSE'
@@ -42,7 +42,7 @@ jobs:
 
   build:
     if: github.event.action != 'closed'
-    name: '${{ matrix.os }}, Java ${{ matrix.java }}'
+    name: 'CI :: Build (Java ${{ matrix.java }}) / ${{ matrix.os }}'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

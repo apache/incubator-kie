@@ -24,7 +24,7 @@ CI runs on GitHub Actions. Workflows live in
 [`script/ci/`](../script/ci/) as [JBang](https://www.jbang.dev) scripts, plus
 local composite actions in [`.github/actions/`](../.github/actions/).
 
-## `CI :: Build` — the main PR check
+## `CI :: Build (Java 17)` / `CI :: Build (Java 21)` — the main PR checks
 
 Defined in [ci.yaml](../.github/workflows/ci.yaml). Runs on every pull request
 against `main`, and on every push to `main`. Documentation-only changes
@@ -61,14 +61,16 @@ JARs) and `-Dreproducible`.
 
 Notes:
 
-- The build matrix currently runs on Linux with Java 17 and 21; macOS and
-  Windows are temporarily excluded because of Docker-dependent tests failing
-  on non-Linux runners.
+- The build matrix currently runs on Linux with Java 17 and Java 21 (producing
+  check names `CI :: Build (Java 17) / ubuntu-latest` and
+  `CI :: Build (Java 21) / ubuntu-latest`); macOS and Windows are temporarily
+  excluded because of Docker-dependent tests failing on non-Linux runners.
 - The `apache.snapshots` Maven repository is blocked via a mirror in
   `settings.xml`, so builds cannot silently depend on snapshot artifacts.
 - A new push to a PR cancels that PR's in-progress run, and so does closing
   or merging the PR. Runs for pushes to `main` are never canceled.
-  `CI :: CI Tests` and `Dev :: Tests` follow the same rules.
+  `CI :: Build (Java 17)`, `CI :: Build (Java 21)`, `CI :: CI Tests`, and
+  `Dev :: Tests` follow the same rules.
 - After the build, a Surefire report step fails the job on test failures, and
   the build logs (`build.log`) plus the reproducibility outputs
   (`*.buildcompare`, `*.buildinfo`) are uploaded as workflow artifacts.
