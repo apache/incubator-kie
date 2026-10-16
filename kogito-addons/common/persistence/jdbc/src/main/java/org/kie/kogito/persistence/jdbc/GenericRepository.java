@@ -74,10 +74,10 @@ public class GenericRepository extends Repository {
     private Collection<Process<? extends Model>> getProcessIdsForFiltering() {
         if (processes != null) {
             Collection<Process<? extends Model>> processIds = processes.processes();
-            LOGGER.debug("Using process IDs from Processes bean for data isolation: {}", processIds);
+            LOGGER.trace("Using process IDs from Processes bean for data isolation: {}", processIds);
             return processIds;
         }
-        LOGGER.debug("No Processes bean available, skipping data isolation filtering");
+        LOGGER.trace("No Processes bean available, skipping data isolation filtering");
         return null;
     }
 
