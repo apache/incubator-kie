@@ -96,12 +96,14 @@ public class ReflectionProtoGenerator extends AbstractProtoGenerator<Class<?>> {
             } else if (Collection.class.isAssignableFrom(pd.getPropertyType())) {
                 fieldTypeString = COLLECTION;
                 Type type = propertyField.getGenericType();
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType ptype = (ParameterizedType) type;
-                    fieldType = (Class<?>) ptype.getActualTypeArguments()[0];
+                if (type instanceof ParameterizedType && ((ParameterizedType) type).getActualTypeArguments()[0] instanceof Class) {
+                    fieldType = (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
                     protoType = protoType(fieldType.getCanonicalName());
                 } else {
-                    throw new IllegalArgumentException("Field " + propertyField.getName() + " of class " + clazz.getName() + " uses collection without type information");
+                    LOGGER.warn("Field '{}' of class '{}' uses a collection without type information. " +
+                            "Its elements will be persisted using Java serialization. " +
+                            "Make sure the stored values implement java.io.Serializable.", propertyField.getName(), clazz.getName());
+                    protoType = KOGITO_SERIALIZABLE;
                 }
             } else {
                 protoType = protoType(fieldTypeString);

@@ -173,6 +173,16 @@ public class JsonSchemaGeneratorTest {
         private Object payload;
     }
 
+    @ProcessInput(processName = "untypedCollectionVarProcess")
+    private static class ProcessInputModelWithUntypedCollectionVar {
+
+        @VariableInfo
+        private String name;
+
+        @VariableInfo
+        private List items;
+    }
+
     private static class HolderWithObjectField {
 
         private String label;
@@ -480,6 +490,20 @@ public class JsonSchemaGeneratorTest {
         assertThat(properties).isNotNull();
         assertThat(properties.has("name")).isTrue();
         assertThat(properties.has("payload")).isFalse();
+    }
+
+    @Test
+    public void testUntypedCollectionFieldIsIncludedInSchema() throws IOException {
+        Collection<GeneratedFile> files = new JsonSchemaGenerator.ClassBuilder(
+                Stream.of(ProcessInputModelWithUntypedCollectionVar.class)).build().generate();
+        assertThat(files).hasSize(1);
+
+        ObjectReader reader = new ObjectMapper().reader();
+        JsonNode properties = reader.readTree(files.iterator().next().contents()).get("properties");
+        assertThat(properties).isNotNull();
+        assertThat(properties.has("name")).isTrue();
+        assertThat(properties.has("items")).isTrue();
+        assertThat(properties.get("items").get("type").asText()).isEqualTo("array");
     }
 
     @Test

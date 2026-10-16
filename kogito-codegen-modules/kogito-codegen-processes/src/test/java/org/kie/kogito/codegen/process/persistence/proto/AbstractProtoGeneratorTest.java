@@ -768,12 +768,18 @@ public abstract class AbstractProtoGeneratorTest<T> {
                 .withDataClasses(Collections.singleton(convertToType(ListWithoutType.class)))
                 .build(null);
 
-        assertThatThrownBy(() -> generator.protoOfDataClasses("defaultPkg"))
-                .hasCauseInstanceOf(IllegalArgumentException.class)
-                .hasMessage(
-                        "Error while generating proto for model class " + ListWithoutType.class.getName()
-                                + " Field attribute of class " + ListWithoutType.class.getName()
-                                + " uses collection without type information");
+        Proto proto = generator.protoOfDataClasses("defaultPkg");
+        assertThat(proto).isNotNull();
+        assertThat(proto.getMessages()).hasSize(1);
+
+        ProtoMessage message = proto.getMessages().get(0);
+        assertThat(message.getName()).isEqualTo("ListWithoutType");
+        assertThat(message.getFields()).hasSize(1)
+                .element(0)
+                .hasFieldOrPropertyWithValue("name", "attribute")
+                .hasFieldOrPropertyWithValue("applicability", "repeated")
+                .hasFieldOrPropertyWithValue("type", ProtoGenerator.KOGITO_SERIALIZABLE)
+                .hasFieldOrPropertyWithValue("option", "[kogito_java_class = \"java.util.List\"]");
     }
 
     @Test
@@ -851,6 +857,33 @@ public abstract class AbstractProtoGeneratorTest<T> {
                 .orElseThrow();
         assertThat(valueField.getType()).isEqualTo(ProtoGenerator.KOGITO_SERIALIZABLE);
         assertThat(valueField.getOption()).isEqualTo("[kogito_java_class = \"java.lang.Object\"]");
+    }
+
+    @Test
+    void modelWithCollectionWithoutTypeField() {
+        AbstractProtoGenerator<T> generator = protoGeneratorBuilder()
+                .build(Collections.singleton(convertToType(ListProcessModel.class)));
+
+        Proto proto = generator.generate("comment", ProtoGenerator.INDEX_COMMENT, "org.kie.kogito.test",
+                convertToType(ListProcessModel.class));
+
+        assertThat(proto.getPackageName()).isEqualTo("org.kie.kogito.test");
+        assertThat(proto.getSyntax()).isEqualTo("proto2");
+        assertThat(proto.getMessages()).hasSize(1);
+
+        ProtoMessage message = proto.getMessages().get(0);
+        assertThat(message.getName()).isEqualTo("ListProcess");
+        assertThat(message.getJavaPackageOption()).isEqualTo("org.kie.kogito.codegen.data");
+
+        assertThat(message.getFields()).hasSize(2);
+
+        ProtoField myListField = message.getFields().stream()
+                .filter(f -> f.getName().equals("myList"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(myListField.getApplicability()).isEqualTo("repeated");
+        assertThat(myListField.getType()).isEqualTo(ProtoGenerator.KOGITO_SERIALIZABLE);
+        assertThat(myListField.getOption()).isEqualTo("[kogito_java_class = \"java.util.List\"]");
     }
 
     private void assertClassIsIncludedInSubclass(ProtoMessage superClass, ProtoMessage subClass) {

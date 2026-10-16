@@ -148,11 +148,14 @@ public class JandexProtoGenerator extends AbstractProtoGenerator<ClassInfo> {
 
                 List<Type> typeParameters = pd.type().kind() == Kind.CLASS ? emptyList() : pd.type().asParameterizedType().arguments();
                 if (typeParameters.isEmpty()) {
-                    throw new IllegalArgumentException("Field " + pd.name() + " of class " + clazz.name().toString()
-                            + " uses collection without type information");
+                    LOGGER.warn("Field '{}' of class '{}' uses a collection without type information. " +
+                            "Its elements will be persisted using Java serialization. " +
+                            "Make sure the stored values implement java.io.Serializable.", pd.name(), clazz.name());
+                    protoType = KOGITO_SERIALIZABLE;
+                } else {
+                    fieldType = typeParameters.get(0).name();
+                    protoType = protoType(fieldType.toString());
                 }
-                fieldType = typeParameters.get(0).name();
-                protoType = protoType(fieldType.toString());
             } else {
                 protoType = protoType(fieldTypeString);
             }

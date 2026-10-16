@@ -53,6 +53,8 @@ class ProcessCodegenTest {
     private static final Path REST_HYPHEN_PARAMS_FULL_PATH = BASE_PATH.resolve(REST_HYPHEN_PARAMS_SOURCE);
     private static final String OBJECT_VARIABLE_SOURCE = "objectvariable/ObjectVariableProcess.bpmn2";
     private static final Path OBJECT_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(OBJECT_VARIABLE_SOURCE);
+    private static final String UNTYPED_COLLECTION_VARIABLE_SOURCE = "collectionvariable/UntypedCollectionVariableProcess.bpmn2";
+    private static final Path UNTYPED_COLLECTION_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(UNTYPED_COLLECTION_VARIABLE_SOURCE);
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
@@ -205,6 +207,18 @@ class ProcessCodegenTest {
         ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
                 context,
                 CollectedResourceProducer.fromFiles(BASE_PATH, OBJECT_VARIABLE_SOURCE_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void untypedCollectionVariableProcessGeneratesWithoutError(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, UNTYPED_COLLECTION_VARIABLE_SOURCE_FULL_PATH.toFile()));
 
         Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
         assertThat(generatedFiles).isNotEmpty();

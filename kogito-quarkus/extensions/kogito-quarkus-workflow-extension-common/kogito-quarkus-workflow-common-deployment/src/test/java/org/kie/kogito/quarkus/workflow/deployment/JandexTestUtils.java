@@ -39,6 +39,7 @@ import org.kie.kogito.codegen.data.GeneratedPOJO;
 import org.kie.kogito.codegen.data.Hello;
 import org.kie.kogito.codegen.data.HelloModel;
 import org.kie.kogito.codegen.data.JacksonData;
+import org.kie.kogito.codegen.data.ListProcessModel;
 import org.kie.kogito.codegen.data.ListWithoutType;
 import org.kie.kogito.codegen.data.NotEmptyConstructor;
 import org.kie.kogito.codegen.data.ObjectHolder;
@@ -84,6 +85,7 @@ public final class JandexTestUtils {
             PersonSubClass.class,
             JacksonData.class,
             ListWithoutType.class,
+            ListProcessModel.class,
             ObjectHolder.class,
             ObjectProcessModel.class,
             PersonWithBooleanObject.class,
