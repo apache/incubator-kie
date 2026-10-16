@@ -1,0 +1,138 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+pipeline {
+    agent {
+        label 'ubuntu'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 360, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(name: 'RELEASE_VERSION', defaultValue: '10.3.0', description: 'Exact release version, e.g. 10.3.0', trim: true)
+        string(name: 'TAG_NAME', defaultValue: '10.3.0-rc1', description: 'RC or Release tag name, e.g. 10.3.0-rc1', trim: true)
+        booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip running tests during reactor build')
+        booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Deploy artifacts to Apache Nexus staging')
+        string(name: 'STAGING_URL', defaultValue: '', description: 'Custom Nexus staging URL (optional)')
+        booleanParam(name: 'PUSH_TAG', defaultValue: true, description: 'Push the git tag to origin')
+        string(name: 'EXTRA_MAVEN_OPTS', defaultValue: '', description: 'Extra Maven CLI options to pass to build.sh')
+        booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Dry run without making remote git or staging changes')
+        booleanParam(name: 'SEND_NOTIFICATION', defaultValue: false, description: 'Send a notification on CI channel when pipeline finishes')
+    }
+
+    environment {
+        DROOLS_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
+
+    stages {
+        stage('Initialize & Validate') {
+            steps {
+                script {
+                    assert params.RELEASE_VERSION : 'RELEASE_VERSION parameter is mandatory'
+                    assert params.TAG_NAME : 'TAG_NAME parameter is mandatory'
+                    currentBuild.displayName = "Release ${params.RELEASE_VERSION} (${params.TAG_NAME})"
+                }
+            }
+        }
+
+        stage('Execute Release Scripts') {
+            steps {
+                // MAVEN_SETTINGS_CONFIG_FILE_ID is a Jenkins Config File ID, not a
+                // secret credential — it must be injected via configFileProvider,
+                // which writes it to a temp path and exposes MAVEN_SETTINGS_FILE.
+                // GPG_PASSPHRASE_CREDS_ID and GIT_AUTHOR_PUSH_CREDS_ID are real
+                // credentials and use withCredentials.
+                configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                    withCredentials([
+                        string(credentialsId: env.GPG_PASSPHRASE_CREDS_ID, variable: 'MAVEN_GPG_PASSPHRASE'),
+                        usernamePassword(credentialsId: env.GIT_AUTHOR_PUSH_CREDS_ID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')
+                    ]) {
+                        script {
+                            // Configure Git identity for the R commit and authenticate
+                            // the raw `git push` in 02-rc-commit.sh. Same mechanism as
+                            // githubscm.pushObject: the helper reads the token from the
+                            // environment at push time, so it is never written to disk.
+                            sh """#!/usr/bin/env bash
+                            set -euo pipefail
+                            git config user.email "${env.GIT_AUTHOR_EMAIL ?: 'dev@kie.apache.org'}"
+                            git config user.name  "${env.GIT_AUTHOR ?: 'Apache KIE Release Bot'}"
+                            git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+                            """
+
+                            // Build the argv array safely — each parameter is a
+                            // separate shell word, no string concatenation or eval.
+                            def releaseArgs = [
+                                './script/release/release-all.sh',
+                                '--version', params.RELEASE_VERSION,
+                                '--tag',     params.TAG_NAME
+                            ]
+                            if (params.SKIP_TESTS)             releaseArgs << '--skip-tests'
+                            if (params.DEPLOY)                 releaseArgs << '--deploy'
+                            if (params.STAGING_URL?.trim())    releaseArgs += ['--staging-url', params.STAGING_URL.trim()]
+                            if (params.PUSH_TAG)               releaseArgs << '--push-tag'
+                            if (params.EXTRA_MAVEN_OPTS?.trim()) releaseArgs += ['--maven-opts', params.EXTRA_MAVEN_OPTS.trim()]
+                            if (params.DRY_RUN)                releaseArgs << '--dry-run'
+
+                            // MAVEN_SETTINGS_FILE is injected by configFileProvider above.
+                            // MAVEN_GPG_PASSPHRASE is already in env from withCredentials
+                            // and is read by the GPG plugin directly (not a CLI arg).
+                            withEnv(["MAVEN_SETTINGS=${MAVEN_SETTINGS_FILE}"]) {
+                                sh """#!/usr/bin/env bash
+                                set -euo pipefail
+                                chmod +x script/release/*.sh
+                                ${releaseArgs.collect { "'${it.replace("'", "'\\''")}'" }.join(' ')}
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            script {
+                sendNotification()
+            }
+        }
+        unsuccessful {
+            sendErrorNotification()
+        }
+    }
+}
+
+void sendNotification() {
+    if (params.SEND_NOTIFICATION) {
+        mailer.sendMarkdownTestSummaryNotification('Release', "[${params.TAG_NAME}] Drools", [env.DROOLS_CI_EMAIL_TO])
+    } else {
+        echo 'No notification sent per configuration'
+    }
+}
+
+void sendErrorNotification() {
+    sendNotification()
+    mailer.sendMarkdownErrorNotification('Release', "[${params.TAG_NAME}] Drools", [env.DROOLS_CI_EMAIL_TO])
+}

@@ -1,0 +1,303 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// 10.3.x+ promote pipeline — mirrors Jenkinsfile.promote with 10.3+ specifics:
+//   - 'Create release' stage uses Nexus nexus-staging:release (same as old)
+//   - 'Tag final release' stage delegates to 05-tag-release.sh (tags the
+//     approved RC commit, not the branch tip as the old pipeline did)
+//   - 'Upload drools binaries and documentation' stage retained for main stream
+
+import org.jenkinsci.plugins.workflow.libs.Library
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+
+deployProperties = [:]
+pipelineProperties = [:]
+
+pipeline {
+    agent {
+        docker {
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+            label util.avoidFaultyNodes()
+        }
+    }
+
+    options {
+        timestamps()
+        timeout(time: 180, unit: 'MINUTES')
+    }
+
+    environment {
+        DROOLS_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
+
+    stages {
+        stage('Initialization') {
+            steps {
+                script {
+                    cleanWs()
+
+                    if (params.DISPLAY_NAME != '') {
+                        currentBuild.displayName = params.DISPLAY_NAME
+                    }
+
+                    readDeployProperties()
+
+                    assert getProjectVersion()
+                    assert getBuildBranch() == util.getReleaseBranchFromVersion(getProjectVersion())
+                    // GIT_TAG must be the approved RC tag; the final tag is derived from it.
+                    assert getRcTag() ==~ /.+-rc[0-9]+/ : "GIT_TAG must be the approved RC tag (e.g. 10.3.0-rc2), got '${getRcTag()}'"
+                }
+            }
+        }
+
+        stage('Merge deploy PR') {
+            // NOTE: tagLatest() removed here intentionally.
+            // In the 103xplus flow the final release tag is created by the
+            // separate "Tag final release" stage below, which delegates to
+            // 05-tag-release.sh so the tag always points to the approved
+            // RC commit — NOT the current branch tip.  Calling tagLatest()
+            // here would create a duplicate tag at the wrong commit.
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        approveAndMergePR(getDeployPrLink())
+                        checkoutRepo()
+                    }
+                }
+            }
+        }
+
+        stage('Tag final release') {
+            // Delegate final-tag creation to 05-tag-release.sh so the release tag
+            // always points to the approved RC commit — NOT the current branch tip.
+            // This matches the documented strategy: the R commit lives under the RC
+            // tag only; the development branch is never disturbed.
+            // Runs before 'Create release' so the GitHub release attaches to this
+            // tag instead of creating one at the branch tip.
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: env.GIT_AUTHOR_PUSH_CREDS_ID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')
+                ]) {
+                    script {
+                        dir(getRepoName()) {
+                            sh """#!/usr/bin/env bash
+                            set -euo pipefail
+                            git config user.email "${env.GIT_AUTHOR_EMAIL ?: 'dev@kie.apache.org'}"
+                            git config user.name  "${env.GIT_AUTHOR ?: 'Apache KIE Release Bot'}"
+                            git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+                            # Fetch the RC tag so the script can resolve it.
+                            git fetch origin "refs/tags/${getRcTag()}:refs/tags/${getRcTag()}"
+                            chmod +x script/release/05-tag-release.sh
+                            ./script/release/05-tag-release.sh --rc-tag "${getRcTag()}" --push
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Create release') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        checkoutRepo()
+                        if (githubscm.isReleaseExist(getGitTag(), getGitAuthorCredsId())) {
+                            githubscm.deleteRelease(getGitTag(), getGitAuthorPushCredsId())
+                        }
+                        githubscm.createReleaseWithGeneratedReleaseNotes(getGitTag(), getBuildBranch(), githubscm.getPreviousTagFromVersion(getGitTag()), getGitAuthorPushCredsId())
+                        githubscm.updateReleaseBody(getGitTag(), getGitAuthorPushCredsId())
+                    }
+                }
+            }
+        }
+
+        stage('Upload drools binaries and documentation') {
+            when {
+                expression { return isMainStream() }
+            }
+            steps {
+                script {
+                    configFileProvider([configFile(fileId: env.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                        getMavenCommand()
+                            .withOptions(env.DROOLS_BUILD_MVN_OPTS ? [ env.DROOLS_BUILD_MVN_OPTS ] : [])
+                            .withOptions(env.BUILD_MVN_OPTS_CURRENT ? [ env.BUILD_MVN_OPTS_CURRENT ] : [])
+                            .inDirectory(getRepoName())
+                            .skipTests(true)
+                            .withProperty('full')
+                            .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
+                            .run('clean install')
+                    }
+                    uploadFileMgmt(getRepoName())
+                }
+            }
+        }
+    }
+    post {
+        unsuccessful {
+            sendNotification()
+        }
+        cleanup {
+            script {
+                util.cleanNode()
+            }
+        }
+    }
+}
+
+void sendNotification() {
+    if (params.SEND_NOTIFICATION) {
+        mailer.sendMarkdownTestSummaryNotification('Promote', "[${getBuildBranch()}] Drools", [env.DROOLS_CI_EMAIL_TO])
+    } else {
+        echo 'No notification sent per configuration'
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Deployment properties
+//////////////////////////////////////////////////////////////////////////////
+
+void readDeployProperties() {
+    String deployUrl = params.DEPLOY_BUILD_URL
+    if (deployUrl != '') {
+        if (!deployUrl.endsWith('/')) {
+            deployUrl += '/'
+        }
+        sh "wget ${deployUrl}artifact/${PROPERTIES_FILE_NAME} -O ${PROPERTIES_FILE_NAME}"
+        deployProperties = readProperties file: PROPERTIES_FILE_NAME
+        // echo all properties
+        echo deployProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    }
+}
+
+boolean hasDeployProperty(String key) {
+    return deployProperties[key] != null
+}
+
+String getDeployProperty(String key) {
+    if (hasDeployProperty(key)) {
+        return deployProperties[key]
+    }
+    return ''
+}
+
+String getParamOrDeployProperty(String paramKey, String deployPropertyKey) {
+    if (params[paramKey] != '') {
+        return params[paramKey]
+    }
+    return getDeployProperty(deployPropertyKey)
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Getter / Setter
+//////////////////////////////////////////////////////////////////////////////
+
+String getRepoName() {
+    return env.REPO_NAME
+}
+
+String getProjectVersion() {
+    return getParamOrDeployProperty('PROJECT_VERSION', 'project.version')
+}
+
+// Approved RC tag to promote (e.g. 10.3.0-rc2). Mandatory, validated in Initialization.
+String getRcTag() {
+    return params.GIT_TAG ?: ''
+}
+
+// Final release tag, derived from the RC tag (e.g. 10.3.0-rc2 -> 10.3.0).
+String getGitTag() {
+    return getRcTag().replaceFirst(/-rc[0-9]+$/, '')
+}
+
+String getBuildBranch() {
+    return params.BUILD_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsId() {
+    return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getGitAuthorPushCredsId() {
+    return env.GIT_AUTHOR_PUSH_CREDS_ID
+}
+
+String getDeployPrLink() {
+    return getDeployProperty("${getRepoName()}.pr.link")
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Git
+//////////////////////////////////////////////////////////////////////////////
+
+void checkoutRepo() {
+    deleteDir()
+    checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
+    // need to manually checkout branch since on a detached branch after checkout command
+    sh "git checkout ${getBuildBranch()}"
+}
+
+void approveAndMergePR(String prLink) {
+    if (prLink?.trim()) {
+        githubscm.approvePR(prLink, getGitAuthorPushCredsId())
+        githubscm.mergePR(prLink, getGitAuthorPushCredsId())
+    }
+}
+
+void tagLatest() {
+    if (getGitTag()) {
+        githubscm.tagLocalAndRemoteRepository('origin', getGitTag(), getGitAuthorPushCredsId(), env.BUILD_TAG, true)
+    }
+}
+
+MavenCommand getMavenCommand() {
+    mvnCmd = new MavenCommand(this, ['-fae', '-ntp'])
+                    .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
+    if (env.MAVEN_DEPENDENCIES_REPOSITORY) {
+        mvnCmd.withDependencyRepositoryInSettings('deps-repo', env.MAVEN_DEPENDENCIES_REPOSITORY)
+    }
+    return mvnCmd
+}
+
+void uploadFileMgmt(String directory) {
+    if (isNotTestingBuild()) {
+        echo "upload binaries and docs for ${directory}"
+        dir(directory) {
+            sshagent(['drools-filemgmt']) {
+                sh "script/release/upload_filemgmt.sh ${getProjectVersion()}"
+            }
+        }
+    } else {
+        echo 'No uploadFileMgmt due to testing build'
+    }
+}
+
+boolean isNotTestingBuild() {
+    return getGitAuthor() == 'apache'
+}
+
+boolean isMainStream() {
+    return env.DROOLS_STREAM == 'main'
+}
