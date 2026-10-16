@@ -344,38 +344,6 @@ public class PatternDSLSequenceConsequenceTest {
         assertThat(results).containsExactly("ball+go");
     }
 
-    @Test
-    public void twoSequencesInOneRuleMultipleAnchorsBothFire() {
-        Variable<Person>       personV = declarationOf(Person.class);
-        Variable<Toy>          toyV    = declarationOf(Toy.class);
-        Variable<Relationship> relV    = declarationOf(Relationship.class);
-
-        Rule rule = rule("two-sequences-multiple-anchors").build(
-                pattern(personV),
-                sequence(
-                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
-                ),
-                sequence(
-                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
-                ),
-                on(personV, toyV, relV).execute((p, t, r) -> results.add(p.getName() + ":" + t.getName() + "+" + r.getStart()))
-        );
-
-        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
-        ksession = kbase.newKieSession();
-
-        // Multiple anchors (Person)
-        insertAndFire(new Person("alice"));
-        insertAndFire(new Person("bob"));
-        insertAndFire(new Toy("ball"));
-        insertAndFire(new Relationship("go", "done"));
-
-        assertThat(results).containsExactlyInAnyOrder(
-                "alice:ball+go",
-                "bob:ball+go"
-        );
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"single-anchor", "two-anchors", "three-anchors"})
     public void twoSequencesInOneRuleMultipleAnchorsAndBindings(String mode) {

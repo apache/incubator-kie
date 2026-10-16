@@ -29,6 +29,7 @@ public class SignalAdapter extends AbstractLinkedListNode<SignalAdapter> {
     private int             signalBitIndex;
     private int             filterIndex;
     private SequenceMemory  memory;
+    private long            registrationEpoch;
 
     public SignalAdapter(SignalProcessor output, int signalBitIndex, int filterIndex, SequenceMemory memory) {
         this.output         = output;
@@ -39,6 +40,14 @@ public class SignalAdapter extends AbstractLinkedListNode<SignalAdapter> {
 
     public BaseTuple getAnchorTuple() {
         return memory.getSequencerMemory().getLeftTuple();
+    }
+
+    public long getRegistrationEpoch() {
+        return registrationEpoch;
+    }
+
+    public void setRegistrationEpoch(long registrationEpoch) {
+        this.registrationEpoch = registrationEpoch;
     }
 
     public void receive(ValueResolver reteEvaluator, FactHandle factHandle) {

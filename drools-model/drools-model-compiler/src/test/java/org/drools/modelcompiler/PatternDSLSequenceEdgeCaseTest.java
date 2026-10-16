@@ -21,6 +21,8 @@ package org.drools.modelcompiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.drools.kiesession.rulebase.InternalKnowledgeBase;
+import org.drools.model.Model;
 import org.drools.model.Rule;
 import org.drools.model.Variable;
 import org.drools.model.impl.ModelImpl;
@@ -36,6 +38,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.KieSessionsPool;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -512,7 +515,7 @@ public class PatternDSLSequenceEdgeCaseTest {
                 .hasMessageContaining("at least one step");
     }
 
-   @Test
+    @Test
     public void mixedAlphaAndBetaExprsInOneStepBothMustHold() {
         Variable<Person> personV = declarationOf(Person.class);
         Variable<Toy>    toyV    = declarationOf(Toy.class);
@@ -591,5 +594,138 @@ public class PatternDSLSequenceEdgeCaseTest {
         ksession.insert(new Toy("apple"));
         ksession.fireAllRules();
         assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void twoSequencesInOneRuleBothCompleteWithInterleavedInserts() {
+        Variable<String>  anchor = declarationOf(String.class);
+        Variable<Integer> a      = declarationOf(Integer.class);
+        Variable<Long>    b      = declarationOf(Long.class);
+
+        Rule rule = rule("two-sequences")
+                .build(
+                    pattern(anchor).expr("isStart", s -> s.equals("start")),
+                    sequence(
+                        pattern(a).expr("isOne", i -> i == 1)
+                    ),
+                    sequence(
+                        pattern(b).expr("isTwo", l -> l == 2L)
+                    ),
+                    execute(() -> results.add("fired"))
+                );
+
+        KieBase kb = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kb.newKieSession();
+
+        ksession.insert("start");
+        ksession.fireAllRules();
+
+        ksession.insert(1);
+        ksession.fireAllRules();
+
+        ksession.insert(2L);
+        ksession.fireAllRules();
+
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void plainRuleAndSequenceRuleShareAnEventType() {
+        Variable<Toy> toy = declarationOf(Toy.class);
+        Variable<Person> person = declarationOf(Person.class);
+
+        Rule plainRule = rule("plain-rule").build(
+                pattern(toy).expr("is-ball", t -> t.getName().equals("ball")),
+                execute(() -> results.add("plain:ball"))
+        );
+
+        Rule seqRule = rule("seq-rule").build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("seq-is-ball", t -> t.getName().equals("ball"))
+                ),
+                execute(() -> results.add("seq:ball"))
+        );
+
+        Model model = new ModelImpl().addRule(plainRule).addRule(seqRule);
+        KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
+        ksession = kieBase.newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.fireAllRules();
+
+        ksession.insert(new Toy("ball"));
+        ksession.fireAllRules();
+
+        // Both the plain rule and the sequence rule must fire.
+        assertThat(results).contains("plain:ball");
+        assertThat(results).contains("seq:ball");
+    }
+
+    @Test
+    public void stepWithNoConstraintMatchesAnyFactOfThatType() {
+        Variable<Toy>    toy    = declarationOf(Toy.class);
+        Variable<Person> person = declarationOf(Person.class);
+
+        Rule rule = rule("unconstrained-step").build(
+                pattern(person),
+                sequence(
+                        pattern(toy)   // no expr() — should accept any Toy
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(
+                new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.fireAllRules();
+        assertThat(results).as("sequence not yet complete").isEmpty();
+
+        // Any toy — no name filter — should satisfy the unconstrained step.
+        ksession.insert(new Toy("anything"));
+        ksession.fireAllRules();
+        assertThat(results).as("unconstrained step fires on any Toy insert").containsExactly("fired");
+    }
+
+    @Test
+    public void pooledSessionReuseShouldNotLeakSequenceState() {
+        Variable<Toy>    toy    = declarationOf(Toy.class);
+        Variable<Person> person = declarationOf(Person.class);
+
+        Rule rule = rule("seq-rule-pooled").build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        InternalKnowledgeBase kbase = KieBaseBuilder.createKieBaseFromModel(
+                new ModelImpl().addRule(rule));
+        KieSessionsPool pool = kbase.newKieSessionsPool(1);
+
+        KieSession s1 = pool.newKieSession();
+        s1.insert(new Person("anchor"));
+        s1.fireAllRules();
+        // Do NOT complete the sequence — dispose mid-flight.
+        s1.dispose();
+
+        KieSession s2 = pool.newKieSession();
+        assertThat(s2).as("pool of 1 must return the same physical session").isSameAs(s1);
+
+        s2.insert(new Person("anchor"));
+        s2.fireAllRules();
+        s2.insert(new Toy("ball"));
+        s2.fireAllRules();
+        int secondFires = results.size();
+
+        pool.shutdown();
+
+        assertThat(secondFires)
+                .as("sequence must fire exactly once in session #2 — " +
+                    "stale DynamicFilter/SignalAdapter state from session #1 must not cause extra or missing fires")
+                .isEqualTo(1);
     }
 }
