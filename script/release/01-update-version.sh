@@ -83,6 +83,16 @@ mvn versions:set \
     -DprocessAllModules \
     -DgenerateBackupPoms=false
 
+# kogito-ide-config has org.apache:apache as its parent (not a KIE reactor
+# module), so versions:set -DprocessAllModules skips it.  Patch it explicitly.
+IDE_CONFIG_POM="${REPO_ROOT}/kogito-build/kogito-ide-config/pom.xml"
+if [[ -f "${IDE_CONFIG_POM}" ]]; then
+    echo ""
+    echo "--- Patching kogito-ide-config version (external-parent module) ---"
+    sed -i "s|<version>${CURRENT_VERSION}</version>|<version>${NEW_VERSION}</version>|g" "${IDE_CONFIG_POM}"
+    echo "    kogito-ide-config: ${CURRENT_VERSION} → ${NEW_VERSION}"
+fi
+
 # The data-index ephemeral image tag property is controlled via a dedicated
 # property inside kogito-quarkus-workflow-common-deployment.  Update it to
 # track the stream name so nightly image pulls resolve correctly.
