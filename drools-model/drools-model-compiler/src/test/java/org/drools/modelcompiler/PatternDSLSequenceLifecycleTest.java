@@ -149,10 +149,7 @@ public class PatternDSLSequenceLifecycleTest {
 
     @Test
     public void sequenceDoesNotFireAgainAfterCompletion() {
-        ksession = makeKSession();
-
-        ksession.insert(new Person("anchor"));
-        ksession.fireAllRules();
+        ksession = makeKSessionAnchorless();
 
         ksession.insert(new Toy("ball"));
         ksession.fireAllRules();
@@ -199,13 +196,10 @@ public class PatternDSLSequenceLifecycleTest {
 
     @Test
     public void retractStepEventDoesNotUndoStep() {
-        ksession = makeKSession();
-
-        ksession.insert(new Person("anchor"));
-        ksession.fireAllRules();
+        ksession = makeKSessionAnchorless();
 
         FactHandle toyHandle = ksession.insert(new Toy("ball"));
-        ksession.fireAllRules();                    // step-1 consumed; sequence now at step-2
+        ksession.fireAllRules();                    // step-1 consumed via replay; sequence now at step-2
 
         ksession.retract(toyHandle);               // retract the step-1 fact — no-op for the sequencer
         ksession.fireAllRules();
@@ -218,14 +212,11 @@ public class PatternDSLSequenceLifecycleTest {
 
     @Test
     public void updateStepEventDoesNotUndoStep() {
-        ksession = makeKSession();
-
-        ksession.insert(new Person("anchor"));
-        ksession.fireAllRules();
+        ksession = makeKSessionAnchorless();
 
         Toy toy = new Toy("ball");
         FactHandle toyHandle = ksession.insert(toy);
-        ksession.fireAllRules();                    // step-1 consumed; sequence now at step-2
+        ksession.fireAllRules();                    // step-1 consumed via replay; sequence now at step-2
 
         ksession.update(toyHandle, toy);            // update the step-1 fact — no-op for the sequencer
         ksession.fireAllRules();
@@ -238,11 +229,9 @@ public class PatternDSLSequenceLifecycleTest {
 
     @Test
     public void removedRuleNoLongerReceivesStepEvents() {
-        Variable<Person> personV = declarationOf(Person.class);
-        Variable<Toy>    toyV    = declarationOf(Toy.class);
+        Variable<Toy> toyV = declarationOf(Toy.class);
 
         Rule rule = rule("seq-remove-rule").build(
-                pattern(personV),
                 sequence(
                         pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
                 ),
@@ -253,8 +242,7 @@ public class PatternDSLSequenceLifecycleTest {
         KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
         ksession = kieBase.newKieSession();
 
-        // Start the sequencer
-        ksession.insert(new Person("anchor"));
+        // Start the sequencer (InitialFact activates it)
         ksession.fireAllRules();
 
         // Remove the rule from the KieBase while the session is active
@@ -288,6 +276,20 @@ public class PatternDSLSequenceLifecycleTest {
                 pattern(person),
                 sequence(
                         pattern(toy).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+        Model model = new ModelImpl().addRule(rule);
+        KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
+        return kieBase.newKieSession();
+    }
+
+    private KieSession makeKSessionAnchorless() {
+        // No anchor pattern: sequencer starts via InitialFact on session creation.
+        Rule rule = rule("lifecycle-rule-anchorless").build(
+                sequence(
+                        pattern(toy).expr("is-ball", t -> t.getName().equals("ball")),
+                        pattern(relationship).expr("is-go", r -> r.getStart().equals("go"))
                 ),
                 execute(() -> results.add("fired"))
         );

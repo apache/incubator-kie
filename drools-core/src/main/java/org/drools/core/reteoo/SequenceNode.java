@@ -26,6 +26,7 @@ import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.reteoo.sequencing.Sequence.SequenceMemory;
 import org.drools.base.rule.Pattern;
 import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.Memory;
@@ -67,6 +68,9 @@ public class SequenceNode extends LeftTupleSource
 
     private DynamicFilterProto[] dynamicFilters;
 
+    /** True when there is no anchor pattern — the sequencer is started by the InitialFact. */
+    private boolean anchorless;
+
     private LeftTupleSinkNode      previousTupleSinkNode;
 
     private LeftTupleSinkNode      nextTupleSinkNode;
@@ -82,11 +86,20 @@ public class SequenceNode extends LeftTupleSource
         setLeftTupleSource(tupleSource);
         this.setObjectCount(leftInput.getObjectCount()); // 'sequence' nodes do not increase the object count
         this.tupleMemoryEnabled = context.isTupleMemoryEnabled();
+        this.anchorless = isInitialFactLian(tupleSource);
 
         initMasks(context);
 
         hashcode = calculateHashCode();
         setStreamMode(true);
+    }
+
+    private static boolean isInitialFactLian(LeftTupleSource tupleSource) {
+        if (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode) {
+            return false;
+        }
+        ObjectTypeNode otn = ((LeftInputAdapterNode) tupleSource).getObjectSource().getObjectTypeNode();
+        return otn != null && otn.getObjectType().isAssignableTo(org.drools.base.InitialFact.class);
     }
 
     public void setAlphaAdapters(AlphaAdapter[] adapters) {
@@ -156,6 +169,76 @@ public class SequenceNode extends LeftTupleSource
     public void setSequencer(Sequencer sequencer) {
         this.sequencer = sequencer;
         this.hashcode = calculateHashCode();
+    }
+
+    void replayExistingFacts(SequenceNodeMemory memory, ReteEvaluator reteEvaluator) {
+        // Only replay when the sequencer was activated by the InitialFact (no anchor pattern).
+        // When there is a real anchor, facts that arrived before it must not be captured —
+        // that is the documented temporal contract of the sequence API.
+        if (!anchorless) {
+            return;
+        }
+        WorkingMemoryEntryPoint ep = reteEvaluator.getDefaultEntryPoint();
+        java.util.Set<DynamicFilter> filtersBefore = new java.util.HashSet<>();
+        boolean changed;
+        do {
+            snapshotActiveFilters(memory, filtersBefore);
+            for (AlphaAdapter adapter : alphaAdapters) {
+                LinkedList<DynamicFilter> activeFilters = memory.getActiveFilters()[adapter.adapterIndex];
+                if (activeFilters == null || activeFilters.isEmpty()) {
+                    continue;
+                }
+                java.util.List<DynamicFilter> newFilters = new java.util.ArrayList<>();
+                for (DynamicFilter f = activeFilters.getFirst(); f != null; f = f.getNext()) {
+                    if (!filtersBefore.contains(f)) {
+                        newFilters.add(f);
+                    }
+                }
+                if (newFilters.isEmpty()) {
+                    continue;
+                }
+                ObjectTypeNode otn = (ObjectTypeNode) adapter.source;
+                Class<?> classType = ((org.drools.base.base.ClassObjectType) otn.getObjectType()).getClassType();
+                java.util.Iterator<InternalFactHandle> it = ep.getObjectStore().iterateFactHandles(classType);
+                while (it.hasNext()) {
+                    InternalFactHandle fh = it.next();
+                    for (DynamicFilter f : newFilters) {
+                        f.assertObject(fh, reteEvaluator);
+                    }
+                }
+            }
+            changed = activeFiltersChanged(memory, filtersBefore);
+        } while (changed);
+    }
+
+    private void snapshotActiveFilters(SequenceNodeMemory memory, java.util.Set<DynamicFilter> snapshot) {
+        snapshot.clear();
+        for (LinkedList<DynamicFilter> slot : memory.getActiveFilters()) {
+            if (slot != null) {
+                for (DynamicFilter f = slot.getFirst(); f != null; f = f.getNext()) {
+                    snapshot.add(f);
+                }
+            }
+        }
+    }
+
+    private boolean activeFiltersChanged(SequenceNodeMemory memory, java.util.Set<DynamicFilter> snapshot) {
+        for (LinkedList<DynamicFilter> slot : memory.getActiveFilters()) {
+            if (slot != null) {
+                for (DynamicFilter f = slot.getFirst(); f != null; f = f.getNext()) {
+                    if (!snapshot.contains(f)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        int currentCount = 0;
+        for (LinkedList<DynamicFilter> slot : memory.getActiveFilters()) {
+            if (slot != null) {
+                currentCount += slot.size();
+            }
+        }
+        return currentCount != snapshot.size();
     }
 
     public boolean isLeftTupleMemoryEnabled() {
@@ -540,6 +623,7 @@ public class SequenceNode extends LeftTupleSource
                 SequencerMemory sequencerMemory = memory.node.createSequencerMemory(leftTuple, sink, memory);
                 leftTuple.setContextObject(sequencerMemory);
                 node.getSequencer().start(sequencerMemory, reteEvaluator);
+                node.replayExistingFacts(memory, reteEvaluator);
 
                 leftTuple.clearStaged();
                 leftTuple = next;
