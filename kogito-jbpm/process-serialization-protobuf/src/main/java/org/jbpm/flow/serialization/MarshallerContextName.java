@@ -32,6 +32,7 @@ public final class MarshallerContextName<T> {
     public static final MarshallerContextName<Process<?>> MARSHALLER_PROCESS = new MarshallerContextName<>("PROCESS");
     public static final MarshallerContextName<RuleFlowProcessInstance> MARSHALLER_PROCESS_INSTANCE = new MarshallerContextName<>("PROCESS_INSTANCE");
     public static final MarshallerContextName<Boolean> MARSHALLER_INSTANCE_READ_ONLY = new MarshallerContextName<>("READ_ONLY");
+    public static final MarshallerContextName<Boolean> MARSHALLER_INSTANCE_EAGER = new MarshallerContextName<>("EAGER", () -> Boolean.FALSE);
     public static final MarshallerContextName<HeadersPersistentConfig> MARSHALLER_HEADERS_CONFIG = new MarshallerContextName<HeadersPersistentConfig>("HEADER_CONFIG");
     public static final MarshallerContextName<ProcessInstanceMarshallerListener[]> MARSHALLER_INSTANCE_LISTENER =
             new MarshallerContextName<>("MARSHALLER_INSTANCE_LISTENERS", () -> new ProcessInstanceMarshallerListener[0]);
