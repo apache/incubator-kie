@@ -202,7 +202,9 @@ public class LightWorkItemManager implements InternalKogitoWorkItemManager {
             lastTransition = nextTransition.get();
             this.eventSupport.fireBeforeWorkItemTransition(workItem.getProcessInstance(), workItem, lastTransition, null);
             nextTransition = handler.transitionToPhase(this, workItem, nextTransition.get());
-            processInstance.signalEvent("workItemTransition", transition);
+            if (processInstance != null) {
+                processInstance.signalEvent("workItemTransition", transition);
+            }
             this.eventSupport.fireAfterWorkItemTransition(workItem.getProcessInstance(), workItem, lastTransition, null);
         }
 
