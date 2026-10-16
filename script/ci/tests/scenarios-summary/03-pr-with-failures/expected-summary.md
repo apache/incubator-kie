@@ -73,6 +73,6 @@ mvn -T 1C --batch-mode --no-transfer-progress -fae -DskipTests -DskipITs -Denfor
 **Step 2 — Build changed and affected modules (with tests):**
 
 ```bash
-mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -pl "g:a1,g:a2" install
+mvn --batch-mode --no-transfer-progress -fae -Dsurefire.redirectTestOutputToFile=true -Dfull -Dreproducible -pl "g:a1,g:a2" install
 ```
 

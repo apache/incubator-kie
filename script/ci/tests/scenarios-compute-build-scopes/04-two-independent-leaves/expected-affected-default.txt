@@ -1,0 +1,2 @@
+org.drools:drools-beliefs
+org.drools:drools-fastutil
