@@ -50,6 +50,9 @@ public class Models {
                 }
             }
         }
+        if (VariableLegacyMode.isEnabled() && m instanceof Model model) {
+            map.putAll(model.getAdditionalProperties());
+        }
         return map;
     }
 
@@ -60,10 +63,12 @@ public class Models {
 
     @SuppressWarnings("squid:S3011")
     public static <T> T fromMap(T m, Map<String, Object> map) {
+        Set<String> declaredJsonProperties = new java.util.HashSet<>();
         for (Field field : m.getClass().getDeclaredFields()) {
             JsonProperty jsonAnnotation = field.getAnnotation(JsonProperty.class);
             if (jsonAnnotation != null) {
                 String name = jsonAnnotation.value();
+                declaredJsonProperties.add(name);
                 if (map.containsKey(name)) {
                     field.setAccessible(true);
                     try {
@@ -73,6 +78,16 @@ public class Models {
                     }
                 }
             }
+        }
+        if (VariableLegacyMode.isEnabled() && m instanceof Model model) {
+            Map<String, Object> additionalProperties = new java.util.HashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                String key = entry.getKey();
+                if (!declaredJsonProperties.contains(key)) {
+                    additionalProperties.put(key, entry.getValue());
+                }
+            }
+            model.setAdditionalProperties(additionalProperties);
         }
         return m;
     }

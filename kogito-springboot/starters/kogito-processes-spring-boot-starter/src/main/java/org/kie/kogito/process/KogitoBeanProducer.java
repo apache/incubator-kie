@@ -21,6 +21,9 @@ package org.kie.kogito.process;
 import java.util.List;
 import java.util.Optional;
 
+import org.jbpm.process.core.context.variable.VariableScope;
+import org.kie.api.annotations.KieProperty;
+import org.kie.kogito.VariableLegacyMode;
 import org.kie.kogito.config.ConfigBean;
 import org.kie.kogito.correlation.CorrelationService;
 import org.kie.kogito.event.correlation.DefaultCorrelationService;
@@ -44,14 +47,30 @@ import org.springframework.context.annotation.Configuration;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 
+import jakarta.annotation.PostConstruct;
+
 @Configuration
 public class KogitoBeanProducer {
 
+    /**
+     * (boolean) when true, undeclared variables are mapped into the runtime process instance (restores legacy behavior); default is false
+     */
+    @KieProperty(type = "boolean", defaultValue = "false")
+    public static final String KOGITO_WORKFLOW_VARIABLE_LEGACY = VariableScope.KOGITO_VARIABLE_LEGACY_PROPERTY;
+
     ConfigBean configBean;
+
+    @Value("${" + VariableScope.KOGITO_VARIABLE_LEGACY_PROPERTY + ":false}")
+    private boolean variableLegacy;
 
     @Autowired
     public KogitoBeanProducer(ConfigBean configBean) {
         this.configBean = configBean;
+    }
+
+    @PostConstruct
+    void init() {
+        VariableLegacyMode.setEnabled(variableLegacy);
     }
 
     @Bean

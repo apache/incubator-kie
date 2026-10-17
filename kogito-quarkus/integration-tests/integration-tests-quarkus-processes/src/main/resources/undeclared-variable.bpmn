@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   xmlns:drools="http://www.jboss.org/drools"
+                   id="_undeclared_variable_def"
+                   targetNamespace="http://www.omg.org/bpmn20"
+                   xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd">
+
+  <bpmn2:signal id="_sig_continue" name="continue"/>
+
+  <!--
+    Process: undeclaredVariable
+    Variables declared: none
+    Logic:
+      Start → XOR gateway
+        → if kcontext.getVariable("payload") == null  → End (null-path)
+        → otherwise                                    → Intermediate catch (signal "continue") → End (wait-path)
+    The undeclared variable "payload" is passed as an input parameter when the process starts.
+  -->
+  <bpmn2:process id="undeclaredVariable"
+                 drools:packageName="org.kie.kogito.integrationtests"
+                 drools:version="1.0"
+                 drools:adHoc="false"
+                 name="undeclaredVariable"
+                 isExecutable="true"
+                 processType="Public">
+
+    <!-- sequence flows -->
+    <bpmn2:sequenceFlow id="_sf_start_gw"     sourceRef="_start"  targetRef="_gw"/>
+    <bpmn2:sequenceFlow id="_sf_gw_wait"      sourceRef="_gw"     targetRef="_wait">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">return kcontext.getVariable("payload") != null;</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="_sf_gw_end_null"  sourceRef="_gw"     targetRef="_end_null">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">return kcontext.getVariable("payload") == null;</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="_sf_wait_end"     sourceRef="_wait"   targetRef="_end_wait"/>
+
+    <!-- start event -->
+    <bpmn2:startEvent id="_start" name="Start">
+      <bpmn2:outgoing>_sf_start_gw</bpmn2:outgoing>
+    </bpmn2:startEvent>
+
+    <!-- exclusive gateway -->
+    <bpmn2:exclusiveGateway id="_gw" name="Payload provided?" gatewayDirection="Diverging">
+      <bpmn2:incoming>_sf_start_gw</bpmn2:incoming>
+      <bpmn2:outgoing>_sf_gw_wait</bpmn2:outgoing>
+      <bpmn2:outgoing>_sf_gw_end_null</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <!-- intermediate catch event – waits for signal "continue" -->
+    <bpmn2:intermediateCatchEvent id="_wait" name="Wait for continue">
+      <bpmn2:incoming>_sf_gw_wait</bpmn2:incoming>
+      <bpmn2:outgoing>_sf_wait_end</bpmn2:outgoing>
+      <bpmn2:signalEventDefinition signalRef="_sig_continue"/>
+    </bpmn2:intermediateCatchEvent>
+
+    <!-- end event: reached when payload is null -->
+    <bpmn2:endEvent id="_end_null" name="End (null)">
+      <bpmn2:incoming>_sf_gw_end_null</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <!-- end event: reached after signal is received -->
+    <bpmn2:endEvent id="_end_wait" name="End (signal)">
+      <bpmn2:incoming>_sf_wait_end</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+  </bpmn2:process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="undeclaredVariable">
+      <bpmndi:BPMNShape id="_start_di"     bpmnElement="_start">    <dc:Bounds x="100" y="100" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_gw_di"        bpmnElement="_gw">       <dc:Bounds x="200" y="93"  width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_wait_di"      bpmnElement="_wait">     <dc:Bounds x="320" y="100" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_end_null_di"  bpmnElement="_end_null"> <dc:Bounds x="320" y="200" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_end_wait_di"  bpmnElement="_end_wait"> <dc:Bounds x="440" y="100" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="_sf_start_gw_di"    bpmnElement="_sf_start_gw"/>
+      <bpmndi:BPMNEdge id="_sf_gw_wait_di"     bpmnElement="_sf_gw_wait"/>
+      <bpmndi:BPMNEdge id="_sf_gw_end_null_di" bpmnElement="_sf_gw_end_null"/>
+      <bpmndi:BPMNEdge id="_sf_wait_end_di"    bpmnElement="_sf_wait_end"/>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn2:definitions>

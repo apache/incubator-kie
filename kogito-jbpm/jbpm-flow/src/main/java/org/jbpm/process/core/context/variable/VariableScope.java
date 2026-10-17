@@ -24,12 +24,15 @@ import java.util.List;
 
 import org.jbpm.process.core.Context;
 import org.jbpm.process.core.context.AbstractContext;
+import org.kie.kogito.VariableLegacyMode;
 import org.kie.kogito.internal.utils.KogitoTags;
 
 public class VariableScope extends AbstractContext {
 
     public static final String VARIABLE_STRICT_ENABLED_PROPERTY = "org.jbpm.variable.strict";
     private static boolean variableStrictEnabled = Boolean.parseBoolean(System.getProperty(VARIABLE_STRICT_ENABLED_PROPERTY, Boolean.FALSE.toString()));
+
+    public static final String KOGITO_VARIABLE_LEGACY_PROPERTY = "kogito.workflow.variable-legacy-mode";
 
     public static final String VARIABLE_SCOPE = "VariableScope";
 
@@ -85,6 +88,9 @@ public class VariableScope extends AbstractContext {
         }
         Variable var = findVariable(name);
         if (var == null) {
+            if (VariableLegacyMode.isEnabled()) {
+                return;
+            }
             throw new IllegalArgumentException("Variable '" + name + "' is not defined in process " + processName);
         }
         if (var.getType() != null && value != null) {

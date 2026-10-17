@@ -18,8 +18,11 @@
  */
 package org.kie.kogito;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Represents data model type of objects that are usually descriptor of data holders.
@@ -43,5 +46,22 @@ public interface Model extends MapInput, MapOutput {
      */
     default Set<String> getModifiedFields() {
         return null;
+    }
+
+    /**
+     * Returns the undeclared process variables carried by this model (legacy variable mode).
+     * Returns an empty map when the model does not carry any.
+     */
+    @JsonIgnore
+    default Map<String, Object> getAdditionalProperties() {
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Sets the undeclared process variables carried by this model (legacy variable mode).
+     * No-op unless the model supports carrying them.
+     */
+    default void setAdditionalProperties(Map<String, Object> additionalProperties) {
+        // no-op by default
     }
 }

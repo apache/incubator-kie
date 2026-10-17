@@ -20,7 +20,9 @@ package org.kie.kogito.quarkus.workflow;
 
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.jbpm.process.core.context.variable.VariableScope;
 import org.kie.api.annotations.KieProperty;
+import org.kie.kogito.VariableLegacyMode;
 import org.kie.kogito.config.ConfigBean;
 import org.kie.kogito.correlation.CorrelationService;
 import org.kie.kogito.event.correlation.DefaultCorrelationService;
@@ -28,6 +30,7 @@ import org.kie.kogito.jobs.JobsService;
 import org.kie.kogito.process.ProcessVersionResolver;
 import org.kie.kogito.process.Processes;
 import org.kie.kogito.process.version.ProjectVersionProcessVersionResolver;
+import org.kie.kogito.quarkus.workflow.config.KogitoWorkflowRuntimeConfig;
 import org.kie.kogito.services.jobs.impl.InMemoryJobContext;
 import org.kie.kogito.services.jobs.impl.InMemoryJobService;
 import org.kie.kogito.services.jobs.impl.InMemoryProcessJobExecutorFactory;
@@ -38,10 +41,13 @@ import org.kie.kogito.usertask.UserTasks;
 
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.properties.IfBuildProperty;
+import io.quarkus.runtime.StartupEvent;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 @ApplicationScoped
@@ -52,6 +58,19 @@ public class KogitoBeanProducer {
      */
     @KieProperty(type = "string", defaultValue = "workflow", allowedValues = "project,workflow")
     public static final String KOGITO_WORKFLOW_VERSION_STRATEGY = "kogito.workflow.version-strategy";
+
+    /**
+     * (boolean) when true, undeclared variables are mapped into the runtime process instance (restores legacy behavior); default is false
+     */
+    @KieProperty(type = "boolean", defaultValue = "false")
+    public static final String KOGITO_WORKFLOW_VARIABLE_LEGACY = VariableScope.KOGITO_VARIABLE_LEGACY_PROPERTY;
+
+    @Inject
+    KogitoWorkflowRuntimeConfig runtimeConfig;
+
+    void onStart(@Observes StartupEvent event) {
+        VariableLegacyMode.setEnabled(runtimeConfig.variableLegacy());
+    }
 
     @DefaultBean
     @Produces

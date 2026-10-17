@@ -194,15 +194,16 @@ public class ModelMetaData {
         }
         modelClass.setName(modelClassSimpleName);
 
-        // The modified-fields tracking field/getter must stay out of the generated OpenAPI
+        // The modified-fields and additional-properties tracking members must stay out of the generated OpenAPI
         if (supportsOpenApiGeneration) {
             NormalAnnotationExpr hiddenSchema = new NormalAnnotationExpr(new Name(Schema.class.getCanonicalName()),
                     NodeList.nodeList(new MemberValuePair("hidden", new BooleanLiteralExpr(true))));
-            modelClass.findFirst(FieldDeclaration.class,
-                    fd -> fd.getVariables().stream().anyMatch(v -> v.getNameAsString().equals("__modifiedFields")))
-                    .ifPresent(fd -> fd.addAnnotation(hiddenSchema.clone()));
-            modelClass.findFirst(MethodDeclaration.class, md -> md.getNameAsString().equals("getModifiedFields"))
-                    .ifPresent(md -> md.addAnnotation(hiddenSchema.clone()));
+            modelClass.findAll(FieldDeclaration.class,
+                    fd -> fd.getVariables().stream().anyMatch(v -> v.getNameAsString().equals("__modifiedFields") || v.getNameAsString().equals("__additionalProperties")))
+                    .forEach(fd -> fd.addAnnotation(hiddenSchema.clone()));
+            modelClass.findAll(MethodDeclaration.class,
+                    md -> md.getNameAsString().equals("getModifiedFields") || md.getNameAsString().equals("getAdditionalProperties") || md.getNameAsString().equals("setAdditionalProperties"))
+                    .forEach(md -> md.addAnnotation(hiddenSchema.clone()));
             compilationUnit.addImport(Schema.class.getCanonicalName());
         }
 
@@ -262,6 +263,9 @@ public class ModelMetaData {
 
         Optional<MethodDeclaration> toMapMethod = modelClass.findFirst(MethodDeclaration.class, sl -> sl.getName().asString().equals("toMap"));
 
+        // Include any undeclared variables that were forwarded from the Input model.
+        toMapBody.addStatement(new MethodCallExpr(new NameExpr("params"), "putAll")
+                .addArgument(new MethodCallExpr(null, "getAdditionalProperties")));
         toMapBody.addStatement(new ReturnStmt(new NameExpr("params")));
         toMapMethod.ifPresent(methodDeclaration -> methodDeclaration.setBody(toMapBody));
 

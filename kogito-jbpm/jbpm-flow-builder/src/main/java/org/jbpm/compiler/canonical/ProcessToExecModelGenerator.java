@@ -224,6 +224,9 @@ public class ProcessToExecModelGenerator {
             }
             body.addStatement(new MethodCallExpr(returnName, "addModifiedFields",
                     NodeList.nodeList(new MethodCallExpr(null, "getModifiedFields"))));
+            // Forward undeclared variables captured by @JsonAnySetter on the Input model.
+            body.addStatement(new MethodCallExpr(returnName, "setAdditionalProperties",
+                    NodeList.nodeList(new MethodCallExpr(null, "getAdditionalProperties"))));
             body.addStatement(new ReturnStmt(returnName));
             method.setBody(body);
         }

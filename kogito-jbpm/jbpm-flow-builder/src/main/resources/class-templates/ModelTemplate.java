@@ -22,6 +22,7 @@ import org.kie.kogito.MapInput;
 import org.kie.kogito.MapInputId;
 import org.kie.kogito.MapOutput;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,6 +39,10 @@ public class XXXModel implements org.kie.kogito.Model, MapInput, MapInputId, Map
 
     @JsonIgnore
     private transient Set<String> __modifiedFields;
+
+    // Carries undeclared process variables forwarded from the Input model.
+    @JsonIgnore
+    private transient Map<String, Object> __additionalProperties;
 
     public void setId(String id) {
         this.id = id;
@@ -69,6 +74,19 @@ public class XXXModel implements org.kie.kogito.Model, MapInput, MapInputId, Map
     // field counts as significant - unlike PATCH, which only touches tracked fields.
     void clearModifiedFields() {
         __modifiedFields = null;
+    }
+
+    // Codegen-internal: forwards undeclared variables from the Input model into this model.
+    @JsonIgnore
+    @Override
+    public void setAdditionalProperties(Map<String, Object> props) {
+        __additionalProperties = props;
+    }
+
+    @JsonIgnore
+    @Override
+    public Map<String, Object> getAdditionalProperties() {
+        return __additionalProperties != null ? __additionalProperties : Collections.emptyMap();
     }
 
 }

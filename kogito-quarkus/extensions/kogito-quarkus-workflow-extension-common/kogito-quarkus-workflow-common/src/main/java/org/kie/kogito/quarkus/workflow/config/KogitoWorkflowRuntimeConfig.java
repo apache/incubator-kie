@@ -21,6 +21,7 @@ package org.kie.kogito.quarkus.workflow.config;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
 
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
@@ -31,6 +32,14 @@ public interface KogitoWorkflowRuntimeConfig {
      * Persistence runtime configuration
      */
     @WithName("persistence")
-    public KogitoPersistenceRuntimeConfig persistenceConfig();
+    KogitoPersistenceRuntimeConfig persistenceConfig();
+
+    /**
+     * When {@code true}, undeclared variables are mapped into the runtime process instance (restores legacy behavior).
+     * Default is {@code false}.
+     */
+    @WithName("workflow.variable-legacy-mode")
+    @WithDefault("false")
+    boolean variableLegacy();
 
 }
