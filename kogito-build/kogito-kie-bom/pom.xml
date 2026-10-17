@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-build</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -38,7 +38,7 @@
 
   <properties>
     <version.org.kie>999-SNAPSHOT</version.org.kie>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:15:33Z</project.build.outputTimestamp>
   </properties>
 
 </project>

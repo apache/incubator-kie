@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>drools-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -38,7 +38,7 @@
   <properties>
     <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
     <version.rewrite.plugin>4.45.0</version.rewrite.plugin>
-    <project.build.outputTimestamp>2024-01-12T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:15:29Z</project.build.outputTimestamp>
     <version.maven.artifact.plugin>3.5.1</version.maven.artifact.plugin>
   </properties>
 

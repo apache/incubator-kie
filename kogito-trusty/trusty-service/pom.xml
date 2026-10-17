@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>trusty</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>trusty-service</artifactId>
@@ -35,7 +35,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:18:23Z</project.build.outputTimestamp>
   </properties>
 
   <modules>

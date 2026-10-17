@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kogito-addons-quarkus-data-index-mongodb-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kogito-addons-quarkus-data-index-mongodb-integration-tests-process</artifactId>
   <name>Kogito Apps :: Kogito Addons Quarkus Data Index MongoDB :: Integration Tests :: Process</name>
@@ -33,7 +33,7 @@
   <properties>
     <disable.quarkus.jar.rename>false</disable.quarkus.jar.rename>
     <disable.quarkus.plugin>false</disable.quarkus.plugin>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:18:46Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>

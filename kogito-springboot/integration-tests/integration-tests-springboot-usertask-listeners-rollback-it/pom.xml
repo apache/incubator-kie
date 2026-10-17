@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kie.kogito</groupId>
         <artifactId>kogito-spring-boot-integration-tests</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -32,7 +32,7 @@
 
     <properties>
         <java.module.name>integration.tests.springboot.usertask.listeners.rollback.it</java.module.name>
-        <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-10-17T16:17:12Z</project.build.outputTimestamp>
     </properties>
 
     <dependencies>

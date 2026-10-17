@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>integration-tests-jobs-service-quarkus</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>integration-tests-jobs-service-quarkus-messaging</artifactId>
   <name>Kogito Apps :: Integration Tests :: Jobs Service :: Quarkus :: Messaging</name>
@@ -35,7 +35,7 @@
   <properties>
     <path.to.apps.integrations.tests>${project.parent.parent.basedir}/../../kogito-apps-integration-tests</path.to.apps.integrations.tests>
     <path.to.integration.tests.jobs.service.common>${path.to.apps.integrations.tests}/integration-tests-jobs-service/integration-tests-jobs-service-common</path.to.integration.tests.jobs.service.common>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:18:17Z</project.build.outputTimestamp>
     <disable.quarkus.plugin>false</disable.quarkus.plugin>
   </properties>
 

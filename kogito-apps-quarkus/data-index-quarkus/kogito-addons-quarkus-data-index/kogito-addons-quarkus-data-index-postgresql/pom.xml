@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kogito-addons-quarkus-data-index</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kogito-addons-quarkus-data-index-postgresql-parent</artifactId>
   <packaging>pom</packaging>
@@ -34,7 +34,7 @@
 
   <properties>
     <java.module.name>org.kie.kogito.addons.quarkus.data.index.postgresql</java.module.name>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:18:43Z</project.build.outputTimestamp>
   </properties>
 
   <modules>

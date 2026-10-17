@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>trusty-storage</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <name>Kogito Apps :: Trusty Storage Common</name>
@@ -35,7 +35,7 @@
   <properties>
     <java.module.name>org.kie.kogito.trusty.storage.common</java.module.name>
     <disable.quarkus.plugin>true</disable.quarkus.plugin>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:18:42Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>

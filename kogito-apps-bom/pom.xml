@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-build-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kogito-build/kogito-build-parent/pom.xml</relativePath>
   </parent>
   <artifactId>kogito-apps-bom</artifactId>
@@ -31,7 +31,7 @@
     <java.module.name>org.kie.kogito.apps.bom</java.module.name>
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-apps-bom</allowedPomsList>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:16:51Z</project.build.outputTimestamp>
     <!-- To be overridden by poms with dependency management -->
     <root_pom>../pom.xml</root_pom>
   </properties>

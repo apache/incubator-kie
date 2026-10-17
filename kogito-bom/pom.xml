@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-parent-drools</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kie-parent-drools/pom.xml</relativePath>
   </parent>
 
@@ -47,7 +47,7 @@
     <!-- PostgreSQL 16.8+ required for SASL authentication protocol -->
     <version.org.postgres>16.8-alpine3.21</version.org.postgres>
 
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:15:44Z</project.build.outputTimestamp>
     <!-- To be overridden by poms with dependency management -->
     <root_pom>../pom.xml</root_pom>
   </properties>

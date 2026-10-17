@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>jobs-service-quarkus</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>jobs-service-storage-jpa</artifactId>
@@ -41,7 +41,7 @@
     <path.to.migration.scripts.target>target/classes/${path.to.flyway.location}</path.to.migration.scripts.target>
     <java.module.name>org.kie.kogito.job.service.repository.jpa</java.module.name>
     <disable.quarkus.plugin>true</disable.quarkus.plugin>
-    <project.build.outputTimestamp>2026-03-18T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-17T16:18:21Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>
