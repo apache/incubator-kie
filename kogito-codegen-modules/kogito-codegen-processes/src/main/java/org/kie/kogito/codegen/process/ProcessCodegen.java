@@ -43,7 +43,7 @@ import org.jbpm.compiler.canonical.ProcessMetaData;
 import org.jbpm.compiler.canonical.ProcessToExecModelGenerator;
 import org.jbpm.compiler.canonical.TriggerMetaData;
 import org.jbpm.compiler.canonical.TriggerMetaData.TriggerType;
-import org.jbpm.compiler.canonical.WorkItemModelMetaData;
+import org.jbpm.compiler.canonical.workitem.WorkItemModelMetaData;
 import org.jbpm.compiler.xml.XmlProcessReader;
 import org.jbpm.compiler.xml.core.SemanticModules;
 import org.jbpm.process.core.impl.ProcessImpl;

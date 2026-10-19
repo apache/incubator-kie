@@ -41,6 +41,7 @@ import org.kie.kogito.codegen.core.DashboardGeneratedFileUtils;
 import org.kie.kogito.codegen.core.io.CollectedResourceProducer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.kogito.codegen.process.ProcessCodegen.BUSINESS_CALENDAR_PRODUCER_TEMPLATE;
 import static org.kie.kogito.grafana.utils.GrafanaDashboardUtils.DISABLED_OPERATIONAL_DASHBOARDS;
 
@@ -55,6 +56,10 @@ class ProcessCodegenTest {
     private static final Path OBJECT_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(OBJECT_VARIABLE_SOURCE);
     private static final String UNTYPED_COLLECTION_VARIABLE_SOURCE = "collectionvariable/UntypedCollectionVariableProcess.bpmn2";
     private static final Path UNTYPED_COLLECTION_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(UNTYPED_COLLECTION_VARIABLE_SOURCE);
+    private static final String DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE = "usertask/DuplicateTaskNamesConflictingTypesProcess.bpmn2";
+    private static final Path DUPLICATE_TASKS_CONFLICTING_TYPES_FULL_PATH = BASE_PATH.resolve(DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE);
+    private static final String DUPLICATE_WORKITEMS_SOURCE = "workitem/DuplicateWorkItemNamesProcess.bpmn2";
+    private static final Path DUPLICATE_WORKITEMS_FULL_PATH = BASE_PATH.resolve(DUPLICATE_WORKITEMS_SOURCE);
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
@@ -222,5 +227,40 @@ class ProcessCodegenTest {
 
         Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
         assertThat(generatedFiles).isNotEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void duplicateTasksWithConflictingTypesThrowsException(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_TASKS_CONFLICTING_TYPES_FULL_PATH.toFile()));
+
+        assertThatThrownBy(codeGenerator::generate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Conflicting types for input parameter 'sharedParam'");
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void duplicateWorkItemsGenerateSeparateModelsPerNode(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_WORKITEMS_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
+
+        List<String> generatedPaths = generatedFiles.stream()
+                .map(GeneratedFile::relativePath)
+                .collect(Collectors.toList());
+
+        // For non-human work items, models should be generated per node ID, not aggregated by taskName
+        assertThat(generatedPaths)
+                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_ServiceTask_1_TaskInput.java"))
+                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_ServiceTask_2_TaskInput.java"))
+                .noneMatch(path -> path.contains("DuplicateWorkItemsProcess_Log_TaskInput.java"));
     }
 }

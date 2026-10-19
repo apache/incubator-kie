@@ -47,8 +47,8 @@ public class UserTaskKogitoWorkItemHandlerProcessListener implements UserTaskEve
         }
 
         // we check first that the work item is not finished to convey the signal
-        Boolean notify = (Boolean) event.getUserTaskInstance().getMetadata().get(DefaultUserTaskLifeCycle.PARAMETER_NOTIFY);
-        if (notify != null && !notify) {
+        Boolean notifyListeners = (Boolean) event.getUserTaskInstance().getMetadata().get(DefaultUserTaskLifeCycle.PARAMETER_NOTIFY_LISTENERS);
+        if (notifyListeners != null && !notifyListeners) {
             return;
         }
 
@@ -58,7 +58,7 @@ public class UserTaskKogitoWorkItemHandlerProcessListener implements UserTaskEve
         processes.processByProcessInstanceId(processInstanceId).get().instances().findById(processInstanceId).ifPresent(pi -> {
             Map<String, Object> data = new HashMap<>(event.getUserTaskInstance().getOutputs());
             data.put("ActorId", event.getUserTaskInstance().getActualOwner());
-            data.put("Notify", false);
+            data.put(UserTaskKogitoWorkItemHandler.PARAMETER_NOTIFY_PROCESS, false);
             pi.completeWorkItem(event.getUserTaskInstance().getExternalReferenceId(), data);
         });
 

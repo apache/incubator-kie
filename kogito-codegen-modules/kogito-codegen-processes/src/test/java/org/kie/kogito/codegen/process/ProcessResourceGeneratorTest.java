@@ -179,6 +179,32 @@ public class ProcessResourceGeneratorTest {
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testDuplicateTaskNameUserTasksEndpointsWithoutNumericSuffix(KogitoBuildContext.Builder contextBuilder) {
+        String fileName = "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn2";
+
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
+
+        List<String> methodNames = classDeclaration.getMethods().stream()
+                .map(MethodDeclaration::getNameAsString)
+                .toList();
+
+        // Must generate clean unsuffixed methods for sharedTask
+        assertThat(methodNames).contains("completeTask_sharedTask");
+
+        // Must NOT generate indexed suffix methods (_0, _1)
+        assertThat(methodNames).noneMatch(name -> name.startsWith("completeTask_sharedTask_"));
+        assertThat(methodNames).noneMatch(name -> name.startsWith("saveTask_sharedTask_"));
+        assertThat(methodNames).noneMatch(name -> name.startsWith("taskInfo_sharedTask_"));
+
+        // Exactly one completeTask_sharedTask method in the class
+        long completeTaskCount = methodNames.stream()
+                .filter(name -> name.equals("completeTask_sharedTask"))
+                .count();
+        assertThat(completeTaskCount).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
     void testGenerateStartSignalEventStringPayload(KogitoBuildContext.Builder contextBuilder) {
         String fileName = "src/test/resources/startsignal/StartSignalEventStringPayload.bpmn2";
         String signalName = "start";
@@ -432,6 +458,7 @@ public class ProcessResourceGeneratorTest {
         ProcessMetaData metaData = execModelGen.generate();
 
         toReturn
+                .withWorkItems(new WorkItemModelClassGenerator(workFlowProcess).generate())
                 .withSignals(metaData.getSignals())
                 .withTriggers(metaData.isStartable(), metaData.isDynamic(), metaData.getTriggers())
                 .withTransaction(withTransaction)

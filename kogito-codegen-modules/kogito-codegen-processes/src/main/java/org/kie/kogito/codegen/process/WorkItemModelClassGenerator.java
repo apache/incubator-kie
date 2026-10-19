@@ -21,7 +21,7 @@ package org.kie.kogito.codegen.process;
 import java.util.List;
 
 import org.jbpm.compiler.canonical.ProcessToExecModelGenerator;
-import org.jbpm.compiler.canonical.WorkItemModelMetaData;
+import org.jbpm.compiler.canonical.workitem.WorkItemModelMetaData;
 import org.kie.api.definition.process.WorkflowProcess;
 
 public class WorkItemModelClassGenerator {

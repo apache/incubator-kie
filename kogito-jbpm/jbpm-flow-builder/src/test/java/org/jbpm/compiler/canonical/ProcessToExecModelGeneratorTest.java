@@ -21,6 +21,9 @@ package org.jbpm.compiler.canonical;
 import java.util.Collections;
 import java.util.List;
 
+import org.jbpm.compiler.canonical.workitem.HumanTaskWorkItemModelMetaData;
+import org.jbpm.compiler.canonical.workitem.WorkItemModelMetaData;
+import org.jbpm.compiler.canonical.workitem.WorkItemNodeModelMetaData;
 import org.jbpm.process.core.datatype.impl.type.IntegerDataType;
 import org.jbpm.process.core.datatype.impl.type.ObjectDataType;
 import org.jbpm.process.core.datatype.impl.type.StringDataType;
@@ -41,6 +44,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ProcessToExecModelGeneratorTest {
 
@@ -135,7 +139,7 @@ public class ProcessToExecModelGeneratorTest {
     }
 
     @Test
-    public void testScriptVariablewithDefaultValue() {
+    public void testScriptVariableWithDefaultValue() {
 
         RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.orders");
         factory
@@ -311,5 +315,162 @@ public class ProcessToExecModelGeneratorTest {
                 .map(v -> v.getNameAsString())
                 .toList();
         assertThat(outputFieldNames).contains("Result");
+    }
+
+    @Test
+    public void testDuplicateTaskNameUserTasksAggregation() {
+        WorkflowElementIdentifier five = WorkflowElementIdentifierFactory.fromExternalFormat("five");
+        WorkflowElementIdentifier six = WorkflowElementIdentifierFactory.fromExternalFormat("six");
+
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.approval");
+        factory
+                .variable("varA", new StringDataType())
+                .variable("varB", new IntegerDataType())
+                .variable("outA", new StringDataType())
+                .variable("outB", new IntegerDataType())
+                .name("approval")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one)
+                .name("start")
+                .done()
+                .humanTaskNode(two)
+                .name("First Approval Step")
+                .taskName("Approval")
+                .inMapping("varA", "inputA")
+                .outMapping("outputA", "outA")
+                .done()
+                .humanTaskNode(three)
+                .name("Second Approval Step")
+                .taskName("Approval")
+                .inMapping("varB", "inputB")
+                .outMapping("outputB", "outB")
+                .done()
+                .endNode(four)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(one, two)
+                .connection(two, three)
+                .connection(three, four);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
+        assertThat(workItemModels).hasSize(1);
+
+        WorkItemModelMetaData metaData = workItemModels.get(0);
+        assertThat(metaData).isInstanceOf(HumanTaskWorkItemModelMetaData.class);
+        assertThat(metaData.getName()).isEqualTo("Approval");
+        assertThat(metaData.getInputModelClassName()).isEqualTo("com.myspace.demo.Approval_Approval_TaskInput");
+        assertThat(metaData.getOutputModelClassName()).isEqualTo("com.myspace.demo.Approval_Approval_TaskOutput");
+        assertThat(metaData.getTaskModelClassName()).isEqualTo("com.myspace.demo.Approval_Approval_TaskModel");
+
+        // Verify input model contains union of both task inputs
+        String inputSource = metaData.generateInput();
+        CompilationUnit inputUnit = StaticJavaParser.parse(inputSource);
+        List<String> inputFieldNames = inputUnit.findAll(FieldDeclaration.class).stream()
+                .flatMap(f -> f.getVariables().stream())
+                .map(v -> v.getNameAsString())
+                .toList();
+        assertThat(inputFieldNames).containsExactlyInAnyOrder("inputA", "inputB");
+
+        // Verify output model contains union of both task outputs
+        String outputSource = metaData.generateOutput();
+        CompilationUnit outputUnit = StaticJavaParser.parse(outputSource);
+        List<String> outputFieldNames = outputUnit.findAll(FieldDeclaration.class).stream()
+                .flatMap(f -> f.getVariables().stream())
+                .map(v -> v.getNameAsString())
+                .toList();
+        assertThat(outputFieldNames).containsExactlyInAnyOrder("outputA", "outputB");
+
+        // Verify model switch entry contains both node IDs
+        var switchEntry = metaData.getModelSwitchEntry();
+        List<String> switchLabels = switchEntry.getLabels().stream()
+                .map(l -> l.asStringLiteralExpr().getValue())
+                .toList();
+        assertThat(switchLabels).containsExactlyInAnyOrder("two", "three");
+    }
+
+    @Test
+    public void testDuplicateTaskNameConflictingTypesThrowsException() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.approval");
+        factory
+                .variable("varA", new StringDataType())
+                .variable("varB", new IntegerDataType())
+                .name("approval")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one)
+                .name("start")
+                .done()
+                .humanTaskNode(two)
+                .name("Step 1")
+                .taskName("Approval")
+                .inMapping("varA", "sharedInput") // String
+                .done()
+                .humanTaskNode(three)
+                .name("Step 2")
+                .taskName("Approval")
+                .inMapping("varB", "sharedInput") // Integer
+                .done()
+                .endNode(four)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(one, two)
+                .connection(two, three)
+                .connection(three, four);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        assertThatThrownBy(() -> ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Conflicting types for input parameter 'sharedInput' in task 'Approval'");
+    }
+
+    @Test
+    public void testNonHumanWorkItemsRemainSeparate() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.logging");
+        factory
+                .name("logging")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one)
+                .name("start")
+                .done()
+                .workItemNode(two)
+                .name("Log 1")
+                .workName("Log")
+                .done()
+                .workItemNode(three)
+                .name("Log 2")
+                .workName("Log")
+                .done()
+                .endNode(four)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(one, two)
+                .connection(two, three)
+                .connection(three, four);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
+        assertThat(workItemModels).hasSize(2);
+        assertThat(workItemModels).allMatch(m -> m instanceof WorkItemNodeModelMetaData);
+
+        WorkItemModelMetaData model1 = workItemModels.get(0);
+        WorkItemModelMetaData model2 = workItemModels.get(1);
+
+        assertThat(model1.getInputModelClassName()).isEqualTo("com.myspace.demo.Logging_two_TaskInput");
+        assertThat(model2.getInputModelClassName()).isEqualTo("com.myspace.demo.Logging_three_TaskInput");
+
+        assertThat(model1.getModelSwitchEntry().getLabels().get(0).asStringLiteralExpr().getValue()).isEqualTo("two");
+        assertThat(model2.getModelSwitchEntry().getLabels().get(0).asStringLiteralExpr().getValue()).isEqualTo("three");
     }
 }

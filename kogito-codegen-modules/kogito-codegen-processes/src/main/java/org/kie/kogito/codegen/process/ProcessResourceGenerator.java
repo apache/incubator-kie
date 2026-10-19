@@ -34,7 +34,7 @@ import org.drools.codegen.common.rest.RestAnnotator;
 import org.drools.util.StringUtils;
 import org.jbpm.compiler.canonical.ProcessToExecModelGenerator;
 import org.jbpm.compiler.canonical.TriggerMetaData;
-import org.jbpm.compiler.canonical.WorkItemModelMetaData;
+import org.jbpm.compiler.canonical.workitem.WorkItemModelMetaData;
 import org.jbpm.ruleflow.core.Metadata;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.workflow.core.node.StartNode;
@@ -214,7 +214,7 @@ public class ProcessResourceGenerator {
         taskModelFactoryClass.setName(taskModelFactorySimpleClassName);
         typeInterpolations.put("$TaskModelFactory$", taskModelFactoryClassName);
 
-        manageWorkItems(templateBuilder, template, taskModelFactoryClass, index);
+        manageWorkItems(templateBuilder, template, taskModelFactoryClass);
 
         typeInterpolations.put("$Clazz$", resourceClazzName);
         typeInterpolations.put("$Type$", dataClazzName);
@@ -395,7 +395,7 @@ public class ProcessResourceGenerator {
     }
 
     protected void manageWorkItems(TemplatedGenerator.Builder templateBuilder, ClassOrInterfaceDeclaration template,
-            ClassOrInterfaceDeclaration taskModelFactoryClass, AtomicInteger index) {
+            ClassOrInterfaceDeclaration taskModelFactoryClass) {
         if (workItems != null && !workItems.isEmpty()) {
 
             CompilationUnit workItemClazz = templateBuilder.build(context, REST_WORK_ITEM_TEMPLATE_NAME).compilationUnitOrThrow();
@@ -410,7 +410,7 @@ public class ProcessResourceGenerator {
             SwitchStmt switchExpr = taskModelFactoryMethod.getBody().map(b -> b.findFirst(SwitchStmt.class).orElseThrow(IllegalStateException::new)).orElseThrow(IllegalStateException::new);
 
             for (WorkItemModelMetaData workItem : workItems) {
-                String methodSuffix = sanitizeJavaName(workItem.getName()) + "_" + index.getAndIncrement();
+                String methodSuffix = sanitizeJavaName(workItem.getName());
                 userTaskTemplate.findAll(MethodDeclaration.class).forEach(md -> {
                     MethodDeclaration cloned = md.clone();
                     template.addMethod(cloned.getName() + "_" + methodSuffix, Keyword.PUBLIC)
@@ -532,7 +532,6 @@ public class ProcessResourceGenerator {
     private void interpolateUserTaskStrings(StringLiteralExpr vv, WorkItemModelMetaData userTask) {
         String s = vv.getValue();
         String interpolated = s.replace("$taskName$", sanitizeName(userTask.getName()));
-        interpolated = interpolated.replace("$taskNodeName$", userTask.getNodeName());
         vv.setString(interpolated);
     }
 
