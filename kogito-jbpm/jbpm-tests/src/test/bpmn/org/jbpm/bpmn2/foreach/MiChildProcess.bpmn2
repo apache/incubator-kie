@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+
+<!--
+  Child subprocess for the parallel MI ForEach test.
+
+  The process layout exercises the fixed regression:
+    - One customAsync script task (sets ASYNC_WAITING on the process metadata)
+    - Two additional user tasks (wait states) in parallel branches
+
+  The presence of the user tasks means the subprocess is NOT imminently completing
+  via the async job.  Before the fix, hasAsyncNodeInstance() returned true solely
+  because ASYNC_WAITING was set, forcing the parent ForEach into sequential mode.
+  After the fix it correctly returns false when wait-state nodes are also active.
+-->
+
+<definitions id="MiChildProcessDef"
+             targetNamespace="http://www.example.org/MinimalExample"
+             typeLanguage="http://www.java.com/javaTypes"
+             expressionLanguage="http://www.mvel.org/2.0"
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             xmlns:tns="http://www.jboss.org/drools">
+
+  <itemDefinition id="_itemItem" structureRef="Integer"/>
+
+  <process processType="Private" isExecutable="true" id="MiChildProcess"
+           name="MI Child Process" tns:packageName="org.jbpm.bpmn2.foreach">
+
+    <property id="item" itemSubjectRef="_itemItem"/>
+
+    <startEvent id="_start" name="Start"/>
+
+    <!-- Parallel split: async branch + two user-task wait-state branches -->
+    <parallelGateway id="_split" gatewayDirection="Diverging"/>
+
+    <!-- Branch 1: customAsync script task → user task wait state -->
+    <scriptTask id="_async" name="Async Script Task" scriptFormat="http://www.java.com/java">
+      <extensionElements>
+        <tns:metaData name="customAsync">
+          <tns:metaValue><![CDATA[true]]></tns:metaValue>
+        </tns:metaData>
+      </extensionElements>
+      <script>// async continuation</script>
+    </scriptTask>
+    <userTask id="_waitC" name="Wait Task C">
+      <ioSpecification>
+        <dataInput id="_waitC_TaskName" name="TaskName"/>
+        <inputSet><dataInputRefs>_waitC_TaskName</dataInputRefs></inputSet>
+      </ioSpecification>
+      <dataInputAssociation>
+        <targetRef>_waitC_TaskName</targetRef>
+        <assignment>
+          <from xsi:type="tFormalExpression"><![CDATA[WaitTaskC]]></from>
+          <to xsi:type="tFormalExpression"><![CDATA[_waitC_TaskName]]></to>
+        </assignment>
+      </dataInputAssociation>
+    </userTask>
+
+    <!-- Branch 2: user task wait state -->
+    <userTask id="_waitA" name="Wait Task A">
+      <ioSpecification>
+        <dataInput id="_waitA_TaskName" name="TaskName"/>
+        <inputSet><dataInputRefs>_waitA_TaskName</dataInputRefs></inputSet>
+      </ioSpecification>
+      <dataInputAssociation>
+        <targetRef>_waitA_TaskName</targetRef>
+        <assignment>
+          <from xsi:type="tFormalExpression"><![CDATA[WaitTaskA]]></from>
+          <to xsi:type="tFormalExpression"><![CDATA[_waitA_TaskName]]></to>
+        </assignment>
+      </dataInputAssociation>
+    </userTask>
+
+    <!-- Parallel join -->
+    <parallelGateway id="_join" gatewayDirection="Converging"/>
+
+    <endEvent id="_end" name="End">
+      <terminateEventDefinition/>
+    </endEvent>
+
+    <sequenceFlow id="_start-_split" sourceRef="_start"  targetRef="_split"/>
+    <sequenceFlow id="_split-_async" sourceRef="_split"  targetRef="_async"/>
+    <sequenceFlow id="_split-_waitA" sourceRef="_split"  targetRef="_waitA"/>
+    <sequenceFlow id="_async-_waitC" sourceRef="_async"  targetRef="_waitC"/>
+    <sequenceFlow id="_waitC-_join"  sourceRef="_waitC"  targetRef="_join"/>
+    <sequenceFlow id="_waitA-_join"  sourceRef="_waitA"  targetRef="_join"/>
+    <sequenceFlow id="_join-_end"    sourceRef="_join"   targetRef="_end"/>
+  </process>
+
+</definitions>
