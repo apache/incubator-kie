@@ -214,7 +214,7 @@ public class ProcessResourceGenerator {
         taskModelFactoryClass.setName(taskModelFactorySimpleClassName);
         typeInterpolations.put("$TaskModelFactory$", taskModelFactoryClassName);
 
-        manageWorkItems(templateBuilder, template, taskModelFactoryClass);
+        manageWorkItems(templateBuilder, template, taskModelFactoryClass, index);
 
         typeInterpolations.put("$Clazz$", resourceClazzName);
         typeInterpolations.put("$Type$", dataClazzName);
@@ -395,7 +395,7 @@ public class ProcessResourceGenerator {
     }
 
     protected void manageWorkItems(TemplatedGenerator.Builder templateBuilder, ClassOrInterfaceDeclaration template,
-            ClassOrInterfaceDeclaration taskModelFactoryClass) {
+            ClassOrInterfaceDeclaration taskModelFactoryClass, AtomicInteger index) {
         if (workItems != null && !workItems.isEmpty()) {
 
             CompilationUnit workItemClazz = templateBuilder.build(context, REST_WORK_ITEM_TEMPLATE_NAME).compilationUnitOrThrow();
@@ -410,7 +410,7 @@ public class ProcessResourceGenerator {
             SwitchStmt switchExpr = taskModelFactoryMethod.getBody().map(b -> b.findFirst(SwitchStmt.class).orElseThrow(IllegalStateException::new)).orElseThrow(IllegalStateException::new);
 
             for (WorkItemModelMetaData workItem : workItems) {
-                String methodSuffix = sanitizeJavaName(workItem.getName());
+                String methodSuffix = sanitizeJavaName(workItem.getName()) + "_" + index.getAndIncrement();
                 userTaskTemplate.findAll(MethodDeclaration.class).forEach(md -> {
                     MethodDeclaration cloned = md.clone();
                     template.addMethod(cloned.getName() + "_" + methodSuffix, Keyword.PUBLIC)

@@ -54,6 +54,7 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.kie.kogito.codegen.process.ProcessResourceGenerator.INVALID_CONTEXT_TEMPLATE;
+import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
 
 public class ProcessResourceGeneratorTest {
 
@@ -179,7 +180,7 @@ public class ProcessResourceGeneratorTest {
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
-    void testDuplicateTaskNameUserTasksEndpointsWithoutNumericSuffix(KogitoBuildContext.Builder contextBuilder) {
+    void testDuplicateTaskNameUserTasksEndpointsSingleEndpointSet(KogitoBuildContext.Builder contextBuilder) {
         String fileName = "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn2";
 
         ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
@@ -188,19 +189,29 @@ public class ProcessResourceGeneratorTest {
                 .map(MethodDeclaration::getNameAsString)
                 .toList();
 
-        // Must generate clean unsuffixed methods for sharedTask
-        assertThat(methodNames).contains("completeTask_sharedTask");
-
-        // Must NOT generate indexed suffix methods (_0, _1)
-        assertThat(methodNames).noneMatch(name -> name.startsWith("completeTask_sharedTask_"));
-        assertThat(methodNames).noneMatch(name -> name.startsWith("saveTask_sharedTask_"));
-        assertThat(methodNames).noneMatch(name -> name.startsWith("taskInfo_sharedTask_"));
-
         // Exactly one completeTask_sharedTask method in the class
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_sharedTask_\\d+"));
+
         long completeTaskCount = methodNames.stream()
-                .filter(name -> name.equals("completeTask_sharedTask"))
+                .filter(name -> name.matches("completeTask_sharedTask_\\d+"))
                 .count();
         assertThat(completeTaskCount).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testDuplicateWorkItemNamesEndpointsAreIndexed(KogitoBuildContext.Builder contextBuilder) {
+        String fileName = "src/test/resources/workitem/DuplicateWorkItemNamesProcess.bpmn2";
+
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
+
+        List<String> methodNames = classDeclaration.getMethods().stream()
+                .map(MethodDeclaration::getNameAsString)
+                .toList();
+
+        // Must generate indexed methods for each work item node without hardcoding exact index numbers
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_First_Log_Task_\\d+"));
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Second_Log_Task_\\d+"));
     }
 
     @ParameterizedTest
@@ -417,7 +428,8 @@ public class ProcessResourceGeneratorTest {
     private ClassOrInterfaceDeclaration getResourceClassDeclaration(KogitoBuildContext.Builder contextBuilder, String fileName) {
         KogitoWorkflowProcess process = parseProcess(fileName);
         CompilationUnit compilationUnit = getCompilationUnit(contextBuilder, process);
-        Optional<ClassOrInterfaceDeclaration> classDeclaration = compilationUnit.getClassByName(process.getId() + "Resource");
+        String className = sanitizeClassName(process.getId() + "Resource");
+        Optional<ClassOrInterfaceDeclaration> classDeclaration = compilationUnit.getClassByName(className);
         assertThat(classDeclaration).isNotEmpty();
         return classDeclaration.orElseThrow();
     }
