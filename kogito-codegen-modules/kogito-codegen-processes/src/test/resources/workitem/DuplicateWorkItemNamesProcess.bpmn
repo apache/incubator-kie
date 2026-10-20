@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" namespace="https://kie.org/bpmn/_DC70D49C-4B8D-4E91-85FA-C89B5CFAF605" id="_4B6CEF8E-1270-4C23-AFDD-56DD2AA72E0C" name="BPMN_CBBEBDE3-6A70-4314-BDD0-43D6F31281E4" targetNamespace="https://kie.apache.org/bpmn/_D0BA6BD5-BCA0-4352-B765-F57DB6DB8AC6">
+  <itemDefinition id="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" structureRef="String" />
+  <process id="DuplicateWorkItemsProcess" isExecutable="true" drools:adHoc="false" name="DuplicateWorkItemsProcess">
+    <property id="_6C983473-2837-4B65-813C-17B18856D462" name="variable1" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+    <property id="_17709A14-3E82-4C74-A896-76D546EC14BC" name="variable2" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+    <laneSet id="_DF7F2AAF-658F-41CA-96CC-742D8386B531" />
+    <startEvent id="_BAEF3362-8DF0-4903-9B6A-7FC004E26795">
+      <outgoing>_CA7E7310-8880-481E-A467-5B0907F98A92</outgoing>
+    </startEvent>
+    <endEvent id="_C0244037-0148-4CAA-AD3B-0A944797C8CA">
+      <incoming>_9F7BE4AF-3215-4C27-A69D-D1E27CC67C9B</incoming>
+    </endEvent>
+    <task id="_8F9A6C6D-D5BF-4EB9-9C4B-8BED8533CBC2" name="Rest Call 1" drools:taskName="Rest">
+      <incoming>_CA7E7310-8880-481E-A467-5B0907F98A92</incoming>
+      <outgoing>_A0036A24-14BB-4BE5-96CC-B858E7274DA6</outgoing>
+      <ioSpecification id="_21D682D6-B5C3-46E6-970B-DDB0459E7917">
+        <dataInput id="_936D3034-3F80-4FD1-9442-CCEDF8B75690" name="Method" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_DAEE1BE6-1224-43CD-B187-D61D602DECDC" name="Url" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_3B92FD35-57E6-45C8-A882-6A612E38FA6C" name="AccessTokenAcquisitionStrategy" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_8D8CED5F-A32F-4106-94A1-D52FC6FE84C2" name="HEADER_content-type" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_6445CE16-C641-44BC-9BB5-1361760A5CE0" name="variable1" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataOutput name="Result" id="_BB1EE798-08EF-4DF6-A8E4-E6016C4A2293" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <inputSet id="_233CCB02-8B77-4C8F-9A15-F7AE0E32B893">
+          <dataInputRefs>_936D3034-3F80-4FD1-9442-CCEDF8B75690</dataInputRefs>
+          <dataInputRefs>_DAEE1BE6-1224-43CD-B187-D61D602DECDC</dataInputRefs>
+          <dataInputRefs>_3B92FD35-57E6-45C8-A882-6A612E38FA6C</dataInputRefs>
+          <dataInputRefs>_8D8CED5F-A32F-4106-94A1-D52FC6FE84C2</dataInputRefs>
+          <dataInputRefs>_6445CE16-C641-44BC-9BB5-1361760A5CE0</dataInputRefs>
+        </inputSet>
+        <outputSet id="_68D0BA7E-7200-4EAD-BF06-566B737162B8">
+          <dataOutputRefs>_BB1EE798-08EF-4DF6-A8E4-E6016C4A2293</dataOutputRefs>
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_D17FBD4E-CB18-4F38-8CCA-15E2D83E6FB8">
+        <targetRef>_936D3034-3F80-4FD1-9442-CCEDF8B75690</targetRef>
+        <assignment id="_CAB4B478-2AF5-4873-8227-7F9401CB80D0">
+          <from id="_4BAF1BA4-55FA-4AC2-8D5F-097F2B772CC4" xsi:type="tFormalExpression">GET</from>
+          <to id="_80CE2A10-6836-45C7-B610-ABFFE4B8687E">_936D3034-3F80-4FD1-9442-CCEDF8B75690</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_0C238375-EF5B-4EEA-98AF-8BC12937ED66">
+        <targetRef>_DAEE1BE6-1224-43CD-B187-D61D602DECDC</targetRef>
+        <assignment id="_2111BD90-A315-44FD-91BF-3285E774C71D">
+          <from id="_532E1F85-376F-4720-850A-B154149C6B6C" xsi:type="tFormalExpression">http://localhost:8080/test</from>
+          <to id="_BD27F31A-84E9-4AC0-8B7C-ADFDE7B09E71">_DAEE1BE6-1224-43CD-B187-D61D602DECDC</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_F7B24E38-19CE-45F7-9F90-A6B750666E44">
+        <targetRef>_3B92FD35-57E6-45C8-A882-6A612E38FA6C</targetRef>
+        <assignment id="_2EF544DC-A60D-4C5D-8185-5732E549280F">
+          <from id="_A274DA26-FD7B-458C-A18D-304564FDE228" xsi:type="tFormalExpression">none</from>
+          <to id="_1256D337-E21D-40BB-822D-FE9AC5167C3A">_3B92FD35-57E6-45C8-A882-6A612E38FA6C</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_1B50484E-4CCF-4554-B40B-D6956F623C39">
+        <targetRef>_8D8CED5F-A32F-4106-94A1-D52FC6FE84C2</targetRef>
+        <assignment id="_C136D0E6-F885-4EED-8C89-14DD21642A74">
+          <from id="_B084D74D-63E8-4C51-B9C5-320B6B3E5873" xsi:type="tFormalExpression">application/json</from>
+          <to id="_4C7752E4-BF4D-443E-A7B1-5D1CFB77FD1E">_8D8CED5F-A32F-4106-94A1-D52FC6FE84C2</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_9804CAC9-C42C-45F6-8FCE-D3C4DB8340AC">
+        <sourceRef>_6C983473-2837-4B65-813C-17B18856D462</sourceRef>
+        <targetRef>_6445CE16-C641-44BC-9BB5-1361760A5CE0</targetRef>
+      </dataInputAssociation>
+      <dataOutputAssociation id="_DB5A6D77-AC4E-439D-A25C-049E4A91A7C8">
+        <sourceRef>_BB1EE798-08EF-4DF6-A8E4-E6016C4A2293</sourceRef>
+        <targetRef></targetRef>
+      </dataOutputAssociation>
+    </task>
+    <task id="_9262E7B8-11D3-4710-B011-C362FE709ED0" name="Rest Call 2" drools:taskName="Rest">
+      <incoming>_A0036A24-14BB-4BE5-96CC-B858E7274DA6</incoming>
+      <outgoing>_9F7BE4AF-3215-4C27-A69D-D1E27CC67C9B</outgoing>
+      <ioSpecification id="_1D36BB01-6089-4CC4-9291-638A6AA98CF5">
+        <dataInput id="_C92D304D-8821-4879-AFE1-41DB6EBE223E" name="Method" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_6AC69AE7-DED3-4287-B00A-3BA28289E280" name="Url" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_8F311E94-2B8A-487C-A010-0E94B4D72DBF" name="AccessTokenAcquisitionStrategy" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_31E9B0F0-D016-4427-B0D2-A84E4F0A45D4" name="HEADER_content-type" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_ED9E5E52-FE2E-484C-9A23-8FF8BF540C25" name="variable2" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataOutput name="Result" id="_6BD65403-DFE4-4620-A7B6-7512B34AD4AD" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <inputSet id="_3C23C505-5B78-4F6E-8C36-7C89750F218C">
+          <dataInputRefs>_C92D304D-8821-4879-AFE1-41DB6EBE223E</dataInputRefs>
+          <dataInputRefs>_6AC69AE7-DED3-4287-B00A-3BA28289E280</dataInputRefs>
+          <dataInputRefs>_8F311E94-2B8A-487C-A010-0E94B4D72DBF</dataInputRefs>
+          <dataInputRefs>_31E9B0F0-D016-4427-B0D2-A84E4F0A45D4</dataInputRefs>
+          <dataInputRefs>_ED9E5E52-FE2E-484C-9A23-8FF8BF540C25</dataInputRefs>
+        </inputSet>
+        <outputSet id="_80FBBFC8-45CF-4349-A374-CC05E5DA5930">
+          <dataOutputRefs>_6BD65403-DFE4-4620-A7B6-7512B34AD4AD</dataOutputRefs>
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_7435BBA8-74CF-406C-BA8C-A00846AC9222">
+        <targetRef>_C92D304D-8821-4879-AFE1-41DB6EBE223E</targetRef>
+        <assignment id="_D154B608-4BC7-4279-8FFB-57A97E60A110">
+          <from id="_73743E17-86D1-41BF-B58F-ABDD9275D154" xsi:type="tFormalExpression">GET</from>
+          <to id="_9BC6C3CD-A525-4DED-888D-6C246CE67400">_C92D304D-8821-4879-AFE1-41DB6EBE223E</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_A044101B-DA7B-4F79-B114-FE47AECBE2F5">
+        <targetRef>_6AC69AE7-DED3-4287-B00A-3BA28289E280</targetRef>
+        <assignment id="_E0AE12C4-3CC9-408A-9E62-34098F78752C">
+          <from id="_509A8D58-5173-473A-B30D-DD20C2FE9E58" xsi:type="tFormalExpression">http://localhost:8080/test</from>
+          <to id="_B90EC8BF-CF39-4EE9-A77B-B70FF9F02742">_6AC69AE7-DED3-4287-B00A-3BA28289E280</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_246B99F3-AB18-450C-88E1-FC860F7F93B9">
+        <targetRef>_8F311E94-2B8A-487C-A010-0E94B4D72DBF</targetRef>
+        <assignment id="_FAF378D9-1A52-4FAF-8E1D-C3A059DCE36C">
+          <from id="_F1792E68-9AC7-470A-94BA-CCA710A84FB3" xsi:type="tFormalExpression">none</from>
+          <to id="_31F4503E-7166-4A61-8901-222F142F5711">_8F311E94-2B8A-487C-A010-0E94B4D72DBF</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_CBE73281-960F-4259-A7C9-B719B2720798">
+        <targetRef>_31E9B0F0-D016-4427-B0D2-A84E4F0A45D4</targetRef>
+        <assignment id="_5122FDA6-B123-43B0-B8B8-8057698B21DF">
+          <from id="_555E6A44-E140-408D-BCA2-0E564305354F" xsi:type="tFormalExpression">application/json</from>
+          <to id="_49BA1AA6-1643-4217-8D8D-FF7FFFD2307A">_31E9B0F0-D016-4427-B0D2-A84E4F0A45D4</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_3DE3F7D8-2192-4A2D-8CAE-0D7516ED21C2">
+        <sourceRef>_17709A14-3E82-4C74-A896-76D546EC14BC</sourceRef>
+        <targetRef>_ED9E5E52-FE2E-484C-9A23-8FF8BF540C25</targetRef>
+      </dataInputAssociation>
+      <dataOutputAssociation id="_C707B1D3-1BC4-4736-A440-965EAF09434F">
+        <sourceRef>_6BD65403-DFE4-4620-A7B6-7512B34AD4AD</sourceRef>
+        <targetRef></targetRef>
+      </dataOutputAssociation>
+    </task>
+    <sequenceFlow id="_CA7E7310-8880-481E-A467-5B0907F98A92" sourceRef="_BAEF3362-8DF0-4903-9B6A-7FC004E26795" targetRef="_8F9A6C6D-D5BF-4EB9-9C4B-8BED8533CBC2" />
+    <sequenceFlow id="_A0036A24-14BB-4BE5-96CC-B858E7274DA6" sourceRef="_8F9A6C6D-D5BF-4EB9-9C4B-8BED8533CBC2" targetRef="_9262E7B8-11D3-4710-B011-C362FE709ED0" />
+    <sequenceFlow id="_9F7BE4AF-3215-4C27-A69D-D1E27CC67C9B" sourceRef="_9262E7B8-11D3-4710-B011-C362FE709ED0" targetRef="_C0244037-0148-4CAA-AD3B-0A944797C8CA" />
+  </process>
+  <bpmndi:BPMNDiagram id="_A2AC2AE1-095D-4AA7-8A95-F70712132ECD">
+    <bpmndi:BPMNPlane id="_F22C9B21-8365-4623-A9B8-50CDD49C3501">
+      <bpmndi:BPMNShape id="_F678E899-0AB4-4D1D-83D5-1AB18E75B138" bpmnElement="_BAEF3362-8DF0-4903-9B6A-7FC004E26795">
+        <dc:Bounds x="20" y="80" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_2E4183B1-1675-4C9A-8B36-3EC59464999B" bpmnElement="_8F9A6C6D-D5BF-4EB9-9C4B-8BED8533CBC2">
+        <dc:Bounds x="100" y="60" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_62BB4664-B3AE-42B0-A0FD-B0B76E1DD840" bpmnElement="_C0244037-0148-4CAA-AD3B-0A944797C8CA">
+        <dc:Bounds x="540" y="80" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_5BE501B6-ACCA-4AE5-BD80-39EEF65B753E" bpmnElement="_9262E7B8-11D3-4710-B011-C362FE709ED0">
+        <dc:Bounds x="320" y="60" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="_5D0A4E60-68F3-4A0A-935D-41E23299087D-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_CA7E7310-8880-481E-A467-5B0907F98A92" sourceElement="_F678E899-0AB4-4D1D-83D5-1AB18E75B138" targetElement="_2E4183B1-1675-4C9A-8B36-3EC59464999B">
+        <di:waypoint x="50" y="110" />
+        <di:waypoint x="190" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_B3AA5274-B3CE-4BCE-BF85-F6BBC179347F-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_A0036A24-14BB-4BE5-96CC-B858E7274DA6" sourceElement="_2E4183B1-1675-4C9A-8B36-3EC59464999B" targetElement="_5BE501B6-ACCA-4AE5-BD80-39EEF65B753E">
+        <di:waypoint x="190" y="110" />
+        <di:waypoint x="410" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_5FEAE63A-60FE-428A-92CF-20D158A18DEC" bpmnElement="_9F7BE4AF-3215-4C27-A69D-D1E27CC67C9B" sourceElement="_5BE501B6-ACCA-4AE5-BD80-39EEF65B753E" targetElement="_62BB4664-B3AE-42B0-A0FD-B0B76E1DD840">
+        <di:waypoint x="410" y="110" />
+        <di:waypoint x="540" y="110" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

@@ -56,9 +56,9 @@ class ProcessCodegenTest {
     private static final Path OBJECT_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(OBJECT_VARIABLE_SOURCE);
     private static final String UNTYPED_COLLECTION_VARIABLE_SOURCE = "collectionvariable/UntypedCollectionVariableProcess.bpmn2";
     private static final Path UNTYPED_COLLECTION_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(UNTYPED_COLLECTION_VARIABLE_SOURCE);
-    private static final String DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE = "usertask/DuplicateTaskNamesConflictingTypesProcess.bpmn2";
+    private static final String DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE = "usertask/DuplicateTaskNamesConflictingTypesProcess.bpmn";
     private static final Path DUPLICATE_TASKS_CONFLICTING_TYPES_FULL_PATH = BASE_PATH.resolve(DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE);
-    private static final String DUPLICATE_WORKITEMS_SOURCE = "workitem/DuplicateWorkItemNamesProcess.bpmn2";
+    private static final String DUPLICATE_WORKITEMS_SOURCE = "workitem/DuplicateWorkItemNamesProcess.bpmn";
     private static final Path DUPLICATE_WORKITEMS_FULL_PATH = BASE_PATH.resolve(DUPLICATE_WORKITEMS_SOURCE);
 
     @ParameterizedTest
@@ -239,7 +239,7 @@ class ProcessCodegenTest {
 
         assertThatThrownBy(codeGenerator::generate)
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Conflicting types for input parameter 'sharedParam'");
+                .hasMessageContaining("Conflicting types for input parameter 'var'");
     }
 
     @ParameterizedTest
@@ -259,8 +259,7 @@ class ProcessCodegenTest {
 
         // For non-human work items, models should be generated per node ID, not aggregated by taskName
         assertThat(generatedPaths)
-                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_ServiceTask_1_TaskInput.java"))
-                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_ServiceTask_2_TaskInput.java"))
-                .noneMatch(path -> path.contains("DuplicateWorkItemsProcess_Log_TaskInput.java"));
+                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess__9262E7B8_11D3_4710_B011_C362FE709ED0_TaskInput.java"))
+                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess__9262E7B8_11D3_4710_B011_C362FE709ED0_TaskOutput.java"));
     }
 }

@@ -282,7 +282,7 @@ public class UserTaskIT extends AbstractCodegenIT {
 
     @Test
     public void testDuplicateTaskNamesProcessExecution() throws Exception {
-        Application app = generateCodeProcessesOnly("usertask/DuplicateTaskNamesProcess.bpmn2");
+        Application app = generateCodeProcessesOnly("usertask/DuplicateTaskNamesProcess.bpmn");
         assertThat(app).isNotNull();
         app.config().get(UserTaskConfig.class).userTaskEventListeners().listeners().add(new UserTaskKogitoWorkItemHandlerProcessListener(app.get(Processes.class)));
 
@@ -313,20 +313,20 @@ public class UserTaskIT extends AbstractCodegenIT {
         List<WorkItem> workItems = processInstance.workItems(securityPolicy);
         assertThat(workItems).hasSize(1);
         WorkItem wi1 = workItems.get(0);
-        assertThat(wi1.getName()).isEqualTo("sharedTask");
-        assertThat(wi1.getParameters()).containsEntry("inputA", "initialA");
+        assertThat(wi1.getName()).isEqualTo("SharedTaskName");
+        assertThat(wi1.getParameters()).containsEntry("varA", "initialA");
 
-        processInstance.completeWorkItem(wi1.getId(), Collections.singletonMap("outputA", "updatedA"), securityPolicy);
+        processInstance.completeWorkItem(wi1.getId(), Collections.singletonMap("varA", "updatedA"), securityPolicy);
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
 
         // Second task sharing the same taskName
         workItems = processInstance.workItems(securityPolicy);
         assertThat(workItems).hasSize(1);
         WorkItem wi2 = workItems.get(0);
-        assertThat(wi2.getName()).isEqualTo("sharedTask");
-        assertThat(wi2.getParameters()).containsEntry("inputB", "initialB");
+        assertThat(wi2.getName()).isEqualTo("SharedTaskName");
+        assertThat(wi2.getParameters()).containsEntry("varB", "initialB");
 
-        processInstance.completeWorkItem(wi2.getId(), Collections.singletonMap("outputB", "updatedB"), securityPolicy);
+        processInstance.completeWorkItem(wi2.getId(), Collections.singletonMap("varB", "updatedB"), securityPolicy);
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
 
         Model result = (Model) processInstance.variables();
@@ -336,8 +336,8 @@ public class UserTaskIT extends AbstractCodegenIT {
 
         // Verify that completed/obsoleted user task instances received the outputs from work item completion
         assertThat(completedUserTasks).hasSize(2);
-        assertThat(completedUserTasks.get(0).getOutputs()).containsEntry("outputA", "updatedA");
-        assertThat(completedUserTasks.get(1).getOutputs()).containsEntry("outputB", "updatedB");
+        assertThat(completedUserTasks.get(0).getOutputs()).containsEntry("varA", "updatedA");
+        assertThat(completedUserTasks.get(1).getOutputs()).containsEntry("varB", "updatedB");
     }
 
     @Test

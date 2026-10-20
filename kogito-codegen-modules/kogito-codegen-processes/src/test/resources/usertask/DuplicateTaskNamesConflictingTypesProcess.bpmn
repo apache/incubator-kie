@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" namespace="https://kie.org/bpmn/_4E7171DC-ABBB-4D2B-BDE1-660FE1A81867" id="_57F0CEBC-853D-486B-B14F-99E048CD469D" name="BPMN_85AFD786-424E-4C19-98EE-AA4A30E646BF">
+  <itemDefinition id="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" structureRef="String" />
+  <itemDefinition id="_6169268A-DB7D-4EA5-9B7D-C08A5DDC114F" structureRef="Integer" />
+  <process id="DuplicateTasksProcessConflictingTypesProcess" isExecutable="true" drools:adHoc="false" name="DuplicateTasksProcessConflictingTypesProcess" processType="Public" drools:packageName="org.kie.kogito.test" drools:version="1">
+    <property id="_DBD003EF-03F9-4FC7-BA5F-175CFF446782" name="varA" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+    <property id="_EC23481B-0FE4-4C7D-B643-C036FDC65F5A" name="varB" itemSubjectRef="_6169268A-DB7D-4EA5-9B7D-C08A5DDC114F" />
+    <startEvent id="_E4AF39CD-69C9-4D14-9AFB-A2257C80BC21">
+      <outgoing>_7863B006-87F8-43A0-81E2-AAFDC80DCF2B</outgoing>
+    </startEvent>
+    <endEvent id="_0CE19B27-BB31-49AE-974E-27D8BA2EE9D9">
+      <incoming>_F415580B-DFC3-414F-A0BD-EDF911270091</incoming>
+    </endEvent>
+    <userTask id="_ABD058D0-F3D2-46AA-BB15-43EF56035B99" name="User Task 1">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="elementname">
+          <drools:metaValue>User Task 1</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_7863B006-87F8-43A0-81E2-AAFDC80DCF2B</incoming>
+      <outgoing>_1492F295-1443-48CE-9B1D-0AC9CCEE1BAD</outgoing>
+      <ioSpecification id="_8FEF88BF-276D-4448-94B0-A3CCFB3B06A8">
+        <dataInput id="_1BC0DE8A-3446-40A9-891E-97C27C97EEBF" name="TaskName" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <dataInput id="_97BF0E3E-81A6-43F0-AAF9-3C8FAE269F92" name="var" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <dataOutput name="var" id="_170F89E4-5D3F-4E7B-B3F4-05DA66740622" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <inputSet id="_8E4D20D4-1814-46AA-A1C0-21439BC13099">
+          <dataInputRefs>_1BC0DE8A-3446-40A9-891E-97C27C97EEBF</dataInputRefs>
+          <dataInputRefs>_97BF0E3E-81A6-43F0-AAF9-3C8FAE269F92</dataInputRefs>
+        </inputSet>
+        <outputSet id="_EAD74386-3D2E-45F8-AC4D-775840AF9C8A">
+          <dataOutputRefs>_170F89E4-5D3F-4E7B-B3F4-05DA66740622</dataOutputRefs>
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_13E78A0B-549E-489C-A7A8-BF03DCDA99DA">
+        <targetRef>_1BC0DE8A-3446-40A9-891E-97C27C97EEBF</targetRef>
+        <assignment id="_8F169B6A-8E19-4249-B436-E728DFCD740E">
+          <from id="_E8286219-1386-40A3-B956-8B0C6EB8FD51" xsi:type="tFormalExpression">SharedTaskName</from>
+          <to id="_2E4CD811-79BA-490D-8488-7C26227FB185">_1BC0DE8A-3446-40A9-891E-97C27C97EEBF</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_3BCE4D41-F4F8-4296-B544-A5AA31ED25AE">
+        <sourceRef>_DBD003EF-03F9-4FC7-BA5F-175CFF446782</sourceRef>
+        <targetRef>_97BF0E3E-81A6-43F0-AAF9-3C8FAE269F92</targetRef>
+      </dataInputAssociation>
+      <dataOutputAssociation id="_B853696A-C457-402E-A81C-5197D8D944DB">
+        <sourceRef>_170F89E4-5D3F-4E7B-B3F4-05DA66740622</sourceRef>
+        <targetRef>_DBD003EF-03F9-4FC7-BA5F-175CFF446782</targetRef>
+      </dataOutputAssociation>
+      <potentialOwner id="_FE3FB4B7-473B-405B-9409-38F2AAC5CBC2">
+        <resourceAssignmentExpression id="_CD3482E9-1F73-4498-A94F-7A9EFB84A5A9">
+          <formalExpression id="_4D95EE14-A4D9-4102-B234-294CDA39C6C8">john</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <userTask id="_C90B9552-7AF8-45DF-A7DD-F92332094A55" name="User Task 2">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_1492F295-1443-48CE-9B1D-0AC9CCEE1BAD</incoming>
+      <outgoing>_F415580B-DFC3-414F-A0BD-EDF911270091</outgoing>
+      <ioSpecification id="_DE872625-3675-48B7-9D60-A3D97F8F99FD">
+        <dataInput id="_8E22BF91-2AE0-4D69-80A0-040EE598FE54" name="TaskName" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <dataInput id="_B854C3E3-7CD0-4124-9FE9-D75C7E8BE2B4" name="var" drools:dtype="Integer" itemSubjectRef="_6169268A-DB7D-4EA5-9B7D-C08A5DDC114F" />
+        <dataOutput name="var" id="_A8E357E5-4BF1-4A7B-9273-BFD4D8460E7F" drools:dtype="Integer" itemSubjectRef="_6169268A-DB7D-4EA5-9B7D-C08A5DDC114F" />
+        <inputSet id="_59E35CFB-2C52-446F-82F6-25D185F79CA6">
+          <dataInputRefs>_8E22BF91-2AE0-4D69-80A0-040EE598FE54</dataInputRefs>
+          <dataInputRefs>_B854C3E3-7CD0-4124-9FE9-D75C7E8BE2B4</dataInputRefs>
+        </inputSet>
+        <outputSet id="_57739FE0-C4B3-41B8-BC38-E0A46D364652">
+          <dataOutputRefs>_A8E357E5-4BF1-4A7B-9273-BFD4D8460E7F</dataOutputRefs>
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_4927591C-560F-44F4-ABBB-FB541C6626BE">
+        <targetRef>_8E22BF91-2AE0-4D69-80A0-040EE598FE54</targetRef>
+        <assignment id="_B66155F9-07CA-462E-92F1-145857FF60CB">
+          <from id="_4B302460-86CA-40DF-9264-653F4EB318BE" xsi:type="tFormalExpression">SharedTaskName</from>
+          <to id="_9C484B7A-A5AD-4C82-B86C-070629490D2F">_8E22BF91-2AE0-4D69-80A0-040EE598FE54</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_9E55BA23-9F36-4036-BACD-69687A086CC2">
+        <sourceRef>_EC23481B-0FE4-4C7D-B643-C036FDC65F5A</sourceRef>
+        <targetRef>_B854C3E3-7CD0-4124-9FE9-D75C7E8BE2B4</targetRef>
+      </dataInputAssociation>
+      <dataOutputAssociation id="_C4FC7336-049F-4D20-B69C-5BDDB221658E">
+        <sourceRef>_A8E357E5-4BF1-4A7B-9273-BFD4D8460E7F</sourceRef>
+        <targetRef>_EC23481B-0FE4-4C7D-B643-C036FDC65F5A</targetRef>
+      </dataOutputAssociation>
+      <potentialOwner id="_3EA2F30A-2D04-464A-821E-4538258BA6DA">
+        <resourceAssignmentExpression id="_4B45FAAB-8FBC-4A65-97C9-22D5815F05BF">
+          <formalExpression id="_586CD64C-7553-41C5-BAD7-B843BD324D13">john</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <sequenceFlow id="_7863B006-87F8-43A0-81E2-AAFDC80DCF2B" sourceRef="_E4AF39CD-69C9-4D14-9AFB-A2257C80BC21" targetRef="_ABD058D0-F3D2-46AA-BB15-43EF56035B99" />
+    <sequenceFlow id="_1492F295-1443-48CE-9B1D-0AC9CCEE1BAD" sourceRef="_ABD058D0-F3D2-46AA-BB15-43EF56035B99" targetRef="_C90B9552-7AF8-45DF-A7DD-F92332094A55" />
+    <sequenceFlow id="_F415580B-DFC3-414F-A0BD-EDF911270091" sourceRef="_C90B9552-7AF8-45DF-A7DD-F92332094A55" targetRef="_0CE19B27-BB31-49AE-974E-27D8BA2EE9D9" />
+  </process>
+  <bpmndi:BPMNDiagram id="_72BDE54F-8781-4E6A-9662-FAD7E88C3120">
+    <bpmndi:BPMNPlane id="_8BC47A37-6AC3-4C38-9129-34E9B71DB63A">
+      <bpmndi:BPMNShape id="_9D87CE38-EEC8-4A47-9676-AAC09370E405" bpmnElement="_E4AF39CD-69C9-4D14-9AFB-A2257C80BC21">
+        <dc:Bounds x="20" y="100" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_88B1934B-EFB7-4998-AF77-F2F466A5B5BF" bpmnElement="_ABD058D0-F3D2-46AA-BB15-43EF56035B99">
+        <dc:Bounds x="120" y="80" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_0E2A1134-9CE7-4810-A09B-1340DB544CA7" bpmnElement="_C90B9552-7AF8-45DF-A7DD-F92332094A55">
+        <dc:Bounds x="320" y="80" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_ACD508D0-C343-4A74-86A3-213F61BB81E8" bpmnElement="_0CE19B27-BB31-49AE-974E-27D8BA2EE9D9">
+        <dc:Bounds x="540" y="100" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="_0A6D7B82-27F8-4A99-B5CD-314BA043165A-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_7863B006-87F8-43A0-81E2-AAFDC80DCF2B" sourceElement="_9D87CE38-EEC8-4A47-9676-AAC09370E405" targetElement="_88B1934B-EFB7-4998-AF77-F2F466A5B5BF">
+        <di:waypoint x="50" y="130" />
+        <di:waypoint x="210" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_502DEEEC-93B5-4FC3-98E8-5B7B236A3FAD-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_1492F295-1443-48CE-9B1D-0AC9CCEE1BAD" sourceElement="_88B1934B-EFB7-4998-AF77-F2F466A5B5BF" targetElement="_0E2A1134-9CE7-4810-A09B-1340DB544CA7">
+        <di:waypoint x="210" y="130" />
+        <di:waypoint x="410" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_0873F38D-9E96-46E2-9C68-863F9554D599-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_F415580B-DFC3-414F-A0BD-EDF911270091" sourceElement="_0E2A1134-9CE7-4810-A09B-1340DB544CA7" targetElement="_ACD508D0-C343-4A74-86A3-213F61BB81E8">
+        <di:waypoint x="410" y="130" />
+        <di:waypoint x="570" y="130" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

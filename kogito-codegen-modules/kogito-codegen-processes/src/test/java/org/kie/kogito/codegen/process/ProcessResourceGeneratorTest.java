@@ -181,7 +181,7 @@ public class ProcessResourceGeneratorTest {
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
     void testDuplicateTaskNameUserTasksEndpointsSingleEndpointSet(KogitoBuildContext.Builder contextBuilder) {
-        String fileName = "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn2";
+        String fileName = "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn";
 
         ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
 
@@ -189,11 +189,11 @@ public class ProcessResourceGeneratorTest {
                 .map(MethodDeclaration::getNameAsString)
                 .toList();
 
-        // Exactly one completeTask_sharedTask method in the class
-        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_sharedTask_\\d+"));
+        // Exactly one completeTask_SharedTaskName method in the class
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_SharedTaskName_\\d+"));
 
         long completeTaskCount = methodNames.stream()
-                .filter(name -> name.matches("completeTask_sharedTask_\\d+"))
+                .filter(name -> name.matches("completeTask_SharedTaskName_\\d+"))
                 .count();
         assertThat(completeTaskCount).isEqualTo(1);
     }
@@ -201,7 +201,7 @@ public class ProcessResourceGeneratorTest {
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
     void testDuplicateWorkItemNamesEndpointsAreIndexed(KogitoBuildContext.Builder contextBuilder) {
-        String fileName = "src/test/resources/workitem/DuplicateWorkItemNamesProcess.bpmn2";
+        String fileName = "src/test/resources/workitem/DuplicateWorkItemNamesProcess.bpmn";
 
         ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
 
@@ -210,8 +210,8 @@ public class ProcessResourceGeneratorTest {
                 .toList();
 
         // Must generate indexed methods for each work item node without hardcoding exact index numbers
-        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_First_Log_Task_\\d+"));
-        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Second_Log_Task_\\d+"));
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_1_\\d+"));
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_2_\\d+"));
     }
 
     @ParameterizedTest
