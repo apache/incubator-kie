@@ -69,6 +69,7 @@ public class DataTypeResolverTest {
         assertThat(DataTypeResolver.fromType("Float", cl)).isInstanceOf(FloatDataType.class);
         assertThat(DataTypeResolver.fromType("java.util.List", cl)).isInstanceOf(ListDataType.class);
         assertThat(DataTypeResolver.fromType("Object", cl)).isInstanceOf(ObjectDataType.class);
+        assertThat(DataTypeResolver.fromType("", cl).getStringType()).isEqualTo("java.lang.Object");
         assertThat(DataTypeResolver.fromType(Others.class.getName(), cl)).isInstanceOf(EnumDataType.class);
     }
 }

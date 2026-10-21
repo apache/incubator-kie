@@ -56,7 +56,7 @@ public class DataTypeResolver {
     }
 
     public static DataType fromType(String type, ClassLoader cl) {
-        return type == null ? defaultDataType : from(type, cl);
+        return type == null || type.trim().isEmpty() ? defaultDataType : from(type, cl);
     }
 
     public static DataType fromClass(Class<?> clazz) {
