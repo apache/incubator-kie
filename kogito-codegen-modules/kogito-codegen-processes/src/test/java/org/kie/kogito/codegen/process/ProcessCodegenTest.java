@@ -257,9 +257,9 @@ class ProcessCodegenTest {
                 .map(GeneratedFile::relativePath)
                 .collect(Collectors.toList());
 
-        // For non-human work items, models should be generated per node ID, not aggregated by taskName
+        // For non-human work items with distinct names ("Rest Call 1" and "Rest Call 2"), models are generated per task name
         assertThat(generatedPaths)
-                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess__9262E7B8_11D3_4710_B011_C362FE709ED0_TaskInput.java"))
-                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess__9262E7B8_11D3_4710_B011_C362FE709ED0_TaskOutput.java"));
+                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_Rest_Call_1_TaskInput.java"))
+                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_Rest_Call_2_TaskInput.java"));
     }
 }

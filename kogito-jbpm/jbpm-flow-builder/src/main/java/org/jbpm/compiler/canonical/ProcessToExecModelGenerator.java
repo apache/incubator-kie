@@ -29,15 +29,11 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.drools.util.StringUtils;
-import org.jbpm.compiler.canonical.workitem.HumanTaskWorkItemModelMetaData;
-import org.jbpm.compiler.canonical.workitem.WorkItemModelMetaData;
-import org.jbpm.compiler.canonical.workitem.WorkItemNodeModelMetaData;
 import org.jbpm.process.core.ContextContainer;
 import org.jbpm.process.core.context.variable.Variable;
 import org.jbpm.process.core.context.variable.VariableScope;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.workflow.core.impl.WorkflowProcessImpl;
-import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
 import org.kie.api.definition.process.Node;
 import org.kie.api.definition.process.WorkflowProcess;
@@ -262,8 +258,7 @@ public class ProcessToExecModelGenerator {
 
     public List<WorkItemModelMetaData> generateWorkItemModel(WorkflowProcess process) {
         String packageName = process.getPackageName();
-        Map<String, HumanTaskWorkItemModelMetaData> humanTaskWorkItemModels = new LinkedHashMap<>();
-        List<WorkItemModelMetaData> nonHumanTaskWorkItemsModels = new ArrayList<>();
+        Map<String, WorkItemModelMetaData> workItemModels = new LinkedHashMap<>();
 
         VariableScope variableScope = getVariableScope(process);
 
@@ -274,22 +269,14 @@ public class ProcessToExecModelGenerator {
                 if (nodeVariableScope == null) {
                     nodeVariableScope = variableScope;
                 }
-                if (workItemNode instanceof HumanTaskNode) {
-                    String taskName = (String) workItemNode.getWork().getParameters().getOrDefault("TaskName", workItemNode.getName());
-                    humanTaskWorkItemModels
-                            .computeIfAbsent(taskName, k -> new HumanTaskWorkItemModelMetaData(packageName, variableScope, k, process.getId()))
-                            .add(workItemNode, nodeVariableScope);
-                } else {
-                    nonHumanTaskWorkItemsModels.add(new WorkItemNodeModelMetaData(packageName, variableScope, nodeVariableScope,
-                            workItemNode, process.getId()));
-                }
+                String taskName = (String) workItemNode.getWork().getParameters().getOrDefault("TaskName", workItemNode.getName());
+                workItemModels
+                        .computeIfAbsent(taskName, k -> new WorkItemModelMetaData(packageName, variableScope, k, process.getId()))
+                        .add(workItemNode, nodeVariableScope);
             }
         }
 
-        List<WorkItemModelMetaData> workItemTaskModels = new ArrayList<>(humanTaskWorkItemModels.values());
-        workItemTaskModels.addAll(nonHumanTaskWorkItemsModels);
-
-        return workItemTaskModels;
+        return new ArrayList<>(workItemModels.values());
     }
 
     public static String extractProcessId(String processId) {
