@@ -150,7 +150,7 @@
     <version.io.fabric8>7.3.1</version.io.fabric8>
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
-    <version.io.micrometer>1.16.7</version.io.micrometer>
+    <version.io.micrometer>1.17.1</version.io.micrometer>
     <version.io.netty>4.1.138.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
@@ -286,6 +286,7 @@
     <version.org.mvel>2.5.4.Final</version.org.mvel>
     <!-- Version of JMH -->
     <version.org.openjdk.jmh>1.21</version.org.openjdk.jmh>
+    <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
     <version.org.postgresql>42.7.12</version.org.postgresql>
     <version.org.powermock>2.0.9</version.org.powermock>
     <version.org.reactivestreams>1.0.4</version.org.reactivestreams>
@@ -308,6 +309,7 @@
     <version.org.wildfly.elytron>2.8.5.Final</version.org.wildfly.elytron>
     <version.org.wiremock>3.13.2</version.org.wiremock>
     <version.org.wiremock.webhooks>3.0.4</version.org.wiremock.webhooks>
+    <version.org.xerial.snappy>1.1.10.12</version.org.xerial.snappy>
     <version.org.xmlunit>2.10.4</version.org.xmlunit>
     <version.org.xmlunit-core>2.10.4</version.org.xmlunit-core>
     <version.org.yaml.snakeyaml>2.6</version.org.yaml.snakeyaml>
@@ -797,10 +799,20 @@
         <artifactId>grpc-util</artifactId>
         <version>${version.io.grpc}</version>
       </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-commons</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
       <!-- Used by drools-metric -->
       <dependency>
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-core</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-observation</artifactId>
         <version>${version.io.micrometer}</version>
       </dependency>
       <dependency>
@@ -2065,6 +2077,31 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-analysis</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-commons</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-tree</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-util</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>${version.org.postgresql}</version>
@@ -2308,6 +2345,11 @@
         <artifactId>xmlunit-matchers</artifactId>
         <version>${version.org.xmlunit}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${version.org.xerial.snappy}</version>
       </dependency>
       <dependency>
         <groupId>simple-jndi</groupId>

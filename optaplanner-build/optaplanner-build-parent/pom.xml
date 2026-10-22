@@ -48,6 +48,7 @@
          https://logging.apache.org/security.html#CVE-2026-49844 -->
     <version.org.apache.logging.log4j>2.26.1</version.org.apache.logging.log4j>
     <version.com.thoughtworks.xstream>1.4.21</version.com.thoughtworks.xstream>
+    <version.io.micrometer>1.17.1</version.io.micrometer>
     <version.io.quarkiverse.operatorsdk>6.6.7</version.io.quarkiverse.operatorsdk>
     <version.io.quarkus>3.33.4</version.io.quarkus>
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
@@ -59,10 +60,12 @@
     <version.org.jdom2>2.0.6.1</version.org.jdom2>
     <version.org.jfree.jfreechart>1.5.4</version.org.jfree.jfreechart>
     <version.org.openrewrite.recipe>1.19.3</version.org.openrewrite.recipe>
+    <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
     <version.org.slf4j>2.0.17</version.org.slf4j><!-- TODO keep in sync with quarkus-bom -->
     <version.org.eclipse.parsson>1.1.8</version.org.eclipse.parsson>
     <version.org.springframework>7.0.9</version.org.springframework>
     <version.org.springframework.boot>4.1.1</version.org.springframework.boot>
+    <version.org.xerial.snappy>1.1.10.12</version.org.xerial.snappy>
     <version.com.fasterxml.jackson.databind>2.22.2</version.com.fasterxml.jackson.databind>
     <!-- ************************************************************************ -->
     <!-- Plugins -->
@@ -123,6 +126,51 @@
         <version>${project.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-commons</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-core</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-observation</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-analysis</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-commons</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-tree</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-util</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${version.org.xerial.snappy}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
@@ -241,7 +289,7 @@
             <dependency>
               <groupId>org.ow2.asm</groupId>
               <artifactId>asm-analysis</artifactId>
-              <version>9.5</version>
+              <version>${version.org.ow2.asm}</version>
             </dependency>
             <dependency>
               <groupId>com.redhat.victims</groupId>
