@@ -105,12 +105,12 @@ public class SourceFilesProviderProducerUtilTest {
         BlockStmt staticInitBody = staticInit.getBody();
 
         assertThat(staticInitBody.getStatements())
-                .hasSize(4);
+                .hasSize(5);
 
         List<MethodCallExpr> initStatements = staticInitBody.findAll(MethodCallExpr.class);
 
         assertThat(initStatements)
-                .hasSize(4);
+                .hasSize(5);
 
         initStatements.forEach(initStatement -> {
             assertThat(initStatement.getScope())

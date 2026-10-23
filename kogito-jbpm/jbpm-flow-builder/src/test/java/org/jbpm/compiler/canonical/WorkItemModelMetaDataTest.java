@@ -77,7 +77,7 @@ public class WorkItemModelMetaDataTest {
         HumanTaskNode taskNode = (HumanTaskNode) process.getNode(two);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "Approval", process.getId());
+                "Approval", process.getId(), process.getPackageName(), variableScope);
         metaData.add(taskNode, variableScope);
 
         assertThat(metaData.getName()).isEqualTo("Approval");
@@ -157,7 +157,7 @@ public class WorkItemModelMetaDataTest {
         HumanTaskNode node2 = (HumanTaskNode) process.getNode(three);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "SharedApproval", process.getId());
+                "SharedApproval", process.getId(), process.getPackageName(), variableScope);
         metaData.add(node1, variableScope);
         metaData.add(node2, variableScope);
 
@@ -219,7 +219,7 @@ public class WorkItemModelMetaDataTest {
         HumanTaskNode node2 = (HumanTaskNode) process.getNode(three);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "SharedTask", process.getId());
+                "SharedTask", process.getId(), process.getPackageName(), variableScope);
         metaData.add(node1, variableScope);
 
         assertThatThrownBy(() -> metaData.add(node2, variableScope))
@@ -260,7 +260,7 @@ public class WorkItemModelMetaDataTest {
         HumanTaskNode node2 = (HumanTaskNode) process.getNode(three);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "SharedTask", process.getId());
+                "SharedTask", process.getId(), process.getPackageName(), variableScope);
         metaData.add(node1, variableScope);
 
         assertThatThrownBy(() -> metaData.add(node2, variableScope))
@@ -297,7 +297,7 @@ public class WorkItemModelMetaDataTest {
         WorkItemNode customNode = (WorkItemNode) process.getNode(three);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "SharedName", process.getId());
+                "SharedName", process.getId(), process.getPackageName(), variableScope);
         metaData.add(humanNode, variableScope);
 
         assertThatThrownBy(() -> metaData.add(customNode, variableScope))
@@ -320,11 +320,13 @@ public class WorkItemModelMetaDataTest {
                 .workItemNode(two)
                 .name("Node1")
                 .workName("SignatureDataNode")
+                .workParameter("TaskName", "SignatureDataNode")
                 .inMapping("var1", "input1")
                 .done()
                 .workItemNode(three)
                 .name("Node2")
                 .workName("SignatureDataNode")
+                .workParameter("TaskName", "SignatureDataNode")
                 .inMapping("var2", "input2")
                 .done()
                 .endNode(four).name("end").terminate(false).done()
@@ -338,7 +340,7 @@ public class WorkItemModelMetaDataTest {
         WorkItemNode node2 = (WorkItemNode) process.getNode(three);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "SignatureDataNode", process.getId());
+                "SignatureDataNode", process.getId(), process.getPackageName(), variableScope);
         metaData.add(node1, variableScope);
         metaData.add(node2, variableScope);
 
@@ -360,6 +362,43 @@ public class WorkItemModelMetaDataTest {
                 .map(expr -> expr.asStringLiteralExpr().getValue())
                 .toList();
         assertThat(labelValues).containsExactlyInAnyOrder("two", "three");
+    }
+
+    @Test
+    public void testTaskNamesSanitizedToSameClassNameThrowsException() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.sanitizedcollision");
+        factory.name("sanitizedcollision")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one).name("start").done()
+                .humanTaskNode(two)
+                .name("First Step")
+                .taskName("My Task")
+                .done()
+                .humanTaskNode(three)
+                .name("Second Step")
+                .taskName("My-Task")
+                .done()
+                .endNode(four).name("end").terminate(false).done()
+                .connection(one, two)
+                .connection(two, three)
+                .connection(three, four);
+
+        RuleFlowProcess process = factory.validate().getProcess();
+        VariableScope variableScope = (VariableScope) process.getDefaultContext(VariableScope.VARIABLE_SCOPE);
+        HumanTaskNode first = (HumanTaskNode) process.getNode(two);
+        HumanTaskNode second = (HumanTaskNode) process.getNode(three);
+
+        WorkItemModelMetaData metaData = new WorkItemModelMetaData(
+                "My Task", process.getId(), process.getPackageName(), variableScope);
+        metaData.add(first, variableScope);
+
+        assertThatThrownBy(() -> metaData.add(second, variableScope))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format(
+                        CONFLICTING_TASK_NAMES_ERROR_TEMPLATE,
+                        "My Task", "My-Task", "demo.sanitizedcollision", "com.myspace.demo.Sanitizedcollision_My_Task_TaskModel"));
     }
 
     @Test
@@ -389,7 +428,7 @@ public class WorkItemModelMetaDataTest {
         WorkItemNode node = (WorkItemNode) process.getNode(two);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "SignatureDataNode", process.getId());
+                "SignatureDataNode", process.getId(), process.getPackageName(), variableScope);
         metaData.add(node, variableScope);
 
         CompilationUnit inputUnit = StaticJavaParser.parse(metaData.generateInput());
@@ -416,7 +455,7 @@ public class WorkItemModelMetaDataTest {
         HumanTaskNode taskNode = (HumanTaskNode) process.getNode(one);
 
         WorkItemModelMetaData metaData = new WorkItemModelMetaData(
-                process.getPackageName(), variableScope, "AdHocTask", process.getId());
+                "AdHocTask", process.getId(), process.getPackageName(), variableScope);
         metaData.add(taskNode, variableScope);
 
         assertThat(metaData.isAdHoc()).isTrue();

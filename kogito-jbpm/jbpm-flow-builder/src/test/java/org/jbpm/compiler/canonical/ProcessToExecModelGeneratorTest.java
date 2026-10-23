@@ -43,6 +43,7 @@ import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.jbpm.compiler.canonical.WorkItemModelMetaData.CONFLICTING_TASK_NAMES_ERROR_TEMPLATE;
 import static org.jbpm.compiler.canonical.WorkItemModelMetaData.CONFLICTING_TYPES_ERROR_TEMPLATE;
 import static org.jbpm.compiler.canonical.WorkItemModelMetaData.MISMATCHED_DEFINITION_ERROR_TEMPLATE;
 
@@ -627,6 +628,42 @@ public class ProcessToExecModelGeneratorTest {
                 .hasMessage(String.format(
                         MISMATCHED_DEFINITION_ERROR_TEMPLATE,
                         "SharedCustomTask", "Rest", "Email", "demo.collidingdefinitions"));
+    }
+
+    @Test
+    public void testTaskNamesSanitizedToSameClassNameThrowsException() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.sanitizedcollision");
+        factory
+                .name("sanitizedcollision")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one)
+                .name("start")
+                .done()
+                .humanTaskNode(two)
+                .name("Step 1")
+                .taskName("Rest Call")
+                .done()
+                .humanTaskNode(three)
+                .name("Step 2")
+                .taskName("Rest_Call")
+                .done()
+                .endNode(four)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(one, two)
+                .connection(two, three)
+                .connection(three, four);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        assertThatThrownBy(() -> ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format(
+                        CONFLICTING_TASK_NAMES_ERROR_TEMPLATE,
+                        "Rest Call", "Rest_Call", "demo.sanitizedcollision", "com.myspace.demo.Sanitizedcollision_Rest_Call_TaskModel"));
     }
 
     @Test

@@ -269,9 +269,10 @@ public class ProcessToExecModelGenerator {
                 if (nodeVariableScope == null) {
                     nodeVariableScope = variableScope;
                 }
-                String taskName = (String) workItemNode.getWork().getParameters().getOrDefault("TaskName", workItemNode.getName());
+                String taskName = WorkItemModelMetaData.resolveTaskName(workItemNode);
                 workItemModels
-                        .computeIfAbsent(taskName, k -> new WorkItemModelMetaData(packageName, variableScope, k, process.getId()))
+                        .computeIfAbsent(WorkItemModelMetaData.normalizeTaskName(taskName),
+                                k -> new WorkItemModelMetaData(taskName, process.getId(), packageName, variableScope))
                         .add(workItemNode, nodeVariableScope);
             }
         }

@@ -86,6 +86,10 @@ public class WorkItemModelMetaData {
     static final String CONFLICTING_TYPES_ERROR_TEMPLATE = "Conflicting types for %s parameter '%s' in task '%s' of process '%s': %s vs %s";
     @KieInternal
     static final String MISMATCHED_DEFINITION_ERROR_TEMPLATE = "Cannot share taskName '%s' between work items of different definition types ('%s' vs '%s') in process '%s'";
+    @KieInternal
+    static final String CONFLICTING_TASK_NAMES_ERROR_TEMPLATE = "Task names '%s' and '%s' in process '%s' resolve to the same generated model class '%s'. Use distinct task names";
+
+    private static final String TASK_NAME_PARAMETER = "TaskName";
 
     private static final String TASK_INPUT_CLASS_SUFFIX = "TaskInput";
     private static final String TASK_OUTPUT_CLASS_SUFFIX = "TaskOutput";
@@ -99,10 +103,10 @@ public class WorkItemModelMetaData {
     public record WorkItemNodeContext(WorkItemNode workItemNode, VariableScope variableScope) {
     }
 
-    private final String packageName;
-    private final VariableScope processVariableScope;
     private final String taskName;
     private final String processId;
+    private final String packageName;
+    private final VariableScope processVariableScope;
     private Work work;
 
     private final String inputModelClassName;
@@ -116,11 +120,11 @@ public class WorkItemModelMetaData {
     private final Map<String, ParameterDefinition> inputParamDefs = new LinkedHashMap<>();
     private final Map<String, ParameterDefinition> outputParamDefs = new LinkedHashMap<>();
 
-    public WorkItemModelMetaData(String packageName, VariableScope processVariableScope, String taskName, String processId) {
-        this.packageName = packageName;
-        this.processVariableScope = processVariableScope;
+    public WorkItemModelMetaData(String taskName, String processId, String packageName, VariableScope processVariableScope) {
         this.taskName = taskName;
         this.processId = processId;
+        this.packageName = packageName;
+        this.processVariableScope = processVariableScope;
 
         String classPrefix = sanitizeClassName(ProcessToExecModelGenerator.extractProcessId(processId) + "_" + sanitizeClassName(taskName));
 
@@ -134,7 +138,29 @@ public class WorkItemModelMetaData {
         this.taskModelClassName = packageName + '.' + taskModelClassSimpleName;
     }
 
+    /**
+     * Resolves the task name of a work item node: the <code>TaskName</code> work parameter if present,
+     * the node name otherwise.
+     */
+    public static String resolveTaskName(WorkItemNode workItemNode) {
+        return (String) workItemNode.getWork().getParameters().getOrDefault(TASK_NAME_PARAMETER, workItemNode.getName());
+    }
+
+    /**
+     * Normalized task name, used to group work item nodes: task names that are normalized to the same value generate the same model classes.
+     */
+    public static String normalizeTaskName(String taskName) {
+        return sanitizeClassName(taskName);
+    }
+
     public WorkItemModelMetaData add(WorkItemNode workItemNode, VariableScope nodeVariableScope) {
+        String nodeTaskName = resolveTaskName(workItemNode);
+        if (!taskName.equals(nodeTaskName)) {
+            throw new IllegalArgumentException(String.format(
+                    CONFLICTING_TASK_NAMES_ERROR_TEMPLATE,
+                    taskName, nodeTaskName, processId, taskModelClassName));
+        }
+
         if (this.work == null) {
             this.work = Objects.requireNonNull(workItemNode.getWork(), "WorkItemNode work cannot be null");
         } else {
