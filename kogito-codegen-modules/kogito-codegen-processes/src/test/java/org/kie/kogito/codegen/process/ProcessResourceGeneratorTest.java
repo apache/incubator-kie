@@ -200,8 +200,8 @@ public class ProcessResourceGeneratorTest {
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
-    void testDuplicateWorkItemNamesEndpointsAreIndexed(KogitoBuildContext.Builder contextBuilder) {
-        String fileName = "src/test/resources/workitem/DuplicateWorkItemNamesProcess.bpmn";
+    void testDuplicatedWorkItemWithoutTaskNameGenerateDuplicatedEndpointSet(KogitoBuildContext.Builder contextBuilder) {
+        String fileName = "src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn";
 
         ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
 
@@ -212,6 +212,22 @@ public class ProcessResourceGeneratorTest {
         // Must generate indexed methods for each work item node without hardcoding exact index numbers
         assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_1_\\d+"));
         assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_2_\\d+"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testDuplicatedWorkItemsWithSharedTaskNameInputGenerateSingleEndpointSet(KogitoBuildContext.Builder contextBuilder) {
+        String fileName = "src/test/resources/workitem/DuplicateWorkItemWithSharedTaskNameInput.bpmn";
+
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
+
+        List<String> methodNames = classDeclaration.getMethods().stream()
+                .map(MethodDeclaration::getNameAsString)
+                .toList();
+
+        // Both service tasks share the TaskName input "SharedTaskName": exactly one endpoint set, none per node name
+        assertThat(methodNames.stream().filter(name -> name.matches("completeTask_SharedTaskName_\\d+")).count()).isEqualTo(1);
+        assertThat(methodNames).noneMatch(name -> name.contains("LogVariable1") || name.contains("LogVariable2"));
     }
 
     @ParameterizedTest

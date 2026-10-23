@@ -83,14 +83,13 @@ public class WorkItemModelMetaData {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkItemModelMetaData.class);
 
     @KieInternal
-    public static final String CONFLICTING_TYPES_ERROR_TEMPLATE = "Conflicting types for %s parameter '%s' in task '%s' of process '%s': %s vs %s";
+    static final String CONFLICTING_TYPES_ERROR_TEMPLATE = "Conflicting types for %s parameter '%s' in task '%s' of process '%s': %s vs %s";
     @KieInternal
-    public static final String MISMATCHED_DEFINITION_ERROR_TEMPLATE = "Cannot share taskName '%s' between work items of different definition types ('%s' vs '%s') in process '%s'";
+    static final String MISMATCHED_DEFINITION_ERROR_TEMPLATE = "Cannot share taskName '%s' between work items of different definition types ('%s' vs '%s') in process '%s'";
 
     private static final String TASK_INPUT_CLASS_SUFFIX = "TaskInput";
     private static final String TASK_OUTPUT_CLASS_SUFFIX = "TaskOutput";
     private static final String TASK_MODEL_CLASS_SUFFIX = "TaskModel";
-    private static final String TASK_NAME_PARAM = "TaskName";
     private static final String WORK_ITEM = "workItem";
     private static final String PARAMS = "params";
 
@@ -150,13 +149,12 @@ public class WorkItemModelMetaData {
 
         nodes.add(new WorkItemNodeContext(workItemNode, nodeVariableScope));
 
-        boolean isHumanTask = workItemNode instanceof HumanTaskNode;
         Map<String, ParameterDefinition> nodeInputs = extractInputParameters(
-                workItemNode, processVariableScope, nodeVariableScope, isHumanTask);
+                workItemNode, processVariableScope, nodeVariableScope);
         mergeParameters(inputParamDefs, nodeInputs, "input");
 
         Map<String, ParameterDefinition> nodeOutputs = extractOutputParameters(
-                workItemNode, processVariableScope, nodeVariableScope, isHumanTask);
+                workItemNode, processVariableScope, nodeVariableScope);
         mergeParameters(outputParamDefs, nodeOutputs, "output");
 
         return this;
@@ -178,12 +176,12 @@ public class WorkItemModelMetaData {
     }
 
     public static Map<String, ParameterDefinition> extractInputParameters(WorkItemNode workItemNode, VariableScope processVariableScope,
-            VariableScope nodeVariableScope, boolean isHumanTask) {
+            VariableScope nodeVariableScope) {
         Map<String, ParameterDefinition> inputParamDefs = new LinkedHashMap<>();
         Map<String, String> inputTypes = workItemNode.getIoSpecification().getInputTypes();
 
         for (Entry<String, String> entry : workItemNode.getIoSpecification().getInputMapping().entrySet()) {
-            if (TASK_NAME_PARAM.equals(entry.getKey()) || (isHumanTask && HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey()))) {
+            if (HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())) {
                 continue;
             }
 
@@ -202,10 +200,9 @@ public class WorkItemModelMetaData {
 
             String variableType = variable.getType().getStringType();
             if (Object.class.getCanonicalName().equals(variableType)) {
-                LOGGER.warn("{} input variable '{}' is declared as java.lang.Object. " +
+                LOGGER.warn("Input variable '{}' of work item '{}' is declared as java.lang.Object. " +
                         "Object type variables are persisted using Java serialization. " +
-                        "Make sure the stored value implements java.io.Serializable.",
-                        isHumanTask ? "User task" : "Work item", entry.getKey());
+                        "Make sure the stored value implements java.io.Serializable.", entry.getKey(), workItemNode.getName());
             }
 
             String fieldName = sanitizeJavaName(entry.getKey());
@@ -213,7 +210,7 @@ public class WorkItemModelMetaData {
         }
 
         for (Entry<String, Object> entry : workItemNode.getWork().getParameters().entrySet()) {
-            if (entry.getValue() == null || TASK_NAME_PARAM.equals(entry.getKey()) || (isHumanTask && HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey()))) {
+            if (entry.getValue() == null || HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())) {
                 continue;
             }
 
@@ -225,12 +222,12 @@ public class WorkItemModelMetaData {
     }
 
     public static Map<String, ParameterDefinition> extractOutputParameters(WorkItemNode workItemNode, VariableScope processVariableScope,
-            VariableScope nodeVariableScope, boolean isHumanTask) {
+            VariableScope nodeVariableScope) {
         Map<String, ParameterDefinition> outputParamDefs = new LinkedHashMap<>();
         Map<String, String> outputTypes = workItemNode.getIoSpecification().getOutputTypes();
 
         for (Entry<String, String> entry : workItemNode.getIoSpecification().getOutputMappingBySources().entrySet()) {
-            if (entry.getValue() == null || TASK_NAME_PARAM.equals(entry.getKey()) || (isHumanTask && HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey()))) {
+            if (entry.getValue() == null || HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())) {
                 continue;
             }
 
@@ -249,10 +246,9 @@ public class WorkItemModelMetaData {
 
             String variableType = variable.getType().getStringType();
             if (Object.class.getCanonicalName().equals(variableType)) {
-                LOGGER.warn("{} output variable '{}' is declared as java.lang.Object. " +
+                LOGGER.warn("Output variable '{}' of work item '{}' is declared as java.lang.Object. " +
                         "Object type variables are persisted using Java serialization. " +
-                        "Make sure the stored value implements java.io.Serializable.",
-                        isHumanTask ? "User task" : "Work item", entry.getKey());
+                        "Make sure the stored value implements java.io.Serializable.", entry.getKey(), workItemNode.getName());
             }
 
             String fieldName = sanitizeJavaName(entry.getKey());

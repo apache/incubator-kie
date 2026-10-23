@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" namespace="https://kie.org/bpmn/_DC70D49C-4B8D-4E91-85FA-C89B5CFAF605" id="_4B6CEF8E-1270-4C23-AFDD-56DD2AA72E0C" name="BPMN_CBBEBDE3-6A70-4314-BDD0-43D6F31281E4" targetNamespace="https://kie.apache.org/bpmn/_D0BA6BD5-BCA0-4352-B765-F57DB6DB8AC6">
+  <itemDefinition id="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" structureRef="String" />
+  <itemDefinition id="__messageItemDefinition" structureRef="" />
+  <message id="_9F918DE8-804B-4E86-AFFF-429AA7C703EF" itemRef="__messageItemDefinition" name="" />
+  <message id="_A67A2CCA-EED3-4A3C-BD8B-8ACB6A4ACBBD" itemRef="__messageItemDefinition" name="" />
+  <interface id="_52F668D7-91B9-4075-B383-C2350AA89144" name="org.kie.kogito.codegen.test.LogVariableServiceTask">
+    <operation id="_BAB5B538-8D02-4DDE-A75E-FB3EF64767E3" name="log">
+      <inMessageRef>_9F918DE8-804B-4E86-AFFF-429AA7C703EF</inMessageRef>
+      <outMessageRef>_9F918DE8-804B-4E86-AFFF-429AA7C703EF</outMessageRef>
+    </operation>
+    <operation id="_13B386D7-D47A-41E8-B8C1-9C8D5BF5E4B5" name="log">
+      <inMessageRef>_A67A2CCA-EED3-4A3C-BD8B-8ACB6A4ACBBD</inMessageRef>
+      <outMessageRef>_A67A2CCA-EED3-4A3C-BD8B-8ACB6A4ACBBD</outMessageRef>
+    </operation>
+  </interface>
+  <process id="DuplicateWorkItemsProcess" isExecutable="true" drools:adHoc="false" name="DuplicateWorkItemsWithSharedTaskName">
+    <property id="_6C983473-2837-4B65-813C-17B18856D462" name="variable1" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+    <property id="_17709A14-3E82-4C74-A896-76D546EC14BC" name="variable2" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+    <laneSet id="_DF7F2AAF-658F-41CA-96CC-742D8386B531" />
+    <startEvent id="_BAEF3362-8DF0-4903-9B6A-7FC004E26795">
+      <outgoing>_98211D88-6FA2-47EC-8CAB-CFF80484E234</outgoing>
+    </startEvent>
+    <endEvent id="_918107ED-11BF-4074-B56F-255A22AB5A1D">
+      <incoming>_625BFD39-94F6-44F0-8181-1E5603CD5525</incoming>
+    </endEvent>
+    <serviceTask id="_60E7AE77-65B5-45F8-B704-991FD2AE5B2C" name="LogVariable1" drools:serviceinterface="org.kie.kogito.codegen.test.LogVariableServiceTask" operationRef="_BAB5B538-8D02-4DDE-A75E-FB3EF64767E3" drools:serviceoperation="log" implementation="Java" drools:serviceimplementation="Java">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_98211D88-6FA2-47EC-8CAB-CFF80484E234</incoming>
+      <outgoing>_F0961EB4-F82B-433F-B296-5CE0B15518E3</outgoing>
+      <ioSpecification id="_4A1EAA7E-A219-4B51-9762-986B8B621D80">
+        <dataInput id="_F2C4D202-B964-49BB-BFA9-76EBC5BE1E3D" name="TaskName" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_F590D419-0D01-4A7A-AFD9-44864E7360A5" name="message" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <inputSet id="_1CB88BB0-B7B5-48DF-8EBC-44BA4DE6040F">
+          <dataInputRefs>_F2C4D202-B964-49BB-BFA9-76EBC5BE1E3D</dataInputRefs>
+          <dataInputRefs>_F590D419-0D01-4A7A-AFD9-44864E7360A5</dataInputRefs>
+        </inputSet>
+        <outputSet id="_9D1C1404-6291-4D2B-B6CE-63922F0A896E">
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_3D70F327-209D-4D72-9A16-F8FEC88E557F">
+        <targetRef>_F2C4D202-B964-49BB-BFA9-76EBC5BE1E3D</targetRef>
+        <assignment id="_E32C00CD-FAAC-4819-B3F7-55EF41CF074A">
+          <from id="_4FB1ABCA-19F4-4812-BD9A-811C14B1F263" xsi:type="tFormalExpression">SharedTaskName</from>
+          <to id="_490BAE0F-7A29-4D07-9B8B-05A7C95BBDE5">_F2C4D202-B964-49BB-BFA9-76EBC5BE1E3D</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_E3E2DE6F-0C64-4D72-AFED-7A2EC49F9E68">
+        <sourceRef>_6C983473-2837-4B65-813C-17B18856D462</sourceRef>
+        <targetRef>_F590D419-0D01-4A7A-AFD9-44864E7360A5</targetRef>
+      </dataInputAssociation>
+    </serviceTask>
+    <serviceTask id="_E261AABD-837E-44CB-8713-73EEC1099060" name="LogVariable2" drools:serviceinterface="org.kie.kogito.codegen.test.LogVariableServiceTask" operationRef="_13B386D7-D47A-41E8-B8C1-9C8D5BF5E4B5" drools:serviceoperation="log" implementation="Java" drools:serviceimplementation="Java">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_5E434E84-9066-45CE-9EE6-52BEAE317FAA</incoming>
+      <incoming>_F0961EB4-F82B-433F-B296-5CE0B15518E3</incoming>
+      <outgoing>_625BFD39-94F6-44F0-8181-1E5603CD5525</outgoing>
+      <ioSpecification id="_78AF1346-600B-4F08-96B0-6CF130B75E7F">
+        <dataInput id="_A0B87EEC-A90F-4DD4-8C91-817EDF6928C6" name="TaskName" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <dataInput id="_2A9F77CC-0874-4413-9B82-F06B70E7A228" name="message" drools:dtype="String" itemSubjectRef="_CC051A27-EDEA-474B-8716-FF16FBB6AAE1" />
+        <inputSet id="_198C2E24-334B-4747-95B4-553D6C223AF7">
+          <dataInputRefs>_A0B87EEC-A90F-4DD4-8C91-817EDF6928C6</dataInputRefs>
+          <dataInputRefs>_2A9F77CC-0874-4413-9B82-F06B70E7A228</dataInputRefs>
+        </inputSet>
+        <outputSet id="_B7D7376C-FAF7-4896-83F7-D8260AAF39F9">
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_D50BEA91-A4C5-4AD8-831C-5C04E76A4008">
+        <targetRef>_A0B87EEC-A90F-4DD4-8C91-817EDF6928C6</targetRef>
+        <assignment id="_0EBB0D21-A4EF-4375-B40B-978DDFDA620D">
+          <from id="_2C379F1D-60C7-4146-9A06-D9C177753085" xsi:type="tFormalExpression">SharedTaskName</from>
+          <to id="_192D74FF-4358-43CC-8C09-084A22A470AA">_A0B87EEC-A90F-4DD4-8C91-817EDF6928C6</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_94FDE4A4-6885-44FF-96DA-CE776BC77A5B">
+        <sourceRef>_17709A14-3E82-4C74-A896-76D546EC14BC</sourceRef>
+        <targetRef>_2A9F77CC-0874-4413-9B82-F06B70E7A228</targetRef>
+      </dataInputAssociation>
+    </serviceTask>
+    <sequenceFlow id="_98211D88-6FA2-47EC-8CAB-CFF80484E234" sourceRef="_BAEF3362-8DF0-4903-9B6A-7FC004E26795" targetRef="_60E7AE77-65B5-45F8-B704-991FD2AE5B2C" />
+    <sequenceFlow id="_F0961EB4-F82B-433F-B296-5CE0B15518E3" sourceRef="_60E7AE77-65B5-45F8-B704-991FD2AE5B2C" targetRef="_E261AABD-837E-44CB-8713-73EEC1099060" />
+    <sequenceFlow id="_625BFD39-94F6-44F0-8181-1E5603CD5525" sourceRef="_E261AABD-837E-44CB-8713-73EEC1099060" targetRef="_918107ED-11BF-4074-B56F-255A22AB5A1D" />
+  </process>
+  <bpmndi:BPMNDiagram id="_A2AC2AE1-095D-4AA7-8A95-F70712132ECD">
+    <bpmndi:BPMNPlane id="_F22C9B21-8365-4623-A9B8-50CDD49C3501">
+      <bpmndi:BPMNShape id="_F678E899-0AB4-4D1D-83D5-1AB18E75B138" bpmnElement="_BAEF3362-8DF0-4903-9B6A-7FC004E26795">
+        <dc:Bounds x="20" y="80" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_CC66BC7D-B8FF-4AB9-BE3C-1217141AACD5" bpmnElement="_60E7AE77-65B5-45F8-B704-991FD2AE5B2C">
+        <dc:Bounds x="120" y="60" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_D2D318D9-345D-4068-8C19-0AFDD0ABBA49" bpmnElement="_E261AABD-837E-44CB-8713-73EEC1099060">
+        <dc:Bounds x="320" y="60" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_D3148347-AAD1-43A4-8819-327D951ECA0E" bpmnElement="_918107ED-11BF-4074-B56F-255A22AB5A1D">
+        <dc:Bounds x="540" y="80" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="_83612CF8-2286-4F0D-8097-2F6DAF7FD468" bpmnElement="_98211D88-6FA2-47EC-8CAB-CFF80484E234" sourceElement="_F678E899-0AB4-4D1D-83D5-1AB18E75B138" targetElement="_CC66BC7D-B8FF-4AB9-BE3C-1217141AACD5">
+        <di:waypoint x="50" y="110" />
+        <di:waypoint x="120" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_8520505E-FC01-4DC1-961C-E03338DA0806" bpmnElement="_F0961EB4-F82B-433F-B296-5CE0B15518E3" sourceElement="_CC66BC7D-B8FF-4AB9-BE3C-1217141AACD5" targetElement="_D2D318D9-345D-4068-8C19-0AFDD0ABBA49">
+        <di:waypoint x="210" y="110" />
+        <di:waypoint x="320" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_3A568570-A1E6-4FFA-B15D-C537F31B457F-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_625BFD39-94F6-44F0-8181-1E5603CD5525" sourceElement="_D2D318D9-345D-4068-8C19-0AFDD0ABBA49" targetElement="_D3148347-AAD1-43A4-8819-327D951ECA0E">
+        <di:waypoint x="410" y="110" />
+        <di:waypoint x="570" y="110" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

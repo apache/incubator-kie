@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.jbpm.compiler.canonical.workitem;
+package org.jbpm.compiler.canonical;
 
 import java.util.List;
 
-import org.jbpm.compiler.canonical.WorkItemModelMetaData;
+import org.jbpm.process.core.Work;
 import org.jbpm.process.core.context.variable.VariableScope;
 import org.jbpm.process.core.datatype.impl.type.IntegerDataType;
 import org.jbpm.process.core.datatype.impl.type.StringDataType;
@@ -31,7 +31,6 @@ import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
 import org.junit.jupiter.api.Test;
 import org.kie.api.definition.process.WorkflowElementIdentifier;
-import org.kie.api.definition.process.WorkflowProcess;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -361,6 +360,44 @@ public class WorkItemModelMetaDataTest {
                 .map(expr -> expr.asStringLiteralExpr().getValue())
                 .toList();
         assertThat(labelValues).containsExactlyInAnyOrder("two", "three");
+    }
+
+    @Test
+    public void testCustomWorkItemInputExcludesTaskInternalParameters() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.customparams");
+        factory.variable("var1", new StringDataType())
+                .name("customparams")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .startNode(one).name("start").done()
+                .workItemNode(two)
+                .name("Node1")
+                .workName("SignatureDataNode")
+                .workParameter(Work.PARAMETER_UNIQUE_TASK_ID, "unique-id")
+                .workParameter("NodeName", "Node1")
+                .workParameter("TaskName", "SignatureDataNode")
+                .workParameter("Url", "http://localhost:8080/test")
+                .inMapping("var1", "input1")
+                .done()
+                .endNode(three).name("end").terminate(false).done()
+                .connection(one, two)
+                .connection(two, three);
+
+        RuleFlowProcess process = factory.validate().getProcess();
+        VariableScope variableScope = (VariableScope) process.getDefaultContext(VariableScope.VARIABLE_SCOPE);
+        WorkItemNode node = (WorkItemNode) process.getNode(two);
+
+        WorkItemModelMetaData metaData = new WorkItemModelMetaData(
+                process.getPackageName(), variableScope, "SignatureDataNode", process.getId());
+        metaData.add(node, variableScope);
+
+        CompilationUnit inputUnit = StaticJavaParser.parse(metaData.generateInput());
+        List<String> inputFields = inputUnit.findAll(FieldDeclaration.class).stream()
+                .flatMap(f -> f.getVariables().stream())
+                .map(NodeWithSimpleName::getNameAsString)
+                .toList();
+        assertThat(inputFields).containsExactlyInAnyOrder("input1", "Url");
     }
 
     @Test

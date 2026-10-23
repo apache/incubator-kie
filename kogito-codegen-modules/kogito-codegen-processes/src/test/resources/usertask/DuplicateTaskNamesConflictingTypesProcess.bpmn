@@ -25,31 +25,31 @@
       </extensionElements>
       <incoming>_7863B006-87F8-43A0-81E2-AAFDC80DCF2B</incoming>
       <outgoing>_1492F295-1443-48CE-9B1D-0AC9CCEE1BAD</outgoing>
-      <ioSpecification id="_8FEF88BF-276D-4448-94B0-A3CCFB3B06A8">
-        <dataInput id="_1BC0DE8A-3446-40A9-891E-97C27C97EEBF" name="TaskName" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
-        <dataInput id="_97BF0E3E-81A6-43F0-AAF9-3C8FAE269F92" name="var" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
-        <dataOutput name="var" id="_170F89E4-5D3F-4E7B-B3F4-05DA66740622" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
-        <inputSet id="_8E4D20D4-1814-46AA-A1C0-21439BC13099">
-          <dataInputRefs>_1BC0DE8A-3446-40A9-891E-97C27C97EEBF</dataInputRefs>
-          <dataInputRefs>_97BF0E3E-81A6-43F0-AAF9-3C8FAE269F92</dataInputRefs>
+      <ioSpecification id="_289B1014-88E1-43F0-8CD3-F4810488D9A4">
+        <dataInput id="_0739E505-9ACC-4CB7-9DE6-E24D2F482F9E" name="TaskName" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <dataInput id="_5B08E234-D615-4280-85AF-7422DC51D7AF" name="var" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <dataOutput name="var" id="_EB195042-5AC7-41E2-B0B8-1CCA4F68826F" drools:dtype="String" itemSubjectRef="_52A8D0E3-38CD-4BA9-9E94-CA71E89E535C" />
+        <inputSet id="_FBEA2F02-B8D7-450A-AB29-9D866FECE504">
+          <dataInputRefs>_0739E505-9ACC-4CB7-9DE6-E24D2F482F9E</dataInputRefs>
+          <dataInputRefs>_5B08E234-D615-4280-85AF-7422DC51D7AF</dataInputRefs>
         </inputSet>
-        <outputSet id="_EAD74386-3D2E-45F8-AC4D-775840AF9C8A">
-          <dataOutputRefs>_170F89E4-5D3F-4E7B-B3F4-05DA66740622</dataOutputRefs>
+        <outputSet id="_6F283DFF-6A63-4881-9D25-FE1259D0FD6F">
+          <dataOutputRefs>_EB195042-5AC7-41E2-B0B8-1CCA4F68826F</dataOutputRefs>
         </outputSet>
       </ioSpecification>
-      <dataInputAssociation id="_13E78A0B-549E-489C-A7A8-BF03DCDA99DA">
-        <targetRef>_1BC0DE8A-3446-40A9-891E-97C27C97EEBF</targetRef>
-        <assignment id="_8F169B6A-8E19-4249-B436-E728DFCD740E">
-          <from id="_E8286219-1386-40A3-B956-8B0C6EB8FD51" xsi:type="tFormalExpression">SharedTaskName</from>
-          <to id="_2E4CD811-79BA-490D-8488-7C26227FB185">_1BC0DE8A-3446-40A9-891E-97C27C97EEBF</to>
+      <dataInputAssociation id="_FA5547F0-406C-4C22-9C8F-6435BAFEA11C">
+        <targetRef>_0739E505-9ACC-4CB7-9DE6-E24D2F482F9E</targetRef>
+        <assignment id="_DA0DAC71-8475-47C9-B4E9-DB5A0423B675">
+          <from id="_E48F436C-27E9-4645-BD9E-0B0D18D3A5C7" xsi:type="tFormalExpression">SharedTaskName</from>
+          <to id="_D2107717-D92D-49CB-A6A3-340152452ECB">_0739E505-9ACC-4CB7-9DE6-E24D2F482F9E</to>
         </assignment>
       </dataInputAssociation>
-      <dataInputAssociation id="_3BCE4D41-F4F8-4296-B544-A5AA31ED25AE">
+      <dataInputAssociation id="_D99A5565-8DF8-4961-B706-14D6DA3C89FF">
         <sourceRef>_DBD003EF-03F9-4FC7-BA5F-175CFF446782</sourceRef>
-        <targetRef>_97BF0E3E-81A6-43F0-AAF9-3C8FAE269F92</targetRef>
+        <targetRef>_5B08E234-D615-4280-85AF-7422DC51D7AF</targetRef>
       </dataInputAssociation>
-      <dataOutputAssociation id="_B853696A-C457-402E-A81C-5197D8D944DB">
-        <sourceRef>_170F89E4-5D3F-4E7B-B3F4-05DA66740622</sourceRef>
+      <dataOutputAssociation id="_2A9834AE-15EB-4C86-B7E3-8DAA80694C78">
+        <sourceRef>_EB195042-5AC7-41E2-B0B8-1CCA4F68826F</sourceRef>
         <targetRef>_DBD003EF-03F9-4FC7-BA5F-175CFF446782</targetRef>
       </dataOutputAssociation>
       <potentialOwner id="_FE3FB4B7-473B-405B-9409-38F2AAC5CBC2">

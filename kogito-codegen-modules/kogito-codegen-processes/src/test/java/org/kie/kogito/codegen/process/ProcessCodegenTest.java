@@ -58,8 +58,10 @@ class ProcessCodegenTest {
     private static final Path UNTYPED_COLLECTION_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(UNTYPED_COLLECTION_VARIABLE_SOURCE);
     private static final String DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE = "usertask/DuplicateTaskNamesConflictingTypesProcess.bpmn";
     private static final Path DUPLICATE_TASKS_CONFLICTING_TYPES_FULL_PATH = BASE_PATH.resolve(DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE);
-    private static final String DUPLICATE_WORKITEMS_SOURCE = "workitem/DuplicateWorkItemNamesProcess.bpmn";
+    private static final String DUPLICATE_WORKITEMS_SOURCE = "workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn";
     private static final Path DUPLICATE_WORKITEMS_FULL_PATH = BASE_PATH.resolve(DUPLICATE_WORKITEMS_SOURCE);
+    private static final String DUPLICATE_WORKITEMS_SHARED_TASK_NAME_SOURCE = "workitem/DuplicateWorkItemWithSharedTaskNameInput.bpmn";
+    private static final Path DUPLICATE_WORKITEMS_SHARED_TASK_NAME_FULL_PATH = BASE_PATH.resolve(DUPLICATE_WORKITEMS_SHARED_TASK_NAME_SOURCE);
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
@@ -261,5 +263,30 @@ class ProcessCodegenTest {
         assertThat(generatedPaths)
                 .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_Rest_Call_1_TaskInput.java"))
                 .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_Rest_Call_2_TaskInput.java"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void workItemsWithSharedTaskNameInputGenerateSingleModel(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_WORKITEMS_SHARED_TASK_NAME_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
+
+        List<String> generatedPaths = generatedFiles.stream()
+                .map(GeneratedFile::relativePath)
+                .collect(Collectors.toList());
+
+        // Both service tasks ("LogVariable1" and "LogVariable2") declare the same TaskName input, so they share one model
+        assertThat(generatedPaths)
+                .filteredOn(path -> path.contains("_TaskInput.java"))
+                .singleElement()
+                .asString()
+                .contains("DuplicateWorkItemsProcess_SharedTaskName_TaskInput.java");
+        assertThat(generatedPaths)
+                .noneMatch(path -> path.contains("LogVariable1") || path.contains("LogVariable2"));
     }
 }

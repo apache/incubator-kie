@@ -21,7 +21,6 @@ package org.jbpm.compiler.canonical;
 import java.util.Collections;
 import java.util.List;
 
-import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import org.jbpm.process.core.datatype.impl.type.IntegerDataType;
 import org.jbpm.process.core.datatype.impl.type.ObjectDataType;
 import org.jbpm.process.core.datatype.impl.type.StringDataType;
@@ -40,6 +39,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,10 +50,10 @@ public class ProcessToExecModelGeneratorTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessToExecModelGeneratorTest.class);
 
-    private static WorkflowElementIdentifier one = WorkflowElementIdentifierFactory.fromExternalFormat("one");
-    private static WorkflowElementIdentifier two = WorkflowElementIdentifierFactory.fromExternalFormat("two");
-    private static WorkflowElementIdentifier three = WorkflowElementIdentifierFactory.fromExternalFormat("three");
-    private static WorkflowElementIdentifier four = WorkflowElementIdentifierFactory.fromExternalFormat("four");
+    private static final WorkflowElementIdentifier one = WorkflowElementIdentifierFactory.fromExternalFormat("one");
+    private static final WorkflowElementIdentifier two = WorkflowElementIdentifierFactory.fromExternalFormat("two");
+    private static final WorkflowElementIdentifier three = WorkflowElementIdentifierFactory.fromExternalFormat("three");
+    private static final WorkflowElementIdentifier four = WorkflowElementIdentifierFactory.fromExternalFormat("four");
 
     @Test
     public void testScriptAndWorkItemGeneration() {
