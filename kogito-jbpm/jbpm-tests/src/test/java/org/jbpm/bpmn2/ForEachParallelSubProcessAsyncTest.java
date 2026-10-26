@@ -37,16 +37,14 @@ import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Regression test for the false-positive in
- * {@code LambdaSubProcessNodeInstance#hasAsyncNodeInstance}: a parallel
- * multi-instance call activity whose child subprocess contains a
- * {@code customAsync} node <em>and</em> wait-state user tasks must launch all
- * child instances in parallel, not serialise them.
+ * Tests that a parallel multi-instance call activity whose child subprocess
+ * contains an async node (e.g. a {@code customAsync} script task) and wait-state
+ * user tasks launches all child instances in parallel, rather than falling back
+ * to sequential execution.
  *
  * <p>
- * Before the fix, {@code ASYNC_WAITING} being set on the child process
- * metadata was enough to force sequential mode in the parent ForEach, even
- * though the subprocess would park at human tasks before completing.
+ * Previously, {@code ForEachNodeInstance} fell back to sequential mode when
+ * child instances contained asynchronous nodes.
  */
 public class ForEachParallelSubProcessAsyncTest {
 
