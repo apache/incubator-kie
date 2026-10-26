@@ -1,7 +1,7 @@
 org.drools.testcoverage:drools-kie-ci-with-domain-tests
 org.drools.testcoverage:drools-kie-ci-without-domain-tests
-org.drools.testcoverage:kjar-with-invoker
 org.drools.testcoverage:drools-test-suite
+org.drools.testcoverage:kjar-with-invoker
 org.drools.testcoverage:test-compiler-integration
 org.drools.testcoverage:test-integration-nomvel
 org.drools.testcoverage:test-integration-notms

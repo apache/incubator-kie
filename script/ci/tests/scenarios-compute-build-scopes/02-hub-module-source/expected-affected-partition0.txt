@@ -1,0 +1,13 @@
+org.optaplanner:optaplanner-benchmark
+org.optaplanner:optaplanner-examples
+org.optaplanner:optaplanner-quarkus-benchmark
+org.optaplanner:optaplanner-quarkus-benchmark-deployment
+org.optaplanner:optaplanner-quarkus-benchmark-integration-test
+org.optaplanner:optaplanner-quarkus-devui-integration-test
+org.optaplanner:optaplanner-quarkus-drl-integration-test
+org.optaplanner:optaplanner-quarkus-integration-test
+org.optaplanner:optaplanner-quarkus-jackson-integration-test
+org.optaplanner:optaplanner-quarkus-jsonb-integration-test
+org.optaplanner:optaplanner-quarkus-reflection-integration-test
+org.optaplanner:optaplanner-spring-boot-autoconfigure
+org.optaplanner:optaplanner-spring-boot-starter

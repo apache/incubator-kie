@@ -1,0 +1,9 @@
+# Modules whose generated image output is required by downstream tests.
+kogito-apps-quarkus/data-index-quarkus/data-index-service-inmemory
+kogito-apps-quarkus/data-index-quarkus/data-index-service-mongodb
+kogito-apps-quarkus/data-index-quarkus/data-index-service-postgresql
+kogito-apps-quarkus/jobs-service-quarkus/jobs-service-common
+kogito-apps-quarkus/jobs-service-quarkus/jobs-service-inmemory
+kogito-apps-quarkus/jobs-service-quarkus/jobs-service-postgresql
+kogito-explainability/explainability-service-messaging
+kogito-jitexecutor/jitexecutor-runner
