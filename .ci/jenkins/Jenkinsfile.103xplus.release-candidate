@@ -24,9 +24,9 @@
 //   - Runs script/release/release-all.sh (R commit + RC tag -> build -> Nexus staging)
 //
 // MANDATORY parameters : RELEASE_VERSION, TAG_NAME
-// Real RC run          : DEPLOY=true, PUSH_TAG=true, DRY_RUN=false
+// Real RC run          : DEPLOY=true, PUSH_TAG=true, DRY_RUN=false (the defaults)
 // Branch cut (once per minor, before rc1 only):
-//                        CREATE_STREAM_BRANCH=true -> creates X.Y.x from STREAM_BASE_BRANCH,
+//                        CREATE_STREAM_BRANCH=true -> creates X.Y.x from main,
 //                        sets X.Y.999-SNAPSHOT, pushes it, then continues the RC on X.Y.x.
 //                        Leave it false for rc2, final and patch releases (branch already exists).
 
@@ -48,24 +48,19 @@ pipeline {
     parameters {
         string(name: 'RELEASE_VERSION', defaultValue: '', description: 'MANDATORY. Exact release version, e.g. 10.3.0', trim: true)
         string(name: 'TAG_NAME', defaultValue: '', description: 'MANDATORY. RC tag name, e.g. 10.3.0-rc1 (must start with RELEASE_VERSION and be a new tag)', trim: true)
-        booleanParam(name: 'CREATE_STREAM_BRANCH', defaultValue: false, description: 'Branch cut: create X.Y.x (derived from RELEASE_VERSION) from STREAM_BASE_BRANCH, set X.Y.999-SNAPSHOT and push it BEFORE building the RC. Only for the first RC of a new minor (e.g. 10.3.0-rc1). Fails if X.Y.x already exists')
-        string(name: 'STREAM_BASE_BRANCH', defaultValue: 'main', description: 'Used only when CREATE_STREAM_BRANCH=true. Branch the stream branch is cut from', trim: true)
+        booleanParam(name: 'CREATE_STREAM_BRANCH', defaultValue: false, description: 'Branch cut: create X.Y.x (derived from RELEASE_VERSION) from main, set X.Y.999-SNAPSHOT and push it BEFORE building the RC. Only for the first RC of a new minor (e.g. 10.3.0-rc1). Fails if X.Y.x already exists')
         booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip running tests during reactor build')
         booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Deploy artifacts to Apache Nexus staging')
         string(name: 'STAGING_URL', defaultValue: '', description: 'Custom Nexus staging URL (optional)')
         booleanParam(name: 'PUSH_TAG', defaultValue: true, description: 'Push the git tag to origin')
         string(name: 'EXTRA_MAVEN_OPTS', defaultValue: '', description: 'Extra Maven CLI options to pass to build.sh')
         booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Dry run without making remote git or staging changes')
-        booleanParam(name: 'SEND_NOTIFICATION', defaultValue: false, description: 'Send an e-mail when the pipeline finishes (requires NOTIFICATION_EMAIL)')
-        string(name: 'NOTIFICATION_EMAIL', defaultValue: '', description: 'Optional. Recipient for SEND_NOTIFICATION', trim: true)
 
         // Jenkins IDs — defaults match the existing KIE Jenkins; override only if they differ.
         string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: 'kie-release-authn-settings', description: 'Config File Provider ID of the Maven settings.xml (must define server "apache.releases.https")', trim: true)
         string(name: 'GPG_KEY_CREDS_ID', defaultValue: 'GPG_KEY_FILE', description: 'Secret FILE credential ID holding the armored GPG private key', trim: true)
         string(name: 'GPG_PASSPHRASE_CREDS_ID', defaultValue: '', description: 'Optional. Secret TEXT credential ID holding the GPG key passphrase. Leave empty if the key has no passphrase (KIE release key has none)', trim: true)
         string(name: 'GIT_PUSH_CREDS_ID', defaultValue: '84811880-2025-45b6-a44c-2f33bef30ad2', description: 'Username/password credential ID used to push the RC tag to GitHub', trim: true)
-        string(name: 'GIT_AUTHOR_NAME', defaultValue: 'Apache KIE Release Bot', description: 'git user.name for the R commit', trim: true)
-        string(name: 'GIT_AUTHOR_EMAIL', defaultValue: 'dev@kie.apache.org', description: 'git user.email for the R commit', trim: true)
     }
 
     stages {
@@ -96,15 +91,15 @@ pipeline {
                         def branchArgs = [
                             './script/release/00-create-stream-branch.sh',
                             '--version', params.RELEASE_VERSION,
-                            '--base',    params.STREAM_BASE_BRANCH,
+                            '--base',    'main',
                             '--push'
                         ]
                         if (params.DRY_RUN) branchArgs << '--dry-run'
 
                         sh """#!/usr/bin/env bash
                         set -euo pipefail
-                        git config user.email "${params.GIT_AUTHOR_EMAIL}"
-                        git config user.name  "${params.GIT_AUTHOR_NAME}"
+                        git config user.email "dev@kie.apache.org"
+                        git config user.name  "Apache KIE Release Bot"
                         git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
                         chmod +x script/release/*.sh
                         ${branchArgs.collect { "'${it.replace("'", "'\\''")}'" }.join(' ')}
@@ -142,8 +137,8 @@ pipeline {
                             // the token from the environment at push time, never from disk.
                             sh """#!/usr/bin/env bash
                             set -euo pipefail
-                            git config user.email "${params.GIT_AUTHOR_EMAIL}"
-                            git config user.name  "${params.GIT_AUTHOR_NAME}"
+                            git config user.email "dev@kie.apache.org"
+                            git config user.name  "Apache KIE Release Bot"
                             git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
                             """
 
@@ -182,37 +177,5 @@ pipeline {
         always {
             cleanWs()
         }
-        success {
-            script {
-                sendNotification()
-            }
-        }
-        unsuccessful {
-            sendErrorNotification()
-        }
-    }
-}
-
-void sendNotification() {
-    if (params.SEND_NOTIFICATION && params.NOTIFICATION_EMAIL) {
-        mail(
-            to: params.NOTIFICATION_EMAIL,
-            subject: "[SUCCESS] Release ${params.RELEASE_VERSION} (${params.TAG_NAME}) Drools - Build ${BUILD_TAG}",
-            body: "Release pipeline succeeded.\n\nBuild URL: ${BUILD_URL}"
-        )
-    } else {
-        echo 'No notification sent per configuration'
-    }
-}
-
-void sendErrorNotification() {
-    if (params.SEND_NOTIFICATION && params.NOTIFICATION_EMAIL) {
-        mail(
-            to: params.NOTIFICATION_EMAIL,
-            subject: "[FAILURE] Release ${params.RELEASE_VERSION} (${params.TAG_NAME}) Drools - Build ${BUILD_TAG}",
-            body: "Release pipeline failed.\n\nBuild URL: ${BUILD_URL}"
-        )
-    } else {
-        echo 'No notification sent per configuration'
     }
 }
