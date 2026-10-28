@@ -18,6 +18,7 @@
  */
 package org.jbpm.workflow.instance.node;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
@@ -68,12 +69,47 @@ public class EventSubProcessNodeInstance extends CompositeContextNodeInstance {
             if (this.getNodeInstances().isEmpty()) {
                 StartNode startNode = getCompositeNode().findStartNode();
                 if (resolveVariables(((EventSubProcessNode) getEventBasedNode()).getEvents()).contains(type) || type.equals(TIMER_TRIGGERED_EVENT)) {
+                    // BPMN 2.0 13.4.4: once an interrupting handler is started, no new handlers can be started
+                    if (isInterruptedByRunningHandler()) {
+                        return;
+                    }
+                    if (isInterrupting(startNode)) {
+                        interruptContainer();
+                    }
                     NodeInstance nodeInstance = getNodeInstance(startNode);
                     ((StartNodeInstance) nodeInstance).signalEvent(type, event);
                 }
             }
         }
         super.signalEvent(type, event, varResolver);
+    }
+
+    private boolean isInterrupting(StartNode startNode) {
+        return getCompositeNode().isKeepActive() && startNode.isInterrupting();
+    }
+
+    private static boolean isRunningInterruptingHandler(NodeInstance nodeInstance) {
+        return nodeInstance instanceof EventSubProcessNodeInstance handler
+                && !handler.getNodeInstances().isEmpty()
+                && handler.isInterrupting(handler.getCompositeNode().findStartNode());
+    }
+
+    private boolean isInterruptedByRunningHandler() {
+        return getNodeInstanceContainer().getNodeInstances().stream()
+                .anyMatch(ni -> ni != this && isRunningInterruptingHandler(ni));
+    }
+
+    /**
+     * BPMN 2.0 13.4.4 / Activity lifecycle: when an interrupting event sub process is initiated the parent is interrupted,
+     * i.e. all its other active node instances are terminated (the handler itself keeps running), and no new event sub
+     * process can be started. The parent itself reaches its final state once the handler completes.
+     */
+    private void interruptContainer() {
+        for (NodeInstance nodeInstance : new ArrayList<>(getNodeInstanceContainer().getNodeInstances())) {
+            if (nodeInstance != this && !isRunningInterruptingHandler(nodeInstance) && getNodeInstanceContainer().getNodeInstances().contains(nodeInstance)) {
+                ((org.jbpm.workflow.instance.NodeInstance) nodeInstance).cancel(org.jbpm.workflow.instance.NodeInstance.CancelType.ABORTED);
+            }
+        }
     }
 
     @Override
