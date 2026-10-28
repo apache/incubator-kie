@@ -107,7 +107,7 @@
     <version.com.github.victools>4.37.0</version.com.github.victools>
     <version.com.google.collections>1.0</version.com.google.collections>
     <version.com.google.gson>2.13.2</version.com.google.gson>
-    <version.com.google.guava>33.5.0-jre</version.com.google.guava>
+    <version.com.google.guava>33.7.1-jre</version.com.google.guava>
     <version.com.google.protobuf>3.25.5</version.com.google.protobuf>
     <version.com.graphql-java>25.0</version.com.graphql-java>
     <version.com.graphql-java-extended-scalars>24.0</version.com.graphql-java-extended-scalars>
