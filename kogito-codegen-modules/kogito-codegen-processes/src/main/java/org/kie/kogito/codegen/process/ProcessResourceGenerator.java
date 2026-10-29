@@ -21,6 +21,7 @@ package org.kie.kogito.codegen.process;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -45,6 +46,7 @@ import org.kie.kogito.codegen.core.BodyDeclarationComparator;
 import org.kie.kogito.codegen.core.CodegenUtils;
 import org.kie.kogito.codegen.core.GeneratorConfig;
 import org.kie.kogito.codegen.faultTolerance.FaultToleranceAnnotator;
+import org.kie.kogito.codegen.process.config.WorkItemRestConfig;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 import org.kie.kogito.internal.utils.ConversionUtils;
 import org.slf4j.Logger;
@@ -89,6 +91,9 @@ public class ProcessResourceGenerator {
     private static final String REST_SIGNAL_TEMPLATE_NAME = "RestResourceSignal";
 
     private static final String SIGNAL_METHOD_PREFFIX = "signal_";
+
+    static final String CONFLICTING_REST_PATHS_ERROR_TEMPLATE =
+            "Work items in process '%s' resolve to the same REST path '%s' (nodes: %s). Use distinct node names or disable the REST endpoints of the work items";
 
     private final String relativePath;
 
@@ -398,9 +403,12 @@ public class ProcessResourceGenerator {
             ClassOrInterfaceDeclaration taskModelFactoryClass, AtomicInteger index) {
         if (workItems != null && !workItems.isEmpty()) {
 
+            WorkItemRestConfig restConfig = WorkItemRestConfig.fromContext(context);
+            validateWorkItemRestPaths(workItems, restConfig);
+
             CompilationUnit workItemClazz = templateBuilder.build(context, REST_WORK_ITEM_TEMPLATE_NAME).compilationUnitOrThrow();
 
-            ClassOrInterfaceDeclaration userTaskTemplate = workItemClazz
+            ClassOrInterfaceDeclaration restWorkItemClassTemplate = workItemClazz
                     .findFirst(ClassOrInterfaceDeclaration.class)
                     .orElseThrow(() -> new NoSuchElementException("Compilation unit doesn't contain a class or interface declaration!"));
 
@@ -410,8 +418,27 @@ public class ProcessResourceGenerator {
             SwitchStmt switchExpr = taskModelFactoryMethod.getBody().map(b -> b.findFirst(SwitchStmt.class).orElseThrow(IllegalStateException::new)).orElseThrow(IllegalStateException::new);
 
             for (WorkItemModelMetaData workItem : workItems) {
+                // every work item has an entry in the factory, even if it has no endpoints, as the pending tasks list maps all of them
+                switchExpr.getEntries().add(0, workItem.getModelSwitchEntry());
+
+                boolean restEnabled = restConfig.isRestEnabled(workItem.getWorkName());
+                if (!restEnabled && !workItem.isAdHoc()) {
+                    // We only generate endpoints for rest-enabled or ad-hoc work items.
+                    continue;
+                }
+
                 String methodSuffix = sanitizeJavaName(workItem.getName()) + "_" + index.getAndIncrement();
-                userTaskTemplate.findAll(MethodDeclaration.class).forEach(md -> {
+
+                restWorkItemClassTemplate.findAll(MethodDeclaration.class).forEach(md -> {
+                    boolean isWorkItemTriggerSignalMethod = md.getNameAsString().equals("signal");
+                    if (isWorkItemTriggerSignalMethod && !workItem.isAdHoc()) {
+                        // Only adding the 'trigger' endpoint on ad-hoc nodes (no incoming connections)
+                        return;
+                    }
+                    if (!isWorkItemTriggerSignalMethod && !restEnabled) {
+                        // Task lifecycle endpoints (complete, save, transition, etc.) require REST enablement
+                        return;
+                    }
                     MethodDeclaration cloned = md.clone();
                     template.addMethod(cloned.getName() + "_" + methodSuffix, Keyword.PUBLIC)
                             .setType(cloned.getType())
@@ -423,15 +450,29 @@ public class ProcessResourceGenerator {
                 template.findAll(StringLiteralExpr.class).forEach(s -> interpolateUserTaskStrings(s, workItem));
                 template.findAll(ClassOrInterfaceType.class).forEach(c -> interpolateUserTaskTypes(c, workItem));
                 template.findAll(NameExpr.class).forEach(c -> interpolateUserTaskNameExp(c, workItem));
-                if (!workItem.isAdHoc()) {
-                    template.findAll(MethodDeclaration.class)
-                            .stream()
-                            .filter(md -> md.getNameAsString().equals(SIGNAL_METHOD_PREFFIX + methodSuffix))
-                            .forEach(template::remove);
-                }
-                switchExpr.getEntries().add(0, workItem.getModelSwitchEntry());
             }
+        }
+    }
 
+    /**
+     * The endpoints of a work item are published under a path segment derived from its name, two work items cannot share it.
+     */
+    private void validateWorkItemRestPaths(List<WorkItemModelMetaData> workItems, WorkItemRestConfig restConfig) {
+        // Collect only work items that expose at least one REST endpoint (lifecycle or ad-hoc trigger)
+        Map<String, List<WorkItemModelMetaData>> bySegment = workItems.stream()
+                .filter(workItem -> restConfig.isRestEnabled(workItem.getWorkName()) || workItem.isAdHoc())
+                .collect(Collectors.groupingBy(workItem -> sanitizeName(workItem.getName()), LinkedHashMap::new, Collectors.toList()));
+
+        // Fail fast if multiple work items resolve to the same URL path segment to avoid route collisions
+        for (Map.Entry<String, List<WorkItemModelMetaData>> entry : bySegment.entrySet()) {
+            List<WorkItemModelMetaData> items = entry.getValue();
+            if (items.size() > 1) {
+                String nodes = items.stream()
+                        .flatMap(item -> item.getNodes().stream())
+                        .map(ctx -> ctx.workItemNode().getId().toExternalFormat())
+                        .collect(Collectors.joining(", "));
+                throw new ProcessCodegenException(String.format(CONFLICTING_REST_PATHS_ERROR_TEMPLATE, processId, entry.getKey(), nodes));
+            }
         }
     }
 
@@ -531,7 +572,8 @@ public class ProcessResourceGenerator {
 
     private void interpolateUserTaskStrings(StringLiteralExpr vv, WorkItemModelMetaData userTask) {
         String s = vv.getValue();
-        String interpolated = s.replace("$taskName$", sanitizeName(userTask.getName()));
+        // the path uses the sanitized name, the runtime needs the real one to resolve the node
+        String interpolated = s.replace("$taskName$", sanitizeName(userTask.getName())).replace("$rawTaskName$", userTask.getName());
         vv.setString(interpolated);
     }
 
@@ -566,7 +608,7 @@ public class ProcessResourceGenerator {
     }
 
     private String sanitizeName(String name) {
-        return name.replaceAll("\\s", "_");
+        return ConversionUtils.sanitizeName(name);
     }
 
     private Collection<TriggerMetaData> getStartSignalTriggers() {

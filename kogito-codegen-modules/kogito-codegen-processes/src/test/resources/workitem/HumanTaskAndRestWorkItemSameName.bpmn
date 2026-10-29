@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="_HumanAndRest" name="HumanTaskAndRestWorkItemSameName" targetNamespace="https://kie.apache.org/bpmn/_HumanAndRest">
+  <itemDefinition id="_String" structureRef="String" />
+  <process id="HumanAndRestProcess" isExecutable="true" drools:adHoc="false" name="HumanAndRestProcess">
+    <property id="_var1" name="variable1" itemSubjectRef="_String" />
+    <startEvent id="_start">
+      <outgoing>_f1</outgoing>
+    </startEvent>
+    <endEvent id="_end">
+      <incoming>_f3</incoming>
+    </endEvent>
+    <userTask id="_human" name="Rest Call">
+      <incoming>_f1</incoming>
+      <outgoing>_f2</outgoing>
+      <ioSpecification id="_humanIo">
+        <dataInput id="_humanIn" name="variable1" drools:dtype="String" itemSubjectRef="_String" />
+        <inputSet id="_humanInSet">
+          <dataInputRefs>_humanIn</dataInputRefs>
+        </inputSet>
+        <outputSet id="_humanOutSet" />
+      </ioSpecification>
+      <dataInputAssociation id="_humanAssoc">
+        <sourceRef>_var1</sourceRef>
+        <targetRef>_humanIn</targetRef>
+      </dataInputAssociation>
+      <potentialOwner id="_owner">
+        <resourceAssignmentExpression id="_ownerExpr">
+          <formalExpression id="_ownerFormal">john</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <task id="_rest" name="Rest Call" drools:taskName="Rest">
+      <incoming>_f2</incoming>
+      <outgoing>_f3</outgoing>
+      <ioSpecification id="_restIo">
+        <dataInput id="_restMethod" name="Method" drools:dtype="String" itemSubjectRef="_String" />
+        <dataInput id="_restUrl" name="Url" drools:dtype="String" itemSubjectRef="_String" />
+        <dataOutput name="Result" id="_restResult" drools:dtype="String" itemSubjectRef="_String" />
+        <inputSet id="_restInSet">
+          <dataInputRefs>_restMethod</dataInputRefs>
+          <dataInputRefs>_restUrl</dataInputRefs>
+        </inputSet>
+        <outputSet id="_restOutSet">
+          <dataOutputRefs>_restResult</dataOutputRefs>
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_restMethodAssoc">
+        <targetRef>_restMethod</targetRef>
+        <assignment id="_restMethodAssign">
+          <from id="_restMethodFrom" xsi:type="tFormalExpression">GET</from>
+          <to id="_restMethodTo">_restMethod</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_restUrlAssoc">
+        <targetRef>_restUrl</targetRef>
+        <assignment id="_restUrlAssign">
+          <from id="_restUrlFrom" xsi:type="tFormalExpression">http://localhost:8080/test</from>
+          <to id="_restUrlTo">_restUrl</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataOutputAssociation id="_restOutAssoc">
+        <sourceRef>_restResult</sourceRef>
+        <targetRef></targetRef>
+      </dataOutputAssociation>
+    </task>
+    <sequenceFlow id="_f1" sourceRef="_start" targetRef="_human" />
+    <sequenceFlow id="_f2" sourceRef="_human" targetRef="_rest" />
+    <sequenceFlow id="_f3" sourceRef="_rest" targetRef="_end" />
+  </process>
+</definitions>

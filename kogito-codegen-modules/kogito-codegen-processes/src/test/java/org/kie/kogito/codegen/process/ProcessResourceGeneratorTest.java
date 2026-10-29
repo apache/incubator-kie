@@ -21,7 +21,9 @@ package org.kie.kogito.codegen.process;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -38,6 +40,7 @@ import org.kie.kogito.codegen.api.context.KogitoBuildContext;
 import org.kie.kogito.codegen.api.context.impl.JavaKogitoBuildContext;
 import org.kie.kogito.codegen.faultTolerance.FaultToleranceAnnotator;
 import org.kie.kogito.codegen.faultTolerance.FaultToleranceUtil;
+import org.kie.kogito.codegen.process.config.WorkItemRestConfig;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcess;
 
 import com.github.javaparser.StaticJavaParser;
@@ -200,34 +203,181 @@ public class ProcessResourceGeneratorTest {
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
-    void testDuplicatedWorkItemWithoutTaskNameGenerateDuplicatedEndpointSet(KogitoBuildContext.Builder contextBuilder) {
-        String fileName = "src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn";
+    void testWorkItemsHaveNoEndpointsByDefault(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn");
 
-        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
-
-        List<String> methodNames = classDeclaration.getMethods().stream()
-                .map(MethodDeclaration::getNameAsString)
-                .toList();
-
-        // Must generate indexed methods for each work item node without hardcoding exact index numbers
-        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_1_\\d+"));
-        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_2_\\d+"));
+        assertThat(methodNames(classDeclaration)).noneMatch(name -> name.startsWith("completeTask_"));
     }
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
-    void testDuplicatedWorkItemsWithSharedTaskNameInputGenerateSingleEndpointSet(KogitoBuildContext.Builder contextBuilder) {
-        String fileName = "src/test/resources/workitem/DuplicateWorkItemWithSharedTaskNameInput.bpmn";
+    void testRegularWorkItemsAreNeverGroupedAndUseTheirNodeName(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn", restEnabled("Rest"));
 
-        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, fileName);
+        List<String> methodNames = methodNames(classDeclaration);
 
-        List<String> methodNames = classDeclaration.getMethods().stream()
-                .map(MethodDeclaration::getNameAsString)
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_1_\\d+"));
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_Rest_Call_2_\\d+"));
+        assertThat(pathsOf(classDeclaration)).anyMatch(path -> path.contains("/Rest_Call_1/")).anyMatch(path -> path.contains("/Rest_Call_2/"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testRegularWorkItemsSharingTaskNameInputAreNotGrouped(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder,
+                "src/test/resources/workitem/DuplicateWorkItemWithSharedTaskNameInput.bpmn", restEnabled("Service Task"));
+
+        List<String> methodNames = methodNames(classDeclaration);
+
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_LogVariable1_\\d+"));
+        assertThat(methodNames).anyMatch(name -> name.matches("completeTask_LogVariable2_\\d+"));
+        assertThat(methodNames).noneMatch(name -> name.contains("SharedTaskName"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testEndpointsOnlyForEnabledWorkItemType(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn", restEnabled("Email"));
+
+        assertThat(methodNames(classDeclaration)).noneMatch(name -> name.startsWith("completeTask_"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testQuotedWorkItemConfigurationIsAccepted(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn",
+                Map.of("kogito.codegen.process.workitems.\"Rest\".rest.enabled", "true"));
+
+        assertThat(methodNames(classDeclaration)).anyMatch(name -> name.matches("completeTask_Rest_Call_1_\\d+"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testHumanTaskEndpointsAreAlwaysGenerated(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn");
+
+        assertThat(methodNames(classDeclaration)).anyMatch(name -> name.matches("completeTask_SharedTaskName_\\d+"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testHumanTaskEndpointsCanBeExplicitlyDisabled(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder,
+                "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn",
+                Map.of("kogito.codegen.process.workitems.\"Human Task\".rest.enabled", "false"));
+
+        assertThat(methodNames(classDeclaration)).noneMatch(name -> name.startsWith("completeTask_"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testWorkItemsWithoutEndpointsKeepTheirTaskModelFactoryEntry(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = createContext(contextBuilder);
+        ProcessResourceGenerator generator = getProcessResourceGenerator(context, parseProcess("src/test/resources/workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn"), true, false);
+
+        assertThat(generator.generate()).doesNotContain("completeTask_Rest");
+        String factory = generator.getTaskModelFactory();
+        assertThat(factory).contains("DuplicateWorkItemsProcess_").contains("_TaskModel.from");
+        assertThat(factory.split("case \"", -1).length - 1).isEqualTo(2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testRegularWorkItemNameClashingWithAnotherFailsFast(KogitoBuildContext.Builder contextBuilder) {
+        assertThatThrownBy(() -> getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/SameNameRestWorkItems.bpmn", restEnabled("Rest")))
+                .isInstanceOf(ProcessCodegenException.class)
+                .hasMessageContaining("Rest_Call");
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testRegularWorkItemNameClashingWithHumanTaskFailsFast(KogitoBuildContext.Builder contextBuilder) {
+        assertThatThrownBy(() -> getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/HumanTaskAndRestWorkItemSameName.bpmn", restEnabled("Rest")))
+                .isInstanceOf(ProcessCodegenException.class)
+                .hasMessageContaining("Rest_Call");
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testNameClashesAreIgnoredWhenEndpointsAreDisabled(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration sameName = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/SameNameRestWorkItems.bpmn");
+        ClassOrInterfaceDeclaration humanAndRest = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/HumanTaskAndRestWorkItemSameName.bpmn");
+
+        assertThat(methodNames(sameName)).noneMatch(name -> name.startsWith("completeTask_"));
+        // only the human task has endpoints
+        assertThat(methodNames(humanAndRest).stream().filter(name -> name.startsWith("completeTask_")).count()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testTriggerIsGeneratedOnlyForAdHocWorkItems(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder,
+                "src/test/resources/workitem/AdHocRestWorkItem.bpmn", restEnabled("Rest"));
+
+        List<String> methodNames = methodNames(classDeclaration);
+
+        // "Rest Call 1" is reached from the start event, "Rest Call 2" has no incoming connection
+        assertThat(methodNames).noneMatch(name -> name.matches("signal_Rest_Call_1_\\d+"));
+        assertThat(methodNames).anyMatch(name -> name.matches("signal_Rest_Call_2_\\d+"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testTriggerSignalsTheRealNodeNameWhilePathIsSanitized(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder,
+                "src/test/resources/workitem/AdHocRestWorkItem.bpmn", restEnabled("Rest"));
+
+        MethodDeclaration trigger = classDeclaration.getMethods().stream()
+                .filter(m -> m.getNameAsString().matches("signal_Rest_Call_2_\\d+"))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(trigger.toString())
+                .contains("/Rest_Call_2/trigger")
+                .contains("signalWorkItem(process, id, \"Rest Call 2\"");
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testTriggerIsGeneratedForAdHocWorkItemsEvenWhenRestDisabled(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/workitem/AdHocRestWorkItem.bpmn");
+
+        List<String> methodNames = methodNames(classDeclaration);
+        // Non-ad-hoc work item ("Rest Call 1") has neither trigger nor lifecycle endpoints
+        assertThat(methodNames).noneMatch(name -> name.matches("signal_Rest_Call_1_\\d+"));
+        assertThat(methodNames).noneMatch(name -> name.matches("completeTask_Rest_Call_1_\\d+"));
+
+        // Ad-hoc work item ("Rest Call 2") has trigger endpoint, but no lifecycle endpoints
+        assertThat(methodNames).anyMatch(name -> name.matches("signal_Rest_Call_2_\\d+"));
+        assertThat(methodNames).noneMatch(name -> name.matches("completeTask_Rest_Call_2_\\d+"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#restContextBuilders")
+    void testDuplicatedHumanTasksWithSharedTaskNameInputGenerateSingleEndpointSet(KogitoBuildContext.Builder contextBuilder) {
+        ClassOrInterfaceDeclaration classDeclaration = getResourceClassDeclaration(contextBuilder, "src/test/resources/usertask/DuplicateTaskNamesProcess.bpmn");
+
+        assertThat(methodNames(classDeclaration).stream().filter(name -> name.matches("completeTask_SharedTaskName_\\d+")).count()).isEqualTo(1);
+    }
+
+    private static Map<String, String> restEnabled(String... workNames) {
+        Map<String, String> properties = new HashMap<>();
+        for (String workName : workNames) {
+            properties.put(WorkItemRestConfig.CONFIG_PREFIX + workName + WorkItemRestConfig.CONFIG_SUFFIX, "true");
+        }
+        return properties;
+    }
+
+    private static List<String> methodNames(ClassOrInterfaceDeclaration classDeclaration) {
+        return classDeclaration.getMethods().stream().map(MethodDeclaration::getNameAsString).toList();
+    }
+
+    private static List<String> pathsOf(ClassOrInterfaceDeclaration classDeclaration) {
+        return classDeclaration.getMethods().stream()
+                .flatMap(m -> m.getAnnotations().stream())
+                .filter(a -> a.getNameAsString().equals("Path") || a.getNameAsString().endsWith("Mapping"))
+                .map(AnnotationExpr::toString)
                 .toList();
-
-        // Both service tasks share the TaskName input "SharedTaskName": exactly one endpoint set, none per node name
-        assertThat(methodNames.stream().filter(name -> name.matches("completeTask_SharedTaskName_\\d+")).count()).isEqualTo(1);
-        assertThat(methodNames).noneMatch(name -> name.contains("LogVariable1") || name.contains("LogVariable2"));
     }
 
     @ParameterizedTest
@@ -442,18 +592,18 @@ public class ProcessResourceGeneratorTest {
     }
 
     private ClassOrInterfaceDeclaration getResourceClassDeclaration(KogitoBuildContext.Builder contextBuilder, String fileName) {
+        return getResourceClassDeclaration(contextBuilder, fileName, Map.of());
+    }
+
+    private ClassOrInterfaceDeclaration getResourceClassDeclaration(KogitoBuildContext.Builder contextBuilder, String fileName, Map<String, String> properties) {
         KogitoWorkflowProcess process = parseProcess(fileName);
-        CompilationUnit compilationUnit = getCompilationUnit(contextBuilder, process);
+        KogitoBuildContext context = createContext(contextBuilder);
+        properties.forEach(context::setApplicationProperty);
+        CompilationUnit compilationUnit = StaticJavaParser.parse(getProcessResourceGenerator(context, process, true, false).generate());
         String className = sanitizeClassName(process.getId() + "Resource");
         Optional<ClassOrInterfaceDeclaration> classDeclaration = compilationUnit.getClassByName(className);
         assertThat(classDeclaration).isNotEmpty();
         return classDeclaration.orElseThrow();
-    }
-
-    private CompilationUnit getCompilationUnit(KogitoBuildContext.Builder contextBuilder,
-            KogitoWorkflowProcess process) {
-        ProcessResourceGenerator processResourceGenerator = getProcessResourceGenerator(contextBuilder, process, true, false);
-        return StaticJavaParser.parse(processResourceGenerator.generate());
     }
 
     private ProcessResourceGenerator getProcessResourceGenerator(KogitoBuildContext.Builder contextBuilder,
@@ -470,8 +620,13 @@ public class ProcessResourceGeneratorTest {
             KogitoWorkflowProcess process,
             boolean withTransaction,
             boolean withFaultTolerance) {
-        KogitoBuildContext context = createContext(contextBuilder);
+        return getProcessResourceGenerator(createContext(contextBuilder), process, withTransaction, withFaultTolerance);
+    }
 
+    private ProcessResourceGenerator getProcessResourceGenerator(KogitoBuildContext context,
+            KogitoWorkflowProcess process,
+            boolean withTransaction,
+            boolean withFaultTolerance) {
         ProcessExecutableModelGenerator execModelGen =
                 new ProcessExecutableModelGenerator(process, new ProcessToExecModelGenerator(context.getClassLoader()));
 

@@ -261,15 +261,16 @@ class ProcessCodegenTest {
                 .map(GeneratedFile::relativePath)
                 .collect(Collectors.toList());
 
-        // For non-human work items with distinct names ("Rest Call 1" and "Rest Call 2"), models are generated per task name
+        // Regular work items are never grouped: each node has its own model, named after the node id
         assertThat(generatedPaths)
-                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_Rest_Call_1_TaskInput.java"))
-                .anyMatch(path -> path.contains("DuplicateWorkItemsProcess_Rest_Call_2_TaskInput.java"));
+                .filteredOn(path -> path.contains("_TaskInput.java"))
+                .hasSize(2)
+                .noneMatch(path -> path.contains("Rest_Call"));
     }
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
-    public void workItemsWithSharedTaskNameInputGenerateSingleModel(KogitoBuildContext.Builder contextBuilder) {
+    public void workItemsWithSharedTaskNameInputGenerateSeparateModels(KogitoBuildContext.Builder contextBuilder) {
         KogitoBuildContext context = contextBuilder.build();
         ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
                 context,
@@ -282,14 +283,11 @@ class ProcessCodegenTest {
                 .map(GeneratedFile::relativePath)
                 .collect(Collectors.toList());
 
-        // Both service tasks ("LogVariable1" and "LogVariable2") declare the same TaskName input, so they share one model
+        // Both service tasks declare the same TaskName input, but regular work items are not grouped by it
         assertThat(generatedPaths)
                 .filteredOn(path -> path.contains("_TaskInput.java"))
-                .singleElement()
-                .asString()
-                .contains("DuplicateWorkItemsProcess_SharedTaskName_TaskInput.java");
-        assertThat(generatedPaths)
-                .noneMatch(path -> path.contains("LogVariable1") || path.contains("LogVariable2"));
+                .hasSize(2)
+                .noneMatch(path -> path.contains("SharedTaskName"));
     }
 
     @ParameterizedTest

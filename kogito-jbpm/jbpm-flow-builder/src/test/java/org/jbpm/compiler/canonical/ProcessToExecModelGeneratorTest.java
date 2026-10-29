@@ -45,7 +45,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.jbpm.compiler.canonical.WorkItemModelMetaData.CONFLICTING_TASK_NAMES_ERROR_TEMPLATE;
 import static org.jbpm.compiler.canonical.WorkItemModelMetaData.CONFLICTING_TYPES_ERROR_TEMPLATE;
-import static org.jbpm.compiler.canonical.WorkItemModelMetaData.MISMATCHED_DEFINITION_ERROR_TEMPLATE;
 
 public class ProcessToExecModelGeneratorTest {
 
@@ -431,7 +430,7 @@ public class ProcessToExecModelGeneratorTest {
     }
 
     @Test
-    public void testCustomWorkItemsGroupedByTaskName() {
+    public void testCustomWorkItemsAreNotGroupedByTaskName() {
         RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.customtasks");
         factory
                 .name("customtasks")
@@ -462,19 +461,21 @@ public class ProcessToExecModelGeneratorTest {
         WorkflowProcess process = factory.validate().getProcess();
 
         List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
-        assertThat(workItemModels).hasSize(1);
+        assertThat(workItemModels).hasSize(2).allMatch(m -> m instanceof WorkItemNodeModelMetaData);
 
-        WorkItemModelMetaData model = workItemModels.get(0);
-        assertThat(model.getName()).isEqualTo("SignatureDataNode");
-        assertThat(model.getInputModelClassName()).isEqualTo("com.myspace.demo.Customtasks_SignatureDataNode_TaskInput");
-        assertThat(model.getOutputModelClassName()).isEqualTo("com.myspace.demo.Customtasks_SignatureDataNode_TaskOutput");
-        assertThat(model.getTaskModelClassName()).isEqualTo("com.myspace.demo.Customtasks_SignatureDataNode_TaskModel");
+        WorkItemModelMetaData first = workItemModels.get(0);
+        assertThat(first.getName()).isEqualTo("Check Make offer status");
+        assertThat(first.getInputModelClassName()).isEqualTo("com.myspace.demo.Customtasks_two_TaskInput");
+        assertThat(first.getOutputModelClassName()).isEqualTo("com.myspace.demo.Customtasks_two_TaskOutput");
+        assertThat(first.getTaskModelClassName()).isEqualTo("com.myspace.demo.Customtasks_two_TaskModel");
+        assertThat(first.getModelSwitchEntry().getLabels().stream().map(l -> l.asStringLiteralExpr().getValue()))
+                .containsExactly("two");
 
-        var switchEntry = model.getModelSwitchEntry();
-        List<String> switchLabels = switchEntry.getLabels().stream()
-                .map(l -> l.asStringLiteralExpr().getValue())
-                .toList();
-        assertThat(switchLabels).containsExactlyInAnyOrder("two", "three");
+        WorkItemModelMetaData second = workItemModels.get(1);
+        assertThat(second.getName()).isEqualTo("Check Decision status");
+        assertThat(second.getTaskModelClassName()).isEqualTo("com.myspace.demo.Customtasks_three_TaskModel");
+        assertThat(second.getModelSwitchEntry().getLabels().stream().map(l -> l.asStringLiteralExpr().getValue()))
+                .containsExactly("three");
     }
 
     @Test
@@ -557,7 +558,7 @@ public class ProcessToExecModelGeneratorTest {
     }
 
     @Test
-    public void testConflictingWorkItemDefinitionTypesThrowsException() {
+    public void testHumanTaskAndWorkItemWithSameNameGenerateSeparateModels() {
         RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.mixeddefinitions");
         factory
                 .name("mixeddefinitions")
@@ -585,15 +586,17 @@ public class ProcessToExecModelGeneratorTest {
 
         WorkflowProcess process = factory.validate().getProcess();
 
-        assertThatThrownBy(() -> ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(String.format(
-                        MISMATCHED_DEFINITION_ERROR_TEMPLATE,
-                        "SharedAction", "Human Task", "SignatureDataNode", "demo.mixeddefinitions"));
+        List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
+        assertThat(workItemModels).hasSize(2);
+
+        assertThat(workItemModels.get(0)).isInstanceOf(HumanTaskWorkItemModelMetaData.class);
+        assertThat(workItemModels.get(0).getTaskModelClassName()).isEqualTo("com.myspace.demo.Mixeddefinitions_SharedAction_TaskModel");
+        assertThat(workItemModels.get(1)).isInstanceOf(WorkItemNodeModelMetaData.class);
+        assertThat(workItemModels.get(1).getTaskModelClassName()).isEqualTo("com.myspace.demo.Mixeddefinitions_three_TaskModel");
     }
 
     @Test
-    public void testDifferentCustomWorkItemDefinitionTypesCollidingThrowsException() {
+    public void testDifferentCustomWorkItemDefinitionsWithSameTaskNameGenerateSeparateModels() {
         RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.collidingdefinitions");
         factory
                 .name("collidingdefinitions")
@@ -623,11 +626,11 @@ public class ProcessToExecModelGeneratorTest {
 
         WorkflowProcess process = factory.validate().getProcess();
 
-        assertThatThrownBy(() -> ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(String.format(
-                        MISMATCHED_DEFINITION_ERROR_TEMPLATE,
-                        "SharedCustomTask", "Rest", "Email", "demo.collidingdefinitions"));
+        List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
+        assertThat(workItemModels).hasSize(2);
+        assertThat(workItemModels.get(0).getWorkName()).isEqualTo("Rest");
+        assertThat(workItemModels.get(1).getWorkName()).isEqualTo("Email");
+        assertThat(workItemModels.get(0).getTaskModelClassName()).isNotEqualTo(workItemModels.get(1).getTaskModelClassName());
     }
 
     @Test
@@ -667,7 +670,7 @@ public class ProcessToExecModelGeneratorTest {
     }
 
     @Test
-    public void testCompatibleCustomWorkItemsParameterUnion() {
+    public void testCustomWorkItemsWithSharedTaskNameKeepOwnParameters() {
         RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.customunion");
         factory
                 .variable("varA", new StringDataType())
@@ -706,24 +709,21 @@ public class ProcessToExecModelGeneratorTest {
         WorkflowProcess process = factory.validate().getProcess();
 
         List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
-        assertThat(workItemModels).hasSize(1);
+        assertThat(workItemModels).hasSize(2);
 
-        WorkItemModelMetaData model = workItemModels.get(0);
-        assertThat(model.getName()).isEqualTo("SignatureTask");
-        assertThat(model.getWorkName()).isEqualTo("SignatureDataNode");
+        assertThat(workItemModels.get(0).getName()).isEqualTo("Step 1");
+        assertThat(fieldNames(workItemModels.get(0).generateInput())).contains("signatureDocA").doesNotContain("signatureDocB");
+        assertThat(fieldNames(workItemModels.get(0).generateOutput())).containsExactly("signedDocA");
 
-        CompilationUnit inputUnit = StaticJavaParser.parse(model.generateInput());
-        List<String> inputFields = inputUnit.findAll(FieldDeclaration.class).stream()
+        assertThat(workItemModels.get(1).getName()).isEqualTo("Step 2");
+        assertThat(fieldNames(workItemModels.get(1).generateInput())).contains("signatureDocB").doesNotContain("signatureDocA");
+        assertThat(fieldNames(workItemModels.get(1).generateOutput())).containsExactly("signedDocB");
+    }
+
+    private static List<String> fieldNames(String source) {
+        return StaticJavaParser.parse(source).findAll(FieldDeclaration.class).stream()
                 .flatMap(f -> f.getVariables().stream())
                 .map(NodeWithSimpleName::getNameAsString)
                 .toList();
-        assertThat(inputFields).containsExactlyInAnyOrder("signatureDocA", "signatureDocB");
-
-        CompilationUnit outputUnit = StaticJavaParser.parse(model.generateOutput());
-        List<String> outputFields = outputUnit.findAll(FieldDeclaration.class).stream()
-                .flatMap(f -> f.getVariables().stream())
-                .map(NodeWithSimpleName::getNameAsString)
-                .toList();
-        assertThat(outputFields).containsExactlyInAnyOrder("signedDocA", "signedDocB");
     }
 }

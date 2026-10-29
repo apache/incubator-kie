@@ -18,14 +18,11 @@
  */
 package org.jbpm.compiler.canonical;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.jbpm.process.core.Work;
@@ -78,14 +75,12 @@ import static org.jbpm.ruleflow.core.Metadata.CUSTOM_AUTO_START;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeClassName;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeJavaName;
 
-public class WorkItemModelMetaData {
+public abstract class WorkItemModelMetaData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkItemModelMetaData.class);
 
     @KieInternal
     static final String CONFLICTING_TYPES_ERROR_TEMPLATE = "Conflicting types for %s parameter '%s' in task '%s' of process '%s': %s vs %s";
-    @KieInternal
-    static final String MISMATCHED_DEFINITION_ERROR_TEMPLATE = "Cannot share taskName '%s' between work items of different definition types ('%s' vs '%s') in process '%s'";
     @KieInternal
     static final String CONFLICTING_TASK_NAMES_ERROR_TEMPLATE = "Task names '%s' and '%s' in process '%s' resolve to the same generated model class '%s'. Use distinct task names";
 
@@ -103,30 +98,33 @@ public class WorkItemModelMetaData {
     public record WorkItemNodeContext(WorkItemNode workItemNode, VariableScope variableScope) {
     }
 
-    private final String taskName;
-    private final String processId;
+    protected final String taskName;
+    protected final String processId;
     private final String packageName;
-    private final VariableScope processVariableScope;
-    private Work work;
+    protected final VariableScope processVariableScope;
+    protected Work work;
 
     private final String inputModelClassName;
     private final String inputModelClassSimpleName;
     private final String outputModelClassName;
     private final String outputModelClassSimpleName;
-    private final String taskModelClassName;
+    protected final String taskModelClassName;
     private final String taskModelClassSimpleName;
 
-    private final List<WorkItemNodeContext> nodes = new ArrayList<>();
-    private final Map<String, ParameterDefinition> inputParamDefs = new LinkedHashMap<>();
-    private final Map<String, ParameterDefinition> outputParamDefs = new LinkedHashMap<>();
+    protected final Map<String, ParameterDefinition> inputParamDefs = new LinkedHashMap<>();
+    protected final Map<String, ParameterDefinition> outputParamDefs = new LinkedHashMap<>();
 
-    public WorkItemModelMetaData(String taskName, String processId, String packageName, VariableScope processVariableScope) {
+    /**
+     * @param taskName name used in the generated {@link UserTask} annotation and as REST path segment
+     * @param classKey key that, together with the process id, names the generated model classes
+     */
+    protected WorkItemModelMetaData(String taskName, String classKey, String processId, String packageName, VariableScope processVariableScope) {
         this.taskName = taskName;
         this.processId = processId;
         this.packageName = packageName;
         this.processVariableScope = processVariableScope;
 
-        String classPrefix = sanitizeClassName(ProcessToExecModelGenerator.extractProcessId(processId) + "_" + sanitizeClassName(taskName));
+        String classPrefix = sanitizeClassName(ProcessToExecModelGenerator.extractProcessId(processId) + "_" + classKey);
 
         this.inputModelClassSimpleName = classPrefix + "_" + TASK_INPUT_CLASS_SUFFIX;
         this.inputModelClassName = packageName + '.' + inputModelClassSimpleName;
@@ -153,37 +151,12 @@ public class WorkItemModelMetaData {
         return sanitizeClassName(taskName);
     }
 
-    public WorkItemModelMetaData add(WorkItemNode workItemNode, VariableScope nodeVariableScope) {
-        String nodeTaskName = resolveTaskName(workItemNode);
-        if (!taskName.equals(nodeTaskName)) {
-            throw new IllegalArgumentException(String.format(
-                    CONFLICTING_TASK_NAMES_ERROR_TEMPLATE,
-                    taskName, nodeTaskName, processId, taskModelClassName));
-        }
-
-        if (this.work == null) {
-            this.work = Objects.requireNonNull(workItemNode.getWork(), "WorkItemNode work cannot be null");
-        } else {
-            String existingWorkName = this.work.getName();
-            String newWorkName = workItemNode.getWork().getName();
-            if (!existingWorkName.equals(newWorkName)) {
-                throw new IllegalArgumentException(String.format(
-                        MISMATCHED_DEFINITION_ERROR_TEMPLATE,
-                        taskName, existingWorkName, newWorkName, processId));
-            }
-        }
-
-        nodes.add(new WorkItemNodeContext(workItemNode, nodeVariableScope));
-
-        Map<String, ParameterDefinition> nodeInputs = extractInputParameters(
-                workItemNode, processVariableScope, nodeVariableScope);
-        mergeParameters(inputParamDefs, nodeInputs, "input");
-
-        Map<String, ParameterDefinition> nodeOutputs = extractOutputParameters(
-                workItemNode, processVariableScope, nodeVariableScope);
-        mergeParameters(outputParamDefs, nodeOutputs, "output");
-
-        return this;
+    /**
+     * Merges the input and output parameters of a node into the generated model, failing if a parameter is declared with different types.
+     */
+    protected void addNodeParameters(WorkItemNode workItemNode, VariableScope nodeVariableScope) {
+        mergeParameters(inputParamDefs, extractInputParameters(workItemNode, processVariableScope, nodeVariableScope), "input");
+        mergeParameters(outputParamDefs, extractOutputParameters(workItemNode, processVariableScope, nodeVariableScope), "output");
     }
 
     private void mergeParameters(Map<String, ParameterDefinition> target, Map<String, ParameterDefinition> source, String direction) {
@@ -284,12 +257,10 @@ public class WorkItemModelMetaData {
         return outputParamDefs;
     }
 
-    public List<WorkItemNodeContext> getNodes() {
-        return Collections.unmodifiableList(nodes);
-    }
+    public abstract List<WorkItemNodeContext> getNodes();
 
     public boolean isAdHoc() {
-        return nodes.stream().anyMatch(nodeCtx -> isNodeAdHoc(nodeCtx.workItemNode()));
+        return getNodes().stream().anyMatch(nodeCtx -> isNodeAdHoc(nodeCtx.workItemNode()));
     }
 
     private boolean isNodeAdHoc(WorkItemNode workItemNode) {
@@ -300,7 +271,7 @@ public class WorkItemModelMetaData {
     public SwitchEntry getModelSwitchEntry() {
         SwitchEntry entry = new SwitchEntry();
         NodeList<Expression> labels = new NodeList<>();
-        for (WorkItemNodeContext nodeCtx : nodes) {
+        for (WorkItemNodeContext nodeCtx : getNodes()) {
             labels.add(new StringLiteralExpr(nodeCtx.workItemNode().getId().toExternalFormat()));
         }
         entry.setLabels(labels);

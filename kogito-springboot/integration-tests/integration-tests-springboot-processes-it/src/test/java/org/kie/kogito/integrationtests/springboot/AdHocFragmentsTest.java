@@ -96,6 +96,14 @@ class AdHocFragmentsTest extends BaseRestTest {
         given()
                 .contentType(ContentType.JSON)
                 .when()
+                .post("/AdHocFragments/{pid}/Service_Task/trigger", pid)
+                .then()
+                .statusCode(200)
+                .body("var1", equalTo("Hello Kermit 5!"));
+
+        given()
+                .contentType(ContentType.JSON)
+                .when()
                 .post("/AdHocFragments/{pid}/Service_Task", pid)
                 .then()
                 .statusCode(200)

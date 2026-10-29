@@ -18,12 +18,12 @@
  */
 package org.kie.kogito.process.impl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,6 +40,7 @@ import org.kie.kogito.internal.process.runtime.KogitoNode;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.workitem.Policy;
 import org.kie.kogito.internal.process.workitem.WorkItemNotFoundException;
+import org.kie.kogito.internal.utils.ConversionUtils;
 import org.kie.kogito.process.Process;
 import org.kie.kogito.process.ProcessInstance;
 import org.kie.kogito.process.ProcessInstanceNotFoundException;
@@ -211,21 +212,25 @@ public class ProcessServiceImpl implements ProcessService {
         });
     }
 
-    private <T extends Model> Optional<WorkItem> findWorkItem(ProcessInstance<T> pi, String taskName, Policy... policy) {
-        KogitoNode node = pi.process().findNodes(worktItemNodeNamed(taskName)).iterator().next();
-        String taskNodeName = node.getName();
-        pi.send(SignalFactory.of(taskNodeName, emptyMap()));
-        return getWorkItemByTaskName(pi, taskName, policy);
+    private <T extends Model> Optional<WorkItem> findWorkItem(ProcessInstance<T> pi, String name, Policy... policy) {
+        Collection<KogitoNode> nodes = pi.process().findNodes(node -> {
+            if (!(node instanceof WorkItemNode workItemNode)) {
+                return false;
+            }
+            String taskName = (String) workItemNode.getWork().getParameters().getOrDefault("TaskName", node.getName());
+            return name.equals(taskName) || name.equals(ConversionUtils.sanitizeName(taskName));
+        });
+        if (nodes.isEmpty()) {
+            return Optional.empty();
+        }
+        nodes.stream().map(KogitoNode::getName).distinct().forEach(nodeName -> pi.send(SignalFactory.of(nodeName, emptyMap())));
+        return getWorkItemByNodes(pi, nodes, policy);
     }
 
-    private Predicate<KogitoNode> worktItemNodeNamed(String taskName) {
-        return node -> node instanceof WorkItemNode workItemNode && taskName.equals(workItemNode.getWork().getParameter("TaskName"));
-    }
-
-    private <T extends Model> Optional<WorkItem> getWorkItemByTaskName(ProcessInstance<T> pi, String taskName, Policy... policies) {
+    private <T extends Model> Optional<WorkItem> getWorkItemByNodes(ProcessInstance<T> pi, Collection<KogitoNode> nodes, Policy... policies) {
         return pi.workItems(policies)
                 .stream()
-                .filter(wi -> wi.getName().equals(taskName))
+                .filter(wi -> nodes.stream().anyMatch(node -> node.getId().equals(wi.getNodeId())))
                 .findFirst();
     }
 

@@ -34,6 +34,7 @@ import org.jbpm.process.core.context.variable.Variable;
 import org.jbpm.process.core.context.variable.VariableScope;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.workflow.core.impl.WorkflowProcessImpl;
+import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
 import org.kie.api.definition.process.Node;
 import org.kie.api.definition.process.WorkflowProcess;
@@ -256,9 +257,13 @@ public class ProcessToExecModelGenerator {
         return sanitizeClassName(extractProcessId(processId) + MODEL_CLASS_SUFFIX);
     }
 
+    /**
+     * Human tasks sharing a task name are grouped in a single model, every other work item node has its own model.
+     */
     public List<WorkItemModelMetaData> generateWorkItemModel(WorkflowProcess process) {
         String packageName = process.getPackageName();
-        Map<String, WorkItemModelMetaData> workItemModels = new LinkedHashMap<>();
+        Map<String, HumanTaskWorkItemModelMetaData> humanTaskModels = new LinkedHashMap<>();
+        List<WorkItemModelMetaData> workItemNodeModels = new ArrayList<>();
 
         VariableScope variableScope = getVariableScope(process);
 
@@ -269,15 +274,21 @@ public class ProcessToExecModelGenerator {
                 if (nodeVariableScope == null) {
                     nodeVariableScope = variableScope;
                 }
-                String taskName = WorkItemModelMetaData.resolveTaskName(workItemNode);
-                workItemModels
-                        .computeIfAbsent(WorkItemModelMetaData.normalizeTaskName(taskName),
-                                k -> new WorkItemModelMetaData(taskName, process.getId(), packageName, variableScope))
-                        .add(workItemNode, nodeVariableScope);
+                if (workItemNode instanceof HumanTaskNode humanTaskNode) {
+                    String taskName = WorkItemModelMetaData.resolveTaskName(humanTaskNode);
+                    humanTaskModels
+                            .computeIfAbsent(WorkItemModelMetaData.normalizeTaskName(taskName),
+                                    k -> new HumanTaskWorkItemModelMetaData(taskName, process.getId(), packageName, variableScope))
+                            .add(humanTaskNode, nodeVariableScope);
+                } else {
+                    workItemNodeModels.add(new WorkItemNodeModelMetaData(workItemNode, nodeVariableScope, process.getId(), packageName, variableScope));
+                }
             }
         }
 
-        return new ArrayList<>(workItemModels.values());
+        List<WorkItemModelMetaData> workItemModels = new ArrayList<>(humanTaskModels.values());
+        workItemModels.addAll(workItemNodeModels);
+        return workItemModels;
     }
 
     public static String extractProcessId(String processId) {

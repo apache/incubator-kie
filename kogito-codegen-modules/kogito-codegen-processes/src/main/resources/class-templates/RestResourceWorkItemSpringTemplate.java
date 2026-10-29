@@ -51,7 +51,7 @@ public class $Type$Resource {
             @RequestParam("group") final List<String> groups,
             final UriComponentsBuilder uriComponentsBuilder) {
 
-        return processService.signalWorkItem(process, id, "$taskName$", SecurityPolicy.of(identityProviderFactory.getOrImpersonateIdentity(user, groups)))
+        return processService.signalWorkItem(process, id, "$rawTaskName$", SecurityPolicy.of(identityProviderFactory.getOrImpersonateIdentity(user, groups)))
                 .map(task -> ResponseEntity
                         .created(uriComponentsBuilder
                                 .path("/$name$/{id}/$taskName$/{taskId}")
