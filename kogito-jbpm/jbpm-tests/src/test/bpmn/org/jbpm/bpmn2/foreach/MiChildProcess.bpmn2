@@ -45,7 +45,7 @@
 
   <itemDefinition id="_itemItem" structureRef="Integer"/>
 
-  <process processType="Private" isExecutable="true" id="MiChildProcess"
+  <process processType="Public" isExecutable="true" id="MiChildProcess"
            name="MI Child Process" tns:packageName="org.jbpm.bpmn2.foreach">
 
     <property id="item" itemSubjectRef="_itemItem"/>
@@ -108,5 +108,59 @@
     <sequenceFlow id="_waitA-_join"  sourceRef="_waitA"  targetRef="_join"/>
     <sequenceFlow id="_join-_end"    sourceRef="_join"   targetRef="_end"/>
   </process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="MiChildProcess">
+      <bpmndi:BPMNShape bpmnElement="_start">
+        <dc:Bounds x="16" y="56" width="48" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_split">
+        <dc:Bounds x="96" y="56" width="48" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_async">
+        <dc:Bounds x="176" y="16" width="120" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_waitC">
+        <dc:Bounds x="328" y="16" width="100" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_waitA">
+        <dc:Bounds x="252" y="96" width="100" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_join">
+        <dc:Bounds x="460" y="56" width="48" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_end">
+        <dc:Bounds x="540" y="56" width="48" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="_start-_split">
+        <di:waypoint x="40" y="80"/>
+        <di:waypoint x="120" y="80"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_split-_async">
+        <di:waypoint x="120" y="80"/>
+        <di:waypoint x="236" y="40"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_split-_waitA">
+        <di:waypoint x="120" y="80"/>
+        <di:waypoint x="302" y="120"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_async-_waitC">
+        <di:waypoint x="236" y="40"/>
+        <di:waypoint x="378" y="40"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_waitC-_join">
+        <di:waypoint x="378" y="40"/>
+        <di:waypoint x="484" y="80"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_waitA-_join">
+        <di:waypoint x="302" y="120"/>
+        <di:waypoint x="484" y="80"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_join-_end">
+        <di:waypoint x="484" y="80"/>
+        <di:waypoint x="564" y="80"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
 
 </definitions>

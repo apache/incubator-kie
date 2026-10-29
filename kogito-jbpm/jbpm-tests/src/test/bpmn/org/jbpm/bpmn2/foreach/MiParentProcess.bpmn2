@@ -32,7 +32,7 @@
 
   <itemDefinition id="_itemListItem" structureRef="java.util.List"/>
 
-  <process processType="Private" isExecutable="true" id="MiParentProcess"
+  <process processType="Public" isExecutable="true" id="MiParentProcess"
            name="MI Parent Process" tns:packageName="org.jbpm.bpmn2.foreach">
 
     <property id="items" itemSubjectRef="_itemListItem"/>
@@ -64,5 +64,27 @@
     <sequenceFlow id="_start-_mi"  sourceRef="_start" targetRef="_mi"/>
     <sequenceFlow id="_mi-_end"    sourceRef="_mi"    targetRef="_end"/>
   </process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="MiParentProcess">
+      <bpmndi:BPMNShape bpmnElement="_start">
+        <dc:Bounds x="16" y="16" width="48" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_mi">
+        <dc:Bounds x="96" y="16" width="150" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_end">
+        <dc:Bounds x="278" y="16" width="48" height="48"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="_start-_mi">
+        <di:waypoint x="40" y="40"/>
+        <di:waypoint x="171" y="40"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_mi-_end">
+        <di:waypoint x="171" y="40"/>
+        <di:waypoint x="302" y="40"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
 
 </definitions>

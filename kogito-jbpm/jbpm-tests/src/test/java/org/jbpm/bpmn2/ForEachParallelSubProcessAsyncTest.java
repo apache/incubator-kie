@@ -31,6 +31,7 @@ import org.kie.api.event.process.ProcessStartedEvent;
 import org.kie.kogito.Application;
 import org.kie.kogito.internal.process.event.DefaultKogitoProcessEventListener;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
+import org.kie.kogito.process.Process;
 import org.kie.kogito.process.ProcessInstance;
 import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 
@@ -64,7 +65,7 @@ public class ForEachParallelSubProcessAsyncTest {
         });
 
         MiChildProcessProcess.newProcess(app);
-        org.kie.kogito.process.Process<MiParentProcessModel> parentProcess = MiParentProcessProcess.newProcess(app);
+        Process<MiParentProcessModel> parentProcess = MiParentProcessProcess.newProcess(app);
 
         MiParentProcessModel model = parentProcess.createModel();
         model.setItems(new ArrayList<>(Arrays.asList(1, 2, 3)));
