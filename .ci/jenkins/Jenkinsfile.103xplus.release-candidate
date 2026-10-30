@@ -1,0 +1,181 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// 10.3.x+ release pipeline — fully independent, no kogito-pipelines / jobs.groovy dependency.
+//   - No @Library, no DSL-injected env vars, no drools-deploy / drools-promote downstream jobs
+//   - Create a plain "Pipeline script from SCM" job pointing at this file and run it
+//     with a few parameters. Everything it needs is a parameter (with a default).
+//   - Runs script/release/release-all.sh (R commit + RC tag -> build -> Nexus staging)
+//
+// MANDATORY parameters : RELEASE_VERSION, TAG_NAME
+// Real RC run          : DEPLOY=true, PUSH_TAG=true, DRY_RUN=false (the defaults)
+// Branch cut (once per minor, before rc1 only):
+//                        CREATE_STREAM_BRANCH=true -> creates X.Y.x from main,
+//                        sets X.Y.999-SNAPSHOT, pushes it, then continues the RC on X.Y.x.
+//                        Leave it false for rc2, final and patch releases (branch already exists).
+
+pipeline {
+    agent {
+        label 'ubuntu'
+    }
+
+    tools {
+        maven 'maven_3.9.16'
+        jdk   'jdk_17_latest'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 360, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(name: 'RELEASE_VERSION', defaultValue: '', description: 'MANDATORY. Exact release version, e.g. 10.3.0', trim: true)
+        string(name: 'TAG_NAME', defaultValue: '', description: 'MANDATORY. RC tag name, e.g. 10.3.0-rc1 (must start with RELEASE_VERSION and be a new tag)', trim: true)
+        booleanParam(name: 'CREATE_STREAM_BRANCH', defaultValue: false, description: 'Branch cut: create X.Y.x (derived from RELEASE_VERSION) from main, set X.Y.999-SNAPSHOT and push it BEFORE building the RC. Only for the first RC of a new minor (e.g. 10.3.0-rc1). Fails if X.Y.x already exists')
+        booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip running tests during reactor build')
+        booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Deploy artifacts to Apache Nexus staging')
+        string(name: 'STAGING_URL', defaultValue: '', description: 'Custom Nexus staging URL (optional)')
+        booleanParam(name: 'PUSH_TAG', defaultValue: true, description: 'Push the git tag to origin')
+        string(name: 'EXTRA_MAVEN_OPTS', defaultValue: '', description: 'Extra Maven CLI options to pass to build.sh')
+        booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Dry run without making remote git or staging changes')
+
+        // Jenkins IDs — defaults match the existing KIE Jenkins; override only if they differ.
+        string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: 'kie-release-authn-settings', description: 'Config File Provider ID of the Maven settings.xml (must define server "apache.releases.https")', trim: true)
+        string(name: 'GPG_KEY_CREDS_ID', defaultValue: 'GPG_KEY_FILE', description: 'Secret FILE credential ID holding the armored GPG private key', trim: true)
+        string(name: 'GPG_PASSPHRASE_CREDS_ID', defaultValue: '', description: 'Optional. Secret TEXT credential ID holding the GPG key passphrase. Leave empty if the key has no passphrase (KIE release key has none)', trim: true)
+        string(name: 'GIT_PUSH_CREDS_ID', defaultValue: '84811880-2025-45b6-a44c-2f33bef30ad2', description: 'Username/password credential ID used to push the RC tag to GitHub', trim: true)
+    }
+
+    stages {
+        stage('Initialize & Validate') {
+            steps {
+                script {
+                    if (!params.RELEASE_VERSION?.trim()) {
+                        error 'RELEASE_VERSION parameter is mandatory (e.g. 10.3.0)'
+                    }
+                    if (!params.TAG_NAME?.trim()) {
+                        error 'TAG_NAME parameter is mandatory (e.g. 10.3.0-rc1)'
+                    }
+                    if (!params.TAG_NAME.startsWith(params.RELEASE_VERSION)) {
+                        error "TAG_NAME '${params.TAG_NAME}' must start with RELEASE_VERSION '${params.RELEASE_VERSION}'"
+                    }
+                    currentBuild.displayName = "Release ${params.RELEASE_VERSION} (${params.TAG_NAME})"
+                }
+            }
+        }
+
+        stage('Create Stream Branch') {
+            when {
+                expression { return params.CREATE_STREAM_BRANCH }
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: params.GIT_PUSH_CREDS_ID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+                        def branchArgs = [
+                            './script/release/00-create-stream-branch.sh',
+                            '--version', params.RELEASE_VERSION,
+                            '--base',    'main',
+                            '--push'
+                        ]
+                        if (params.DRY_RUN) branchArgs << '--dry-run'
+
+                        sh """#!/usr/bin/env bash
+                        set -euo pipefail
+                        git config user.email "dev@kie.apache.org"
+                        git config user.name  "Apache KIE Release Bot"
+                        git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+                        chmod +x script/release/*.sh
+                        ${branchArgs.collect { "'${it.replace("'", "'\\''")}'" }.join(' ')}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Execute Release Scripts') {
+            steps {
+                // The Maven settings id is a Config File Provider id (not a secret) and is
+                // exposed as MAVEN_SETTINGS_FILE. GPG key/passphrase and the GitHub push
+                // credential are real credentials and use withCredentials.
+                script {
+                    def creds = [
+                        file(credentialsId: params.GPG_KEY_CREDS_ID, variable: 'GPG_KEY_FILE_PATH'),
+                        usernamePassword(credentialsId: params.GIT_PUSH_CREDS_ID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')
+                    ]
+                    // Passphrase is optional: the KIE release signing key has none.
+                    if (params.GPG_PASSPHRASE_CREDS_ID?.trim()) {
+                        creds << string(credentialsId: params.GPG_PASSPHRASE_CREDS_ID, variable: 'MAVEN_GPG_PASSPHRASE')
+                    }
+                    configFileProvider([configFile(fileId: params.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
+                        withCredentials(creds) {
+                            // Import the signing key so the apache-release profile can sign
+                            // artifacts. Passphrase is supplied later via MAVEN_GPG_PASSPHRASE.
+                            sh '''#!/usr/bin/env bash
+                            set -euo pipefail
+                            gpg --batch --pinentry-mode=loopback --import "$GPG_KEY_FILE_PATH"
+                            '''
+
+                            // Configure Git identity for the R commit and authenticate the
+                            // raw `git push` in 02-rc-commit.sh. The credential helper reads
+                            // the token from the environment at push time, never from disk.
+                            sh """#!/usr/bin/env bash
+                            set -euo pipefail
+                            git config user.email "dev@kie.apache.org"
+                            git config user.name  "Apache KIE Release Bot"
+                            git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+                            """
+
+                            // Build the argv array safely — each parameter is a
+                            // separate shell word, no string concatenation or eval.
+                            def releaseArgs = [
+                                './script/release/release-all.sh',
+                                '--version', params.RELEASE_VERSION,
+                                '--tag',     params.TAG_NAME
+                            ]
+                            if (params.SKIP_TESTS)             releaseArgs << '--skip-tests'
+                            if (params.DEPLOY)                 releaseArgs << '--deploy'
+                            if (params.STAGING_URL?.trim())    releaseArgs += ['--staging-url', params.STAGING_URL.trim()]
+                            if (params.PUSH_TAG)               releaseArgs << '--push-tag'
+                            if (params.EXTRA_MAVEN_OPTS?.trim()) releaseArgs += ['--maven-opts', params.EXTRA_MAVEN_OPTS.trim()]
+                            if (params.DRY_RUN)                releaseArgs << '--dry-run'
+
+                            // MAVEN_SETTINGS_FILE is injected by configFileProvider above.
+                            // If a passphrase credential was given, MAVEN_GPG_PASSPHRASE is in
+                            // env and read by the GPG plugin directly (not a CLI arg).
+                            withEnv(["MAVEN_SETTINGS=${MAVEN_SETTINGS_FILE}"]) {
+                                sh """#!/usr/bin/env bash
+                                set -euo pipefail
+                                chmod +x script/release/*.sh
+                                ${releaseArgs.collect { "'${it.replace("'", "'\\''")}'" }.join(' ')}
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

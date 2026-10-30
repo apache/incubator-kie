@@ -1,0 +1,108 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Builds and publishes the CI builder image from .ci/incubator-kie-ci-build.Dockerfile.
+// One tag per stream (e.g. main-latest, 10.3.x-latest, 10.4.x-latest): set IMAGE_TAG to the stream name.
+// The 10.3.x+ deploy/promote pipelines no longer use this image — they run on
+// agent { label 'ubuntu' } with tools { maven 'maven_3.9.16' } directly.
+// This pipeline is retained for future streams that may still use the Docker agent path.
+
+pipeline {
+    agent {
+        label 'ubuntu'
+    }
+
+    parameters {
+        string(name: 'IMAGE_TAG', defaultValue: "${env.BRANCH_NAME}", description: 'Image tag, one per stream, e.g. 10.3.x-latest', trim: true)
+    }
+
+    environment {
+        DOCKER_CONFIG = "${WORKSPACE}/.docker"
+        IMAGE_REGISTRY = 'docker.io'
+        IMAGE_ACCOUNT = 'apache'
+        IMAGE_NAME = 'incubator-kie-kogito-ci-build'
+        DOCKERHUB_USER_CREDS_ID = 'DOCKERHUB_USER'
+        DOCKERHUB_TOKEN_CREDS_ID = 'DOCKERHUB_TOKEN'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 120, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    assert params.IMAGE_TAG : 'IMAGE_TAG parameter is mandatory'
+                    env.FULL_IMAGE = "${env.IMAGE_REGISTRY}/${env.IMAGE_ACCOUNT}/${env.IMAGE_NAME}:${params.IMAGE_TAG}"
+                    currentBuild.displayName = params.IMAGE_TAG
+                }
+                cleanWs(deleteDirs: true, disableDeferredWipeout: true)
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                dir('kie') {
+                    checkout scm
+                }
+            }
+        }
+
+        stage('Build image') {
+            steps {
+                dir('kie') {
+                    sh "docker build -t ${env.FULL_IMAGE} -f .ci/incubator-kie-ci-build.Dockerfile ."
+                }
+            }
+        }
+
+        stage('Test built image') {
+            steps {
+                // Test before pushing so a broken image is never published.
+                // --privileged: the image entrypoint starts the Docker-in-Docker daemon.
+                sh """#!/bin/bash -el
+                    docker run --rm --privileged --group-add docker ${env.FULL_IMAGE} bash -lc 'wait-for-docker.sh && java -version && mvn --version && git --version && gh --version && docker info > /dev/null && echo DOCKER_OK'
+                """.trim()
+            }
+        }
+
+        stage('Push image to registry') {
+            steps {
+                withCredentials([
+                    string(credentialsId: env.DOCKERHUB_USER_CREDS_ID, variable: 'REGISTRY_USER'),
+                    string(credentialsId: env.DOCKERHUB_TOKEN_CREDS_ID, variable: 'REGISTRY_TOKEN')
+                ]) {
+                    sh '''#!/bin/bash -e
+                        echo "${REGISTRY_TOKEN}" | docker login -u "${REGISTRY_USER}" --password-stdin "${IMAGE_REGISTRY}"
+                        docker push "${FULL_IMAGE}"
+                        docker logout "${IMAGE_REGISTRY}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs(deleteDirs: true)
+        }
+    }
+}

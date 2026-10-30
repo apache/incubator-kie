@@ -1,0 +1,139 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// 10.3.x+ promote / tag-release pipeline for incubator-kie.
+// Run after the IPMC vote passes to:
+//   1. Create and push the official release Git tag (e.g. 10.3.0) pointing to the approved RC commit.
+//   2. Create the GitHub Release for incubator-kie.
+
+pipeline {
+    agent {
+        label 'ubuntu'
+    }
+
+    tools {
+        maven 'maven_3.9.16'
+        jdk   'jdk_17_latest'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Release version (e.g. 10.3.0)', trim: true)
+        string(name: 'GIT_TAG', defaultValue: '', description: 'Approved RC tag (e.g. 10.3.0-rc1)', trim: true)
+        string(name: 'BUILD_BRANCH_NAME', defaultValue: '', description: 'Stream branch name (e.g. 10.3.x)', trim: true)
+        string(name: 'GIT_AUTHOR_PUSH_CREDS_ID', defaultValue: '84811880-2025-45b6-a44c-2f33bef30ad2', description: 'GitHub push credentials ID', trim: true)
+    }
+
+    stages {
+        stage('Initialization') {
+            steps {
+                script {
+                    cleanWs()
+
+                    assert params.PROJECT_VERSION : 'PROJECT_VERSION is required (e.g. 10.3.0)'
+                    assert params.GIT_TAG : 'GIT_TAG (approved RC tag, e.g. 10.3.0-rc1) is required'
+                    assert params.BUILD_BRANCH_NAME : 'BUILD_BRANCH_NAME (e.g. 10.3.x) is required'
+
+                    currentBuild.displayName = "${params.PROJECT_VERSION} (${params.GIT_TAG})"
+                }
+            }
+        }
+
+        stage('Checkout repository') {
+            steps {
+                script {
+                    dir('incubator-kie') {
+                        checkout([$class: 'GitSCM',
+                            branches: [[name: "*/${params.BUILD_BRANCH_NAME}"]],
+                            userRemoteConfigs: [[
+                                url: 'https://github.com/apache/incubator-kie.git',
+                                credentialsId: params.GIT_AUTHOR_PUSH_CREDS_ID
+                            ]]
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('Tag final release') {
+            steps {
+                dir('incubator-kie') {
+                    withCredentials([
+                        usernamePassword(credentialsId: params.GIT_AUTHOR_PUSH_CREDS_ID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')
+                    ]) {
+                        sh """#!/usr/bin/env bash
+                        set -euo pipefail
+                        git config user.email "dev@kie.apache.org"
+                        git config user.name  "Apache KIE Release Bot"
+                        git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+
+                        # Fetch the approved RC tag
+                        git fetch origin "refs/tags/${params.GIT_TAG}:refs/tags/${params.GIT_TAG}"
+
+                        # Create and push the final release tag
+                        chmod +x script/release/05-tag-release.sh
+                        ./script/release/05-tag-release.sh --rc-tag "${params.GIT_TAG}" --push
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Create GitHub Release') {
+            steps {
+                dir('incubator-kie') {
+                    withCredentials([
+                        usernamePassword(credentialsId: params.GIT_AUTHOR_PUSH_CREDS_ID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')
+                    ]) {
+                        sh """#!/usr/bin/env bash
+                        set -euo pipefail
+                        git config --local credential.helper '!f() { echo username=\$GITHUB_USER; echo password=\$GITHUB_TOKEN; }; f'
+
+                        FINAL_TAG="${params.PROJECT_VERSION}"
+
+                        # Delete any pre-existing release for this tag if needed
+                        if gh release view "\${FINAL_TAG}" --repo "apache/incubator-kie" &>/dev/null; then
+                            gh release delete "\${FINAL_TAG}" --repo "apache/incubator-kie" --yes
+                        fi
+
+                        PREV_TAG="\$(git tag --sort=-version:refname | grep -v "^\${FINAL_TAG}\$" | head -1 || true)"
+
+                        gh release create "\${FINAL_TAG}" \
+                            --repo "apache/incubator-kie" \
+                            --target "${params.BUILD_BRANCH_NAME}" \
+                            --title "\${FINAL_TAG}" \
+                            --generate-notes \
+                            \${PREV_TAG:+--notes-start-tag "\${PREV_TAG}"}
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        cleanup {
+            cleanWs()
+        }
+    }
+}
