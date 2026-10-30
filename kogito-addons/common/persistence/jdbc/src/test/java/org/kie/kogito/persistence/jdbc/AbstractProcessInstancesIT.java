@@ -37,6 +37,7 @@ import org.kie.kogito.auth.SecurityPolicy;
 import org.kie.kogito.internal.process.workitem.Policy;
 import org.kie.kogito.process.Process;
 import org.kie.kogito.process.ProcessInstance;
+import org.kie.kogito.process.ProcessInstanceReadMode;
 import org.kie.kogito.process.Processes;
 import org.kie.kogito.process.SignalFactory;
 import org.kie.kogito.process.WorkItem;
@@ -424,6 +425,18 @@ abstract class AbstractProcessInstancesIT {
                     .isEqualTo("BPMN2_CallActivity_v2");
             assertThat(pi.getRootProcessVersion())
                     .as("unmarshalled child rootProcessVersion must be overridden from DB column")
+                    .isEqualTo("2.0");
+            return null;
+        });
+
+        AbstractProcessInstance<?> eagerChildInstance = (AbstractProcessInstance<?>) userTaskProcess.instances()
+                .findById(childId, ProcessInstanceReadMode.MUTABLE_EAGER).get();
+        eagerChildInstance.executeInWorkflowProcessInstanceRead(pi -> {
+            assertThat(pi.getRootProcessId())
+                    .as("eagerly unmarshalled child rootProcessId must be overridden from DB column")
+                    .isEqualTo("BPMN2_CallActivity_v2");
+            assertThat(pi.getRootProcessVersion())
+                    .as("eagerly unmarshalled child rootProcessVersion must be overridden from DB column")
                     .isEqualTo("2.0");
             return null;
         });
