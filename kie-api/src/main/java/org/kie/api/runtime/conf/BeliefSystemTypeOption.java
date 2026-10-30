@@ -65,6 +65,7 @@ public class BeliefSystemTypeOption implements SingleValueRuleRuntimeOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

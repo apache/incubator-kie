@@ -101,8 +101,10 @@ public interface KieSession
      * Deprecated. use {@link #getIdentifier()} instead
      *
      * @return id of this session
+     * @deprecated since 6.3.0, use {@link #getIdentifier()} instead. This method returns int which
+     *             can overflow for long-running sessions. Will be removed in a future version.
      */
-    @Deprecated
+    @Deprecated(since = "6.3.0", forRemoval = true)
     int getId();
 
     long getIdentifier();

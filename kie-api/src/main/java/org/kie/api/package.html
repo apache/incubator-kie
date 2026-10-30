@@ -18,5 +18,77 @@
   -->
 
 <body>
-  Base KIE API classes.
+<h1>KIE API - Core Package</h1>
+
+<p>
+This package contains the core interfaces of the Apache KIE (Knowledge Is Everything) API, 
+providing the foundation for building and executing business rules, processes, and decision services.
+</p>
+
+<h2>Key Components</h2>
+
+<h3>KieServices</h3>
+<p>
+The central entry point and factory for all KIE services. This thread-safe singleton provides access to:
+</p>
+<ul>
+  <li>KieContainer - for loading and managing KIE modules</li>
+  <li>KieRepository - for managing KIE module artifacts</li>
+  <li>KieBuilder - for building KIE modules from resources</li>
+  <li>Configuration factories - for creating KieBase and KieSession configurations</li>
+</ul>
+
+<h3>KieBase</h3>
+<p>
+A repository of knowledge definitions (rules, processes, functions, type models). 
+The KieBase is immutable and serves as a factory for creating KieSession instances where runtime data is managed.
+</p>
+
+<h3>KieBaseConfiguration</h3>
+<p>
+Configuration interface for customizing KieBase behavior at instantiation time. 
+Supports property-based configuration for equality behavior, sequential mode, TMS, and more.
+</p>
+
+<h3>PropertiesConfiguration</h3>
+<p>
+Base interface for configuration classes, providing simple property get/set operations.
+</p>
+
+<h2>Getting Started</h2>
+
+<p>Basic usage example:</p>
+<pre>
+// Get the KieServices singleton
+KieServices kieServices = KieServices.get();
+
+// Create a KieContainer from the classpath
+KieContainer kieContainer = kieServices.getKieClasspathContainer();
+
+// Get a KieBase
+KieBase kieBase = kieContainer.getKieBase();
+
+// Create a KieSession
+KieSession kieSession = kieBase.newKieSession();
+
+// Insert facts and fire rules
+kieSession.insert(myFact);
+kieSession.fireAllRules();
+
+// Clean up
+kieSession.dispose();
+</pre>
+
+<h2>Related Packages</h2>
+<ul>
+  <li><code>org.kie.api.builder</code> - Building and managing KIE modules</li>
+  <li><code>org.kie.api.runtime</code> - Runtime execution (KieSession, StatelessKieSession)</li>
+  <li><code>org.kie.api.conf</code> - Configuration options</li>
+  <li><code>org.kie.api.event</code> - Event listeners for monitoring</li>
+</ul>
+
+<p>
+For more information, see the <a href="https://kie.apache.org/">Drools documentation</a>.
+</p>
+
 </body>

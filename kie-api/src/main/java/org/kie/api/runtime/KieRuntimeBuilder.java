@@ -27,7 +27,21 @@ public interface KieRuntimeBuilder {
     KieSession newKieSession();
     KieSession newKieSession(String sessionName);
 
+    /**
+     * Creates a new stateless session.
+     * @return a new stateless session
+     * @since 10.1.0
+     * @apiNote Convenience method added to builder pattern
+     */
     StatelessKieSession newStatelessKieSession();
+    
+    /**
+     * Creates a new named stateless session.
+     * @param sessionName the session name
+     * @return a new stateless session
+     * @since 10.1.0
+     * @apiNote Convenience method added to builder pattern
+     */
     StatelessKieSession newStatelessKieSession(String sessionName);
 
     default KieSession newKieSession(KieSessionConfiguration conf) {

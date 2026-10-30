@@ -43,6 +43,7 @@ public enum KieBaseMutabilityOption implements SingleValueKieBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

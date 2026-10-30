@@ -86,6 +86,7 @@ public class PersistedSessionOption implements SingleValueKieSessionOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

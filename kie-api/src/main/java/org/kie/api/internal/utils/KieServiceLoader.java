@@ -28,7 +28,7 @@ public class KieServiceLoader {
 
     static final KieServiceLoader INSTANCE = new KieServiceLoader();
 
-    private static final KieService DUMMY_SERIVCE = new KieService() {};
+    private static final KieService DUMMY_SERVICE = new KieService() {};
 
     private final Map<String, KieService> serviceCache = new ConcurrentHashMap<>();
 
@@ -43,11 +43,11 @@ public class KieServiceLoader {
 
         T cachedService = (T) serviceCache.get(serviceKey);
         if (cachedService != null) {
-            return cachedService == DUMMY_SERIVCE ? null : cachedService;
+            return cachedService == DUMMY_SERVICE ? null : cachedService;
         }
 
         T loadedService = load(serviceClass, tag);
-        serviceCache.put(serviceKey, loadedService == null ? DUMMY_SERIVCE : loadedService);
+        serviceCache.put(serviceKey, loadedService == null ? DUMMY_SERVICE : loadedService);
         return loadedService;
     }
 

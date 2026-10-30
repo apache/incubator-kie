@@ -116,6 +116,13 @@ public interface KieCommands extends KieService {
                      String name,
                      Object[] arguments);
 
+    /**
+     * Creates a batch execution command from varargs.
+     * @param commands the commands to execute
+     * @return the batch execution command
+     * @since 10.1.0
+     * @apiNote Convenience method for varargs instead of List
+     */
     default BatchExecutionCommand newBatchExecution(Command... commands) {
         return newBatchExecution( asList(commands) );
     }
@@ -151,6 +158,13 @@ public interface KieCommands extends KieService {
     Command<Long> newAdvanceSessionTime(long amount, TimeUnit unit);
     Command<Long> newAdvanceSessionTime(long amount, TimeUnit unit, String outIdentifier);
 
+    /**
+     * Creates a command to apply a PMML model.
+     * @param request the PMML request data as a Map
+     * @return the command
+     * @since 10.2.0
+     * @apiNote Replaces deprecated newApplyPmmlModel(PMMLRequestData). Convert PMMLRequestData to Map before calling.
+     */
     Command newApplyPmmlModel(Map<String, Object> request);
 
     ExecutionResults newExecutionResults();

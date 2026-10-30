@@ -39,6 +39,10 @@ public interface NodeInstanceContainer {
      * within this container and are serializable
      *
      * @return the list of serializable node instances currently active
+     * @since 10.1.0
+     * @apiNote When implementing custom node instances, override this method to exclude
+     *          non-serializable instances if your process needs to support persistence.
+     *          The default implementation returns all node instances.
      */
     default Collection<NodeInstance> getSerializableNodeInstances() {
         return getNodeInstances(); // defaulting to getNodeInstances to avoid breaking
