@@ -526,6 +526,15 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                                 pmem.getSegmentMemories()[sproto.getPos()] = sm;
                                 sm.getPathMemories().add(pmem);
                                 notifyImpactedSegments(wm, sm, smemsToNotify);
+                            } else if (pmem != null) {
+                                SegmentMemory sm = wm.getSegmentMemorySupport().getOrCreateSegmentMemory(sproto.getRootNode());
+                                if (sm != null) {
+                                    pmem.getSegmentMemories()[sproto.getPos()] = sm;
+                                    if (!sm.getPathMemories().contains(pmem)) {
+                                        sm.getPathMemories().add(pmem);
+                                    }
+                                    notifyImpactedSegments(wm, sm, smemsToNotify);
+                                }
                             }
                         } else if (pmem != null) {
                             // segment with just the PathEndNode, so create
@@ -637,6 +646,9 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                 }
 
                 for (PathEndNode endNode : tn.getPathEndNodes()) {
+                    if (endNode.getAssociatedTerminalsSize() > 1) {
+                        continue;
+                    }
                     PathMemory pmem = (PathMemory) wm.getNodeMemories().peekNodeMemory(endNode);
 
                     // Iterate from root to tip.

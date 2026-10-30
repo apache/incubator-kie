@@ -23,12 +23,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
@@ -45,6 +45,12 @@ public class SubnetworkSegmentSplitIntegrationTest {
         private final List<String> items;
         public Container(String... items) { this.items = new ArrayList<>(Arrays.asList(items)); }
         public List<String> getItems() { return items; }
+    }
+
+    public static class Person {
+        private final String name;
+        public Person(String name) { this.name = name; }
+        public String getName() { return name; }
     }
 
     // =======================================================================
@@ -97,6 +103,128 @@ public class SubnetworkSegmentSplitIntegrationTest {
             ks.delete(fh);
             ks.fireAllRules();
             assertThat(results).as("After retraction: not-rule fires again, exists does not").containsExactly("not-rule");
+        } finally {
+            ks.dispose();
+        }
+    }
+
+    // =======================================================================
+    // TP-02: Cascading 3+ package subnetwork split
+    // =======================================================================
+
+    // DRL shared between TP02 rules
+    private static final String DRL_TP02_PKG_A =
+            "package repro.tp02.a;\n" +
+            "import " + Container.class.getCanonicalName() + ";\n" +
+            "global java.util.List results;\n" +
+            "rule \"ruleA\"\n" +
+            "when\n" +
+            "    not ( $c : Container() and String( this == \"tagA\" ) from $c.items )\n" +
+            "then\n" +
+            "    results.add(\"ruleA\");\n" +
+            "end\n";
+
+    private static final String DRL_TP02_PKG_B =
+            "package repro.tp02.b;\n" +
+            "import " + Container.class.getCanonicalName() + ";\n" +
+            "global java.util.List results;\n" +
+            "rule \"ruleB\"\n" +
+            "when\n" +
+            "    not ( $c : Container() and String( this == \"tagB\" ) from $c.items )\n" +
+            "then\n" +
+            "    results.add(\"ruleB\");\n" +
+            "end\n";
+
+    private static final String DRL_TP02_PKG_C =
+            "package repro.tp02.c;\n" +
+            "import " + Container.class.getCanonicalName() + ";\n" +
+            "import " + Person.class.getCanonicalName() + ";\n" +
+            "global java.util.List results;\n" +
+            "rule \"ruleC\"\n" +
+            "when\n" +
+            "    not ( $c : Container() and $p : Person() and String( this == $p.name ) from $c.items )\n" +
+            "then\n" +
+            "    results.add(\"ruleC\");\n" +
+            "end\n";
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTP02_cascadingThreePackageSplit(KieBaseTestConfiguration cfg) {
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("tp02", cfg, DRL_TP02_PKG_A, DRL_TP02_PKG_B, DRL_TP02_PKG_C);
+        KieSession ks = kbase.newKieSession();
+        try {
+            List<String> results = new ArrayList<>();
+            ks.setGlobal("results", results);
+
+            // Insert Container matching only ruleA ("tagA") and Person for ruleC
+            FactHandle fhC = ks.insert(new Container("tagA"));
+            ks.insert(new Person("other"));
+            ks.fireAllRules();
+
+            // ruleA is blocked ("tagA" matches).
+            // ruleB fires (no "tagB").
+            // ruleC fires (Person is "other", not in items).
+            assertThat(results).as("Initial fire with Container(tagA)").containsExactlyInAnyOrder("ruleB", "ruleC");
+            results.clear();
+
+            // Retract container -> ruleA FALSE->TRUE must fire; ruleB/ruleC TRUE->TRUE must not re-fire
+            ks.delete(fhC);
+            ks.fireAllRules();
+            assertThat(results).as("After retraction of Container(tagA)").containsExactly("ruleA");
+        } finally {
+            ks.dispose();
+        }
+    }
+
+    // =======================================================================
+    // TP-03: Incremental rule removal on split subnetwork
+    // =======================================================================
+
+    // DRL shared between TP03 rules
+    private static final String DRL_TP03_PKG_A =
+            "package repro.tp03.a;\n" +
+            "import " + Container.class.getCanonicalName() + ";\n" +
+            "global java.util.List results;\n" +
+            "rule \"not-rule\"\n" +
+            "when\n" +
+            "    not ( $c : Container() and String( this == \"match\" ) from $c.items )\n" +
+            "then\n" +
+            "    results.add(\"not-rule\");\n" +
+            "end\n";
+
+    private static final String DRL_TP03_PKG_B =
+            "package repro.tp03.b;\n" +
+            "import " + Container.class.getCanonicalName() + ";\n" +
+            "global java.util.List results;\n" +
+            "rule \"exists-rule\"\n" +
+            "when\n" +
+            "    exists ( $c : Container() and String( this == \"match\" ) from $c.items )\n" +
+            "then\n" +
+            "    results.add(\"exists-rule\");\n" +
+            "end\n";
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTP03_ruleRemovalOnSplitSubnetwork(KieBaseTestConfiguration cfg) {
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("tp03", cfg, DRL_TP03_PKG_A, DRL_TP03_PKG_B);
+        KieSession ks = kbase.newKieSession();
+        try {
+            List<String> results = new ArrayList<>();
+            ks.setGlobal("results", results);
+
+            // Initial insert
+            FactHandle fh = ks.insert(new Container("match"));
+            ks.fireAllRules();
+            assertThat(results).containsExactly("exists-rule");
+            results.clear();
+
+            // Remove exists-rule from package b
+            kbase.removeRule("repro.tp03.b", "exists-rule");
+
+            // Retract container -> not-rule must still fire even after sibling rule was removed
+            ks.delete(fh);
+            ks.fireAllRules();
+            assertThat(results).as("not-rule must fire on retraction after sibling exists-rule removed").containsExactly("not-rule");
         } finally {
             ks.dispose();
         }
