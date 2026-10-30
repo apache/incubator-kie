@@ -57,6 +57,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.ConditionalExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NullLiteralExpr;
@@ -357,13 +358,27 @@ public class ProcessResourceGenerator {
                                         .orElseThrow(() -> new RuntimeException("signalInstanceDeclaration doesn't have body"));
 
                                 if (signalType == null) {
-                                    signalInstanceBody.findAll(NameExpr.class, nameExpr -> "data".equals(nameExpr.getNameAsString())).forEach(name -> name.replace(new NullLiteralExpr()));
+                                    signalInstanceBody.findAll(
+                                            ConditionalExpr.class,
+                                            expr -> expr.getThenExpr().isMethodCallExpr()
+                                                    && expr.getThenExpr().asMethodCallExpr()
+                                                            .getNameAsString().equals("toJavaValue"))
+                                            .forEach(expr -> expr.replace(new NullLiteralExpr()));
+
+                                    // Remove method-level OpenAPI RequestBody annotation
+                                    signalInstanceDeclarationClone.getAnnotations()
+                                            .removeIf(annotation -> annotation.getNameAsString().equals(
+                                                    "org.eclipse.microprofile.openapi.annotations.parameters.RequestBody")
+                                                    || annotation.getNameAsString().equals(
+                                                            "io.swagger.v3.oas.annotations.parameters.RequestBody"));
                                 }
 
                                 template.addMethod(SIGNAL_METHOD_PREFFIX + index.getAndIncrement(), Keyword.PUBLIC)
                                         .setType(signalInstanceDeclarationClone.getType())
-                                        // Remove data parameter ( payload ) if signalType is null
-                                        .setParameters(signalType == null ? NodeList.nodeList(signalInstanceDeclarationClone.getParameter(0)) : signalInstanceDeclaration.getParameters())
+                                        // Remove data parameter if signalType is null
+                                        .setParameters(signalType == null
+                                                ? NodeList.nodeList(signalInstanceDeclarationClone.getParameter(0))
+                                                : signalInstanceDeclarationClone.getParameters())
                                         .setBody(signalInstanceBody)
                                         .setAnnotations(signalInstanceDeclarationClone.getAnnotations());
 
