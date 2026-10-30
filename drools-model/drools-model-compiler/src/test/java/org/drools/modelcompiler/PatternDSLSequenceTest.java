@@ -42,15 +42,13 @@ import static org.drools.model.PatternDSL.sequence;
 
 public class PatternDSLSequenceTest {
 
-    private final Variable<Person>       person = declarationOf(Person.class);
     private final Variable<Toy>          toy = declarationOf(Toy.class);
     private final Variable<Relationship> relationship = declarationOf(Relationship.class);
     private final List<String>           results = new ArrayList<>();
     private KieSession                   ksession;
 
-    private final Rule rule =
+    private final Rule anchorlessRule =
             rule("seq-rule").build(
-                pattern(person),
                 sequence(
                     pattern(toy).expr("toy-filter",
                             t -> t.getName().equals("ball")),
@@ -62,32 +60,23 @@ public class PatternDSLSequenceTest {
 
     @Test
     public void sequenceFiresWhenToyThenRelationship() {
-        ksession = makeKSession();
+        ksession = makeKSessionAnchorless();
 
-        // LHS anchor — activates the sequencer
-        insertAndFire(
-           new Person("anchor")
-        );
+        // Step 1 arrives in cycle 1: Toy activates the sequencer (LIAN left-input),
+        // step-0 fires immediately, sequencer advances to step 1.
+        insertAndFire(new Toy("ball"));
+        assertThat(results).isEmpty();
 
-        // Step 1, then step 2 — rule should fire
-        insertAndFire(
-           new Toy("ball"),
-           new Relationship("go", "done")
-        );
-
+        // Step 2 arrives in cycle 2: Relationship satisfies step 1.
+        insertAndFire(new Relationship("go", "done"));
         assertThat(results).containsExactly("fired");
     }
 
     @Test
     public void sequenceFiresWithSeparateInserts() {
-        ksession = makeKSession();
+        ksession = makeKSessionAnchorless();
 
-        // LHS anchor — activates the sequencer
-        insertAndFire(
-                new Person("anchor")
-        );
-
-        // Step 1, then fireAll() — rule should NOT fire
+        // Step 1, then fireAll() — rule should NOT fire yet
         insertAndFire(
                 new Toy("ball")
         );
@@ -104,14 +93,26 @@ public class PatternDSLSequenceTest {
 
     @Test
     public void sequenceDoesNotFireWithoutCorrectOrder() {
-        ksession = makeKSession();
+        // This test verifies the ordering contract with an anchored rule: step facts
+        // arrive after the sequencer starts, so insertion order is enforced.
+        // The anchorless equivalent is covered by PatternDSLSequenceAnchorlessTemporalTest.
+        Variable<Person>       personV = declarationOf(Person.class);
+        Variable<Toy>          toyV    = declarationOf(Toy.class);
+        Variable<Relationship> relV    = declarationOf(Relationship.class);
 
-        // LHS anchor — activates the sequencer
-        insertAndFire(
-           new Person("anchor")
+        Rule anchoredRule = rule("seq-order-rule").build(
+                pattern(personV),
+                sequence(
+                    pattern(toyV).expr("toy-filter", t -> t.getName().equals("ball")),
+                    pattern(relV).expr("rel-filter",  r -> r.getStart().equals("go"))
+                ),
+                execute(() -> results.add("fired"))
         );
 
-        // Step 1, then step 2 — sequence expects Toy then Relationship. We provide Relationship then Toy
+        ksession = makeKSession(anchoredRule);
+        insertAndFire(new Person("anchor"));
+
+        // Relationship arrives before Toy — must not fire
         insertAndFire(
             new Relationship("go", "done"),
             new Toy("ball"));
@@ -121,11 +122,7 @@ public class PatternDSLSequenceTest {
 
     @Test
     public void sequenceDoesNotFireWithoutToy() {
-        ksession = makeKSession();
-
-        insertAndFire(
-            new Person("anchor")
-        );
+        ksession = makeKSessionAnchorless();
 
         // Step 2 arrives without step 1 — rule must NOT fire
         insertAndFire(
@@ -148,7 +145,13 @@ public class PatternDSLSequenceTest {
         ksession.fireAllRules();
     }
 
-    private KieSession makeKSession() {
+    private KieSession makeKSessionAnchorless() {
+        final Model model = new ModelImpl().addRule(anchorlessRule);
+        final KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
+        return kieBase.newKieSession();
+    }
+
+    private KieSession makeKSession(Rule rule) {
         final Model model = new ModelImpl().addRule(rule);
         final KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
         return kieBase.newKieSession();

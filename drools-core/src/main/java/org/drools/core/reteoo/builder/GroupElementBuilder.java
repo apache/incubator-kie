@@ -127,6 +127,12 @@ public class GroupElementBuilder
         }
 
         private boolean isTerminalAlpha( BuildContext context, RuleConditionElement child ) {
+            // Terminal-alpha optimisation only applies to simple Pattern nodes.
+            // Non-Pattern children (e.g. Sequence) build their own left-input internally
+            // and do not participate in the OTN→LIAN alpha-terminal path.
+            if (!(child instanceof Pattern)) {
+                return false;
+            }
             boolean isInitialFact = ((Pattern) child).getObjectType().isAssignableTo(InitialFact.class);
             boolean hasTimer = context.getRule().getTimer() != null;
             RuleBaseConfiguration conf = context.getRuleBase().getRuleBaseConfiguration();

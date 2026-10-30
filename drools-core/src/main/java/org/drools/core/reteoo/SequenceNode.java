@@ -67,6 +67,14 @@ public class SequenceNode extends LeftTupleSource
 
     private DynamicFilterProto[] dynamicFilters;
 
+    /**
+     * True when the first pattern inside the sequence serves as the anchor
+     * (i.e. no explicit outer anchor pattern was supplied). In this case the
+     * left-tuple fact that activates the sequencer also satisfies step 0, so
+     * the step-0 DynamicFilter is fired immediately with the anchor FactHandle.
+     */
+    private boolean firstPatternAsAnchor;
+
     private LeftTupleSinkNode      previousTupleSinkNode;
 
     private LeftTupleSinkNode      nextTupleSinkNode;
@@ -156,6 +164,14 @@ public class SequenceNode extends LeftTupleSource
     public void setSequencer(Sequencer sequencer) {
         this.sequencer = sequencer;
         this.hashcode = calculateHashCode();
+    }
+
+    public boolean isFirstPatternAsAnchor() {
+        return firstPatternAsAnchor;
+    }
+
+    public void setFirstPatternAsAnchor(boolean firstPatternAsAnchor) {
+        this.firstPatternAsAnchor = firstPatternAsAnchor;
     }
 
     public boolean isLeftTupleMemoryEnabled() {
@@ -484,6 +500,17 @@ public class SequenceNode extends LeftTupleSource
                 deleteChildren(nodeMemoryForUpdate.getStagedChildTuples(), trgLeftTuples, leftTuple);
 
                 node.getSequencer().start(sequencerMemory, reteEvaluator);
+
+                // When the first pattern is the anchor, re-fire step 0 with the
+                // (potentially updated) anchor FactHandle so the sequencer advances.
+                if (node.isFirstPatternAsAnchor()) {
+                    SequenceNodeMemory nodeMemory = reteEvaluator.getNodeMemory(node);
+                    DynamicFilter step0Filter = nodeMemory.getActiveDynamicFilter(0);
+                    if (step0Filter != null) {
+                        step0Filter.assertObject(leftTuple.getFactHandle(), reteEvaluator);
+                    }
+                }
+
                 leftTuple.getMemory().removeAdd(leftTuple);
 
                 leftTuple.clearStaged();
@@ -540,6 +567,16 @@ public class SequenceNode extends LeftTupleSource
                 SequencerMemory sequencerMemory = memory.node.createSequencerMemory(leftTuple, sink, memory);
                 leftTuple.setContextObject(sequencerMemory);
                 node.getSequencer().start(sequencerMemory, reteEvaluator);
+
+                // When the first pattern is the anchor, the left-tuple's FactHandle IS
+                // the step-0 match. Fire step 0's DynamicFilter immediately with it so
+                // the sequencer advances to step 1 without waiting for another fact.
+                if (node.isFirstPatternAsAnchor()) {
+                    DynamicFilter step0Filter = memory.getActiveDynamicFilter(0);
+                    if (step0Filter != null) {
+                        step0Filter.assertObject(leftTuple.getFactHandle(), reteEvaluator);
+                    }
+                }
 
                 leftTuple.clearStaged();
                 leftTuple = next;

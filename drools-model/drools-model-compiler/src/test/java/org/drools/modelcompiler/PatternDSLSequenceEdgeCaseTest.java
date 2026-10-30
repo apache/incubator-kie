@@ -592,4 +592,80 @@ public class PatternDSLSequenceEdgeCaseTest {
         ksession.fireAllRules();
         assertThat(results).containsExactly("fired");
     }
+
+    /**
+     * A plain (batched/non-sequence) rule and an anchorless sequence rule are loaded in the same
+     * KieBase, both consuming the same fact type as their first pattern.  Under the
+     * first-pattern-as-anchor design the sequence rule promotes its first pattern to a stream-mode
+     * LIAN (flush-on-insert), while the plain rule gets a separate batched (non-stream-mode) LIAN
+     * for the same OTN.
+     *
+     * The plain rule must obey normal staging semantics — it must NOT fire until
+     * {@code fireAllRules()} is called.  If the stream-mode LIAN were incorrectly shared with
+     * the plain rule, the plain rule would be flushed eagerly on insert, which would alter its
+     * activation timing and break expected batched-mode behaviour.
+     *
+     * This test proves node isolation: two separate LIAN nodes must exist (stream-mode for the
+     * sequence anchor, batched for the plain rule) so that each rule's staging semantics are
+     * preserved independently.
+     */
+    @Test
+    public void plainRuleAndAnchorlessSequenceSharingAnchorTypePreserveStagingSemantics() {
+        Variable<Toy>          toyV  = declarationOf(Toy.class);
+        Variable<Relationship> relV  = declarationOf(Relationship.class);
+
+        // Plain rule: fires whenever a Toy named "ball" is in WM — normal batched staging.
+        Rule plainRule = rule("plain-toy-rule").build(
+                pattern(toyV).expr("is-ball", t -> t.getName().equals("ball")),
+                execute(() -> results.add("plain:ball"))
+        );
+
+        // Anchorless sequence: the first pattern (Toy) is promoted to the stream-mode LIAN anchor;
+        // no explicit outer anchor pattern is present.
+        Rule seqRule = rule("anchorless-seq-rule").build(
+                sequence(
+                        pattern(toyV).expr("seq-ball", t -> t.getName().equals("ball")),
+                        pattern(relV).expr("seq-go",   r -> r.getStart().equals("go"))
+                ),
+                execute(() -> results.add("seq:complete"))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(
+                new ModelImpl().addRule(plainRule).addRule(seqRule));
+        ksession = kbase.newKieSession();
+
+        // The session-creation InitialFact starts the anchorless sequencer (step 0 — Toy).
+        ksession.fireAllRules();
+
+        // Insert the Toy: the sequence's stream-mode LIAN flushes eagerly, advancing the
+        // sequencer to step 1.  The plain rule's separate batched LIAN must NOT flush eagerly;
+        // it must stay staged until fireAllRules().
+        ksession.insert(new Toy("ball"));
+
+        // At this point — before fireAllRules — plain rule must NOT have fired yet.
+        // (The sequence has advanced internally but its consequence is not triggered until
+        // both steps match, so seq:complete must not appear either.)
+        assertThat(results)
+                .as("plain rule must not fire before fireAllRules() — its batched LIAN must not be affected by the sequence's stream-mode LIAN")
+                .isEmpty();
+
+        ksession.fireAllRules();
+
+        // After fireAllRules: the plain rule fires (Toy "ball" is in WM).
+        // The sequence is waiting at step 1 (Relationship) — it must NOT have completed yet.
+        assertThat(results)
+                .as("plain rule must fire after fireAllRules()")
+                .contains("plain:ball");
+        assertThat(results)
+                .as("sequence must not complete before step-1 (Relationship) arrives")
+                .doesNotContain("seq:complete");
+
+        // Satisfy the sequence's second step.
+        ksession.insert(new Relationship("go", "done"));
+        ksession.fireAllRules();
+
+        assertThat(results)
+                .as("sequence must complete once Relationship arrives")
+                .contains("seq:complete");
+    }
 }

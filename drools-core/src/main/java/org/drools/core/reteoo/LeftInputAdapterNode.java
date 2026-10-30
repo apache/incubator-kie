@@ -114,6 +114,21 @@ public class LeftInputAdapterNode extends LeftTupleSource
         return objectSource;
     }
 
+    /**
+     * Makes this node flush its path at insert time instead of staging the tuple until the next
+     * {@code fireAllRules()}. Used for the LIAN that promotes the first pattern of a sequence to
+     * the anchor role, so the sequencer is active before the next fact is inserted.
+     *
+     * <p><strong>Must be called before {@code BuildUtils.attachNode()}</strong>.  The stream-mode
+     * flag is part of the node's equality and hash key (see {@link #calculateHashCode()} and
+     * {@link #equals}).  Calling this method after the node has been attached would mutate the
+     * key of a node already stored in the OTN's sink propagator map, silently breaking
+     * subsequent sharing lookups for that OTN.</p>
+     */
+    public void enableStreamMode() {
+        setStreamMode(true);
+    }
+
     private BitMask calculateSinkMask(BuildContext context) {
         Pattern pattern = context.getLastBuiltPatterns() != null ? context.getLastBuiltPatterns()[0] : null;
         if (pattern == null) {
@@ -463,7 +478,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
     }
 
     private int calculateHashCode() {
-        return 31 * this.objectSource.hashCode() + 37 * sinkMask.hashCode();
+        return 31 * this.objectSource.hashCode() + 37 * sinkMask.hashCode() + (isStreamMode() ? 1 : 0);
     }
 
     @Override
@@ -475,7 +490,9 @@ public class LeftInputAdapterNode extends LeftTupleSource
         if ( object.getClass() != LeftInputAdapterNode.class || this.hashCode() != object.hashCode() ) {
             return false;
         }
-        return this.objectSource.getId() == ((LeftInputAdapterNode)object).objectSource.getId() && this.sinkMask.equals( ((LeftInputAdapterNode) object).sinkMask );
+        return this.objectSource.getId() == ((LeftInputAdapterNode)object).objectSource.getId() &&
+               this.sinkMask.equals( ((LeftInputAdapterNode) object).sinkMask ) &&
+               this.isStreamMode() == ((LeftInputAdapterNode) object).isStreamMode();
     }
 
     @Override

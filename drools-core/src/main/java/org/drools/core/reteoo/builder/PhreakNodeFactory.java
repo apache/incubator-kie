@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.drools.base.base.ObjectType;
@@ -132,42 +133,54 @@ public class PhreakNodeFactory implements NodeFactory, Serializable {
                                           final LeftTupleSource tupleSource,
                                           final Sequence seq,
                                           final BuildContext context) {
+
+        Pattern[] allPatterns = seq.getFilters();
+
+        // Whether the first pattern inside the sequence serves as the anchor.
+        // SequenceBuilder.promoteFirstPatternToAnchor sets this flag before calling here
+        // when no explicit outer anchor pattern was provided.
+        final boolean firstPatternAsAnchor = context.isSequenceFirstPatternAsAnchor();
+        // Reset the flag so it does not bleed into nested sequences.
+        context.setSequenceFirstPatternAsAnchor(false);
+
         SequenceNode node = new SequenceNode(id, tupleSource, context);
         node.setSequencer(new Sequencer(seq));
+        node.setFirstPatternAsAnchor(firstPatternAsAnchor);
 
         NodeFactory nFactory = CoreComponentFactory.get().getNodeFactoryService();
 
-        Pattern[] patterns =  seq.getFilters();
+        // Build the OTN/AlphaAdapter ring for all sequence-step patterns.
+        // The deduplication key is (entryPointId, objectType): two patterns with the
+        // same ObjectType but on different entry points need separate OTNs and adapters.
+        // Use LinkedHashSet to preserve insertion order (first-seen per key).
+        Set<EpOtnKey> keySet = new LinkedHashSet<>();
+        for (Pattern p : allPatterns) {
+            keySet.add(new EpOtnKey(SequenceBuilder.entryPointIdFor(p, context), p.getObjectType()));
+        }
+        List<EpOtnKey> keyList = new ArrayList<>(keySet);
 
-        // first attach the OTN sources in Rete.
-        // Use LinkedHashSet to preserve insertion order (first-seen per type),
-        // so objectTypeList index aligns with the first pattern index for that type.
-        Set<ObjectType>  objectTypeSet  = new LinkedHashSet<>();
-        Arrays.stream(patterns).forEach(p -> objectTypeSet.add(p.getObjectType()));
-        List<ObjectType> objectTypeList = new ArrayList<>(objectTypeSet);
-
-        Map<ObjectType, Integer> objectTypeIndex = new HashMap<>(objectTypeList.size() * 2);
-        ObjectSource[] otns = new ObjectSource[objectTypeList.size()];
-        EntryPointNode epn = context.getRuleBase().getRete().getEntryPointNode(context.getCurrentEntryPoint());
-        Map<ObjectType, ObjectTypeNode> existingOtns = epn.getObjectTypeNodes();
-        for ( int i = 0; i < objectTypeList.size(); i++ ) {
-            ObjectType objectType = objectTypeList.get(i);
-            objectTypeIndex.put(objectType, i);
-            ObjectTypeNode existing = existingOtns.get(objectType);
+        Map<EpOtnKey, Integer> adapterIndexMap = new HashMap<>(keyList.size() * 2);
+        ObjectSource[] otns = new ObjectSource[keyList.size()];
+        for ( int i = 0; i < keyList.size(); i++ ) {
+            EpOtnKey key = keyList.get(i);
+            adapterIndexMap.put(key, i);
+            EntryPointNode epn = SequenceBuilder.getOrCreateEntryPointNode(key.entryPointId, context);
+            Map<ObjectType, ObjectTypeNode> existingOtns = epn.getObjectTypeNodes();
+            ObjectTypeNode existing = existingOtns.get(key.objectType);
             if (existing != null) {
                 // Reuse the existing OTN — building a fresh one and calling attach()
                 // would call EntryPointNode.addObjectSink which is a Map.put, silently
                 // replacing the existing OTN and cutting off all rules already wired to it.
                 otns[i] = existing;
             } else {
-                otns[i] = nFactory.buildObjectTypeNode(context.getNextNodeId(), epn, objectType, context);
+                otns[i] = nFactory.buildObjectTypeNode(context.getNextNodeId(), epn, key.objectType, context);
                 otns[i].attach(context);
             }
         }
 
         // For each source create an alpha adapter, which will map it to any filters on the stack.
-        AlphaAdapter[] adapters = new AlphaAdapter[objectTypeList.size()];
-        for ( int i = 0; i < objectTypeList.size(); i++ ) {
+        AlphaAdapter[] adapters = new AlphaAdapter[keyList.size()];
+        for ( int i = 0; i < keyList.size(); i++ ) {
             adapters[i] = new AlphaAdapter(context.getNextNodeId(), otns[i],
                     context.getPartitionId(), node, i);
 
@@ -179,9 +192,9 @@ public class PhreakNodeFactory implements NodeFactory, Serializable {
         // Create all the dynamic filters, these are added on demand to the stack.
         // filterIndex (i) is the pattern index — one per step.
         // adapterIndex is the index of this pattern's type in objectTypeList — one per distinct type.
-        DynamicFilterProto[] filters = new DynamicFilterProto[patterns.length];
-        for ( int i = 0; i < patterns.length; i++ ) {
-            List<Constraint> constraints = patterns[i].getConstraints();
+        DynamicFilterProto[] filters = new DynamicFilterProto[allPatterns.length];
+        for ( int i = 0; i < allPatterns.length; i++ ) {
+            List<Constraint> constraints = allPatterns[i].getConstraints();
             if (constraints.isEmpty()) {
                 throw new IllegalArgumentException(
                         "sequence step " + i + " has no constraint expression. " +
@@ -197,13 +210,44 @@ public class PhreakNodeFactory implements NodeFactory, Serializable {
                         .toArray(AlphaNodeFieldConstraint[]::new);
                 combined = new CombinedConstraint(all);
             }
-            int adapterIndex = objectTypeIndex.get(patterns[i].getObjectType());
+            EpOtnKey key = new EpOtnKey(SequenceBuilder.entryPointIdFor(allPatterns[i], context), allPatterns[i].getObjectType());
+            int adapterIndex = adapterIndexMap.get(key);
             filters[i] = new DynamicFilterProto(combined, adapterIndex);
         }
 
-        node.setDynamicFilters( filters);
+        node.setDynamicFilters(filters);
 
         return node;
+    }
+
+    /**
+     * Composite key for the OTN deduplication map in {@link #buildSequenceNode}.
+     * Two sequence-step patterns that share the same ObjectType but are declared on
+     * different entry points must be wired to different OTNs, so both dimensions
+     * are part of the key.
+     */
+    private static final class EpOtnKey {
+        final EntryPointId entryPointId;
+        final ObjectType   objectType;
+
+        EpOtnKey(EntryPointId entryPointId, ObjectType objectType) {
+            this.entryPointId = entryPointId;
+            this.objectType   = objectType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof EpOtnKey)) return false;
+            EpOtnKey other = (EpOtnKey) o;
+            return Objects.equals(entryPointId, other.entryPointId)
+                && Objects.equals(objectType,   other.objectType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(entryPointId, objectType);
+        }
     }
 
     public JoinNode buildJoinNode( int id, LeftTupleSource leftInput, ObjectSource rightInput, BetaConstraints binder, BuildContext context ) {

@@ -149,10 +149,7 @@ public class PatternDSLSequenceLifecycleTest {
 
     @Test
     public void sequenceDoesNotFireAgainAfterCompletion() {
-        ksession = makeKSession();
-
-        ksession.insert(new Person("anchor"));
-        ksession.fireAllRules();
+        ksession = makeKSessionAnchorless();
 
         ksession.insert(new Toy("ball"));
         ksession.fireAllRules();
@@ -198,51 +195,80 @@ public class PatternDSLSequenceLifecycleTest {
     }
 
     @Test
-    public void retractStepEventDoesNotUndoStep() {
-        ksession = makeKSession();
+    public void retractAnchorFactStopsAnchorlessSequencer() {
+        ksession = makeKSessionAnchorless();
 
-        ksession.insert(new Person("anchor"));
-        ksession.fireAllRules();
-
+        // In the first-pattern-as-anchor design, the Toy fact IS the LIAN anchor.
+        // Retracting it stops the sequencer — same contract as for anchored rules.
         FactHandle toyHandle = ksession.insert(new Toy("ball"));
-        ksession.fireAllRules();                    // step-1 consumed; sequence now at step-2
+        ksession.fireAllRules();                    // step-0 fires; sequencer at step 1
 
-        ksession.retract(toyHandle);               // retract the step-1 fact — no-op for the sequencer
+        ksession.retract(toyHandle);               // retract the anchor fact — stops the sequencer
         ksession.fireAllRules();
 
         ksession.insert(new Relationship("go", "done"));
-        ksession.fireAllRules();                    // step-2 arrives — sequence is still at step-2, fires
+        ksession.fireAllRules();                    // sequencer stopped, must NOT fire
 
-        assertThat(results).containsExactly("fired");
+        assertThat(results)
+                .as("retracting the anchor fact must stop the anchorless sequencer")
+                .isEmpty();
     }
 
     @Test
-    public void updateStepEventDoesNotUndoStep() {
-        ksession = makeKSession();
+    public void updateAnchorFactRestartsAnchorlessSequencerAndAdvancesPastStep0() {
+        ksession = makeKSessionAnchorless();
 
-        ksession.insert(new Person("anchor"));
-        ksession.fireAllRules();
-
+        // In the first-pattern-as-anchor design, updating the anchor fact triggers a stop+start
+        // cycle.  Since the anchor fact IS the step-0 match, step 0 fires again immediately after
+        // restart, and the sequencer advances to step 1.
         Toy toy = new Toy("ball");
         FactHandle toyHandle = ksession.insert(toy);
-        ksession.fireAllRules();                    // step-1 consumed; sequence now at step-2
+        ksession.fireAllRules();                    // step-0 fires; sequencer at step 1
 
-        ksession.update(toyHandle, toy);            // update the step-1 fact — no-op for the sequencer
+        ksession.update(toyHandle, toy);            // update anchor fact — stop+restart
+        ksession.fireAllRules();                    // step-0 fires again; sequencer back at step 1
+
+        // Sequencer is at step 1 again, so Relationship satisfies it.
+        ksession.insert(new Relationship("go", "done"));
         ksession.fireAllRules();
 
-        ksession.insert(new Relationship("go", "done"));
-        ksession.fireAllRules();                    // step-2 arrives — sequence fires
+        assertThat(results)
+                .as("after anchor update, sequencer restarts and step-0 fires immediately; Relationship satisfies step 1")
+                .containsExactly("fired");
+    }
 
-        assertThat(results).containsExactly("fired");
+    @Test
+    public void updateAnchorFactToNonMatchingValueKepsSequencerAtStep0() {
+        ksession = makeKSessionAnchorless();
+
+        // Step-0 predicate is t.getName().equals("ball").
+        // After a stop+restart cycle the anchor fact is re-asserted to step 0.
+        // When the updated fact no longer satisfies the predicate, step 0 must
+        // reject it silently — the sequencer stays at step 0 and must not fire
+        // when step 1 arrives without a prior step-0 match.
+        Toy toy = new Toy("ball");
+        FactHandle toyHandle = ksession.insert(toy);
+        ksession.fireAllRules();                    // step-0 fires; sequencer at step 1
+
+        // Mutate the fact so it no longer satisfies step 0's predicate.
+        toy.setName("not-ball");
+        ksession.update(toyHandle, toy);            // stop+restart; re-fire step 0 with "not-ball"
+        ksession.fireAllRules();                    // step-0 must reject "not-ball"; sequencer stays at step 0
+
+        // Step-1 event arrives, but sequencer is at step 0 — must NOT complete.
+        ksession.insert(new Relationship("go", "done"));
+        ksession.fireAllRules();
+
+        assertThat(results)
+                .as("step-0 predicate rejected the updated fact; sequencer must stay at step 0 and not fire when step 1 arrives without a new step-0 match")
+                .isEmpty();
     }
 
     @Test
     public void removedRuleNoLongerReceivesStepEvents() {
-        Variable<Person> personV = declarationOf(Person.class);
-        Variable<Toy>    toyV    = declarationOf(Toy.class);
+        Variable<Toy> toyV = declarationOf(Toy.class);
 
         Rule rule = rule("seq-remove-rule").build(
-                pattern(personV),
                 sequence(
                         pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
                 ),
@@ -253,8 +279,7 @@ public class PatternDSLSequenceLifecycleTest {
         KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
         ksession = kieBase.newKieSession();
 
-        // Start the sequencer
-        ksession.insert(new Person("anchor"));
+        // Start the sequencer (InitialFact activates it)
         ksession.fireAllRules();
 
         // Remove the rule from the KieBase while the session is active
@@ -288,6 +313,20 @@ public class PatternDSLSequenceLifecycleTest {
                 pattern(person),
                 sequence(
                         pattern(toy).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+        Model model = new ModelImpl().addRule(rule);
+        KieBase kieBase = KieBaseBuilder.createKieBaseFromModel(model);
+        return kieBase.newKieSession();
+    }
+
+    private KieSession makeKSessionAnchorless() {
+        // No anchor pattern: sequencer starts via InitialFact on session creation.
+        Rule rule = rule("lifecycle-rule-anchorless").build(
+                sequence(
+                        pattern(toy).expr("is-ball", t -> t.getName().equals("ball")),
+                        pattern(relationship).expr("is-go", r -> r.getStart().equals("go"))
                 ),
                 execute(() -> results.add("fired"))
         );
