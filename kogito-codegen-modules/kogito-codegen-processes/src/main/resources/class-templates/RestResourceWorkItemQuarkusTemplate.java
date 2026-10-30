@@ -46,7 +46,7 @@ public class $Type$Resource {
             @QueryParam("user") final String user,
             @QueryParam("group") final List<String> groups,
             @Context UriInfo uriInfo) {
-        return processService.signalWorkItem(process, id, "$rawTaskName$", SecurityPolicy.of(identityProviderFactory.getOrImpersonateIdentity(user, groups)))
+        return processService.signalWorkItem(process, id, "$taskNodeName$", SecurityPolicy.of(identityProviderFactory.getOrImpersonateIdentity(user, groups)))
                 .map(task -> Response
                         .created(uriInfo.getAbsolutePathBuilder().path(task.getId()).build())
                         .entity(task)

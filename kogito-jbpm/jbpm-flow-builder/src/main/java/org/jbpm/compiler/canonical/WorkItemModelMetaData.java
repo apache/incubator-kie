@@ -145,6 +145,14 @@ public abstract class WorkItemModelMetaData {
     }
 
     /**
+     * Returns the name used to look up and signal this work item at runtime:
+     * the {@code TaskName} work parameter if present, otherwise the node name.
+     */
+    public String resolveTaskNodeName() {
+        return (String) work.getParameters().getOrDefault(TASK_NAME_PARAMETER, taskName);
+    }
+
+    /**
      * Normalized task name, used to group work item nodes: task names that are normalized to the same value generate the same model classes.
      */
     public static String normalizeTaskName(String taskName) {

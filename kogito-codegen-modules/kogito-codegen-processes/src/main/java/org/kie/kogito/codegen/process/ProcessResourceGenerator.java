@@ -572,8 +572,8 @@ public class ProcessResourceGenerator {
 
     private void interpolateUserTaskStrings(StringLiteralExpr vv, WorkItemModelMetaData userTask) {
         String s = vv.getValue();
-        // the path uses the sanitized name, the runtime needs the real one to resolve the node
-        String interpolated = s.replace("$taskName$", sanitizeName(userTask.getName())).replace("$rawTaskName$", userTask.getName());
+        // the path uses the sanitized name, the runtime needs the resolved task node name to signal the work item
+        String interpolated = s.replace("$taskName$", sanitizeName(userTask.getName())).replace("$taskNodeName$", userTask.resolveTaskNodeName());
         vv.setString(interpolated);
     }
 
