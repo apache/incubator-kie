@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.internal.utils.ConversionUtils.concatPaths;
 import static org.kie.kogito.internal.utils.ConversionUtils.convert;
 import static org.kie.kogito.internal.utils.ConversionUtils.convertToCollection;
+import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeName;
 import static org.kie.kogito.internal.utils.ConversionUtils.sanitizeToSimpleName;
 import static org.kie.kogito.internal.utils.ConversionUtils.toCamelCase;
 
@@ -149,5 +150,13 @@ class ConversionUtilsTest {
         assertThat(sanitizeToSimpleName(nameSimple)).isEqualTo("ProcessTest2");
         assertThat(sanitizeToSimpleName(nameEmpty)).isEqualTo("");
         assertThat(sanitizeToSimpleName(null)).isNull();
+    }
+
+    @Test
+    public void testSanitizeName() {
+        assertThat(sanitizeName("My Task Name")).isEqualTo("My_Task_Name");
+        assertThat(sanitizeName("Task\tName\nWith  Whitespace")).isEqualTo("Task_Name_With__Whitespace");
+        assertThat(sanitizeName("")).isEqualTo("");
+        assertThat(sanitizeName(null)).isNull();
     }
 }

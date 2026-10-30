@@ -41,6 +41,7 @@ import org.kie.kogito.codegen.core.DashboardGeneratedFileUtils;
 import org.kie.kogito.codegen.core.io.CollectedResourceProducer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.kogito.codegen.process.ProcessCodegen.BUSINESS_CALENDAR_PRODUCER_TEMPLATE;
 import static org.kie.kogito.grafana.utils.GrafanaDashboardUtils.DISABLED_OPERATIONAL_DASHBOARDS;
 
@@ -55,6 +56,14 @@ class ProcessCodegenTest {
     private static final Path OBJECT_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(OBJECT_VARIABLE_SOURCE);
     private static final String UNTYPED_COLLECTION_VARIABLE_SOURCE = "collectionvariable/UntypedCollectionVariableProcess.bpmn2";
     private static final Path UNTYPED_COLLECTION_VARIABLE_SOURCE_FULL_PATH = BASE_PATH.resolve(UNTYPED_COLLECTION_VARIABLE_SOURCE);
+    private static final String DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE = "usertask/DuplicateTaskNamesConflictingTypesProcess.bpmn";
+    private static final Path DUPLICATE_TASKS_CONFLICTING_TYPES_FULL_PATH = BASE_PATH.resolve(DUPLICATE_TASKS_CONFLICTING_TYPES_SOURCE);
+    private static final String DUPLICATE_WORKITEMS_SOURCE = "workitem/DuplicateWorkItemWithoutTaskNameInput.bpmn";
+    private static final Path DUPLICATE_WORKITEMS_FULL_PATH = BASE_PATH.resolve(DUPLICATE_WORKITEMS_SOURCE);
+    private static final String DUPLICATE_WORKITEMS_SHARED_TASK_NAME_SOURCE = "workitem/DuplicateWorkItemWithSharedTaskNameInput.bpmn";
+    private static final Path DUPLICATE_WORKITEMS_SHARED_TASK_NAME_FULL_PATH = BASE_PATH.resolve(DUPLICATE_WORKITEMS_SHARED_TASK_NAME_SOURCE);
+    private static final String DUPLICATE_TASKS_SANITIZED_COLLISION_SOURCE = "usertask/DuplicateTaskNamesSanitizedCollisionProcess.bpmn";
+    private static final Path DUPLICATE_TASKS_SANITIZED_COLLISION_FULL_PATH = BASE_PATH.resolve(DUPLICATE_TASKS_SANITIZED_COLLISION_SOURCE);
 
     @ParameterizedTest
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
@@ -222,5 +231,76 @@ class ProcessCodegenTest {
 
         Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
         assertThat(generatedFiles).isNotEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void duplicateTasksWithConflictingTypesThrowsException(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_TASKS_CONFLICTING_TYPES_FULL_PATH.toFile()));
+
+        assertThatThrownBy(codeGenerator::generate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Conflicting types for input parameter 'var'");
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void duplicateWorkItemsGenerateSeparateModelsPerNode(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_WORKITEMS_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
+
+        List<String> generatedPaths = generatedFiles.stream()
+                .map(GeneratedFile::relativePath)
+                .collect(Collectors.toList());
+
+        // Regular work items are never grouped: each node has its own model, named after the node id
+        assertThat(generatedPaths)
+                .filteredOn(path -> path.contains("_TaskInput.java"))
+                .hasSize(2)
+                .noneMatch(path -> path.contains("Rest_Call"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void workItemsWithSharedTaskNameInputGenerateSeparateModels(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_WORKITEMS_SHARED_TASK_NAME_FULL_PATH.toFile()));
+
+        Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
+        assertThat(generatedFiles).isNotEmpty();
+
+        List<String> generatedPaths = generatedFiles.stream()
+                .map(GeneratedFile::relativePath)
+                .collect(Collectors.toList());
+
+        // Both service tasks declare the same TaskName input, but regular work items are not grouped by it
+        assertThat(generatedPaths)
+                .filteredOn(path -> path.contains("_TaskInput.java"))
+                .hasSize(2)
+                .noneMatch(path -> path.contains("SharedTaskName"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
+    public void taskNamesSanitizedToSameClassNameThrowsException(KogitoBuildContext.Builder contextBuilder) {
+        KogitoBuildContext context = contextBuilder.build();
+        ProcessCodegen codeGenerator = ProcessCodegen.ofCollectedResources(
+                context,
+                CollectedResourceProducer.fromFiles(BASE_PATH, DUPLICATE_TASKS_SANITIZED_COLLISION_FULL_PATH.toFile()));
+
+        // "My Task", "My-Task", "My.Task" and "My_Task" are different task names that generate the same model classes
+        assertThatThrownBy(codeGenerator::generate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("resolve to the same generated model class 'com.example.tasknames.MatchingTaskNames_My_Task_TaskModel'");
     }
 }

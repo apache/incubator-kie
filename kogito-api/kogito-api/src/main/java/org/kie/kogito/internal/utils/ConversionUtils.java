@@ -245,6 +245,13 @@ public class ConversionUtils {
         return string.replaceAll("\"", "\\\\\"");
     }
 
+    public static String sanitizeName(String name) {
+        if (isEmpty(name)) {
+            return name;
+        }
+        return name.replaceAll("\\s", "_");
+    }
+
     public static String sanitizeClassName(String className) {
         return sanitizeJavaName(className, true);
     }

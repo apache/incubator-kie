@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" namespace="https://kie.org/bpmn/_CBC95960-E475-445B-B2BF-DA3B8D6872F8" id="_28502B6D-5B51-4C42-B406-4B6D5858FE96" name="BPMN_74CBB62D-FEB1-46BD-BB02-EAB423790852" targetNamespace="https://kie.apache.org/bpmn/_BF617F5E-9C49-48FC-B49B-743ECADE6E35" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <itemDefinition id="_DA36503A-2FE0-4E91-8523-25526A0505BB" structureRef="String" />
+  <itemDefinition id="_60C19482-685E-441D-8F34-03CF7117E704" structureRef="s" />
+  <process id="matchingTaskNames" isExecutable="true" drools:adHoc="false" name="matchingTaskNames" processType="Public" drools:packageName="com.example.tasknames" drools:version="1">
+    <property id="_1EB954BC-515F-4296-B7A5-DD60B38E1BF6" name="var1" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+    <property id="_50525995-8E50-41F1-8787-9E1886A34DD3" name="var2" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+    <property id="_7E977E5F-4820-44DA-8A1D-56B653370A0D" name="var3" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+    <laneSet id="_28410E38-3A6C-4577-A9F7-29A3D36EC6D8">
+    </laneSet>
+    <startEvent id="_F7797CC9-E5B4-43EC-B156-DEBDB4F6CFC5">
+      <outgoing>_A14090E5-0674-4D27-98E2-FD2E593F32EE</outgoing>
+    </startEvent>
+    <endEvent id="_E867BDF8-965D-4666-87B9-4911840FF0ED">
+      <incoming>_F3768181-55F0-4906-8B85-C0FBCA082832</incoming>
+    </endEvent>
+    <userTask id="_BF57A330-970F-46BE-9DB4-ED7C544F3169" name="My Task (1)">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="elementname">
+          <drools:metaValue>My Task (1)</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_A14090E5-0674-4D27-98E2-FD2E593F32EE</incoming>
+      <outgoing>_923EDCD2-9E51-44A2-9623-2B59DEE4A647</outgoing>
+      <ioSpecification id="_707A140B-1243-424E-B491-EC4A0A32F564">
+        <dataInput id="_C585F68D-A48B-4EEC-BD62-1309131E0057" name="TaskName" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <dataInput id="_C0EF5710-3F94-441C-9E00-541747499146" name="var2" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <inputSet id="_16572C02-F1F1-45D3-9598-09BE242C8101">
+          <dataInputRefs>_C585F68D-A48B-4EEC-BD62-1309131E0057</dataInputRefs>
+          <dataInputRefs>_C0EF5710-3F94-441C-9E00-541747499146</dataInputRefs>
+        </inputSet>
+        <outputSet id="_BC71E8E4-BBF2-4240-8925-B67C51F3C7FD">
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_C8725C07-B149-4730-A019-D02396B3D147">
+        <targetRef>_C585F68D-A48B-4EEC-BD62-1309131E0057</targetRef>
+        <assignment id="_5FFEB2A6-478E-49AA-A94B-DA43521B7848">
+          <from id="_F8514A43-F9F8-4C8C-A80E-14F56D076A65" xsi:type="tFormalExpression">My Task</from>
+          <to id="_8A8691F0-964E-4BF4-94AF-85A29D733937">_C585F68D-A48B-4EEC-BD62-1309131E0057</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_E4F2709F-8154-41B1-A2E3-CF94869296E8">
+        <sourceRef>_1EB954BC-515F-4296-B7A5-DD60B38E1BF6</sourceRef>
+        <targetRef>_C0EF5710-3F94-441C-9E00-541747499146</targetRef>
+      </dataInputAssociation>
+      <potentialOwner id="_1A0DC923-A1D7-4D8B-A028-49EC61A24387">
+        <resourceAssignmentExpression id="_42B04548-BD5F-4720-B0FF-7BB37F04D892">
+          <formalExpression id="_A49C6DF0-52B1-44C4-9783-F24C12BC3D04">jdoe</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <userTask id="_6EF42D96-E83A-49E5-9601-3D77BBB90413" name="My Task (2)">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="elementname">
+          <drools:metaValue>My Task (2)</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_E9EF2DBB-2157-4013-9638-0DDFC46474BA</incoming>
+      <incoming>_923EDCD2-9E51-44A2-9623-2B59DEE4A647</incoming>
+      <outgoing>_CAA4E786-7F3D-4931-9BDE-F12EFBB5F9DE</outgoing>
+      <ioSpecification id="_78F8F99D-8266-4C36-9713-8996C414D00D">
+        <dataInput id="_CED41677-88CA-4C5C-ADFF-5BC18A6C4874" name="TaskName" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <dataInput id="_6D81A321-30DF-4FB9-A5BE-2A311E84FF31" name="var2" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <inputSet id="_0F0E66AA-BDE6-4635-AD78-FAC583122CDC">
+          <dataInputRefs>_CED41677-88CA-4C5C-ADFF-5BC18A6C4874</dataInputRefs>
+          <dataInputRefs>_6D81A321-30DF-4FB9-A5BE-2A311E84FF31</dataInputRefs>
+        </inputSet>
+        <outputSet id="_54808682-9C65-49D8-8A7A-6264842A5A91">
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_7991B43D-50EE-4B4D-9474-7A9E212A9232">
+        <targetRef>_CED41677-88CA-4C5C-ADFF-5BC18A6C4874</targetRef>
+        <assignment id="_FBA63AD4-3EE1-43EC-9015-EEBD927E19F8">
+          <from id="_86D2806B-7EB8-46C3-A477-3FDD18D10129" xsi:type="tFormalExpression">My-Task</from>
+          <to id="_4938D91D-3EA6-4534-A6CD-2D76A673E60F">_CED41677-88CA-4C5C-ADFF-5BC18A6C4874</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_268971A2-C5E4-455D-A30F-6681E9112E52">
+        <sourceRef>_50525995-8E50-41F1-8787-9E1886A34DD3</sourceRef>
+        <targetRef>_6D81A321-30DF-4FB9-A5BE-2A311E84FF31</targetRef>
+      </dataInputAssociation>
+      <potentialOwner id="_7E6EBCC8-FAA5-4E9A-8B2D-01C578083E7D">
+        <resourceAssignmentExpression id="_91B6D16C-EC9C-40BE-91E0-B65AE6FB65E1">
+          <formalExpression id="_30B4818B-E426-4566-9C8B-912650246F94">jdoe</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <userTask id="_EC3478EB-98E6-41B5-83E3-20DE009A34F6" name="My Task (3)">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="elementname">
+          <drools:metaValue>My Task (3)</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_93D39588-DF9B-4057-9A6B-0D10995DE99B</incoming>
+      <incoming>_CAA4E786-7F3D-4931-9BDE-F12EFBB5F9DE</incoming>
+      <outgoing>_2A9BB767-7297-4FD7-9BE9-814BBB89AE21</outgoing>
+      <ioSpecification id="_88AB2346-53B2-4E25-9BE7-CB20E2F66637">
+        <dataInput id="_E3893BEE-1A80-41BB-881E-909D58471305" name="TaskName" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <dataInput id="_01012AA8-3418-464A-81E5-5767194253FB" name="var3" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <inputSet id="_BE598E37-F336-4FE6-89B3-79FFD81EA307">
+          <dataInputRefs>_E3893BEE-1A80-41BB-881E-909D58471305</dataInputRefs>
+          <dataInputRefs>_01012AA8-3418-464A-81E5-5767194253FB</dataInputRefs>
+        </inputSet>
+        <outputSet id="_CFF06BF6-3854-4D9E-801C-A452568B573B">
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_6B43EBAD-1E39-4828-8A55-D0E20DAAA616">
+        <targetRef>_E3893BEE-1A80-41BB-881E-909D58471305</targetRef>
+        <assignment id="_C540677E-3C1E-4EC3-B2BF-70569897B44D">
+          <from id="_7CB524E2-0E5E-468A-8E1B-1698A0990C73" xsi:type="tFormalExpression">My.Task</from>
+          <to id="_0D8FC411-5E52-4DE0-A5A8-53568EC04798">_E3893BEE-1A80-41BB-881E-909D58471305</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_8B54D64C-A1C0-4C1B-8661-70965F4CB48E">
+        <sourceRef>_7E977E5F-4820-44DA-8A1D-56B653370A0D</sourceRef>
+        <targetRef>_01012AA8-3418-464A-81E5-5767194253FB</targetRef>
+      </dataInputAssociation>
+      <potentialOwner id="_8BEE07CE-08A3-481B-97AE-262E805BF2A6">
+        <resourceAssignmentExpression id="_274BE477-C700-470F-A00C-BAC4078029B0">
+          <formalExpression id="_0B5FDAFA-3460-4ED7-8729-1804BACA4DF0">jdoe</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <userTask id="_AEF9E77F-7952-4EF1-9222-FB48C21E214C" name="My Task (4)">
+      <extensionElements>
+        <drools:metaData name="customAsync">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="customAutoStart">
+          <drools:metaValue>false</drools:metaValue>
+        </drools:metaData>
+        <drools:metaData name="elementname">
+          <drools:metaValue>My Task (3)</drools:metaValue>
+        </drools:metaData>
+      </extensionElements>
+      <incoming>_39B12E53-2809-42F5-9D2E-975D02F50715</incoming>
+      <incoming>_E0BF4A1A-111D-4551-A44C-81D51342D308</incoming>
+      <incoming>_2A9BB767-7297-4FD7-9BE9-814BBB89AE21</incoming>
+      <outgoing>_F3768181-55F0-4906-8B85-C0FBCA082832</outgoing>
+      <ioSpecification id="_48488B97-67AF-424B-B13F-536D9D291A16">
+        <dataInput id="_0EBD9B6A-173F-4A64-907E-2503222A70EF" name="TaskName" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <dataInput id="_BA3647D9-7732-48F7-A9DB-3FFCCDEA24B9" name="var3" drools:dtype="String" itemSubjectRef="_DA36503A-2FE0-4E91-8523-25526A0505BB" />
+        <inputSet id="_3748F412-7123-4A20-AD1E-933CEFC718B5">
+          <dataInputRefs>_0EBD9B6A-173F-4A64-907E-2503222A70EF</dataInputRefs>
+          <dataInputRefs>_BA3647D9-7732-48F7-A9DB-3FFCCDEA24B9</dataInputRefs>
+        </inputSet>
+        <outputSet id="_BA5E5EAD-D3BC-4CA4-B263-268BD40C597B">
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation id="_E36632A8-AF35-4381-9D3A-E865465892DE">
+        <targetRef>_0EBD9B6A-173F-4A64-907E-2503222A70EF</targetRef>
+        <assignment id="_4DA6549F-5BA3-4A7C-92D2-EB7E9B98CE44">
+          <from id="_B0CDF780-B42E-40E5-B9BA-971806CD3260" xsi:type="tFormalExpression">My_Task</from>
+          <to id="_5B32CE4C-DC72-42D8-89DF-B8B337AB28A3">_0EBD9B6A-173F-4A64-907E-2503222A70EF</to>
+        </assignment>
+      </dataInputAssociation>
+      <dataInputAssociation id="_1CA3B852-24AE-4DD1-8516-E8425A79F201">
+        <sourceRef></sourceRef>
+        <targetRef>_BA3647D9-7732-48F7-A9DB-3FFCCDEA24B9</targetRef>
+      </dataInputAssociation>
+      <potentialOwner id="_AA7FED20-1AB5-4334-ADAD-29372B6C1754">
+        <resourceAssignmentExpression id="_1DAA9689-A0A8-456A-82A9-1164D365A5D0">
+          <formalExpression id="_03DCC394-32CC-4EB4-AFEE-DBF316653074">jdoe</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <sequenceFlow id="_A14090E5-0674-4D27-98E2-FD2E593F32EE" sourceRef="_F7797CC9-E5B4-43EC-B156-DEBDB4F6CFC5" targetRef="_BF57A330-970F-46BE-9DB4-ED7C544F3169" />
+    <sequenceFlow id="_923EDCD2-9E51-44A2-9623-2B59DEE4A647" sourceRef="_BF57A330-970F-46BE-9DB4-ED7C544F3169" targetRef="_6EF42D96-E83A-49E5-9601-3D77BBB90413" />
+    <sequenceFlow id="_CAA4E786-7F3D-4931-9BDE-F12EFBB5F9DE" sourceRef="_6EF42D96-E83A-49E5-9601-3D77BBB90413" targetRef="_EC3478EB-98E6-41B5-83E3-20DE009A34F6" />
+    <sequenceFlow id="_2A9BB767-7297-4FD7-9BE9-814BBB89AE21" sourceRef="_EC3478EB-98E6-41B5-83E3-20DE009A34F6" targetRef="_AEF9E77F-7952-4EF1-9222-FB48C21E214C" />
+    <sequenceFlow id="_F3768181-55F0-4906-8B85-C0FBCA082832" sourceRef="_AEF9E77F-7952-4EF1-9222-FB48C21E214C" targetRef="_E867BDF8-965D-4666-87B9-4911840FF0ED" />
+  </process>
+  <bpmndi:BPMNDiagram id="_2775FBB3-7059-40D3-90E4-2C81BB85E730">
+    <bpmndi:BPMNPlane id="_0012623B-90C4-4276-9F27-7FAFD8596B82">
+      <bpmndi:BPMNShape id="_C1C71506-2D06-4792-9720-21BD2BD73F57" bpmnElement="_F7797CC9-E5B4-43EC-B156-DEBDB4F6CFC5">
+        <dc:Bounds x="0" y="60" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_218AC409-AB49-43D1-A00D-F2C208E63179" bpmnElement="_BF57A330-970F-46BE-9DB4-ED7C544F3169">
+        <dc:Bounds x="100" y="40" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_ED87E5F4-3A5D-4EC4-BF67-619CA73E1C4F" bpmnElement="_6EF42D96-E83A-49E5-9601-3D77BBB90413">
+        <dc:Bounds x="300" y="40" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_265BBCA5-0712-4616-A913-46509E1F8901" bpmnElement="_EC3478EB-98E6-41B5-83E3-20DE009A34F6">
+        <dc:Bounds x="500" y="40" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_1D3E3463-2397-4900-AE86-8DD8A67ECBCD" bpmnElement="_AEF9E77F-7952-4EF1-9222-FB48C21E214C">
+        <dc:Bounds x="700" y="40" width="180" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BF4C9348-517A-412B-B39B-E844AA92B2F4" bpmnElement="_E867BDF8-965D-4666-87B9-4911840FF0ED">
+        <dc:Bounds x="920" y="60" width="60" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="_3D775711-C670-4C66-B1CA-6A833911D94F-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_A14090E5-0674-4D27-98E2-FD2E593F32EE" sourceElement="_C1C71506-2D06-4792-9720-21BD2BD73F57" targetElement="_218AC409-AB49-43D1-A00D-F2C208E63179">
+        <di:waypoint x="30" y="90" />
+        <di:waypoint x="190" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_FB49C77A-4D32-4CFD-AA4A-10CBA7344B83" bpmnElement="_923EDCD2-9E51-44A2-9623-2B59DEE4A647" sourceElement="_218AC409-AB49-43D1-A00D-F2C208E63179" targetElement="_ED87E5F4-3A5D-4EC4-BF67-619CA73E1C4F">
+        <di:waypoint x="190" y="90" />
+        <di:waypoint x="300" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_554D0C9D-5D95-464A-BD0F-7E9DEE6F1113" bpmnElement="_CAA4E786-7F3D-4931-9BDE-F12EFBB5F9DE" sourceElement="_ED87E5F4-3A5D-4EC4-BF67-619CA73E1C4F" targetElement="_265BBCA5-0712-4616-A913-46509E1F8901">
+        <di:waypoint x="390" y="90" />
+        <di:waypoint x="500" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_0B9602AB-BB58-4D50-965B-84B437D0BBF5" bpmnElement="_2A9BB767-7297-4FD7-9BE9-814BBB89AE21" sourceElement="_265BBCA5-0712-4616-A913-46509E1F8901" targetElement="_1D3E3463-2397-4900-AE86-8DD8A67ECBCD">
+        <di:waypoint x="590" y="90" />
+        <di:waypoint x="700" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="_B9D45A9B-9D76-473D-A134-A2FA373A1F0A-AUTO-SOURCE-AUTO-TARGET" bpmnElement="_F3768181-55F0-4906-8B85-C0FBCA082832" sourceElement="_1D3E3463-2397-4900-AE86-8DD8A67ECBCD" targetElement="_BF4C9348-517A-412B-B39B-E844AA92B2F4">
+        <di:waypoint x="790" y="90" />
+        <di:waypoint x="950" y="90" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

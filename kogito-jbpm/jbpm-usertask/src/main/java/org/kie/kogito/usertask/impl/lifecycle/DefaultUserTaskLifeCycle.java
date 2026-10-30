@@ -41,7 +41,7 @@ public class DefaultUserTaskLifeCycle implements UserTaskLifeCycle {
     public static final String WORKFLOW_ENGINE_USER = "WORKFLOW_ENGINE_USER";
 
     public static final String PARAMETER_USER = "USER";
-    public static final String PARAMETER_NOTIFY = "NOTIFY";
+    public static final String PARAMETER_NOTIFY_LISTENERS = "NOTIFY";
 
     public static final String ACTIVATE = "activate";
     public static final String CLAIM = "claim";
@@ -210,8 +210,13 @@ public class DefaultUserTaskLifeCycle implements UserTaskLifeCycle {
     }
 
     public Optional<UserTaskTransitionToken> skip(UserTaskInstance userTaskInstance, UserTaskTransitionToken token, IdentityProvider identityProvider) {
-        if (token.data().containsKey(PARAMETER_NOTIFY)) {
-            userTaskInstance.getMetadata().put(PARAMETER_NOTIFY, token.data().get(PARAMETER_NOTIFY));
+        token.data().forEach((k, v) -> {
+            if (!PARAMETER_NOTIFY_LISTENERS.equals(k)) {
+                userTaskInstance.setOutput(k, v);
+            }
+        });
+        if (token.data().containsKey(PARAMETER_NOTIFY_LISTENERS)) {
+            userTaskInstance.getMetadata().put(PARAMETER_NOTIFY_LISTENERS, token.data().get(PARAMETER_NOTIFY_LISTENERS));
         }
         userTaskInstance.stopNotStartedDeadlines();
         userTaskInstance.stopNotStartedReassignments();
@@ -221,8 +226,8 @@ public class DefaultUserTaskLifeCycle implements UserTaskLifeCycle {
     }
 
     public Optional<UserTaskTransitionToken> fail(UserTaskInstance userTaskInstance, UserTaskTransitionToken token, IdentityProvider identityProvider) {
-        if (token.data().containsKey(PARAMETER_NOTIFY)) {
-            userTaskInstance.getMetadata().put(PARAMETER_NOTIFY, token.data().get(PARAMETER_NOTIFY));
+        if (token.data().containsKey(PARAMETER_NOTIFY_LISTENERS)) {
+            userTaskInstance.getMetadata().put(PARAMETER_NOTIFY_LISTENERS, token.data().get(PARAMETER_NOTIFY_LISTENERS));
         }
         userTaskInstance.stopNotStartedDeadlines();
         userTaskInstance.stopNotStartedReassignments();
