@@ -72,7 +72,6 @@
     <dependency>
       <groupId>org.optaplanner</groupId>
       <artifactId>optaplanner-quarkus-deployment</artifactId>
-      <version>${version.org.optaplanner}</version>
       <type>pom</type>
       <scope>test</scope>
       <exclusions>
