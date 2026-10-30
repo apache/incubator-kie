@@ -27,6 +27,7 @@ import org.jbpm.process.core.context.variable.Variable;
 import org.jbpm.process.core.context.variable.VariableScope;
 import org.jbpm.process.core.datatype.DataType;
 import org.jbpm.process.core.datatype.DataTypeResolver;
+import org.jbpm.process.workitem.builtin.ProcessWorkItemHandlerExceptionHandler;
 import org.jbpm.util.PatternConstants;
 import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
@@ -193,7 +194,8 @@ public class WorkItemModelMetaData {
         // map is task input -> context variable / process variable
         Map<String, String> inputTypes = workItemNode.getIoSpecification().getInputTypes();
         for (Entry<String, String> entry : workItemNode.getIoSpecification().getInputMapping().entrySet()) {
-            if (HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())) {
+            if (HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())
+                    || ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLING_PARAMETERS.contains(entry.getKey())) {
                 continue;
             }
 
@@ -246,7 +248,9 @@ public class WorkItemModelMetaData {
 
         for (Entry<String, Object> entry : workItemNode.getWork().getParameters().entrySet()) {
 
-            if (entry.getValue() == null || HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())) {
+            if (entry.getValue() == null
+                    || HumanTaskNode.TASK_PARAMETERS.contains(entry.getKey())
+                    || ProcessWorkItemHandlerExceptionHandler.ERROR_HANDLING_PARAMETERS.contains(entry.getKey())) {
                 continue;
             }
 

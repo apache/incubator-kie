@@ -312,4 +312,46 @@ public class ProcessToExecModelGeneratorTest {
                 .toList();
         assertThat(outputFieldNames).contains("Result");
     }
+
+    @Test
+    public void testWorkItemModelExcludesErrorHandlingParams() {
+        RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("demo.test");
+        factory
+                .name("test-process")
+                .packageName("com.myspace.demo")
+                .dynamic(false)
+                .version("1.0")
+                .workItemNode(one)
+                .name("RestService")
+                .workName("Rest")
+                .inMapping("user", "username")
+                .inMapping("errorProcess", "ErrorHandlerProcessId")
+                .inMapping("errorStrategy", "ErrorHandlingStrategy")
+                .inMapping("errorRetries", "ErrorHandlingRetries")
+                .done()
+                .startNode(two)
+                .name("start")
+                .done()
+                .endNode(three)
+                .name("end")
+                .terminate(false)
+                .done()
+                .connection(two, one)
+                .connection(one, three);
+
+        WorkflowProcess process = factory.validate().getProcess();
+
+        List<WorkItemModelMetaData> workItemModels = ProcessToExecModelGenerator.INSTANCE.generateWorkItemModel(process);
+        assertThat(workItemModels).hasSize(1);
+
+        String inputSource = workItemModels.get(0).generateInput();
+        List<String> inputFieldNames = StaticJavaParser.parse(inputSource).findAll(FieldDeclaration.class).stream()
+                .flatMap(f -> f.getVariables().stream())
+                .map(v -> v.getNameAsString())
+                .toList();
+
+        assertThat(inputFieldNames).contains("username");
+        assertThat(inputFieldNames).doesNotContain("ErrorHandlerProcessId", "ErrorHandlingStrategy", "ErrorHandlingRetries");
+        assertThat(inputSource).doesNotContain("ErrorHandlerProcessId", "ErrorHandlingStrategy", "ErrorHandlingRetries");
+    }
 }
