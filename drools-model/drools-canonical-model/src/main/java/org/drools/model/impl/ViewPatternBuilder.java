@@ -37,6 +37,7 @@ import org.drools.model.PatternDSL.PatternItem;
 import org.drools.model.PatternDSL.SequenceViewItem;
 import org.drools.model.RuleItem;
 import org.drools.model.RuleItemBuilder;
+import org.drools.model.SequenceStep;
 import org.drools.model.SingleConstraint;
 import org.drools.model.Variable;
 import org.drools.model.consequences.ConditionalNamedConsequenceImpl;
@@ -185,7 +186,31 @@ public class ViewPatternBuilder implements ViewBuilder {
 
         if (ruleItem instanceof SequenceViewItem) {
             SequenceViewItem sv = (SequenceViewItem) ruleItem;
-            List<Condition> steps = Arrays.stream(sv.getSteps())
+            SequenceStep[] rawSteps = rewriteRevertingGateSteps(flattenNonPositiveAndSteps(sv.getSteps()));
+            if (rawSteps.length > 0) {
+                SequenceStep last = rawSteps[rawSteps.length - 1];
+                if (!hasPositiveTrigger(last)) {
+                    throw new IllegalArgumentException(
+                        "sequence(): trailing absent()/oneOf()/noneOrAll() requires a following positive step. " +
+                        "Trailing absence with completeWithin is planned but not yet implemented.");
+                }
+                for (SequenceStep step : rawSteps) {
+                    if (hasPositiveTrigger(step)) {
+                        break; // reached a positive step — prefix is fine
+                    }
+                    if (isAbsenceStep(step)) {
+                        throw new IllegalArgumentException(
+                            "sequence(): leading absent() has no preceding positive step to define its " +
+                            "activation window. The veto always resets to step 0 (the same state), so " +
+                            "the absence guard is vacuous and the positive trigger always fires. " +
+                            "Add a positive step before absent().");
+                    }
+                }
+                for (SequenceStep step : rawSteps) {
+                    validateActivationMatching((org.drools.model.view.ViewItem) step);
+                }
+            }
+            List<Condition> steps = Arrays.stream(rawSteps)
                     .map(s -> ruleItem2Condition((RuleItem) s))
                     .collect(toList());
             return new SequenceConditionImpl(steps);
@@ -193,6 +218,256 @@ public class ViewPatternBuilder implements ViewBuilder {
 
         throw new UnsupportedOperationException( "Unknown " + ruleItem );
     }
+
+    private static boolean hasPositiveTrigger(SequenceStep step) {
+        if (step instanceof ExistentialExprViewItem) {
+            ExistentialExprViewItem ex = (ExistentialExprViewItem) step;
+            if (ex.getType() == Condition.Type.NOT) {
+                return false;
+            }
+            return true;
+        }
+        if (step instanceof CombinedExprViewItem) {
+            CombinedExprViewItem comb = (CombinedExprViewItem) step;
+            Condition.Type type = comb.getType();
+            if (type == Condition.Type.NOT || type == Condition.Type.NOR
+                    || type == Condition.Type.XOR || type == Condition.Type.XNOR) {
+                return false;
+            }
+            if (type == Condition.Type.AND) {
+                // In an AND composite, at least one child must be a positive trigger
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (expr instanceof SequenceStep) {
+                        if (hasPositiveTrigger((SequenceStep) expr)) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (type == Condition.Type.OR) {
+                // In an OR composite, all branches must have a positive trigger
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (expr instanceof SequenceStep) {
+                        if (!hasPositiveTrigger((SequenceStep) expr)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAbsenceStep(SequenceStep step) {
+        if (step instanceof ExistentialExprViewItem) {
+            return ((ExistentialExprViewItem) step).getType() == Condition.Type.NOT;
+        }
+        if (step instanceof CombinedExprViewItem) {
+            Condition.Type type = ((CombinedExprViewItem) step).getType();
+            return type == Condition.Type.NOT || type == Condition.Type.NOR;
+        }
+        throw new IllegalStateException("Unexpected SequenceStep type: " + step.getClass());
+    }
+
+    private static void validateActivationMatching(org.drools.model.view.ViewItem item) {
+        if (item instanceof CombinedExprViewItem) {
+            CombinedExprViewItem comb = (CombinedExprViewItem) item;
+            Condition.Type type = comb.getType();
+            for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                validateActivationMatching(expr);
+            }
+            if (type == Condition.Type.XOR) {
+                int matchedChildren = 0;
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (matchesOnActivation(expr)) {
+                        matchedChildren++;
+                    }
+                }
+                if (matchedChildren >= 2) {
+                    throw new IllegalArgumentException(
+                        "sequence(): oneOf() has " + matchedChildren + " children that match on step activation (0 inputs), " +
+                        "causing an immediate over-match veto upon activation. oneOf() requires exactly one child to match.");
+                }
+            }
+        }
+    }
+
+    private static boolean matchesOnActivation(org.drools.model.view.ViewItem item) {
+        if (item instanceof CombinedExprViewItem) {
+            CombinedExprViewItem comb = (CombinedExprViewItem) item;
+            Condition.Type type = comb.getType();
+            if (type == Condition.Type.XNOR) {
+                int matched = 0;
+                int total = comb.getExpressions().length;
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (matchesOnActivation(expr)) {
+                        matched++;
+                    }
+                }
+                return matched == 0 || matched == total;
+            }
+            if (type == Condition.Type.XOR) {
+                int matched = 0;
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (matchesOnActivation(expr)) {
+                        matched++;
+                    }
+                }
+                return matched == 1;
+            }
+            if (type == Condition.Type.AND) {
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (!matchesOnActivation(expr)) {
+                        return false;
+                    }
+                }
+                return comb.getExpressions().length > 0;
+            }
+            if (type == Condition.Type.OR) {
+                for (org.drools.model.view.ViewItem expr : comb.getExpressions()) {
+                    if (matchesOnActivation(expr)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (type == Condition.Type.NOT || type == Condition.Type.NOR) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Rewrites runs of revertible gate steps (such as {@code oneOf()} / XOR and {@code noneOrAll()} / XNOR)
+     * by folding them together with their immediately following positive trigger into an {@code and(...)}
+     * composite step.
+     * <p>
+     * Standalone XOR/XNOR gates are non-propagating on their own within the sequence pipeline and require
+     * a following positive pattern step to act as the activation trigger. This transformation:
+     * <ul>
+     *   <li>Separates and emits any interleaved absence guards ({@code NOT}/{@code NOR}/{@code absent()})
+     *       before the folded composite so that compiler accumulation loops build them as independent
+     *       veto side-channels.</li>
+     *   <li>Folds consecutive XOR/XNOR gate steps and the subsequent positive trigger step into a single
+     *       {@link CombinedExprViewItem} of type {@link Condition.Type#AND}.</li>
+     * </ul>
+     *
+     * @param steps the original sequence steps
+     * @return the rewritten sequence steps with folded gate composites
+     */
+    private static SequenceStep[] rewriteRevertingGateSteps(SequenceStep[] steps) {
+        boolean hasXor = false;
+        for (int i = 0; i < steps.length; i++) {
+            SequenceStep step = steps[i];
+            if (step instanceof CombinedExprViewItem) {
+                Condition.Type t = ((CombinedExprViewItem) step).getType();
+                if ((t == Condition.Type.XOR || t == Condition.Type.XNOR) && i + 1 < steps.length) {
+                    hasXor = true;
+                    break;
+                }
+            }
+        }
+        if (!hasXor) {
+            return steps;
+        }
+        List<SequenceStep> result = new ArrayList<>();
+        for (int i = 0; i < steps.length; i++) {
+            SequenceStep step = steps[i];
+            if (step instanceof CombinedExprViewItem) {
+                Condition.Type t = ((CombinedExprViewItem) step).getType();
+                if (t == Condition.Type.XOR || t == Condition.Type.XNOR) {
+                    // Collect the full run of consecutive XOR/XNOR gate steps.
+                    // Interleaved absent() absence guards are held in a separate list —
+                    // they will be emitted BEFORE the folded and(...) composite so that
+                    // KiePackagesBuilder's top-level NOT accumulation loop handles them as
+                    // independent veto side-channels, which is the same circuit it builds for
+                    // standalone absent() steps.
+                    List<ViewItem> xorRun = new ArrayList<>();
+                    List<SequenceStep> absenceGuards = new ArrayList<>();
+                    xorRun.add((ViewItem) step);
+                    while (i + 1 < steps.length) {
+                        SequenceStep next = steps[i + 1];
+                        if (next instanceof CombinedExprViewItem) {
+                            Condition.Type nt = ((CombinedExprViewItem) next).getType();
+                            if (nt == Condition.Type.XOR || nt == Condition.Type.XNOR) {
+                                xorRun.add((ViewItem) next);
+                                i++;
+                                continue;
+                            }
+                            if (nt == Condition.Type.NOT || nt == Condition.Type.NOR) {
+                                absenceGuards.add(next);
+                                i++;
+                                continue;
+                            }
+                        } else if (next instanceof ExistentialExprViewItem
+                                && ((ExistentialExprViewItem) next).getType() == Condition.Type.NOT) {
+                            absenceGuards.add(next);
+                            i++;
+                            continue;
+                        }
+                        break;
+                    }
+                    // The step that follows the run must be a positive trigger.
+                    if (i + 1 >= steps.length) {
+                        // No following step at all — the trailing-gate check in the caller handles this.
+                        result.addAll(xorRun.stream().map(v -> (SequenceStep) v).collect(java.util.stream.Collectors.toList()));
+                        result.addAll(absenceGuards);
+                        continue;
+                    }
+                    SequenceStep trigger = steps[i + 1];
+                    if (!hasPositiveTrigger(trigger)) {
+                        throw new IllegalArgumentException(
+                                "sequence(): consecutive bare oneOf()/noneOrAll() steps require a positive " +
+                                "pattern step between them. Found " + xorRun.size() + " consecutive " +
+                                "oneOf/noneOrAll step(s) followed by another revertible guard. " +
+                                "Each oneOf()/noneOrAll() run must be immediately followed by a positive step.");
+                    }
+                    // Emit absence guards first so KiePackagesBuilder's NOT accumulation loop
+                    // picks them up as veto side-channels before the positive trigger.
+                    result.addAll(absenceGuards);
+                    // Fold the xor/xnor run + trigger into and(xor(...), ..., trigger).
+                    List<ViewItem> run = new ArrayList<>(xorRun);
+                    run.add((ViewItem) trigger);
+                    CombinedExprViewItem wrapped = new CombinedExprViewItem(
+                            Condition.Type.AND,
+                            run.toArray(new ViewItem[0]));
+                    result.add(wrapped);
+                    i++;
+                    continue;
+                }
+            }
+            result.add(step);
+        }
+        return result.toArray(new SequenceStep[0]);
+    }
+
+    private static SequenceStep[] flattenNonPositiveAndSteps(SequenceStep[] steps) {
+        List<SequenceStep> flattened = new ArrayList<>();
+        for (SequenceStep step : steps) {
+            if (step instanceof CombinedExprViewItem) {
+                CombinedExprViewItem comb = (CombinedExprViewItem) step;
+                if (comb.getType() == Condition.Type.AND && !hasPositiveTrigger(step)) {
+                    List<SequenceStep> childSteps = new ArrayList<>();
+                    for (ViewItem expr : comb.getExpressions()) {
+                        if (expr instanceof SequenceStep) {
+                            childSteps.add((SequenceStep) expr);
+                        }
+                    }
+                    flattened.addAll(Arrays.asList(flattenNonPositiveAndSteps(childSteps.toArray(new SequenceStep[0]))));
+                    continue;
+                }
+            }
+            flattened.add(step);
+        }
+        return flattened.toArray(new SequenceStep[0]);
+    }
+
+
 
     private static ConditionalNamedConsequenceImpl createConditionalNamedConsequence( Map<String, Consequence> consequences, ConditionalConsequence cond) {
         return new ConditionalNamedConsequenceImpl( createConstraint( cond.getExpr() ),

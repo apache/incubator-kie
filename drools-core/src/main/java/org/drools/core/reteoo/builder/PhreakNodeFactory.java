@@ -35,6 +35,7 @@ import org.drools.base.reteoo.DynamicFilterProto;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.base.rule.constraint.CombinedConstraint;
+import org.drools.base.rule.constraint.TrueConstraint;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.reteoo.sequencing.Sequence;
 import org.drools.base.reteoo.sequencing.Sequencer;
@@ -182,14 +183,11 @@ public class PhreakNodeFactory implements NodeFactory, Serializable {
         DynamicFilterProto[] filters = new DynamicFilterProto[patterns.length];
         for ( int i = 0; i < patterns.length; i++ ) {
             List<Constraint> constraints = patterns[i].getConstraints();
-            if (constraints.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "sequence step " + i + " has no constraint expression. " +
-                        "Every sequence step must have at least one expr(). " +
-                        "Add an expr() to the pattern, or use a dedicated fact type per step.");
-            }
             AlphaNodeFieldConstraint combined;
-            if (constraints.size() == 1) {
+            if (constraints.isEmpty()) {
+                // No expr() on this step — accept any fact of the right type.
+                combined = TrueConstraint.INSTANCE;
+            } else if (constraints.size() == 1) {
                 combined = (AlphaNodeFieldConstraint) constraints.get(0);
             } else {
                 AlphaNodeFieldConstraint[] all = constraints.stream()

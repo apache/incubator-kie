@@ -27,6 +27,8 @@ public class LogicGate extends SignalProcessor {
 
     private SignalProcessor output;
 
+    private SignalProcessor reversionOutput;
+
     private final LongBiPredicate predicate;
 
     private final int gateIndex;
@@ -36,6 +38,8 @@ public class LogicGate extends SignalProcessor {
     private final int[] filterIndexes;
 
     private int[] signalAdapterIndexes;
+
+    private boolean statusCanRevert;
 
     private static final LogicGate[] EMPTY_INPUT_GATES = new LogicGate[0];
 
@@ -57,6 +61,16 @@ public class LogicGate extends SignalProcessor {
         this.gateIndex = gateIndex;
     }
 
+    public LogicGate(LongBiPredicate predicate, int gateIndex, int[] filterIndexes,
+                     int[] signalAdapterIndexes, int nbrOfInputGates, boolean statusCanRevert) {
+        this(predicate, gateIndex, filterIndexes, signalAdapterIndexes, nbrOfInputGates);
+        this.statusCanRevert = statusCanRevert;
+    }
+
+    public boolean isStatusCanRevert() {
+        return statusCanRevert;
+    }
+
     public int[] getSignalAdapterIndexes() {
         return signalAdapterIndexes;
     }
@@ -67,6 +81,10 @@ public class LogicGate extends SignalProcessor {
 
     public void setOutput(SignalProcessor output) {
         this.output = output;
+    }
+
+    public void setReversionOutput(SignalProcessor reversionOutput) {
+        this.reversionOutput = reversionOutput;
     }
 
     @Override
@@ -84,6 +102,38 @@ public class LogicGate extends SignalProcessor {
         if (matched && !memory.isLogicGateMatched(gateIndex)) {
             memory.setLogicGateMatched(gateIndex, true);
             propagate(memory, valueResolver);
+        } else if (!matched && statusCanRevert) {
+            if (memory.isLogicGateMatched(gateIndex)) {
+                // Gate was previously MATCHED and is now reverting.
+                memory.setLogicGateMatched(gateIndex, false);
+                if (reversionOutput != null) {
+                    // Dedicated reversion handler (e.g. VetoSignalProcessor for XOR) — takes
+                    // priority over the default clearParentBit path.
+                    reversionOutput.consume(memory, valueResolver);
+                } else if (output instanceof LogicGateOutputSignalProcessor) {
+                    // Default path: clear the parent gate's contribution bit so the parent
+                    // AND/OR gate no longer sees this gate as matched (used by XNOR).
+                    ((LogicGateOutputSignalProcessor) output).clearParentBit(memory, valueResolver);
+                }
+            }
+        }
+    }
+
+    public void clearInputBit(int signalBitIndex, SequenceMemory memory, ValueResolver valueResolver) {
+        long currentMatched = memory.getLogicGateMemory()[gateIndex] & ~(1L << (signalBitIndex - 1));
+        memory.getLogicGateMemory()[gateIndex] = currentMatched;
+
+        boolean wasMatched = memory.isLogicGateMatched(gateIndex);
+        boolean matched = predicate.test(currentMatched, allMatched);
+
+        if (!wasMatched && matched) {
+            memory.setLogicGateMatched(gateIndex, true);
+            propagate(memory, valueResolver);
+        } else if (wasMatched && !matched) {
+            memory.setLogicGateMatched(gateIndex, false);
+            if (output instanceof LogicGateOutputSignalProcessor) {
+                ((LogicGateOutputSignalProcessor) output).clearParentBit(memory, valueResolver);
+            }
         }
     }
 
@@ -97,7 +147,9 @@ public class LogicGate extends SignalProcessor {
             gate.reset(memory, valueResolver);
         }
 
-        memory.resetLogicGateMemory(gateIndex, valueResolver);
+        if (!statusCanRevert) {
+            memory.resetLogicGateMemory(gateIndex, valueResolver);
+        }
     }
 
     public void reset(SequenceMemory memory, ValueResolver valueResolver) {
@@ -105,11 +157,14 @@ public class LogicGate extends SignalProcessor {
         output.reset(memory, valueResolver);
     }
 
-    public void activate(SequenceMemory memory) {
+    public void activate(SequenceMemory memory, ValueResolver valueResolver) {
         for (int i = 0; i < filterIndexes.length; i++) {
             memory.activateSignalAdapter(filterIndexes[i], this, signalAdapterIndexes[i], i + 1); // bit indexes start at 1
         }
-
+        if (!memory.isLogicGateMatched(gateIndex) && predicate.test(memory.getLogicGateMemory()[gateIndex], allMatched)) {
+            memory.setLogicGateMatched(gateIndex, true);
+            propagate(memory, valueResolver);
+        }
     }
 
     public void deactivate(SequenceMemory memory, ValueResolver valueResolver) {
