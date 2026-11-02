@@ -61,6 +61,7 @@ import org.jbpm.workflow.core.impl.WorkflowProcessImpl;
 import org.jbpm.workflow.core.node.EndNode;
 import org.jbpm.workflow.core.node.HumanTaskNode;
 import org.jbpm.workflow.core.node.StartNode;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -92,8 +93,13 @@ public class ProcessInstanceMarshallTest {
 
     private static WorkflowProcessImpl workflow;
 
+    private static final DeserializationFilterTestSupport FILTER_SUPPORT = new DeserializationFilterTestSupport();
+
     @BeforeAll
     public static void init() {
+        FILTER_SUPPORT.setUp();
+        FILTER_SUPPORT.allow(MarshableObject.class.getName());
+
         workflow = new WorkflowProcessImpl();
 
         workflow.setId("processId");
@@ -121,6 +127,11 @@ public class ProcessInstanceMarshallTest {
         process = mock(AbstractProcess.class);
         when(process.getProcessRuntime()).thenReturn(mock(KogitoProcessRuntime.class));
         when(process.get()).thenReturn(workflow);
+    }
+
+    @AfterAll
+    public static void cleanUp() {
+        FILTER_SUPPORT.tearDown();
     }
 
     @XmlRootElement
