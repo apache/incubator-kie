@@ -29,11 +29,11 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieModule;
+import org.kie.api.conf.EqualityBehaviorOption;
 import org.kie.api.conf.SequentialOption;
 import org.kie.api.runtime.StatelessKieSession;
 import org.kie.internal.command.CommandFactory;
@@ -141,11 +141,10 @@ public class SequentialInsertDeleteUpdateTest {
     }
 
     /**
-     * Inserting an object which is already in the working memory.
+     * Inserting an object which is already in the working memory doesn't create another fact.
      */
     @ParameterizedTest(name = "KieBase type={0}")
     @MethodSource("parameters")
-    @Disabled("Behaves differently from non-sequential mode. See https://github.com/apache/incubator-kie/issues/7222")
     public void testInsertSameObjectAgain(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "package org.drools.mvel.compiler.test\n" +
@@ -165,6 +164,79 @@ public class SequentialInsertDeleteUpdateTest {
 
         List<String> list = executeSequential(str, kieBaseTestConfiguration, new Cheese("stilton", 10));
         assertThat(list).containsExactly("R1", "R2:stilton");
+    }
+
+    /**
+     * 2 Persons share a Cheese, and R1 inserts it for each Person. Only the first insert creates a fact.
+     */
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInsertSharedObjectInRhs(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        String str =
+                "package org.drools.mvel.compiler.test\n" +
+                "import " + Person.class.getCanonicalName() + "\n" +
+                "import " + Cheese.class.getCanonicalName() + "\n" +
+                "global " + List.class.getCanonicalName() + " list\n" +
+                "rule R1 salience 100 when\n" +
+                "    $p : Person()\n" +
+                "then\n" +
+                "    insert( $p.getCheese() );\n" +
+                "end\n" +
+                "rule R2 when\n" +
+                "    $c : Cheese()\n" +
+                "then\n" +
+                "    list.add( \"R2:\" + $c.getType() );\n" +
+                "end\n";
+
+        Cheese cheese = new Cheese("stilton", 10);
+        Person p1 = new Person("p1", "stilton", 0);
+        p1.setCheese(cheese);
+        Person p2 = new Person("p2", "stilton", 0);
+        p2.setCheese(cheese);
+
+        List<String> list = executeSequential(str, kieBaseTestConfiguration, p1, p2);
+        assertThat(list).containsExactly("R2:stilton");
+    }
+
+    /**
+     * The same object is passed twice as an initial fact. It doesn't depend on the RHS.
+     */
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInsertSameObjectTwiceAsInitialFact(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        String str =
+                "package org.drools.mvel.compiler.test\n" +
+                "import " + Cheese.class.getCanonicalName() + "\n" +
+                "global " + List.class.getCanonicalName() + " list\n" +
+                "rule R1 when\n" +
+                "    $c : Cheese()\n" +
+                "then\n" +
+                "    list.add( \"R1:\" + $c.getType() );\n" +
+                "end\n";
+
+        Cheese cheese = new Cheese("stilton", 10);
+        List<String> list = executeSequential(str, kieBaseTestConfiguration, cheese, cheese);
+        assertThat(list).containsExactly("R1:stilton");
+    }
+
+    /**
+     * With equality behavior, an object equal to one in the working memory doesn't create another fact.
+     */
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInsertEqualObjectWithEqualityBehavior(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        String str =
+                "package org.drools.mvel.compiler.test\n" +
+                "import " + Cheese.class.getCanonicalName() + "\n" +
+                "global " + List.class.getCanonicalName() + " list\n" +
+                "rule R1 when\n" +
+                "    $c : Cheese()\n" +
+                "then\n" +
+                "    list.add( \"R1:\" + $c.getType() );\n" +
+                "end\n";
+
+        List<String> list = executeSequentialWithEquality(str, kieBaseTestConfiguration, new Cheese("stilton", 10), new Cheese("stilton", 10));
+        assertThat(list).containsExactly("R1:stilton");
     }
 
     /**
@@ -373,11 +445,11 @@ public class SequentialInsertDeleteUpdateTest {
 
     /**
      * A single-use Coupon is deleted when it is applied. R1 has 2 matches (one per Order) with the same Coupon.
-     * The first firing deletes the Coupon, so the other match is cancelled as it is in non-sequential mode.
+     * The first firing deletes the Coupon, but R1 is not re-evaluated, so the other match is not cancelled.
+     * It differs from non-sequential mode, where the Coupon is applied to only 1 Order.
      */
     @ParameterizedTest(name = "KieBase type={0}")
     @MethodSource("parameters")
-    @Disabled("Behaves differently from non-sequential mode. See https://github.com/apache/incubator-kie/issues/7222")
     public void testDeleteFactOfPendingMatchOfSameRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "package org.drools.mvel.compiler.test\n" +
@@ -396,8 +468,8 @@ public class SequentialInsertDeleteUpdateTest {
         Order o1 = new Order("o1", 100);
         Order o2 = new Order("o2", 100);
         List<String> list = executeSequential(str, kieBaseTestConfiguration, o1, o2, new Coupon("A", 10));
-        assertThat(list).hasSize(1);
-        assertThat(Stream.of(o1, o2).filter(Order::isDiscounted)).hasSize(1);
+        assertThat(list).containsExactly("R1:o1:A", "R1:o2:A");
+        assertThat(Stream.of(o1, o2).filter(Order::isDiscounted)).hasSize(2);
     }
 
     /**
@@ -674,11 +746,11 @@ public class SequentialInsertDeleteUpdateTest {
 
     /**
      * Only one Coupon can be applied to an Order. R1 has 2 matches (one per Coupon) with the same Order.
-     * The first firing updates the Order to discounted, so the other match is cancelled as it is in non-sequential mode.
+     * The first firing updates the Order to discounted, but R1 is not re-evaluated, so the other match is not cancelled.
+     * It differs from non-sequential mode, where only 1 Coupon is applied.
      */
     @ParameterizedTest(name = "KieBase type={0}")
     @MethodSource("parameters")
-    @Disabled("Behaves differently from non-sequential mode. See https://github.com/apache/incubator-kie/issues/7222")
     public void testUpdateFactOfPendingMatchOfSameRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "package org.drools.mvel.compiler.test\n" +
@@ -695,8 +767,8 @@ public class SequentialInsertDeleteUpdateTest {
 
         Order o1 = new Order("o1", 100);
         List<String> list = executeSequential(str, kieBaseTestConfiguration, o1, new Coupon("A", 10), new Coupon("B", 20));
-        assertThat(list).hasSize(1);
-        assertThat(o1.getTotal()).isIn(90, 80);
+        assertThat(list).containsExactly("R1:o1:A", "R1:o1:B");
+        assertThat(o1.getTotal()).isEqualTo(70);
     }
 
     /**
@@ -989,6 +1061,17 @@ public class SequentialInsertDeleteUpdateTest {
         final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
         final KieBase kbase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(
                 kieModule, kieBaseTestConfiguration, SequentialOption.YES);
+        return execute(kbase, facts);
+    }
+
+    private List<String> executeSequentialWithEquality(String drl, KieBaseTestConfiguration kieBaseTestConfiguration, Object... facts) {
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
+        final KieBase kbase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(
+                kieModule, kieBaseTestConfiguration, SequentialOption.YES, EqualityBehaviorOption.EQUALITY);
+        return execute(kbase, facts);
+    }
+
+    private List<String> execute(KieBase kbase, Object... facts) {
         StatelessKieSession ksession = kbase.newStatelessKieSession();
 
         final List<String> list = new ArrayList<>();
