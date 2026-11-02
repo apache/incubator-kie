@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,6 +69,11 @@ public class TypeDeclarationUtil {
         return typeDeclaration;
     }
 
+    // accepts the same forms as the DRL compiler: event, EVENT, Role.Type.EVENT
+    private static Role.Type parseRole( String value ) {
+        return Role.Type.valueOf( value.substring( value.lastIndexOf( '.' ) + 1 ).toUpperCase( Locale.ROOT ) );
+    }
+
     private static void wireMetaTypeAnnotations( TypeMetaData metaType, TypeDeclaration typeDeclaration ) {
         ClassDefinition classDef = typeDeclaration.getTypeClassDef();
         for (Map.Entry<String, AnnotationValue[]> ann : metaType.getAnnotations().entrySet()) {
@@ -77,8 +83,8 @@ public class TypeDeclarationUtil {
             switch (annotationName) {
                 case "role":
                     for (AnnotationValue annVal : ann.getValue()) {
-                        if (annVal.getKey().equals( "value" ) && annVal.getValue().equals( "event" )) {
-                            typeDeclaration.setRole( Role.Type.EVENT );
+                        if (annVal.getKey().equals( "value" )) {
+                            typeDeclaration.setRole( parseRole( annVal.getValue().toString() ) );
                         }
                     }
                     break;
