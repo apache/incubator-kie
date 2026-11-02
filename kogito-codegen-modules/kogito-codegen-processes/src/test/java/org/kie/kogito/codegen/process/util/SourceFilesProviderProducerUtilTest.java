@@ -84,7 +84,7 @@ public class SourceFilesProviderProducerUtilTest {
     public void testAddSourceFilesToProvider() {
         // Loading Process from test resources
         final Path testResourcesPath = Paths.get("src/test/resources/usertask").toAbsolutePath();
-        File[] testProcessFiles = testResourcesPath.toFile().listFiles(pathname -> pathname.getName().endsWith(".bpmn2"));
+        File[] testProcessFiles = testResourcesPath.toFile().listFiles(pathname -> pathname.getName().endsWith(".bpmn2") || pathname.getName().endsWith(".bpmn"));
         List<Process> testProcesses = parseProcesses(List.of(testProcessFiles));
 
         Map<String, KogitoWorkflowProcess> workflows = testProcesses.stream()
@@ -105,12 +105,12 @@ public class SourceFilesProviderProducerUtilTest {
         BlockStmt staticInitBody = staticInit.getBody();
 
         assertThat(staticInitBody.getStatements())
-                .hasSize(2);
+                .hasSize(5);
 
         List<MethodCallExpr> initStatements = staticInitBody.findAll(MethodCallExpr.class);
 
         assertThat(initStatements)
-                .hasSize(2);
+                .hasSize(5);
 
         initStatements.forEach(initStatement -> {
             assertThat(initStatement.getScope())
