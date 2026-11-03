@@ -1947,7 +1947,7 @@
         <artifactId>resteasy-jackson2-provider</artifactId>
         <version>${version.org.jboss.resteasy}</version>
         <exclusions>
-          <!-- CVE fix: no patched version of json-patch/jackson-coreutils exists (latest is 1.13/2.0) -->
+          <!-- CVE fix: no patched version of json-patch/jackson-coreutils exists -->
           <exclusion>
             <groupId>com.github.java-json-tools</groupId>
             <artifactId>json-patch</artifactId>
