@@ -407,7 +407,7 @@ public class KiePackagesBuilder {
         Declaration[] requiredDeclarations = getRequiredDeclarationsIfPossible( ctx, consequence, name );
         boolean enabledTupleOptimization = requiredDeclarations != null && requiredDeclarations.length > 0;
 
-        Map<String, int[]> sequenceVarIndexes = buildSequenceVarIndexesForConsequence( ctx, consequence );
+        Map<String, int[]> sequenceVarIndexes = buildSequenceVarIndexesForConsequence( ctx, consequence, name );
 
         if ( name.equals( RuleImpl.DEFAULT_CONSEQUENCE_NAME ) ) {
             if ("java".equals(consequence.getLanguage())) {
@@ -426,19 +426,16 @@ public class KiePackagesBuilder {
      * These variables are not accessible via the activation tuple; they must be resolved
      * from SequencerMemory.getData() at consequence evaluation time.
      */
-    private Map<String, int[]> buildSequenceVarIndexesForConsequence( RuleContext ctx, Consequence consequence ) {
-        Map<Variable, int[]> seqIndexes = ctx.getSequenceVarIndexes();
-        if (seqIndexes.isEmpty()) {
+    private Map<String, int[]> buildSequenceVarIndexesForConsequence( RuleContext ctx, Consequence consequence, String name ) {
+        if (!ctx.sequences().hasVariables()) {
             return Map.of();
         }
-        int totalSeqs = ctx.getSequenceCount();
         Map<String, int[]> result = null;
         for (Variable var : consequence.getDeclarations()) {
-            int[] entry = seqIndexes.get(var);
-            if (entry != null) {
+            int[] ref = ctx.sequences().variableRef( name, var );
+            if (ref != null) {
                 if (result == null) result = new java.util.HashMap<>();
-                int skip = totalSeqs - 1 - entry[RuleContext.SEQ_VAR_SEQ_IDX];
-                result.put(var.getName(), new int[]{ skip, entry[RuleContext.SEQ_VAR_FILTER_IDX] });
+                result.put(var.getName(), ref);
             }
         }
         return result == null ? Map.of() : result;
@@ -535,7 +532,7 @@ public class KiePackagesBuilder {
                 return buildForAll( ctx, group, condition );
             }
             case SEQUENCE: {
-                int seqIdx = ctx.nextSeqIndex();
+                int seqIdx = ctx.sequences().open();
                 SequenceConditionImpl sc = (SequenceConditionImpl) condition;
                 List<Condition> steps = sc.getSubConditions();
                 int n = steps.size();
@@ -558,7 +555,11 @@ public class KiePackagesBuilder {
             case CONSEQUENCE:
                 if (condition instanceof NamedConsequenceImpl) {
                     NamedConsequenceImpl consequence = (NamedConsequenceImpl) condition;
-                    return consequence.getName().equals( RuleImpl.DEFAULT_CONSEQUENCE_NAME ) ? null : new NamedConsequence( consequence.getName(), consequence.isBreaking() );
+                    if (!consequence.getName().equals( RuleImpl.DEFAULT_CONSEQUENCE_NAME )) {
+                        ctx.sequences().registerNamedConsequence( consequence.getName() );
+                        return new NamedConsequence( consequence.getName(), consequence.isBreaking() );
+                    }
+                    return null;
                 } else if (condition instanceof ConditionalNamedConsequenceImpl) {
                     return buildConditionalConsequence(ctx, (ConditionalNamedConsequenceImpl) condition);
                 }
@@ -628,7 +629,7 @@ public class KiePackagesBuilder {
             // fact from SequencerMemory.getData() at rule-fire time.
             Variable stepVar = patternImpl.getPatternVariable();
             if (stepVar != null) {
-                ctx.addSequenceVarIndex(stepVar, seqIdx, idx);
+                ctx.sequences().bindVariable(stepVar, seqIdx, idx);
             }
             LogicGate leaf = new LogicGate(
                     Gates::and,
@@ -830,6 +831,7 @@ public class KiePackagesBuilder {
         } else {
             evalCondition = new EvalCondition(LambdaEvalExpression.EMPTY, null);
         }
+        ctx.sequences().registerNamedConsequence( consequence.getThenConsequence().getName() );
         return new ConditionalBranch( evalCondition,
                                       new NamedConsequence( consequence.getThenConsequence().getName(), consequence.getThenConsequence().isBreaking() ),
                                       consequence.getElseBranch() != null ? buildConditionalConsequence(ctx, consequence.getElseBranch()) : null );
