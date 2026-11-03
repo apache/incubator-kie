@@ -128,7 +128,7 @@
         </executions>
       </plugin>
 
-      <!-- quarkus-rest brings in a couple of dependencies in the javax.* namespace that cannot be excluded -->
+      <!-- quarkus-resteasy brings in a couple of dependencies in the javax.* namespace that cannot be excluded -->
       <!-- that's why it is necessary to disable the plugin that checks for banned dependencies -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
