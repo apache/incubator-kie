@@ -84,6 +84,10 @@ public class EventSubProcessNodeInstance extends CompositeContextNodeInstance {
         super.signalEvent(type, event, varResolver);
     }
 
+    public boolean isInterrupting() {
+        return isInterrupting(getCompositeNode().findStartNode());
+    }
+
     private boolean isInterrupting(StartNode startNode) {
         return getCompositeNode().isKeepActive() && startNode.isInterrupting();
     }
