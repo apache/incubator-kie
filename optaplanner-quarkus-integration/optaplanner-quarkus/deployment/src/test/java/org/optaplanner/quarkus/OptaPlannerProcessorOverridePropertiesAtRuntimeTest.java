@@ -61,7 +61,7 @@ class OptaPlannerProcessorOverridePropertiesAtRuntimeTest {
 
     @RegisterExtension
     static final QuarkusProdModeTest config = new QuarkusProdModeTest()
-            .setForcedDependencies(List.of(Dependency.of("io.quarkus", "quarkus-resteasy", QUARKUS_VERSION)))
+            .setForcedDependencies(List.of(Dependency.of("io.quarkus", "quarkus-rest", QUARKUS_VERSION)))
             // We want to check if these are overridden at runtime
             .overrideConfigKey("quarkus.optaplanner.solver.termination.best-score-limit", "0")
             .overrideConfigKey("quarkus.optaplanner.solver.move-thread-count", "4")
