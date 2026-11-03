@@ -18,17 +18,23 @@
  */
 package org.jbpm.flow.migration;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jbpm.flow.migration.impl.JsonMigrationPlanFileReader;
 import org.jbpm.flow.migration.model.MigrationPlan;
 import org.jbpm.flow.migration.model.NodeInstanceMigrationPlan;
 import org.jbpm.flow.migration.model.ProcessDefinitionMigrationPlan;
 import org.jbpm.flow.migration.model.ProcessInstanceMigrationPlan;
+import org.jbpm.flow.migration.model.VariableMigrationAction;
+import org.jbpm.flow.migration.model.VariableMigrationPlan;
 import org.jbpm.ruleflow.core.WorkflowElementIdentifierFactory;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class MigrationPlanProviderTest {
 
@@ -55,9 +61,43 @@ public class MigrationPlanProviderTest {
         plan.setProcessMigrationPlan(pdmp);
 
         assertThat(plans)
-                .hasSize(2)
+                .hasSize(3)
                 .contains(plan);
 
+    }
+
+    @Test
+    public void testReadingVariableMigrationPlan() {
+        MigrationPlanProvider provider = MigrationPlanProvider.newMigrationPlanProviderBuilder().withEnvironmentDefaults().build();
+        List<MigrationPlan> plans = provider.findMigrationPlans();
+
+        MigrationPlan plan = plans.stream()
+                .filter(p -> "my variable migration".equals(p.getName()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(plan.getProcessMigrationPlan().getVariableMigrationPlan()).containsExactly(
+                new VariableMigrationPlan(VariableMigrationAction.RENAME, null, "custName", "customerName", null),
+                new VariableMigrationPlan(VariableMigrationAction.DEFAULT, "riskLevel", null, null, "LOW"),
+                new VariableMigrationPlan(VariableMigrationAction.DEFAULT, "approvedBy", null, null, "SYSTEM"),
+                new VariableMigrationPlan(VariableMigrationAction.REMOVE, "tempFlag", null, null, null));
+    }
+
+    @Test
+    public void testReadingVariableMigrationPlanWithoutRequiredField() {
+        String json = "{ \"processMigrationPlan\" : { \"variableMigrationPlan\" : [ { \"action\" : \"rename\", \"from\" : \"custName\" } ] } }";
+
+        assertThatThrownBy(() -> new JsonMigrationPlanFileReader().read(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))))
+                .isInstanceOf(MigrationPlanFileFormatException.class)
+                .hasMessageContaining("requires field to");
+    }
+
+    @Test
+    public void testReadingVariableMigrationPlanWithUnknownAction() {
+        String json = "{ \"processMigrationPlan\" : { \"variableMigrationPlan\" : [ { \"action\" : \"copy\", \"name\" : \"custName\" } ] } }";
+
+        assertThatThrownBy(() -> new JsonMigrationPlanFileReader().read(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))))
+                .isInstanceOf(MigrationPlanFileFormatException.class);
     }
 
 }

@@ -20,6 +20,8 @@ package org.jbpm.flow.migration;
 
 import java.util.Collections;
 
+import org.jbpm.process.core.context.variable.VariableScope;
+import org.jbpm.process.instance.context.variable.VariableScopeInstance;
 import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
 import org.jbpm.workflow.instance.impl.ExtendedNodeInstanceImpl;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
@@ -119,6 +121,52 @@ public class MigrationPlanServiceTest {
         assertThat(processImpl)
                 .hasFieldOrPropertyWithValue("processId", "process_A")
                 .hasFieldOrPropertyWithValue("processVersion", "3");
+    }
+
+    @Test
+    public void testMigrationProcessInstanceVariables() {
+        MigrationPlanService service = new MigrationPlanService();
+
+        RuleFlowProcessInstance processImpl = new RuleFlowProcessInstance();
+        processImpl.setInternalProcess(new DummyProcess("process_B", "2"));
+        processImpl.setProcessId("process_E");
+        processImpl.setProcessVersion("1");
+        VariableScopeInstance variableScope = new VariableScopeInstance();
+        processImpl.setContextInstance(VariableScope.VARIABLE_SCOPE, variableScope);
+        variableScope.internalSetVariable("custName", "John");
+        variableScope.internalSetVariable("approvedBy", "manager");
+        variableScope.internalSetVariable("tempFlag", Boolean.TRUE);
+
+        service.migrateProcessElement(processes, processImpl);
+
+        assertThat(processImpl)
+                .hasFieldOrPropertyWithValue("processId", "process_B")
+                .hasFieldOrPropertyWithValue("processVersion", "2");
+        assertThat(variableScope.getVariables())
+                .containsEntry("customerName", "John")
+                .containsEntry("custName", null)
+                .containsEntry("riskLevel", "LOW")
+                .containsEntry("approvedBy", "manager")
+                .containsEntry("tempFlag", null);
+    }
+
+    @Test
+    public void testMigrationProcessInstanceRenameMissingVariable() {
+        MigrationPlanService service = new MigrationPlanService();
+
+        RuleFlowProcessInstance processImpl = new RuleFlowProcessInstance();
+        processImpl.setInternalProcess(new DummyProcess("process_B", "2"));
+        processImpl.setProcessId("process_E");
+        processImpl.setProcessVersion("1");
+        VariableScopeInstance variableScope = new VariableScopeInstance();
+        processImpl.setContextInstance(VariableScope.VARIABLE_SCOPE, variableScope);
+        variableScope.internalSetVariable("customerName", "Jane");
+
+        service.migrateProcessElement(processes, processImpl);
+
+        assertThat(variableScope.getVariables())
+                .containsEntry("customerName", "Jane")
+                .doesNotContainKey("custName");
     }
 
     @Test

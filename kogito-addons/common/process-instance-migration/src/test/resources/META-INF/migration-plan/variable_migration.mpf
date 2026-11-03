@@ -1,0 +1,35 @@
+{
+    "name" : "my variable migration",
+    "processMigrationPlan" : {
+        "sourceProcessDefinition" : {
+            "processId" : "process_E",
+            "processVersion" : "1"
+        },
+        "targetProcessDefinition" : {
+            "processId" : "process_B",
+            "processVersion" : "2"
+        },
+        "nodeInstanceMigrationPlan" : [],
+        "variableMigrationPlan" : [
+            {
+                "action" : "rename",
+                "from" : "custName",
+                "to" : "customerName"
+            },
+            {
+                "action" : "default",
+                "name" : "riskLevel",
+                "value" : "LOW"
+            },
+            {
+                "action" : "default",
+                "name" : "approvedBy",
+                "value" : "SYSTEM"
+            },
+            {
+                "action" : "remove",
+                "name" : "tempFlag"
+            }
+        ]
+    }
+}
