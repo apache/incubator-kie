@@ -65,6 +65,7 @@ import static org.jbpm.ruleflow.core.Metadata.ATTACHED_TO;
 import static org.jbpm.ruleflow.core.Metadata.CANCEL_ACTIVITY;
 import static org.jbpm.ruleflow.core.Metadata.ERROR_EVENT;
 import static org.jbpm.ruleflow.core.Metadata.ERROR_STRUCTURE_REF;
+import static org.jbpm.ruleflow.core.Metadata.EVENT_TYPE_ESCALATION;
 import static org.jbpm.ruleflow.core.Metadata.HAS_ERROR_EVENT;
 import static org.jbpm.ruleflow.core.Metadata.SIGNAL_NAME;
 import static org.jbpm.ruleflow.core.Metadata.TIME_CYCLE;
@@ -308,6 +309,8 @@ public class RuleFlowProcessFactory extends RuleFlowNodeContainerFactory<RuleFlo
                             linkBoundarySignalEvent(node, attachedTo);
                         } else if (type.startsWith(ERROR_TYPE_PREFIX)) {
                             linkBoundaryErrorEvent(node, attachedTo, attachedNode);
+                        } else if (type.startsWith(EVENT_TYPE_ESCALATION)) {
+                            linkBoundaryEscalationEvent(node, attachedTo);
                         }
                     }
                 }
@@ -367,6 +370,20 @@ public class RuleFlowProcessFactory extends RuleFlowNodeContainerFactory<RuleFlo
     }
 
     protected void linkBoundarySignalEvent(Node node, String attachedTo) {
+        boolean cancelActivity = (Boolean) node.getMetaData().get(CANCEL_ACTIVITY);
+        if (cancelActivity) {
+            List<DroolsAction> actions = ((EventNode) node).getActions(EVENT_NODE_EXIT);
+            if (actions == null) {
+                actions = new ArrayList<>();
+            }
+            DroolsConsequenceAction action = new DroolsConsequenceAction("java", null);
+            action.setMetaData(ACTION, new CancelNodeInstanceAction(attachedTo));
+            actions.add(action);
+            ((EventNode) node).setActions(EVENT_NODE_EXIT, actions);
+        }
+    }
+
+    protected void linkBoundaryEscalationEvent(Node node, String attachedTo) {
         boolean cancelActivity = (Boolean) node.getMetaData().get(CANCEL_ACTIVITY);
         if (cancelActivity) {
             List<DroolsAction> actions = ((EventNode) node).getActions(EVENT_NODE_EXIT);

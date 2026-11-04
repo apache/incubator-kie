@@ -419,6 +419,13 @@ public class CompositeNodeInstance extends StateBasedNodeInstance implements Nod
     }
 
     @Override
+    public void nodeInstanceCancelled(NodeInstance nodeInstance) {
+        if (getCompositeNode().isAutoComplete() && nodeInstances.isEmpty()) {
+            triggerCompleted(Node.CONNECTION_DEFAULT_TYPE);
+        }
+    }
+
+    @Override
     public void nodeInstanceCompleted(NodeInstance nodeInstance, String outType) {
         org.kie.api.definition.process.Node nodeInstanceNode = nodeInstance.getNode();
         if (nodeInstanceNode != null) {

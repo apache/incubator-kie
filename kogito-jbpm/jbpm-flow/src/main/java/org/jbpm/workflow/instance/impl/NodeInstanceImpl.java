@@ -209,6 +209,7 @@ public abstract class NodeInstanceImpl implements org.jbpm.workflow.instance.Nod
                     .getProcessEventSupport().fireBeforeNodeLeft(this, kruntime);
         }
         nodeInstanceContainer.removeNodeInstance(this);
+        nodeInstanceContainer.nodeInstanceCancelled(this);
         if (!hidden) {
             InternalKnowledgeRuntime kruntime = getProcessInstance().getKnowledgeRuntime();
             ((InternalProcessRuntime) kruntime.getProcessRuntime())
