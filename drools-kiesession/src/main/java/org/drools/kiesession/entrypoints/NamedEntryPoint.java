@@ -196,6 +196,12 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
                     null,
                     entryPoint);
             if ( this.reteEvaluator.isSequential() ) {
+                // check if the object already exists in the WM
+                final InternalFactHandle existingHandle = this.objectStore.getHandleForObject( object );
+                if ( existingHandle != null ) {
+                    return existingHandle;
+                }
+
                 InternalFactHandle handle = createHandle( object, typeConf );
                 propagationContext.setFactHandle(handle);
                 insert( handle, object, rule, typeConf, propagationContext );
