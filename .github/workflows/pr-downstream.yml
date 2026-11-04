@@ -101,10 +101,12 @@ jobs:
         shell: bash
         run: mvn --batch-mode --no-transfer-progress -DskipTests -DskipITs -Denforcer.skip=true -Dcheckstyle.skip=true -Dformatter.skip=true -Darchunit.skip=true install -f incubator-kie/pom.xml
 
+      # TEMPORARY: build against the RESTEasy -> quarkus-rest migration branch of the examples
       - name: 'SETUP :: Checkout incubator-kie-examples'
         uses: actions/checkout@v7
         with:
-          repository: apache/incubator-kie-examples
+          repository: Kusuma04-dev/incubator-kie-examples
+          ref: resteasy-migration
           path: kie-examples-repo
 
       - name: 'BUILD :: ${{ matrix.examples-subfolder }}'
