@@ -29,6 +29,7 @@ import org.drools.commands.runtime.process.AbortWorkItemCommand;
 import org.drools.commands.runtime.process.CompleteWorkItemCommand;
 import org.drools.commands.runtime.process.SignalEventCommand;
 import org.drools.commands.runtime.process.StartProcessCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -103,6 +104,8 @@ public class XStreamHelper {
                        DefaultFactHandle.class );
         xstream.alias( "set-focus",
                        AgendaGroupSetFocusCommand.class );
+        xstream.alias( "activate-ruleflow-group",
+                       ActivateRuleFlowGroupCommand.class );
         xstream.alias( "clear-activation-group",
                        ClearActivationGroupCommand.class );
         xstream.alias( "clear-agenda",

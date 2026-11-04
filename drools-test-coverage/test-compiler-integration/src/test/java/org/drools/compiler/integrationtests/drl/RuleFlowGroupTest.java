@@ -18,6 +18,8 @@
  */
 package org.drools.compiler.integrationtests.drl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.drools.core.common.InternalAgenda;
@@ -29,6 +31,8 @@ import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
+import org.kie.api.event.rule.DefaultAgendaEventListener;
+import org.kie.api.event.rule.RuleFlowGroupActivatedEvent;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +74,167 @@ public class RuleFlowGroupTest {
             ksession.insert(new Cheese("gorgonzola"));
             ((InternalAgenda) ksession.getAgenda()).activateRuleFlowGroup("group1");
             assertThat(ksession.fireAllRules()).isEqualTo(1);
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testActivateFromJava(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "rule R1\n" +
+                "ruleflow-group \"group1\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "   $p.setName(\"activated\");\n" +
+                "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("ruleflowgroup-test", kieBaseTestConfiguration, drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final Person person = new Person();
+            ksession.insert(person);
+            ksession.getAgenda().getRuleFlowGroup("group1").activate();
+            assertThat(ksession.fireAllRules()).isEqualTo(1);
+            assertThat(person.getName()).isEqualTo("activated");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testActivateFiresRuleFlowGroupActivatedEvent(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "rule R1\n" +
+                "ruleflow-group \"group1\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("ruleflowgroup-test", kieBaseTestConfiguration, drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final List<String> events = new ArrayList<>();
+            ksession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void beforeRuleFlowGroupActivated(RuleFlowGroupActivatedEvent event) {
+                    events.add("before:" + event.getRuleFlowGroup().getName());
+                }
+                @Override
+                public void afterRuleFlowGroupActivated(RuleFlowGroupActivatedEvent event) {
+                    events.add("after:" + event.getRuleFlowGroup().getName());
+                }
+            });
+
+            ksession.insert(new Person());
+            ksession.getAgenda().getRuleFlowGroup("group1").activate();
+            assertThat(events).containsExactly("before:group1", "after:group1");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testActivateTwoGroupsStackOrder(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "global java.util.List results;\n" +
+                "rule R1\n" +
+                "ruleflow-group \"group1\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "   results.add(\"group1\");\n" +
+                "end\n" +
+                "rule R2\n" +
+                "ruleflow-group \"group2\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "   results.add(\"group2\");\n" +
+                "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("ruleflowgroup-test", kieBaseTestConfiguration, drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final List<String> results = new ArrayList<>();
+            ksession.setGlobal("results", results);
+            ksession.insert(new Person());
+            ksession.getAgenda().getRuleFlowGroup("group1").activate();
+            ksession.getAgenda().getRuleFlowGroup("group2").activate();
+            ksession.fireAllRules();
+            // group2 was pushed last, so it fires first (stack order)
+            assertThat(results).containsExactly("group2", "group1");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testActivateRuleFlowGroupFromRHS(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "global java.util.List results;\n" +
+                "rule R1\n" +
+                "ruleflow-group \"group1\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "   results.add(\"R1\");\n" +
+                "   drools.activateRuleFlowGroup(\"group2\");\n" +
+                "end\n" +
+                "rule R2\n" +
+                "ruleflow-group \"group2\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "   results.add(\"R2\");\n" +
+                "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("ruleflowgroup-test", kieBaseTestConfiguration, drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final List<String> results = new ArrayList<>();
+            ksession.setGlobal("results", results);
+            ksession.insert(new Person());
+            ksession.getAgenda().getRuleFlowGroup("group1").activate();
+            ksession.fireAllRules();
+            assertThat(results).containsExactly("R1", "R2");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testClearOnActivatedGroup(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "rule R1\n" +
+                "ruleflow-group \"group1\"\n" +
+                "when\n" +
+                "   $p : Person()\n" +
+                "then\n" +
+                "   $p.setName(\"fired\");\n" +
+                "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("ruleflowgroup-test", kieBaseTestConfiguration, drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final Person person = new Person();
+            ksession.insert(person);
+            ksession.getAgenda().getRuleFlowGroup("group1").activate();
+            ksession.getAgenda().getRuleFlowGroup("group1").clear();
+            assertThat(ksession.fireAllRules()).isEqualTo(0);
+            assertThat(person.getName()).isNotEqualTo("fired");
         } finally {
             ksession.dispose();
         }

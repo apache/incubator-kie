@@ -31,6 +31,10 @@ public interface ExtendedKieCommands extends KieCommands {
 
     Command newClearAgenda();
 
+    /**
+     * @implNote This method will be deprecated in a future version.
+     * Use {@link #newClearRuleFlowGroup(String)} instead.
+     */
     Command newClearAgendaGroup(String name);
 
     Command newClearRuleFlowGroup(String name);

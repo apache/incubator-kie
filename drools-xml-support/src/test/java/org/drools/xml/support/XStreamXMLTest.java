@@ -31,6 +31,7 @@ import com.thoughtworks.xstream.XStream;
 import org.drools.commands.runtime.rule.ModifyCommand.SetterImpl;
 import org.drools.core.base.RuleNameEndsWithAgendaFilter;
 import org.drools.commands.runtime.process.StartProcessCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -86,6 +87,15 @@ public class XStreamXMLTest {
         assertThat(obj.getClass()).isEqualTo(StartProcessCommand.class);
         StartProcessCommand cmd = (StartProcessCommand)obj;
         assertThat(cmd.getProcessId()).isEqualTo("some-process-id");
+    }
+
+    @Test
+    public void testMarshallActivateRuleFlowGroupCommand() {
+        ActivateRuleFlowGroupCommand cmd = new ActivateRuleFlowGroupCommand("foo-group");
+        String xmlString = xstream.toXML( cmd );
+        assertThat(xmlString).isEqualTo("<activate-ruleflow-group name=\"foo-group\"/>");
+        ActivateRuleFlowGroupCommand cmd2 = (ActivateRuleFlowGroupCommand) xstream.fromXML( xmlString );
+        assertThat(cmd2.getName()).isEqualTo(cmd.getName());
     }
 
     @Test
