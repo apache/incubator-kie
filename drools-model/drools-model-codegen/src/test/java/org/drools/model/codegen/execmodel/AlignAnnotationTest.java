@@ -19,8 +19,10 @@
 package org.drools.model.codegen.execmodel;
 
 import org.drools.base.rule.TypeDeclaration;
+import org.drools.core.common.InternalFactHandle;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.model.codegen.execmodel.domain.AnnotatedEvent;
+import org.drools.model.codegen.execmodel.domain.Person;
 import org.drools.model.codegen.execmodel.domain.PropertyChangeSupportFact;
 import org.drools.model.codegen.execmodel.domain.PropertyReactiveFact;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -176,10 +178,36 @@ public class AlignAnnotationTest extends BaseModelTest {
     // --- Explicit DRL override — DRL annotation should take precedence over Java ---
 
     @ParameterizedTest
-    @MethodSource("parametersStandardOnly")
+    @MethodSource("parameters")
     public void testRoleExplicitOverride(RUN_TYPE runType) {
         TypeDeclaration typeDecl = getTypeDeclaration(runType, ANNOTATED_EVENT_OVERRIDE_DRL, AnnotatedEvent.class);
         assertThat(typeDecl.getRole()).isEqualTo(Role.Type.FACT);
+    }
+
+    // --- DRL @role on a class without a Java @Role ---
+
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testRoleEventDeclaredInDrlOnPlainClass(RUN_TYPE runType) {
+        for (String roleValue : new String[]{"event", "EVENT", "Role.Type.EVENT"}) {
+            String drl =
+                    "import " + Person.class.getCanonicalName() + ";\n" +
+                    "declare Person\n" +
+                    "  @role(" + roleValue + ")\n" +
+                    "end\n" +
+                    "rule R when Person() then end\n";
+
+            KieSession ksession = getKieSession(runType, drl);
+            try {
+                TypeDeclaration typeDecl = ((InternalRuleBase) ksession.getKieBase()).getTypeDeclaration(Person.class);
+                assertThat(typeDecl.getRole()).as("@role(%s)", roleValue).isEqualTo(Role.Type.EVENT);
+
+                InternalFactHandle handle = (InternalFactHandle) ksession.insert(new Person("Mario", 40));
+                assertThat(handle.isEvent()).as("@role(%s)", roleValue).isTrue();
+            } finally {
+                ksession.dispose();
+            }
+        }
     }
 
     @ParameterizedTest
