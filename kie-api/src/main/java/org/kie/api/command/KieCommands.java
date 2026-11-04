@@ -142,8 +142,14 @@ public interface KieCommands extends KieService {
 
     Command<FactHandle> fromExternalFactHandleCommand(String factHandleExternalForm, boolean disconnected);
 
+    /**
+     * @implNote This method will be deprecated in a future version.
+     * Use {@link #newActivateRuleFlowGroup(String)} instead.
+     */
     Command newAgendaGroupSetFocus(String name);
-    
+
+    Command newActivateRuleFlowGroup(String name);
+
     Command newGetFactHandles();
 
     Command newGetFactHandles(String outIdentifier);

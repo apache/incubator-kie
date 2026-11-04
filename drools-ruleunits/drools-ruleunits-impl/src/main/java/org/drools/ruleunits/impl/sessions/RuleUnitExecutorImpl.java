@@ -488,6 +488,11 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
         }
 
         @Override
+        public void activateRuleFlowGroup(String name) {
+            knowledgeHelper.activateRuleFlowGroup(name);
+        }
+
+        @Override
         public Object get(Declaration declaration) {
             return knowledgeHelper.get(declaration);
         }

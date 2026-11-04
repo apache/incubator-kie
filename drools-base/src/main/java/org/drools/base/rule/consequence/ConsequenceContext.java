@@ -114,7 +114,13 @@ public interface ConsequenceContext extends RuleContext {
 
     Match getMatch();
 
+    /**
+     * @implNote This method will be deprecated in a future version.
+     * Use {@link #activateRuleFlowGroup(String)} instead.
+     */
     void setFocus(String focus);
+
+    void activateRuleFlowGroup(String name);
 
     EntryPoint getEntryPoint(String id);
 
