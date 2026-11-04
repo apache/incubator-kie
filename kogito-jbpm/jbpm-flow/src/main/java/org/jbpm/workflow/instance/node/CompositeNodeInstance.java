@@ -428,10 +428,6 @@ public class CompositeNodeInstance extends StateBasedNodeInstance implements Nod
             }
         }
         if (nodeInstance instanceof FaultNodeInstance || nodeInstance instanceof EndNodeInstance || nodeInstance instanceof EventSubProcessNodeInstance) {
-            if (nodeInstance instanceof EventSubProcessNodeInstance eventSubProcess && eventSubProcess.isInterrupting()) {
-                // the interrupting event sub process aborts this container itself, it must not be completed here
-                return;
-            }
             if (getCompositeNode().isAutoComplete() && nodeInstances.isEmpty()) {
                 triggerCompleted(Node.CONNECTION_DEFAULT_TYPE);
 
