@@ -28,15 +28,14 @@ public interface Drools extends DroolsEntryPoint {
 
     void halt();
 
-    /**
-     * This method will be deprecated in a future version.
-     * Use {@link #activateRuleFlowGroup(String)} instead.
-     */
     void setFocus(String focus);
 
     /**
-     * Activates the given ruleflow-group, equivalent to
-     * {@code getKieRuntime().getAgenda().getRuleFlowGroup(name).activate()}.
+     * Activates the given ruleflow-group.
+     * @param name the name of the ruleflow-group to activate
+     * @since 10.4.0
+     * @apiNote Equivalent to {@code getKieRuntime().getAgenda().getRuleFlowGroup(name).activate()}.
+     *          This is the ruleflow-group counterpart of {@link #setFocus(String)}.
      */
     void activateRuleFlowGroup(String name);
 
