@@ -912,4 +912,21 @@ public class DeclaredTypesTest extends BaseModelTest {
                 .containsExactlyInAnyOrder("Unknown annotation property yyy",
                                            "Unknown annotation property zzz");
     }
+
+    @ParameterizedTest
+    @MethodSource("parameters")
+    void testInvalidAnnotationValueReportsBuildError(RUN_TYPE runType) {
+        String str = "package org.example.invalid; \n" +
+                "declare Foo\n" +
+                "    @role( event )\n" +
+                "    @expires( abc )\n" +
+                "    name : String\n" +
+                "end";
+
+        Results results = createKieBuilder(runType, str).getResults();
+
+        assertThat(results.getMessages(Message.Level.ERROR))
+                .extracting(Message::getText)
+                .anyMatch(text -> text.contains("Error parsing time string: [ abc ]"));
+    }
 }

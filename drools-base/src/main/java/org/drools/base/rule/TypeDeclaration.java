@@ -35,11 +35,13 @@ import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.base.util.TimeIntervalParser;
 import org.drools.util.ClassUtils;
 import org.kie.api.definition.type.ClassReactive;
+import org.kie.api.definition.type.Duration;
 import org.kie.api.definition.type.Expires;
 import org.kie.api.definition.type.Expires.Policy;
 import org.kie.api.definition.type.PropertyChangeSupport;
 import org.kie.api.definition.type.PropertyReactive;
 import org.kie.api.definition.type.Role;
+import org.kie.api.definition.type.Timestamp;
 import org.kie.api.io.Resource;
 import org.kie.api.prototype.Prototype;
 import org.kie.internal.builder.conf.PropertySpecificOption;
@@ -567,6 +569,8 @@ public class TypeDeclaration
         configureExpirationOffset( type, annotated );
         configurePropertyReactivity( type, annotated, propertySpecificOption );
         configurePropertyChangeSupport( type, annotated );
+        configureTimestampAttribute( type, annotated );
+        configureDurationAttribute( type, annotated );
     }
 
     private static void configureRole( TypeDeclaration type, Annotated annotated ) {
@@ -594,9 +598,22 @@ public class TypeDeclaration
     }
 
     private static void configurePropertyChangeSupport( TypeDeclaration type, Annotated annotated ) {
-        // only ever switch it on: a DRL declaration may already have made the type dynamic
         if ( annotated.hasAnnotation( PropertyChangeSupport.class ) ) {
             type.setDynamic( true );
+        }
+    }
+
+    private static void configureTimestampAttribute( TypeDeclaration type, Annotated annotated ) {
+        Timestamp timestamp = annotated.getTypedAnnotation(Timestamp.class);
+        if (timestamp != null) {
+            type.setTimestampAttribute( timestamp.value() );
+        }
+    }
+
+    private static void configureDurationAttribute( TypeDeclaration type, Annotated annotated ) {
+        Duration duration = annotated.getTypedAnnotation(Duration.class);
+        if (duration != null) {
+            type.setDurationAttribute( duration.value() );
         }
     }
 }

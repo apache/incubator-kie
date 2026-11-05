@@ -31,10 +31,10 @@ import java.util.Set;
 import org.drools.base.factmodel.ClassDefinition;
 import org.drools.base.factmodel.FieldDefinition;
 import org.drools.base.factmodel.traits.Thing;
-import org.drools.base.rule.Annotated;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.compiler.compiler.TypeDeclarationError;
+import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.util.ClassUtils;
 import org.kie.api.definition.type.Position;
@@ -245,13 +245,12 @@ public class TypeDeclarationCache {
     }
 
     private TypeDeclaration createTypeDeclarationForBean(Class<?> cls) {
-        Annotated annotated = new Annotated.ClassAdapter(cls);
-        TypeDeclaration typeDeclaration = TypeDeclaration.createTypeDeclarationForBean(cls, annotated, context.getBuilderConfiguration().getOption(PropertySpecificOption.KEY));
+        TypeDeclaration typeDeclaration = TypeDeclaration.createTypeDeclarationForBean(cls, context.getBuilderConfiguration().getOption(PropertySpecificOption.KEY));
 
         String namespace = ClassUtils.getPackage( cls );
         PackageRegistry pkgRegistry = context.getOrCreatePackageRegistry( new PackageDescr(namespace) );
 
-        processMvelBasedAccessors(context, results, pkgRegistry, annotated, typeDeclaration );
+        processMvelBasedAccessors(context, results, pkgRegistry, new BaseDescr(), typeDeclaration );
         return typeDeclaration;
     }
 

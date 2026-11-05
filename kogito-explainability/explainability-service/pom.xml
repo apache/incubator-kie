@@ -68,6 +68,20 @@
       <artifactId>optaplanner-quarkus</artifactId>
     </dependency>
 
+    <!-- Explicit dependency to enforce Maven reactor build order during parallel builds (-T), ensuring optaplanner-quarkus-deployment is built before explainability-service runs quarkus:build -->
+    <dependency>
+      <groupId>org.optaplanner</groupId>
+      <artifactId>optaplanner-quarkus-deployment</artifactId>
+      <type>pom</type>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
