@@ -49,12 +49,14 @@ public class ActivateRuleFlowGroupCommand implements ExecutableCommand<Void> {
         this.name = name;
     }
 
+    @Override
     public Void execute(Context context) {
         KieSession ksession = ((RegistryContext) context).lookup( KieSession.class );
         ksession.getAgenda().getRuleFlowGroup( this.name ).activate();
         return null;
     }
 
+    @Override
     public String toString() {
         return "session.getAgenda().getRuleFlowGroup(" + name + ").activate();";
     }
