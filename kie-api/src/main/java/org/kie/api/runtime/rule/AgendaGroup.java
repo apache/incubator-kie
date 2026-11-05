@@ -37,7 +37,7 @@ public interface AgendaGroup {
     void clear();
 
     /**
-     * @implNote This method will be deprecated in a future version.
+     * This method will be deprecated in a future version.
      * Use {@link RuleFlowGroup#activate()} instead.
      */
     void setFocus();

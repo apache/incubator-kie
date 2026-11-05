@@ -32,8 +32,7 @@ public interface RuleFlowGroup {
      * Rules in this group become eligible to fire.
      *
      * <p>Unlike {@link AgendaGroup#setFocus()}, this method also fires
-     * before/after {@code RuleFlowGroupActivated} events and sets the
-     * group's active and ruleflow-listener flags.
+     * before/after {@code RuleFlowGroupActivated} events.
      *
      * <p>The corresponding {@code RuleFlowGroupDeactivated} event fires
      * only when the group was activated with a process node instance.
