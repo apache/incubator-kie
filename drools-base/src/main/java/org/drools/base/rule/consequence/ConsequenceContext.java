@@ -115,11 +115,15 @@ public interface ConsequenceContext extends RuleContext {
     Match getMatch();
 
     /**
-     * @implNote This method will be deprecated in a future version.
+     * This method will be deprecated in a future version.
      * Use {@link #activateRuleFlowGroup(String)} instead.
      */
     void setFocus(String focus);
 
+    /**
+     * Activates the given ruleflow-group, equivalent to
+     * {@code getKieRuntime().getAgenda().getRuleFlowGroup(name).activate()}.
+     */
     void activateRuleFlowGroup(String name);
 
     EntryPoint getEntryPoint(String id);
