@@ -59,6 +59,7 @@ import org.kie.kogito.jobs.service.model.JobExecutionExceptionDetails;
 import org.kie.kogito.jobs.service.model.JobStatus;
 import org.kie.kogito.jobs.service.model.RecipientInstance;
 import org.kie.kogito.jobs.service.utils.DateUtil;
+import org.kie.kogito.process.impl.lock.ProcessInstanceAtomicLockStrategy;
 import org.kie.kogito.timer.Trigger;
 import org.kie.kogito.timer.impl.SimpleTimerTrigger;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ import io.vertx.core.WorkerExecutor;
  */
 public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
-    private record TimerInfo(String jobId, Integer retries, Long timerId, Date timeout) {
+    private record TimerInfo(String jobId, Integer retries, Long timerId, Date timeout, String correlationId) {
 
     }
 
@@ -418,12 +419,12 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         reconcileScheduling(null, jobContext, cancelledJobDetails);
     }
 
-    private void timeout(Long timerId, String jobId) {
+    private void timeout(Long timerId, String mapKey, String jobId) {
         LOG.debug("Executing timeout with timer Id {} and jobId {}", timerId, jobId);
-        workerExecutor.executeBlocking(newTimeoutTask(timerId, jobId), false);
+        workerExecutor.executeBlocking(newTimeoutTask(timerId, mapKey, jobId), false);
     }
 
-    private Callable<JobTimeoutExecution> newTimeoutTask(Long timerId, String jobId) {
+    private Callable<JobTimeoutExecution> newTimeoutTask(Long timerId, String mapKey, String jobId) {
         Callable<JobTimeoutExecution> current = new Callable<JobTimeoutExecution>() {
             @Override
             public JobTimeoutExecution call() throws Exception {
@@ -434,7 +435,7 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
                 boolean shouldRun = jobStore.shouldRun(jobContext, jobId);
                 if (!shouldRun) {
                     LOG.trace("Timeout {} with jobId {} won't run", timerId, jobId);
-                    VertxJobScheduler.this.jobsScheduled.remove(jobId);
+                    VertxJobScheduler.this.jobsScheduled.remove(mapKey);
                     return null;
                 }
 
@@ -471,6 +472,32 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         for (JobTimeoutInterceptor interceptor : interceptors) {
             current = interceptor.chainIntercept(current);
         }
+
+        TimerInfo timerInfo = jobsScheduled.get(mapKey);
+        String correlationId = timerInfo != null ? timerInfo.correlationId() : null;
+        if (correlationId != null) {
+            final Callable<JobTimeoutExecution> intercepted = current;
+            final String processInstanceId = correlationId;
+            return () -> {
+                try {
+                    return ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
+                        try {
+                            return intercepted.call();
+                        } catch (RuntimeException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } catch (RuntimeException e) {
+                    if (e.getCause() instanceof Exception && !(e.getCause() instanceof RuntimeException)) {
+                        throw (Exception) e.getCause();
+                    }
+                    throw e;
+                }
+            };
+        }
+
         return current;
     }
 
@@ -588,13 +615,14 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         ZonedDateTime now = DateUtil.now();
         Long diff = ChronoUnit.MILLIS.between(now, trigger);
         Long delay = Math.max(1, diff);
+        String mapKey = getMapKey(jobDetails);
         Long timerId = this.vertx.setTimer(delay, new Handler<Long>() {
             @Override
             public void handle(Long timerId) {
-                timeout(timerId, jobDetails.getId());
+                timeout(timerId, mapKey, jobDetails.getId());
             }
         });
-        return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime());
+        return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime(), jobDetails.getCorrelationId());
     }
 
     private void removeTimerInfo(TimerInfo timerInfo) {
