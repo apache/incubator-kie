@@ -1110,6 +1110,10 @@ public abstract class WorkflowProcessInstanceImpl extends ProcessInstanceImpl im
         if (nodeInstance instanceof FaultNodeInstance || nodeInstance instanceof EndNodeInstance ||
                 ((org.jbpm.workflow.core.WorkflowProcess) getWorkflowProcess()).isDynamic()
                 || nodeInstance instanceof CompositeNodeInstance) {
+            if (nodeInstance instanceof EventSubProcessNodeInstance eventSubProcess && eventSubProcess.isInterrupting()) {
+                // the interrupting event sub process aborts this process instance itself, it must not be completed here
+                return;
+            }
             if (((org.jbpm.workflow.core.WorkflowProcess) getProcess()).isAutoComplete() && canComplete()) {
                 setState(KogitoProcessInstance.STATE_COMPLETED);
             }
