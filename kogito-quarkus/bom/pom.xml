@@ -31,21 +31,37 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
+    <!-- CVE-2026-111497 (GHSA-9v8h-qqgm-4m35): quarkus-bom:3.33.4.1 ships brotli4j and native artifacts
+         at 1.23.0 (vulnerable out-of-bounds write in Google Brotli decoder). Pin brotli4j and all native
+         architecture variants to 1.24.0 before quarkus-bom import so CI/production (Linux x86_64) and
+         developer environments (macOS/Windows) resolve the secure release.
+         Remove when quarkus-bom ships brotli4j >= 1.24.0. -->
+    <version.com.aayushatharva.brotli4j>1.24.0</version.com.aayushatharva.brotli4j>
     <!--
-      [CVE-2026-45292] opentelemetry-api 1.57.0 pulled in via smallrye-reactive-messaging-otel.
-      Pin to 1.62.0 before quarkus-bom import so this value takes precedence.
-      Should be removed in future Quarkus upgrades that include OpenTelemetry >= 1.62.0
+      [CVE-2026-45292, CVE-2026-118259 (GHSA-ccrj-gw8r-854m)] opentelemetry-api: prior pin was 1.62.0
+      (CVE-2026-45292 fix). Versions 1.62.0-1.66.0 are vulnerable to quadratic CPU consumption in
+      W3C tracestate parsing (CVE-2026-118259). Pin to 1.67.0 (first CVE-free same-major release).
+      MUST move in lockstep with version.io.opentelemetry.instrumentation below: 1.67.0 removed
+      io.opentelemetry.api.internal.ConfigUtil, which opentelemetry-api-incubator 1.62.0-1.66.0-alpha
+      still calls (NoClassDefFoundError at startup of any app using smallrye-reactive-messaging-kafka).
+      Should be removed in future Quarkus upgrades that include OpenTelemetry >= 1.67.0
     -->
-    <version.io.opentelemetry.api>1.62.0</version.io.opentelemetry.api>
-    <version.io.opentelemetry.instrumentation>2.28.1-alpha</version.io.opentelemetry.instrumentation>
-    <version.io.quarkus>3.33.4</version.io.quarkus>
+    <version.io.opentelemetry.api>1.67.0</version.io.opentelemetry.api>
+    <!--
+      opentelemetry-instrumentation-bom-alpha imports opentelemetry-bom and opentelemetry-bom-alpha, which
+      control opentelemetry-api-incubator, -sdk and -context. 2.28.1-alpha imports 1.62.0, which mismatches
+      the opentelemetry-api 1.67.0 pin above; 2.33.0-alpha imports 1.67.0 / 1.67.0-alpha.
+      Remove together with version.io.opentelemetry.api once quarkus-bom ships OpenTelemetry >= 1.67.0
+    -->
+    <version.io.opentelemetry.instrumentation>2.33.0-alpha</version.io.opentelemetry.instrumentation>
+    <version.io.quarkus>3.33.4.1</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
     <version.io.quarkiverse.openapi.generator>2.17.0-lts</version.io.quarkiverse.openapi.generator>
     <version.io.quarkiverse.asyncapi>1.0.5</version.io.quarkiverse.asyncapi>
     <version.io.quarkiverse.reactivemessaging.http>2.7.1</version.io.quarkiverse.reactivemessaging.http>
     <version.io.quarkiverse.embedded.postgresql>0.8.0</version.io.quarkiverse.embedded.postgresql>
-    <version.io.quarkus.camel>3.33.2</version.io.quarkus.camel>
+    <version.io.quarkus.camel>3.33.3</version.io.quarkus.camel>
     <!-- Quarkus-platform-aligned pins. These live here, not in kie-parent, so that the Quarkus upgrade does not
          change what the Spring Boot side resolves. -->
     <version.io.grpc>1.81.0</version.io.grpc>
@@ -71,6 +87,73 @@
 </properties>
   <dependencyManagement>
     <dependencies>
+      <!-- CVE-2026-111497 (GHSA-9v8h-qqgm-4m35): quarkus-bom:3.33.4.1 pins brotli4j and native
+           artifacts at 1.23.0 (vulnerable out-of-bounds write in Google Brotli decoder).
+           All architecture variants (native-linux-*, native-osx-*, native-windows-*, service)
+           are pinned together to ensure both Linux CI/production builds and local developer
+           workstations (macOS/Windows) resolve secure 1.24.0 artifacts.
+           These entries must appear before the quarkus-bom import — first declaration wins in Maven
+           dependencyManagement. Remove when quarkus-bom ships brotli4j >= 1.24.0. -->
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>brotli4j</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-armv7</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-ppc64le</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-riscv64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-s390x</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-osx-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-osx-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-windows-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-windows-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>service</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
       <dependency>
         <groupId>com.github.stephenc.jcip</groupId>
         <artifactId>jcip-annotations</artifactId>

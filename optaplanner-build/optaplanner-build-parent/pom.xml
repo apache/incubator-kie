@@ -43,6 +43,14 @@
 
     <!-- Normal dependency versions -->
     <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
+    <!-- CVE-2026-111497 (GHSA-9v8h-qqgm-4m35): quarkus-bom:3.33.4.1 ships brotli4j and native artifacts
+         at 1.23.0 (vulnerable out-of-bounds write in Google Brotli decoder). Pin brotli4j and all native
+         architecture variants to 1.24.0 before quarkus-bom import so CI/production (Linux x86_64) and
+         developer environments (macOS/Windows) resolve the secure release.
+         Remove when quarkus-bom ships brotli4j >= 1.24.0. -->
+    <version.com.aayushatharva.brotli4j>1.24.0</version.com.aayushatharva.brotli4j>
+    <!-- Overrides the jackson-core and jackson-databind versions shipped by quarkus-bom (see dependencyManagement). -->
+    <version.com.fasterxml.jackson>2.22.4</version.com.fasterxml.jackson>
     <!-- CVE-2026-49844: log4j-api versions below 2.25.5 are vulnerable. Upgrade log4j to 2.26.1.
          This covers log4j-to-slf4j (explicitly managed) and log4j-api (promoted by quarkus-bom to 2.25.1).
          https://logging.apache.org/security.html#CVE-2026-49844 -->
@@ -50,23 +58,24 @@
     <version.com.thoughtworks.xstream>1.4.21</version.com.thoughtworks.xstream>
     <version.io.micrometer>1.17.1</version.io.micrometer>
     <version.io.quarkiverse.operatorsdk>6.6.7</version.io.quarkiverse.operatorsdk>
-    <version.io.quarkus>3.33.4</version.io.quarkus>
+    <!-- CVE fix: quarkus-bom 3.33.4.1 ships netty 4.1.138.Final; override to 4.1.139.Final via netty-bom imported before quarkus-bom. -->
+    <version.io.netty>4.1.139.Final</version.io.netty>
+    <version.io.quarkus>3.33.4.1</version.io.quarkus>
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
     <version.org.apache.commons.text>1.14.0</version.org.apache.commons.text>
     <version.org.apache.openjpa>4.0.0</version.org.apache.openjpa>
     <version.org.apache.poi>5.4.1</version.org.apache.poi>
     <version.org.assertj>3.27.7</version.org.assertj>
-    <version.org.freemarker>2.3.34</version.org.freemarker>
+    <version.org.freemarker>2.3.35</version.org.freemarker>
     <version.org.jdom2>2.0.6.1</version.org.jdom2>
     <version.org.jfree.jfreechart>1.5.4</version.org.jfree.jfreechart>
     <version.org.openrewrite.recipe>1.19.3</version.org.openrewrite.recipe>
     <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
     <version.org.slf4j>2.0.17</version.org.slf4j><!-- TODO keep in sync with quarkus-bom -->
     <version.org.eclipse.parsson>1.1.8</version.org.eclipse.parsson>
-    <version.org.springframework>7.0.9</version.org.springframework>
-    <version.org.springframework.boot>4.1.1</version.org.springframework.boot>
+    <version.org.springframework>7.0.10</version.org.springframework>
+    <version.org.springframework.boot>4.1.2</version.org.springframework.boot>
     <version.org.xerial.snappy>1.1.10.12</version.org.xerial.snappy>
-    <version.com.fasterxml.jackson.databind>2.22.2</version.com.fasterxml.jackson.databind>
     <!-- ************************************************************************ -->
     <!-- Plugins -->
     <!-- ************************************************************************ -->
@@ -127,6 +136,15 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <!-- CVE fix: override netty version shipped by quarkus-bom 3.33.4.1 (4.1.138.Final) to 4.1.139.Final.
+           Placed before quarkus-bom so this import takes precedence — first import wins (Maven MNG). -->
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${version.io.netty}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-commons</artifactId>
@@ -171,6 +189,85 @@
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
         <version>${version.org.xerial.snappy}</version>
+      </dependency>
+      <!-- CVE-2026-111497 (GHSA-9v8h-qqgm-4m35): quarkus-bom:3.33.4.1 pins brotli4j and native
+           artifacts at 1.23.0 (vulnerable out-of-bounds write in Google Brotli decoder).
+           All architecture variants (native-linux-*, native-osx-*, native-windows-*, service)
+           are pinned together to ensure both Linux CI/production builds and local developer
+           workstations (macOS/Windows) resolve secure 1.24.0 artifacts.
+           These entries must appear before the quarkus-bom import — first declaration wins in Maven
+           dependencyManagement. Remove when quarkus-bom ships brotli4j >= 1.24.0. -->
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>brotli4j</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-armv7</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-ppc64le</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-riscv64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-s390x</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-osx-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-osx-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-windows-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-windows-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>service</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <!-- Override quarkus-bom (3.33.4.1) jackson-core and jackson-databind version (2.21.6) with 2.22.4; transitively imported by
+           optaplanner-persistence-jackson, optaplanner-spring-boot-autoconfigure and optaplanner-quarkus-jackson -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${version.com.fasterxml.jackson}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${version.com.fasterxml.jackson}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
@@ -262,13 +359,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-persistence</artifactId>
         <version>${version.org.springframework.boot}</version>
-      </dependency>
- <!-- Override quarkus-bom jackson-databind version; transitively imported by
-           optaplanner-persistence-jackson, optaplanner-spring-boot-autoconfigure and optaplanner-quarkus-jackson -->
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${version.com.fasterxml.jackson.databind}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
