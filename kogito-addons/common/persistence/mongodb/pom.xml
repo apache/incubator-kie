@@ -132,6 +132,8 @@
         <configuration>
           <systemPropertyVariables combine.children="append">
               <container.image.mongodb>${container.image.mongodb}</container.image.mongodb>
+              <!-- test model classes kept in process variables through Java serialization -->
+              <drools.serialization.allowedDeserializationClassPatterns>org.kie.kogito.mongodb.Address;org.kie.kogito.mongodb.PersonWithAddresses</drools.serialization.allowedDeserializationClassPatterns>
           </systemPropertyVariables>
         </configuration>
         <executions>
