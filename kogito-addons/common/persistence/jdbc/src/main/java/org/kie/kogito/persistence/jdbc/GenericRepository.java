@@ -245,7 +245,7 @@ public class GenericRepository extends Repository {
             deleteStmt.executeUpdate();
 
             for (String eventType : newEvents) {
-                LOGGER.debug("Inserting event type: {} for process instance id: {}", eventType, id);
+                LOGGER.trace("Inserting event type: {} for process instance id: {}", eventType, id);
                 insertStmt.setString(1, id.toString());
                 insertStmt.setString(2, eventType);
                 insertStmt.executeUpdate();
@@ -259,7 +259,6 @@ public class GenericRepository extends Repository {
                 PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(DELETE, processVersion));
                 PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE)) {
 
-            LOGGER.debug("[deleteInternal] Deleting event types for process instance id: {}", id);
             eventStatement.setString(1, id.toString());
             eventStatement.executeUpdate();
 
