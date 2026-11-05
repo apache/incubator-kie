@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Stream;
 
+import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
@@ -62,6 +64,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.api.runtime.process.ProcessInstance.STATE_ACTIVE;
 import static org.kie.kogito.persistence.kafka.KafkaPersistenceUtils.createTopologyForProcesses;
+import static org.kie.kogito.persistence.kafka.KafkaPersistenceUtils.topicName;
 import static org.kie.kogito.process.ProcessInstance.STATE_COMPLETED;
 import static org.kie.kogito.process.ProcessInstance.STATE_ERROR;
 import static org.kie.kogito.test.utils.ProcessInstancesTestUtils.abort;
@@ -83,7 +86,12 @@ public class KafkaProcessInstancesIT {
     KafkaStreamsStateListener listener;
 
     @BeforeEach
-    void start() {
+    void start() throws Exception {
+        // With Kafka Streams >= 4.2 the global table fails to initialize ("no partitions available") if its source topic
+        // does not exist yet, so create it before the topology starts.
+        try (Admin admin = Admin.create(singletonMap(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()))) {
+            admin.createTopics(List.of(new NewTopic(topicName(), 1, (short) 1))).all().get();
+        }
         listener = new KafkaStreamsStateListener();
         factory = new KafkaProcessInstancesFactory();
         factory.setKafkaConfig(singletonMap(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()));

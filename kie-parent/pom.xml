@@ -82,11 +82,17 @@
     <version.archunit.maven.plugin>4.0.2</version.archunit.maven.plugin>
     <version.artifact.transfer>0.9.1</version.artifact.transfer>
     <version.asciidoctor-maven-plugin>2.0.0-RC.1</version.asciidoctor-maven-plugin>
-    <version.at.yawk.lz4.java>1.11.4</version.at.yawk.lz4.java>
+    <!-- CVE-2026-106449, CVE-2026-106450, CVE-2026-106451, CVE-2026-106452, CVE-2026-106453 (GHSA-343h-94h5-c4wr, GHSA-gm45-99xc-r7wv,
+         GHSA-mcr4-qmvw-px4g, GHSA-4v53-57pg-c464, GHSA-6cx8-rjf8-pr8g): lz4-java 1.11.1 is vulnerable. Upgraded from 1.11.4 to 1.12.0
+         (1.11.4 is the minimum CVE-free release). Remove only if a later fix release supersedes it. -->
+    <version.at.yawk.lz4.java>1.12.0</version.at.yawk.lz4.java>
     <version.black.ninia>4.2.0</version.black.ninia>
     <version.build.helper.maven.plugin>3.4.0</version.build.helper.maven.plugin>
     <version.ch.obermuhlner>2.0.1</version.ch.obermuhlner>
-    <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
+    <!-- Logback security upgrade: upgraded from 1.6.3 to 1.6.5 (latest release). Applies to logback-classic and logback-core.
+         Keep aligned with version.ch.qos.logback in optaplanner-build/optaplanner-build-parent/pom.xml.
+         Remove only if a later fix release supersedes it. -->
+    <version.ch.qos.logback>1.6.5</version.ch.qos.logback>
     <version.com.fasterxml.jackson>2.22.3</version.com.fasterxml.jackson>
     <version.com.fasterxml.jackson.annotations>2.22</version.com.fasterxml.jackson.annotations>
     <version.com.fasterxml.jackson.databind>2.22.3</version.com.fasterxml.jackson.databind>
@@ -204,12 +210,12 @@
     <version.maven.plugin>3.15.1</version.maven.plugin>
     <version.maven.project>2.2.1</version.maven.project>
     <version.maven.resolver.api>1.9.27</version.maven.resolver.api>
-    <version.mongodb-driver-sync>5.11.1</version.mongodb-driver-sync>
+    <!-- CVE-2026-118581: MongoDB driver NoSQL injection (CWE-943) in <= 5.13.0. Override to 5.14.0. -->
+    <version.mongodb-driver-sync>5.14.0</version.mongodb-driver-sync>
     <version.nashorn>15.3</version.nashorn>
     <version.native2ascii-maven-plugin>1.0-beta-1</version.native2ascii-maven-plugin>
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
     <version.net.java.dev.glazedlists>1.8.0</version.net.java.dev.glazedlists>
-    <version.net.minidev.jsonsmart>2.4.10</version.net.minidev.jsonsmart>
     <version.net.sf.saxon.Saxon-HE>12.10</version.net.sf.saxon.Saxon-HE>
     <version.net.thisptr.jackson-jq>1.0.0-preview.20240207</version.net.thisptr.jackson-jq>
     <version.org.antlr>3.5.2</version.org.antlr>
@@ -227,7 +233,15 @@
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
     <version.org.apache.groovy>4.0.29</version.org.apache.groovy>
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
-    <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
+    <!-- kafka-clients/kafka-streams 4.1.2 are affected by CVE-2026-110985, CVE-2026-111115,
+         CVE-2026-110952, CVE-2026-111108, CVE-2026-114349, CVE-2026-111551, CVE-2026-111073 and CVE-2026-111496.
+         Fixed in Apache Kafka 4.2.2, 4.3.x and 4.4.0 (https://kafka.apache.org/community/cve-list/); pinned to the lowest fixed release, 4.2.2,
+         to keep the jump from quarkus-bom's 4.1.2 small. 4.3.0+ moves Kafka Streams changelog offsets into the state store (KIP-1035),
+         which makes an in-flight downgrade impossible, so 4.3/4.4 are deliberately avoided. quarkus-bom:3.33.4.1 still pins 4.1.2.
+         kafka-clients and kafka-streams are both managed in this POM from this property; managed entries inherited from
+         kie-parent take precedence over the imported quarkus-bom, so no Quarkus BOM override is needed.
+         Remove this override once quarkus-bom ships kafka >= 4.2.2. -->
+    <version.org.apache.kafka>4.2.2</version.org.apache.kafka>
     <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
          quarkus-bom:3.33.4 promotes it to 2.25.3. Both are below the minimum safe version 2.25.5.
          This managed entry forces 2.26.1 across all modules inheriting kie-parent.
@@ -284,6 +298,10 @@
     <version.org.mongo>5.3.1</version.org.mongo>
     <version.org.mozilla.rhino>1.8.1</version.org.mozilla.rhino>
     <version.org.mvel>2.5.4.Final</version.org.mvel>
+    <!-- CVE-2026-116486 (GHSA-743r-26gf-97ff): objenesis before 3.6 has Type Confusion via Class Name
+         Instantiator Cache. mockito-core:5.18.0 ships objenesis:3.3 as a runtime dependency.
+         Pin to 3.6 (fix release; latest same-major). Remove when mockito ships objenesis >= 3.6. -->
+    <version.org.objenesis>3.6</version.org.objenesis>
     <!-- Version of JMH -->
     <version.org.openjdk.jmh>1.21</version.org.openjdk.jmh>
     <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
@@ -1214,11 +1232,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>net.minidev</groupId>
-        <artifactId>json-smart</artifactId>
-        <version>${version.net.minidev.jsonsmart}</version>
-      </dependency>
-      <dependency>
         <groupId>net.sf.saxon</groupId>
         <artifactId>Saxon-HE</artifactId>
         <version>${version.net.sf.saxon.Saxon-HE}</version>
@@ -1353,6 +1366,14 @@
             <artifactId>lz4-java</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <!-- kafka-streams 4.1.2 (pinned by quarkus-bom:3.33.4.1) is affected by CVE-2026-111551 and CVE-2026-111496.
+           Kept on the same property as kafka-clients so the Kafka family moves together.
+           Remove when quarkus-bom ships kafka >= 4.2.2. -->
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-streams</artifactId>
+        <version>${version.org.apache.kafka}</version>
       </dependency>
       <dependency>
         <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
@@ -2056,6 +2077,15 @@
         <groupId>org.mvel</groupId>
         <artifactId>mvel2</artifactId>
         <version>${version.org.mvel}</version>
+      </dependency>
+      <!-- CVE-2026-116486 (GHSA-743r-26gf-97ff): objenesis before 3.6 has Type Confusion via Class Name
+           Instantiator Cache. mockito-core:5.18.0 ships objenesis:3.3 as a runtime dependency; this pin
+           forces resolution to 3.6 across all sub-trees inheriting from kie-parent.
+           Remove when mockito ships objenesis >= 3.6. -->
+      <dependency>
+        <groupId>org.objenesis</groupId>
+        <artifactId>objenesis</artifactId>
+        <version>${version.org.objenesis}</version>
       </dependency>
       <!--JMH (Benchmarks)-->
       <dependency>

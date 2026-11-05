@@ -158,8 +158,8 @@
         <artifactId>reactor-core</artifactId>
         <version>${version.io.projectreactor}</version>
       </dependency>
-      <!-- CVE-2026-18710 (JAVA-6266): quarkus-bom:3.33.4 ships MongoDB driver artifacts at 5.6.4.
-           Pin to 5.11.1 (version.mongodb-driver-sync). Remove when quarkus-bom ships >= 5.11.1.
+      <!-- CVE-2026-118581 / CVE-2026-18710: quarkus-bom:3.33.4.1 ships MongoDB driver artifacts at 5.6.4.
+           Pin to 5.14.0 (version.mongodb-driver-sync). Remove when quarkus-bom ships >= 5.14.0.
            Must appear before the quarkus-bom import to take precedence
            (first explicit entry wins in Maven dependencyManagement). -->
       <dependency>

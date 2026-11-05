@@ -42,7 +42,10 @@
     <version.org.drools>${project.version}</version.org.drools>
 
     <!-- Normal dependency versions -->
-    <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
+    <!-- Logback security upgrade: upgraded from 1.6.3 to 1.6.5 (latest release). Applies to logback-classic and logback-core.
+         Keep aligned with version.ch.qos.logback in kie-parent/pom.xml.
+         Remove only if a later fix release supersedes it. -->
+    <version.ch.qos.logback>1.6.5</version.ch.qos.logback>
     <!-- CVE-2026-49844: log4j-api versions below 2.25.5 are vulnerable. Upgrade log4j to 2.26.1.
          This covers log4j-to-slf4j (explicitly managed) and log4j-api (promoted by quarkus-bom to 2.25.1).
          https://logging.apache.org/security.html#CVE-2026-49844 -->
@@ -59,6 +62,10 @@
     <version.org.freemarker>2.3.34</version.org.freemarker>
     <version.org.jdom2>2.0.6.1</version.org.jdom2>
     <version.org.jfree.jfreechart>1.5.4</version.org.jfree.jfreechart>
+    <!-- CVE-2026-116486 (GHSA-743r-26gf-97ff): objenesis before 3.6 has Type Confusion via Class Name
+         Instantiator Cache. mockito-core:5.18.0 ships objenesis:3.3 as a runtime dependency.
+         Pin to 3.6 (fix release; latest same-major). Remove when mockito ships objenesis >= 3.6. -->
+    <version.org.objenesis>3.6</version.org.objenesis>
     <version.org.openrewrite.recipe>1.19.3</version.org.openrewrite.recipe>
     <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
     <version.org.slf4j>2.0.17</version.org.slf4j><!-- TODO keep in sync with quarkus-bom -->
@@ -141,6 +148,15 @@
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-observation</artifactId>
         <version>${version.io.micrometer}</version>
+      </dependency>
+      <!-- CVE-2026-116486 (GHSA-743r-26gf-97ff): objenesis before 3.6 has Type Confusion via Class Name
+           Instantiator Cache. mockito-core:5.18.0 ships objenesis:3.3 as a runtime dependency; this pin
+           forces resolution to 3.6 across the OptaPlanner tree.
+           Remove when mockito ships objenesis >= 3.6. -->
+      <dependency>
+        <groupId>org.objenesis</groupId>
+        <artifactId>objenesis</artifactId>
+        <version>${version.org.objenesis}</version>
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>

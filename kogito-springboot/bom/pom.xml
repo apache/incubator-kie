@@ -94,9 +94,9 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- CVE-2026-18710 (JAVA-6266): spring-boot-dependencies:4.1.1 imports mongodb-driver-bom:5.8.1
-           which pins mongodb-driver-core and bson to 5.8.1. Override to 5.11.1 (version.mongodb-driver-sync).
-           Remove when spring-boot-dependencies imports mongodb-driver-bom >= 5.11.1. -->
+      <!-- CVE-2026-118581 / CVE-2026-18710: spring-boot-dependencies:4.1.2 imports mongodb-driver-bom:5.8.1
+           which pins mongodb-driver-core and bson to 5.8.1. Override to 5.14.0 (version.mongodb-driver-sync).
+           Remove when spring-boot-dependencies imports mongodb-driver-bom >= 5.14.0. -->
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>mongodb-driver-core</artifactId>
@@ -650,6 +650,22 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>${version.org.springframework.boot}</version>
         <type>pom</type>
+      </dependency>
+      <!-- Exclude unused json-path and transitive vulnerable json-smart from spring-boot-starter-test -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <version>${version.org.springframework.boot}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
