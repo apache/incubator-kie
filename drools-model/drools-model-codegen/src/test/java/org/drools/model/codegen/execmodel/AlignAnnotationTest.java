@@ -64,6 +64,16 @@ public class AlignAnnotationTest extends BaseModelTest {
             "end\n" +
             "rule R when AnnotatedEvent() then end\n";
 
+    // #7252: capitalized (Java-name) annotations must override the Java class
+    // annotations exactly like the lowercase forms do.
+    private static final String ANNOTATED_EVENT_CAPITAL_OVERRIDE_DRL =
+            "import " + AnnotatedEvent.class.getCanonicalName() + ";\n" +
+            "declare AnnotatedEvent\n" +
+            "  @Role(FACT)\n" +
+            "  @Expires(5s)\n" +
+            "end\n" +
+            "rule R when AnnotatedEvent() then end\n";
+
     private TypeDeclaration getTypeDeclaration(RUN_TYPE runType, String drl, Class<?> clazz) {
         return getTypeDeclaration(runType, null, drl, clazz);
     }
@@ -215,6 +225,22 @@ public class AlignAnnotationTest extends BaseModelTest {
     public void testExpiresExplicitOverride(RUN_TYPE runType) {
         TypeDeclaration typeDecl = getTypeDeclaration(runType, ANNOTATED_EVENT_OVERRIDE_DRL, AnnotatedEvent.class);
         assertThat(typeDecl.getExpirationOffset()).isEqualTo(5_000L);
+    }
+
+    // --- #7252: capitalized DRL annotations must override Java class annotations ---
+
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testCapitalizedRoleExplicitOverride(RUN_TYPE runType) {
+        TypeDeclaration typeDecl = getTypeDeclaration(runType, ANNOTATED_EVENT_CAPITAL_OVERRIDE_DRL, AnnotatedEvent.class);
+        assertThat(typeDecl.getRole()).as("@Role(FACT)").isEqualTo(Role.Type.FACT);
+    }
+
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testCapitalizedExpiresExplicitOverride(RUN_TYPE runType) {
+        TypeDeclaration typeDecl = getTypeDeclaration(runType, ANNOTATED_EVENT_CAPITAL_OVERRIDE_DRL, AnnotatedEvent.class);
+        assertThat(typeDecl.getExpirationOffset()).as("@Expires(5s)").isEqualTo(5_000L);
     }
 
     @ParameterizedTest
