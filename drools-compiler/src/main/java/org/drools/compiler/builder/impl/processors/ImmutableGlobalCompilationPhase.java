@@ -59,7 +59,7 @@ public class ImmutableGlobalCompilationPhase extends AbstractPackageCompilationP
                 addGlobal(pkg, identifier, globalType);
             } catch (final ClassNotFoundException e) {
                 this.results.add(new GlobalError(global, e.getMessage()));
-                logger.warn("ClassNotFoundException occured!", e);
+                logger.warn("ClassNotFoundException occurred!", e);
             }
         }
 
