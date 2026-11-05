@@ -41,10 +41,6 @@ public interface RuleFluent<T, U> {
 
     T setActiveRuleFlowGroup(String ruleFlowGroup);
 
-    /**
-     * This method will be deprecated in a future version.
-     * Use {@link #setActiveRuleFlowGroup(String)} instead.
-     */
     T setActiveAgendaGroup(String agendaGroup);
 
     U dispose();

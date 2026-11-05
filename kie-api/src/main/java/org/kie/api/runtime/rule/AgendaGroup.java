@@ -36,10 +36,5 @@ public interface AgendaGroup {
 
     void clear();
 
-    /**
-     * This method will be deprecated in a future version.
-     * Use {@code agenda.getRuleFlowGroup(getName()).activate()} instead
-     * (see {@link Agenda#getRuleFlowGroup(String)} and {@link RuleFlowGroup#activate()}).
-     */
     void setFocus();
 }
