@@ -35,6 +35,25 @@
   meaningful variable names, small classes with a single clear responsibility,
   and methods that don't depend on hidden state established by their callers.
 
+## Versioning and public API changes
+
+- Semantic Versioning applies to the entire codebase: every module, feature,
+  and any public resource an end user can use (APIs, configuration, file
+  formats, generated artifacts, …), whatever module it lives in.
+- Breaking changes are only allowed in a major release, and what is going to
+  be removed must be **deprecated first** (in an earlier release), so users
+  have time to migrate.
+- Exceptions are possible but not the norm: if there is a good reason to
+  break something outside of a major release (or without deprecating it
+  first), it can be proposed and eventually merged. The PR must call it out
+  explicitly so the reviewing committers are aware of it, and depending on its
+  impact it may require a discussion in the Apache KIE community mailing list.
+- Today, only the `kie-api` module is tracked for API changes. Its rules (API
+  change management, deprecation and removal) are described in
+  [kie-api/README.md](../kie-api/README.md); read them before adding,
+  changing, deprecating, or removing anything in it, and follow the same
+  principles elsewhere.
+
 ## Licensing
 
 - Every source file carries the ASF license header. This is enforced in CI
