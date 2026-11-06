@@ -47,6 +47,7 @@ public enum RemoveIdentitiesOption implements SingleValueRuleBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }
