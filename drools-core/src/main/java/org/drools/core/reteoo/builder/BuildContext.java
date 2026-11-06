@@ -108,6 +108,8 @@ public class BuildContext implements RuleBuildContext {
     private boolean                          emptyForAllBetaConstraints;
     private boolean                          attachPQN;
     private boolean                          terminated;
+    /** Set by SequenceBuilder when the first sequence pattern is promoted to anchor role. */
+    private boolean                          sequenceFirstPatternAsAnchor;
 
     private String                           consequenceName;
 
@@ -432,6 +434,14 @@ public class BuildContext implements RuleBuildContext {
 
     void terminate() {
         this.terminated = true;
+    }
+
+    public boolean isSequenceFirstPatternAsAnchor() {
+        return sequenceFirstPatternAsAnchor;
+    }
+
+    public void setSequenceFirstPatternAsAnchor(boolean sequenceFirstPatternAsAnchor) {
+        this.sequenceFirstPatternAsAnchor = sequenceFirstPatternAsAnchor;
     }
 
     public String getConsequenceName() {
