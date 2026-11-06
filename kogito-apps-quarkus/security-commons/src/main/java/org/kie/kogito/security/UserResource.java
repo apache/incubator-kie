@@ -21,7 +21,7 @@ package org.kie.kogito.security;
 import java.util.Collections;
 import java.util.Set;
 
-import org.jboss.resteasy.annotations.cache.NoCache;
+import org.jboss.resteasy.reactive.NoCache;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.credential.TokenCredential;
