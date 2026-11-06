@@ -1429,6 +1429,95 @@ public class PatternDSLSequenceOneOfStepTest {
             .containsExactly("fired");
     }
 
+    @Test
+    public void orContainingOneOfAtIntermediateStepOvermatchVetoResetsSequence() {
+        Variable<Toy> alarmA = declarationOf(Toy.class);
+        Variable<Toy> alarmB = declarationOf(Toy.class);
+
+        Rule rule = rule("or-containing-oneof-intermediate").build(
+            pattern(person),
+            sequence(
+                pattern(toy).expr("isStartOr", t -> t.getName().equals("start")),
+                or(
+                    oneOf(
+                        pattern(alarmA).expr("isAlarmAOr", t -> t.getName().equals("alarmA")),
+                        pattern(alarmB).expr("isAlarmBOr", t -> t.getName().equals("alarmB"))
+                    ),
+                    pattern(toy).expr("isCFactOr", t -> t.getName().equals("cFact"))
+                ),
+                pattern(toy).expr("isDFactOr", t -> t.getName().equals("dFact"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        // First attempt: alarmB over-matches the oneOf inside or(...) -> must VETO and reset to step 0
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("cFact"));
+        insertAndFire(new Toy("alarmB")); // oneOf over-match: should veto the sequence
+        insertAndFire(new Toy("dFact"));  // should not fire because sequence was vetoed/reset
+
+        assertThat(results)
+            .as("over-match in oneOf inside or(...) at an intermediate step must veto the sequence before dFact arrives")
+            .isEmpty();
+
+        // Second attempt — proves sequence reset to step 0 and remains reusable
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("dFact"));
+        assertThat(results)
+            .as("after veto-reset the sequence is reusable: second attempt with start+alarmA+dFact must fire once")
+            .containsExactly("fired");
+    }
+
+    @Test
+    public void orContainingMultipleOneOfAtIntermediateStepOvermatchVetoResetsSequence() {
+        Variable<Toy> alarmA = declarationOf(Toy.class);
+        Variable<Toy> alarmB = declarationOf(Toy.class);
+        Variable<Toy> alarmC = declarationOf(Toy.class);
+        Variable<Toy> alarmE = declarationOf(Toy.class);
+
+        Rule rule = rule("or-containing-multiple-oneof-intermediate").build(
+            pattern(person),
+            sequence(
+                pattern(toy).expr("isStartOr2", t -> t.getName().equals("start")),
+                or(
+                    oneOf(
+                        pattern(alarmA).expr("isAlarmAOr2", t -> t.getName().equals("alarmA")),
+                        pattern(alarmB).expr("isAlarmBOr2", t -> t.getName().equals("alarmB"))
+                    ),
+                    oneOf(
+                        pattern(alarmC).expr("isAlarmCOr2", t -> t.getName().equals("alarmC")),
+                        pattern(alarmE).expr("isAlarmEOr2", t -> t.getName().equals("alarmE"))
+                    )
+                ),
+                pattern(toy).expr("isDFactOr2", t -> t.getName().equals("dFact"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("alarmB")); // over-match on first oneOf branch -> VETO -> reset
+        insertAndFire(new Toy("dFact"));
+
+        assertThat(results)
+            .as("over-match in oneOf inside or(oneOf, oneOf) must veto the sequence before dFact arrives")
+            .isEmpty();
+
+        // Second attempt — happy path: exactly alarmC arrives for second oneOf branch
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmC"));
+        insertAndFire(new Toy("dFact"));
+        assertThat(results)
+            .as("after veto-reset the sequence is reusable: second attempt with start+alarmC+dFact must fire once")
+            .containsExactly("fired");
+    }
+
     @AfterEach
     public void tearDown() {
         results.clear();

@@ -20,6 +20,7 @@ package org.drools.modelcompiler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.model.Model;
@@ -37,6 +38,8 @@ import org.drools.modelcompiler.domain.Toy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
+import org.kie.api.event.rule.DefaultAgendaEventListener;
+import org.kie.api.event.rule.MatchCreatedEvent;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionsPool;
 import org.kie.api.runtime.rule.FactHandle;
@@ -727,5 +730,137 @@ public class PatternDSLSequenceEdgeCaseTest {
                 .as("sequence must fire exactly once in session #2 — " +
                     "stale DynamicFilter/SignalAdapter state from session #1 must not cause extra or missing fires")
                 .isEqualTo(1);
+    }
+
+    @Test
+    public void sameTypeInTwoSteps() {
+        Variable<Toy>    toy    = declarationOf(Toy.class);
+        Variable<Person> person = declarationOf(Person.class);
+
+        Rule rule = rule("ball-then-doll").build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("is-ball", t -> t.getName().equals("ball")),
+                        pattern(toy).expr("is-doll", t -> t.getName().equals("doll"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(
+                new ModelImpl().addRule(rule))
+                .newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.fireAllRules();
+
+        ksession.insert(new Toy("ball"));
+        ksession.fireAllRules();
+
+        ksession.insert(new Toy("doll"));
+        ksession.fireAllRules();
+
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void stepWithTwoConstraintsIsUnsatisfiable() {
+        Variable<Toy>    toy    = declarationOf(Toy.class);
+        Variable<Person> person = declarationOf(Person.class);
+
+        // A step that requires name == "ball" AND name == "doll" simultaneously —
+        // logically impossible, must never match any real Toy.
+        Rule rule = rule("impossible-step").build(
+                pattern(person),
+                sequence(
+                        pattern(toy)
+                                .expr("is-ball", t -> t.getName().equals("ball"))
+                                .expr("is-doll", t -> t.getName().equals("doll"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(
+                new ModelImpl().addRule(rule))
+                .newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.fireAllRules();
+
+        // A Toy("ball") satisfies "is-ball" but not "is-doll" — must NOT fire.
+        ksession.insert(new Toy("ball"));
+        ksession.fireAllRules();
+
+        assertThat(results).isEmpty();
+    }
+
+    @Test
+    public void stepWithTwoConstraintsBothSatisfiedFires() {
+        Variable<Toy>    toy    = declarationOf(Toy.class);
+        Variable<Person> person = declarationOf(Person.class);
+
+        // A step that requires name starts with "t" AND length > 3.
+        // Toy("toy-car") satisfies both — CombinedAlphaConstraint.isAllowed()
+        // must return true (the all-pass branch at the end of the loop).
+        Rule rule = rule("two-constraint-step").build(
+                pattern(person),
+                sequence(
+                        pattern(toy)
+                                .expr("starts-with-t", t -> t.getName().startsWith("t"))
+                                .expr("longer-than-3",  t -> t.getName().length() > 3)
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(
+                new ModelImpl().addRule(rule))
+                .newKieSession();
+
+        ksession.insert(new Person("anchor"));
+        ksession.fireAllRules();
+
+        // Toy("toy-car"): starts with "t" ✓, length 7 > 3 ✓ — both constraints pass.
+        ksession.insert(new Toy("toy-car"));
+        ksession.fireAllRules();
+
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void joinAfterSequenceHasCorrectTupleWidth() {
+        Variable<Person> anchorV   = declarationOf(Person.class);
+        Variable<Toy>    toyV      = declarationOf(Toy.class);
+        Variable<Person> observerV = declarationOf(Person.class);
+
+        Rule rule = rule("join-after-sequence").build(
+                pattern(anchorV).expr("is-anchor",   p -> p.getName().equals("anchor")),
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                pattern(observerV).expr("is-observer", p -> p.getName().equals("observer")),
+                execute(() -> results.add("fired"))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        AtomicInteger capturedHandleCount = new AtomicInteger(-1);
+        ksession.addEventListener(new DefaultAgendaEventListener() {
+            @Override
+            public void matchCreated(MatchCreatedEvent event) {
+                capturedHandleCount.set(event.getMatch().getFactHandles().size());
+            }
+        });
+
+        ksession.insert(new Person("anchor"));
+        ksession.insert(new Person("observer"));
+        ksession.fireAllRules();
+
+        ksession.insert(new Toy("ball"));
+        ksession.fireAllRules();
+
+        assertThat(results).containsExactly("fired");
+        assertThat(capturedHandleCount.get())
+                .as("match must contain both anchor and observer fact handles")
+                .isEqualTo(2);
     }
 }

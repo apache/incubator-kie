@@ -481,12 +481,19 @@ public class PatternDSLSequenceNoneOrAllStepTest {
 
     @Test
     public void noneOrAllInsideOrNoneOrAllRevertsAfterOrAlreadyAdvancedStillFires() {
-        // The OR has already matched via the xnor branch when the step activated, so the step has
-        // advanced to ack. A later alarmA reverting the xnor must not un-advance the sequence.
+        // or(noneOrAll(A,B), other) folded with ack into and(or(...), ack).
+        // alarmA makes noneOrAll partial (UNMATCHED), so or(...) is unmatched, and ack alone must not fire.
         ksession = makeKSession(buildXnorInsideOrRule("or-xnor-reverts-late"));
         insertAndFire(new Person("anchor"));
         insertAndFire(new Toy("start"));
         insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("ack"));
+        assertThat(results)
+                .as("alarmA causes partial match in noneOrAll, leaving or unmatched so ack does not fire")
+                .isEmpty();
+
+        // If alarmB arrives too (all matched), noneOrAll is satisfied and ack fires.
+        insertAndFire(new Toy("alarmB"));
         insertAndFire(new Toy("ack"));
         assertThat(results).containsExactly("fired");
     }
@@ -821,6 +828,63 @@ public class PatternDSLSequenceNoneOrAllStepTest {
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("trailing absent()/oneOf()/noneOrAll() requires a following positive step");
+    }
+
+    @Test
+    public void orContainingNoneOrAllAtIntermediateStepPartialMatchReverts() {
+        Variable<Toy> alarmA = declarationOf(Toy.class);
+        Variable<Toy> alarmB = declarationOf(Toy.class);
+
+        Rule rule = rule("or-containing-noneorall-intermediate").build(
+            pattern(person),
+            sequence(
+                pattern(toy).expr("isStartNoneOrAllOr", t -> t.getName().equals("start")),
+                or(
+                    pattern(toy).expr("isXFactOr", t -> t.getName().equals("xFact")),
+                    noneOrAll(
+                        pattern(alarmA).expr("isAlarmANoneOrAllOr", t -> t.getName().equals("alarmA")),
+                        pattern(alarmB).expr("isAlarmBNoneOrAllOr", t -> t.getName().equals("alarmB"))
+                    )
+                ),
+                pattern(toy).expr("isDFactNoneOrAllOr", t -> t.getName().equals("dFact"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        // Case 1: start, alarmA (noneOrAll becomes partial/unmatched), dFact -> must NOT fire
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("dFact"));
+        assertThat(results)
+            .as("partial match in noneOrAll inside or(...) leaves or unmatched; dFact must not fire")
+            .isEmpty();
+        ksession.dispose();
+        results.clear();
+
+        // Case 2: start, alarmA, alarmB (noneOrAll has all matched -> matched again), dFact -> fires
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("alarmB"));
+        insertAndFire(new Toy("dFact"));
+        assertThat(results)
+            .as("all-match in noneOrAll satisfies or; dFact must fire")
+            .containsExactly("fired");
+        ksession.dispose();
+        results.clear();
+
+        // Case 3: start, xFact (satisfies other branch of or), dFact -> fires
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("xFact"));
+        insertAndFire(new Toy("dFact"));
+        assertThat(results)
+            .as("xFact satisfies or; dFact must fire")
+            .containsExactly("fired");
     }
 
     private static PatternDSL.PatternDef<Toy> toyNamed(Variable<Toy> var, String name) {

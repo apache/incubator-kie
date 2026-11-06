@@ -270,7 +270,11 @@ public class ViewPatternBuilder implements ViewBuilder {
             Condition.Type type = ((CombinedExprViewItem) step).getType();
             return type == Condition.Type.NOT || type == Condition.Type.NOR;
         }
-        throw new IllegalStateException("Unexpected SequenceStep type: " + step.getClass());
+        return false;
+    }
+
+    private static boolean isNonPositiveGuardStep(SequenceStep step) {
+        return !hasPositiveTrigger(step) && !isAbsenceStep(step);
     }
 
     private static void validateActivationMatching(org.drools.model.view.ViewItem item) {
@@ -361,85 +365,70 @@ public class ViewPatternBuilder implements ViewBuilder {
      * @return the rewritten sequence steps with folded gate composites
      */
     private static SequenceStep[] rewriteRevertingGateSteps(SequenceStep[] steps) {
-        boolean hasXor = false;
+        boolean hasGuard = false;
         for (int i = 0; i < steps.length; i++) {
-            SequenceStep step = steps[i];
-            if (step instanceof CombinedExprViewItem) {
-                Condition.Type t = ((CombinedExprViewItem) step).getType();
-                if ((t == Condition.Type.XOR || t == Condition.Type.XNOR) && i + 1 < steps.length) {
-                    hasXor = true;
-                    break;
-                }
+            if (isNonPositiveGuardStep(steps[i]) && i + 1 < steps.length) {
+                hasGuard = true;
+                break;
             }
         }
-        if (!hasXor) {
+        if (!hasGuard) {
             return steps;
         }
         List<SequenceStep> result = new ArrayList<>();
         for (int i = 0; i < steps.length; i++) {
             SequenceStep step = steps[i];
-            if (step instanceof CombinedExprViewItem) {
-                Condition.Type t = ((CombinedExprViewItem) step).getType();
-                if (t == Condition.Type.XOR || t == Condition.Type.XNOR) {
-                    // Collect the full run of consecutive XOR/XNOR gate steps.
-                    // Interleaved absent() absence guards are held in a separate list —
-                    // they will be emitted BEFORE the folded and(...) composite so that
-                    // KiePackagesBuilder's top-level NOT accumulation loop handles them as
-                    // independent veto side-channels, which is the same circuit it builds for
-                    // standalone absent() steps.
-                    List<ViewItem> xorRun = new ArrayList<>();
-                    List<SequenceStep> absenceGuards = new ArrayList<>();
-                    xorRun.add((ViewItem) step);
-                    while (i + 1 < steps.length) {
-                        SequenceStep next = steps[i + 1];
-                        if (next instanceof CombinedExprViewItem) {
-                            Condition.Type nt = ((CombinedExprViewItem) next).getType();
-                            if (nt == Condition.Type.XOR || nt == Condition.Type.XNOR) {
-                                xorRun.add((ViewItem) next);
-                                i++;
-                                continue;
-                            }
-                            if (nt == Condition.Type.NOT || nt == Condition.Type.NOR) {
-                                absenceGuards.add(next);
-                                i++;
-                                continue;
-                            }
-                        } else if (next instanceof ExistentialExprViewItem
-                                && ((ExistentialExprViewItem) next).getType() == Condition.Type.NOT) {
-                            absenceGuards.add(next);
-                            i++;
-                            continue;
-                        }
-                        break;
-                    }
-                    // The step that follows the run must be a positive trigger.
-                    if (i + 1 >= steps.length) {
-                        // No following step at all — the trailing-gate check in the caller handles this.
-                        result.addAll(xorRun.stream().map(v -> (SequenceStep) v).collect(java.util.stream.Collectors.toList()));
-                        result.addAll(absenceGuards);
+            if (isNonPositiveGuardStep(step)) {
+                // Collect the full run of consecutive non-positive guard steps.
+                // Interleaved absent() absence guards are held in a separate list —
+                // they will be emitted BEFORE the folded and(...) composite so that
+                // KiePackagesBuilder's top-level NOT accumulation loop handles them as
+                // independent veto side-channels, which is the same circuit it builds for
+                // standalone absent() steps.
+                List<ViewItem> guardRun = new ArrayList<>();
+                List<SequenceStep> absenceGuards = new ArrayList<>();
+                guardRun.add((ViewItem) step);
+                while (i + 1 < steps.length) {
+                    SequenceStep next = steps[i + 1];
+                    if (isNonPositiveGuardStep(next)) {
+                        guardRun.add((ViewItem) next);
+                        i++;
                         continue;
                     }
-                    SequenceStep trigger = steps[i + 1];
-                    if (!hasPositiveTrigger(trigger)) {
-                        throw new IllegalArgumentException(
-                                "sequence(): consecutive bare oneOf()/noneOrAll() steps require a positive " +
-                                "pattern step between them. Found " + xorRun.size() + " consecutive " +
-                                "oneOf/noneOrAll step(s) followed by another revertible guard. " +
-                                "Each oneOf()/noneOrAll() run must be immediately followed by a positive step.");
+                    if (isAbsenceStep(next)) {
+                        absenceGuards.add(next);
+                        i++;
+                        continue;
                     }
-                    // Emit absence guards first so KiePackagesBuilder's NOT accumulation loop
-                    // picks them up as veto side-channels before the positive trigger.
+                    break;
+                }
+                // The step that follows the run must be a positive trigger.
+                if (i + 1 >= steps.length) {
+                    // No following step at all — the trailing-gate check in the caller handles this.
+                    result.addAll(guardRun.stream().map(v -> (SequenceStep) v).collect(java.util.stream.Collectors.toList()));
                     result.addAll(absenceGuards);
-                    // Fold the xor/xnor run + trigger into and(xor(...), ..., trigger).
-                    List<ViewItem> run = new ArrayList<>(xorRun);
-                    run.add((ViewItem) trigger);
-                    CombinedExprViewItem wrapped = new CombinedExprViewItem(
-                            Condition.Type.AND,
-                            run.toArray(new ViewItem[0]));
-                    result.add(wrapped);
-                    i++;
                     continue;
                 }
+                SequenceStep trigger = steps[i + 1];
+                if (!hasPositiveTrigger(trigger)) {
+                    throw new IllegalArgumentException(
+                            "sequence(): consecutive guard-only steps require a positive " +
+                            "pattern step between them. Found " + guardRun.size() + " consecutive " +
+                            "guard step(s) followed by another non-positive step. " +
+                            "Each guard step run must be immediately followed by a positive step.");
+                }
+                // Emit absence guards first so KiePackagesBuilder's NOT accumulation loop
+                // picks them up as veto side-channels before the positive trigger.
+                result.addAll(absenceGuards);
+                // Fold the guardRun + trigger into and(guard1, ..., trigger).
+                List<ViewItem> run = new ArrayList<>(guardRun);
+                run.add((ViewItem) trigger);
+                CombinedExprViewItem wrapped = new CombinedExprViewItem(
+                        Condition.Type.AND,
+                        run.toArray(new ViewItem[0]));
+                result.add(wrapped);
+                i++;
+                continue;
             }
             result.add(step);
         }
