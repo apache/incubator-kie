@@ -56,6 +56,7 @@ import org.drools.commands.runtime.process.StartCorrelatedProcessCommand;
 import org.drools.commands.runtime.process.StartProcessCommand;
 import org.drools.commands.runtime.process.StartProcessFromNodeIdsCommand;
 import org.drools.commands.runtime.process.StartProcessInstanceCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -397,6 +398,11 @@ public class CommandBasedStatefulKnowledgeSessionImpl extends AbstractRuntime
 
                         public String getName() {
                             return name;
+                        }
+
+                        public void activate() {
+                            ActivateRuleFlowGroupCommand command = new ActivateRuleFlowGroupCommand( name );
+                            runner.execute( command );
                         }
                     };
                 }

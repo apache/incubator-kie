@@ -165,6 +165,11 @@ public class DroolsImpl implements Drools, org.kie.api.runtime.rule.RuleContext 
     }
 
     @Override
+    public void activateRuleFlowGroup( String name ) {
+        knowledgeHelper.activateRuleFlowGroup( name );
+    }
+
+    @Override
     public KieBase getKieBase() {
         return (KieBase) reteEvaluator.getKnowledgeBase();
     }

@@ -66,6 +66,13 @@ public class KieSessionFluentImpl extends BaseBatchWithProcessFluent<KieSessionF
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @implNote This method currently delegates to {@link #setActiveAgendaGroup(String)}
+     * and does not fire {@code RuleFlowGroupActivated}/{@code RuleFlowGroupDeactivated} events.
+     * A future version will align its behaviour with {@link org.kie.api.runtime.rule.RuleFlowGroup#activate()}.
+     */
     @Override
     public KieSessionFluent setActiveRuleFlowGroup(String ruleFlowGroup) {
         return setActiveAgendaGroup(ruleFlowGroup);

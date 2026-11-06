@@ -131,6 +131,11 @@ public class AgendaGroupQueueImpl
         reteEvaluator.addPropagation( new SetFocusAction( this.name ) );
     }
 
+    @Override
+    public void activate() {
+        ((InternalAgenda) reteEvaluator.getActivationsManager()).activateRuleFlowGroup(this.name);
+    }
+
     public class SetFocusAction extends AbstractPropagationEntry<ReteEvaluator> {
 
         private final String name;
