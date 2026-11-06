@@ -449,4 +449,155 @@ public class PatternDSLSequenceConsequenceTest {
 
         assertThat(results).containsExactly("ball+go");
     }
+
+    @Test
+    public void namedConsequenceBetweenTwoSequencesResolvesStepVariable() {
+        Variable<Person>       personV = declarationOf(Person.class);
+        Variable<Toy>          toyV    = declarationOf(Toy.class);
+        Variable<Relationship> relV    = declarationOf(Relationship.class);
+
+        Rule rule = rule("named-consequence-between-sequences").build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                when("always", personV, p -> true).then(
+                        on(toyV).breaking().execute(t -> results.add("named:" + t.getName()))
+                ),
+                sequence(
+                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
+                ),
+                on(toyV, relV).execute((t, r) -> results.add("final:" + t.getName() + "+" + r.getStart()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new Person("alice"));
+        insertAndFire(new Toy("ball"));
+
+        assertThat(results).as("named consequence after first sequence must resolve step variable without anchor skip error")
+                .containsExactly("named:ball");
+    }
+
+    @Test
+    public void nonBreakingNamedConsequenceBetweenTwoSequencesThenFinalConsequenceFires() {
+        Variable<Person>       personV = declarationOf(Person.class);
+        Variable<Toy>          toyV    = declarationOf(Toy.class);
+        Variable<Relationship> relV    = declarationOf(Relationship.class);
+
+        Rule rule = rule("non-breaking-named-consequence-between-sequences").build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                when("always", personV, p -> true).then(
+                        on(toyV).execute(t -> results.add("named:" + t.getName()))
+                ),
+                sequence(
+                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
+                ),
+                on(toyV, relV).execute((t, r) -> results.add("final:" + t.getName() + "+" + r.getStart()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new Person("alice"));
+        insertAndFire(new Toy("ball"));
+        insertAndFire(new Relationship("go", "done"));
+
+        assertThat(results).containsExactly("named:ball", "final:ball+go");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {5, 20, 50})
+    public void threeLevelConditionalBetweenTwoSequencesResolvesStepVariableInEveryBranch(int age) {
+        Variable<Person>       personV = declarationOf(Person.class);
+        Variable<Toy>          toyV    = declarationOf(Toy.class);
+        Variable<Relationship> relV    = declarationOf(Relationship.class);
+
+        Rule rule = rule("three-level-conditional-between-sequences-" + age).build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                when("young", personV, p -> p.getAge() < 10).then(
+                        on(toyV).breaking().execute(t -> results.add("first:" + t.getName()))
+                ).elseWhen("middle", personV, p -> p.getAge() < 30).then(
+                        on(toyV).breaking().execute(t -> results.add("second:" + t.getName()))
+                ).elseWhen().then(
+                        on(toyV).breaking().execute(t -> results.add("third:" + t.getName()))
+                ),
+                sequence(
+                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
+                ),
+                on(toyV, relV).execute((t, r) -> results.add("final:" + t.getName() + "+" + r.getStart()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new Person("alice", age));
+        insertAndFire(new Toy("ball"));
+
+        String expected = age < 10 ? "first:ball" : age < 30 ? "second:ball" : "third:ball";
+        assertThat(results).containsExactly(expected);
+    }
+
+    @Test
+    public void plainNamedConsequenceBetweenTwoSequencesResolvesStepVariable() {
+        Variable<Person>       personV = declarationOf(Person.class);
+        Variable<Toy>          toyV    = declarationOf(Toy.class);
+        Variable<Relationship> relV    = declarationOf(Relationship.class);
+
+        Rule rule = rule("plain-named-consequence-between-sequences").build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                on(toyV).execute(t -> results.add("named:" + t.getName())),
+                sequence(
+                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
+                ),
+                on(toyV, relV).execute((t, r) -> results.add("final:" + t.getName() + "+" + r.getStart()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new Person("alice"));
+        insertAndFire(new Toy("ball"));
+        insertAndFire(new Relationship("go", "done"));
+
+        assertThat(results).containsExactly("named:ball", "final:ball+go");
+    }
+
+    @Test
+    public void plainNamedConsequenceFiresBeforeSecondSequenceIsSatisfied() {
+        Variable<Person>       personV = declarationOf(Person.class);
+        Variable<Toy>          toyV    = declarationOf(Toy.class);
+        Variable<Relationship> relV    = declarationOf(Relationship.class);
+
+        Rule rule = rule("plain-named-consequence-before-second-sequence").build(
+                pattern(personV),
+                sequence(
+                        pattern(toyV).expr("is-ball", t -> t.getName().equals("ball"))
+                ),
+                on(toyV).execute(t -> results.add("named:" + t.getName())),
+                sequence(
+                        pattern(relV).expr("is-go", r -> r.getStart().equals("go"))
+                ),
+                on(toyV, relV).execute((t, r) -> results.add("final:" + t.getName() + "+" + r.getStart()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new Person("alice"));
+        insertAndFire(new Toy("ball"));
+
+        assertThat(results).as("plain named consequence must resolve step variable when firing before second sequence")
+                .containsExactly("named:ball");
+    }
 }
