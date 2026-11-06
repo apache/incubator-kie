@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.drools.base.factmodel.AccessibleFact;
 import org.drools.base.factmodel.AnnotationDefinition;
@@ -55,34 +54,6 @@ public class TypeDeclarationUtil {
         "propertyChangeSupport"
     );
 
-    private static final Map<String, String> KNOWN_ANNOTATIONS_BY_FQN = Map.of(
-        "org.kie.api.definition.type.Role", "role",
-        "org.kie.api.definition.type.Duration", "duration",
-        "org.kie.api.definition.type.Timestamp", "timestamp",
-        "org.kie.api.definition.type.Expires", "expires",
-        "org.kie.api.definition.type.PropertyReactive", "propertyReactive",
-        "org.kie.api.definition.type.ClassReactive", "classReactive",
-        "org.kie.api.definition.type.PropertyChangeSupport", "propertyChangeSupport"
-    );
-
-    private static final Map<String, String> KNOWN_ANNOTATIONS_BY_LOWER_NAME = KNOWN_ANNOTATIONS.stream()
-            .collect(Collectors.toMap(name -> name.toLowerCase(Locale.ROOT), name -> name));
-
-    /**
-     * Canonical name of a built-in type annotation as written in a declare block: the DRL
-     * parser also accepts the Java (capitalized) form of these annotations, e.g. {@code @Role}
-     * and {@code @Expires}, and the classic compiler resolves both spellings — so an unqualified
-     * name matches its built-in case-insensitively and maps to the canonical spelling. A
-     * qualified name only maps when it is a built-in's own FQN; any other qualified annotation
-     * stays itself (custom metadata).
-     */
-    private static String canonicalAnnotationName(String name) {
-        if (name.indexOf('.') >= 0) {
-            return KNOWN_ANNOTATIONS_BY_FQN.getOrDefault(name, name);
-        }
-        return KNOWN_ANNOTATIONS_BY_LOWER_NAME.getOrDefault(name.toLowerCase(Locale.ROOT), name);
-    }
-
     public static TypeDeclaration createTypeDeclaration(TypeMetaData metaType, PropertySpecificOption propertySpecificOption, TypeResolver typeResolver) {
         Class<?> typeClass = metaType.getType();
 
@@ -106,7 +77,7 @@ public class TypeDeclarationUtil {
     private static void wireMetaTypeAnnotations( TypeMetaData metaType, TypeDeclaration typeDeclaration ) {
         ClassDefinition classDef = typeDeclaration.getTypeClassDef();
         for (Map.Entry<String, AnnotationValue[]> ann : metaType.getAnnotations().entrySet()) {
-            String annotationName = canonicalAnnotationName(ann.getKey());
+            String annotationName = ann.getKey();
             boolean isKnownAnnotation = KNOWN_ANNOTATIONS.contains(annotationName);
             
             switch (annotationName) {
@@ -163,7 +134,7 @@ public class TypeDeclarationUtil {
                         break;
                     }
                 }
-                classDef.addMetaData(ann.getKey(), value);
+                classDef.addMetaData(annotationName, value);
             }
         }
 

@@ -34,6 +34,7 @@ import org.kie.api.runtime.KieSession;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Reproduces the annotation-precedence discrepancy between classic and executable
@@ -249,5 +250,45 @@ public class AlignAnnotationTest extends BaseModelTest {
         TypeDeclaration typeDecl = getTypeDeclaration(runType, ANNOTATED_EVENT_OVERRIDE_DRL, AnnotatedEvent.class);
         // DRL @propertyReactive overrides Java @ClassReactive
         assertThat(typeDecl.isPropertyReactive()).isTrue();
+    }
+
+    // --- #7252: capitalized ClassReactive on a plain class means the built-in, not a custom annotation ---
+
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testCapitalizedClassReactiveOnPlainClass(RUN_TYPE runType) {
+        String drl =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "declare Person\n" +
+                "  @ClassReactive\n" +
+                "end\n" +
+                "rule R when Person() then end\n";
+
+        TypeDeclaration typeDecl = getTypeDeclaration(runType, drl, Person.class);
+        assertThat(typeDecl.isPropertyReactive()).as("@ClassReactive").isFalse();
+    }
+
+    // --- #7270: an imported custom annotation whose simple name collides with a built-in stays custom ---
+
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testImportedAnnotationWithCollidingSimpleNameStaysCustom(RUN_TYPE runType) {
+        String drl =
+                "import " + org.drools.model.codegen.execmodel.domain.ClassReactive.class.getCanonicalName() + ";\n" +
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "declare Person\n" +
+                "  @ClassReactive(\"custom-marker\")\n" +
+                "end\n" +
+                "rule R when Person() then end\n";
+
+        TypeDeclaration typeDecl = getTypeDeclaration(runType, drl, Person.class);
+        // The custom annotation must not act as the built-in @classReactive: property reactivity
+        // keeps its default in both models...
+        assertThat(typeDecl.isPropertyReactive()).as("custom @ClassReactive must not switch off property reactivity").isTrue();
+        // ...and PATTERN_DSL keeps it as custom metadata under its own name. (STANDARD_FROM_DRL does
+        // not populate a ClassDefinition metadata map for custom annotations on an existing class.)
+        assumeTrue(runType == RUN_TYPE.PATTERN_DSL);
+        assertThat(typeDecl.getTypeClassDef().getMetaData()).as("custom annotation is kept as custom metadata")
+                .containsKey(org.drools.model.codegen.execmodel.domain.ClassReactive.class.getSimpleName());
     }
 }
