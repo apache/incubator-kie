@@ -21,7 +21,6 @@ package org.drools.compiler.builder.impl;
 import java.util.Map;
 
 import org.drools.base.definitions.InternalKnowledgePackage;
-import org.drools.base.rule.Annotated;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.compiler.compiler.AnalysisResult;
 import org.drools.compiler.compiler.BoundIdentifiers;
@@ -31,13 +30,7 @@ import org.drools.compiler.compiler.TypeDeclarationError;
 import org.drools.compiler.rule.builder.PackageBuildContext;
 import org.drools.drl.ast.descr.AbstractClassTypeDeclarationDescr;
 import org.drools.drl.ast.descr.BaseDescr;
-import org.kie.api.definition.type.Duration;
-import org.kie.api.definition.type.Role;
-import org.kie.api.definition.type.Timestamp;
 import org.kie.internal.builder.conf.PropertySpecificOption;
-
-import static org.drools.base.rule.TypeDeclaration.processTypeAnnotations;
-import static org.drools.compiler.rule.builder.util.AnnotationFactory.toAnnotated;
 
 public class TypeDeclarationConfigurator {
 
@@ -58,24 +51,8 @@ public class TypeDeclarationConfigurator {
             if ( oldType == null ) {
                 pkgRegistry.getPackage().addTypeDeclaration( type );
             } else {
-                if (type.getRole() == Role.Type.EVENT) {
-                    oldType.setRole(Role.Type.EVENT);
-                    if ( type.getDurationAttribute() != null ) {
-                        oldType.setDurationAttribute( type.getDurationAttribute() );
-                        oldType.setDurationExtractor( type.getDurationExtractor() );
-                    }
-                    if ( type.getTimestampAttribute() != null ) {
-                        oldType.setTimestampAttribute( type.getTimestampAttribute() );
-                        oldType.setTimestampExtractor( type.getTimestampExtractor() );
-                    }
-                    if ( type.getExpirationOffset() >= 0 ) {
-                        oldType.setExpirationOffset( type.getExpirationOffset() );
-                        oldType.setExpirationType( type.getExpirationPolicy() );
-                    }
-                }
-                if (type.isPropertyReactive()) {
-                    oldType.setPropertyReactive(true);
-                }
+                // the existing declaration is kept, so apply the annotations of this redeclaration to it
+                TypeDeclarationFactory.processAnnotations( typeDescr, oldType, context.getBuilderConfiguration().getOption( PropertySpecificOption.KEY ) );
             }
         }
     }
@@ -99,62 +76,34 @@ public class TypeDeclarationConfigurator {
             }
         }
 
-        // Annotations were pre-populated from Java and overridden by DRL in processAnnotations().
-        // The composite Annotated here re-applies them with DRL priority for @Timestamp/@Duration
-        // extractor wiring, which requires compiler infrastructure unavailable in earlier steps.
-        Annotated annotatedType = toAnnotated(typeDescr);
-        if (type.getTypeClass() != null) {
-            annotatedType = Annotated.withFallback(annotatedType, new Annotated.ClassAdapter(type.getTypeClass()));
-        }
-        processMvelBasedAccessors(context, results, pkgRegistry, annotatedType, type );
-        processTypeAnnotations( type, annotatedType, context.getBuilderConfiguration().getOption(PropertySpecificOption.KEY));
+        processMvelBasedAccessors(context, results, pkgRegistry, typeDescr, type );
         return true;
     }
 
-    static void processMvelBasedAccessors(TypeDeclarationContext context, BuildResultCollector results, PackageRegistry pkgRegistry, Annotated annotated, TypeDeclaration type ) {
-        wireTimestampAccessor(context, results, annotated, type, pkgRegistry );
-        wireDurationAccessor(context, results, annotated, type, pkgRegistry );
+    static void processMvelBasedAccessors(TypeDeclarationContext context, BuildResultCollector results, PackageRegistry pkgRegistry, BaseDescr typeDescr, TypeDeclaration type ) {
+        wireTimestampAccessor(context, results, typeDescr, type, pkgRegistry );
+        wireDurationAccessor(context, results, typeDescr, type, pkgRegistry );
     }
 
-    private static void wireTimestampAccessor(TypeDeclarationContext context, BuildResultCollector resultCollector, Annotated annotated, TypeDeclaration type, PackageRegistry pkgRegistry ) {
-        Timestamp timestamp = annotated.getTypedAnnotation(Timestamp.class);
-        if ( timestamp != null ) {
-            BaseDescr typeDescr = annotated instanceof BaseDescr ? ( (BaseDescr) annotated ) : new BaseDescr();
-            String timestampField;
-            try {
-                timestampField = timestamp.value();
-            } catch (Exception e) {
-                resultCollector.addBuilderResult(new TypeDeclarationError(typeDescr, e.getMessage()));
-                return;
-            }
-            type.setTimestampAttribute( timestampField );
+    private static void wireTimestampAccessor(TypeDeclarationContext context, BuildResultCollector resultCollector, BaseDescr typeDescr, TypeDeclaration type, PackageRegistry pkgRegistry ) {
+        String timestampField = type.getTimestampAttribute();
+        if ( timestampField != null ) {
             InternalKnowledgePackage pkg = pkgRegistry.getPackage();
-
             AnalysisResult results = getMvelAnalysisResult(context, typeDescr, type, pkgRegistry, timestampField, pkg );
             if (results != null) {
                 type.setTimestampExtractor(pkg.getFieldExtractor( type, timestampField, results.getReturnType() ));
             } else {
                 resultCollector.addBuilderResult(new TypeDeclarationError(typeDescr,
-                                                                   "Error creating field accessors for timestamp field '" + timestamp +
+                                                                   "Error creating field accessors for timestamp field '" + timestampField +
                                                                    "' for type '" + type.getTypeName() + "'"));
             }
         }
     }
 
-    private static void wireDurationAccessor(TypeDeclarationContext context, BuildResultCollector resultCollector, Annotated annotated, TypeDeclaration type, PackageRegistry pkgRegistry ) {
-        Duration duration = annotated.getTypedAnnotation(Duration.class);
-        if (duration != null) {
-            BaseDescr typeDescr = annotated instanceof BaseDescr ? ( (BaseDescr) annotated ) : new BaseDescr();
-            String durationField;
-            try {
-                durationField = duration.value();
-            } catch (Exception e) {
-                resultCollector.addBuilderResult(new TypeDeclarationError(typeDescr, e.getMessage()));
-                return;
-            }
-            type.setDurationAttribute(durationField);
+    private static void wireDurationAccessor(TypeDeclarationContext context, BuildResultCollector resultCollector, BaseDescr typeDescr, TypeDeclaration type, PackageRegistry pkgRegistry ) {
+        String durationField = type.getDurationAttribute();
+        if (durationField != null) {
             InternalKnowledgePackage pkg = pkgRegistry.getPackage();
-
             AnalysisResult results = getMvelAnalysisResult(context, typeDescr, type, pkgRegistry, durationField, pkg );
             if (results != null) {
                 type.setDurationExtractor(pkg.getFieldExtractor( type, durationField, results.getReturnType() ));

@@ -54,6 +54,8 @@ import org.jbpm.bpmn2.data.DataOutputAssociationsModel;
 import org.jbpm.bpmn2.data.DataOutputAssociationsProcess;
 import org.jbpm.bpmn2.data.DataOutputAssociationsXmlNodeModel;
 import org.jbpm.bpmn2.data.DataOutputAssociationsXmlNodeProcess;
+import org.jbpm.bpmn2.data.EmptyStructureRefModel;
+import org.jbpm.bpmn2.data.EmptyStructureRefProcess;
 import org.jbpm.bpmn2.data.Evaluation2Model;
 import org.jbpm.bpmn2.data.Evaluation2Process;
 import org.jbpm.bpmn2.data.Evaluation3Model;
@@ -110,6 +112,19 @@ public class DataTest extends JbpmBpmn2TestCase {
 
         assertThat(processInstance.status()).isEqualTo(org.jbpm.process.instance.ProcessInstance.STATE_COMPLETED);
 
+    }
+
+    @Test
+    public void testEmptyStructureRef() {
+        Application app = ProcessTestHelper.newApplication();
+        org.kie.kogito.process.Process<EmptyStructureRefModel> process = EmptyStructureRefProcess.newProcess(app);
+        EmptyStructureRefModel model = process.createModel();
+        model.setMyVar("test value");
+        ProcessInstance<EmptyStructureRefModel> processInstance = process.createInstance(model);
+        processInstance.start();
+
+        assertThat(processInstance.status()).isEqualTo(org.jbpm.process.instance.ProcessInstance.STATE_COMPLETED);
+        assertThat(processInstance.variables().getMyVar()).isEqualTo("test value");
     }
 
     @Test

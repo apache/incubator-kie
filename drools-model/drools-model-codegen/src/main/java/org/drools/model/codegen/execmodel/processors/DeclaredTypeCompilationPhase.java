@@ -33,6 +33,7 @@ import org.drools.model.codegen.execmodel.CanonicalModelBuildContext;
 import org.drools.model.codegen.execmodel.PackageModelManager;
 import org.drools.model.codegen.execmodel.generator.declaredtype.POJOGenerator;
 import org.kie.internal.builder.KnowledgeBuilderResult;
+import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static java.util.Arrays.asList;
 
@@ -59,7 +60,7 @@ public class DeclaredTypeCompilationPhase implements CompilationPhase {
     @Override
     public void process() {
         List<CompilationPhase> phases = asList(
-                iteratingPhase((reg, acc) -> new DeclaredTypeRegistrationPhase(reg, acc, pkgRegistryManager)),
+                iteratingPhase((reg, acc) -> new DeclaredTypeRegistrationPhase(reg, acc, pkgRegistryManager, buildConfiguration.getOption(PropertySpecificOption.KEY))),
                 iteratingPhase((reg, acc) ->
                         new POJOGenerator(reg.getPackage(), acc, packageModelManager.getPackageModel(acc, reg, reg.getPackage().getName()), packages, pkgRegistryManager)),
                 new GeneratedPojoCompilationPhase(

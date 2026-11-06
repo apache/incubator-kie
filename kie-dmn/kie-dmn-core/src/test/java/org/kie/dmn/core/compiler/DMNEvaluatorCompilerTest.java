@@ -30,16 +30,32 @@ import org.kie.dmn.api.core.DMNRuntime;
 import org.kie.dmn.api.core.DMNType;
 import org.kie.dmn.api.core.DMNVersion;
 import org.kie.dmn.core.api.DMNExpressionEvaluator;
+import org.kie.dmn.core.ast.BusinessKnowledgeModelNodeImpl;
 import org.kie.dmn.core.ast.DMNBaseNode;
 import org.kie.dmn.core.ast.DMNConditionalEvaluator;
+import org.kie.dmn.core.ast.DecisionNodeImpl;
+import org.kie.dmn.core.ast.InputDataNodeImpl;
 import org.kie.dmn.core.impl.DMNModelImpl;
 import org.kie.dmn.core.internal.utils.DMNRuntimeBuilder;
 import org.kie.dmn.feel.FEEL;
 import org.kie.dmn.feel.lang.FEELDialect;
 import org.kie.dmn.feel.lang.impl.FEELImpl;
+import org.kie.dmn.model.api.ChildExpression;
 import org.kie.dmn.model.api.Conditional;
+import org.kie.dmn.model.api.Context;
+import org.kie.dmn.model.api.Expression;
+import org.kie.dmn.model.api.FunctionDefinition;
 import org.kie.dmn.model.api.DMNModelInstrumentedBase;
 import org.kie.dmn.model.api.LiteralExpression;
+import org.kie.dmn.model.v1_5.TBusinessKnowledgeModel;
+import org.kie.dmn.model.v1_5.TChildExpression;
+import org.kie.dmn.model.v1_5.TConditional;
+import org.kie.dmn.model.v1_5.TContext;
+import org.kie.dmn.model.v1_5.TDecision;
+import org.kie.dmn.model.v1_5.TFor;
+import org.kie.dmn.model.v1_5.TFunctionDefinition;
+import org.kie.dmn.model.v1_5.TInputData;
+import org.kie.dmn.model.v1_5.TList;
 import org.kie.dmn.model.v1_5.TLiteralExpression;
 import org.kie.internal.io.ResourceFactory;
 
@@ -49,7 +65,11 @@ import static org.kie.dmn.core.ast.DMNConditionalEvaluator.EvaluatorType.ELSE;
 import static org.kie.dmn.core.ast.DMNConditionalEvaluator.EvaluatorType.IF;
 import static org.kie.dmn.core.ast.DMNConditionalEvaluator.EvaluatorType.THEN;
 import static org.kie.dmn.core.compiler.DMNEvaluatorCompiler.getEvaluatorIdentifier;
+import static org.kie.dmn.core.compiler.DMNEvaluatorCompiler.getChildExpression;
 import static org.kie.dmn.core.compiler.DMNEvaluatorCompiler.getEvaluatorIdentifierMap;
+import static org.kie.dmn.core.compiler.DMNEvaluatorCompiler.getDecisionBKMNodeExpression;
+import static org.kie.dmn.core.compiler.DMNEvaluatorCompiler.isResultOfDecisionOrBKM;
+import static org.kie.dmn.core.compiler.DMNEvaluatorCompiler.isSameOrConditionalBranchOf;
 
 class DMNEvaluatorCompilerTest {
 
@@ -225,6 +245,186 @@ class DMNEvaluatorCompilerTest {
         DMNExpressionEvaluator result = dmnEvaluatorCompiler.compileConditional(compilerContext, (DMNModelImpl) dmnModel, dmnBaseNode, exprName, (Conditional) retrieved);
         assertThat(result).isNotNull();
         assertThat(result).isInstanceOf(DMNConditionalEvaluator.class);
+    }
+
+    @Test
+    void getDecisionBKMNodeExpressionOfDecision() {
+        Expression expression = new TContext();
+        assertThat(getDecisionBKMNodeExpression(decisionNode(expression))).containsSame(expression);
+    }
+
+    @Test
+    void getDecisionBKMNodeExpressionOfDecisionWithoutExpression() {
+        assertThat(getDecisionBKMNodeExpression(decisionNode(null))).isEmpty();
+    }
+
+    @Test
+    void getDecisionBKMNodeExpressionOfBKM() {
+        Expression body = new TContext();
+        assertThat(getDecisionBKMNodeExpression(bkmNode(functionDefinition(body)))).containsSame(body);
+    }
+
+    @Test
+    void getDecisionBKMNodeExpressionOfBKMWithoutEncapsulatedLogic() {
+        assertThat(getDecisionBKMNodeExpression(bkmNode(null))).isEmpty();
+    }
+
+    @Test
+    void getDecisionBKMNodeExpressionOfBKMWithoutBody() {
+        assertThat(getDecisionBKMNodeExpression(bkmNode(functionDefinition(null)))).isEmpty();
+    }
+
+    @Test
+    void getDecisionBKMNodeExpressionOfOtherNode() {
+        assertThat(getDecisionBKMNodeExpression(new InputDataNodeImpl(new TInputData()))).isEmpty();
+    }
+
+    @Test
+    void getChildExpressionOfNull() {
+        assertThat(getChildExpression(null)).isEmpty();
+    }
+
+    @Test
+    void getChildExpressionWithExpression() {
+        Expression expression = new TContext();
+        assertThat(getChildExpression(childExpression(expression))).containsSame(expression);
+    }
+
+    @Test
+    void getChildExpressionWithoutExpression() {
+        assertThat(getChildExpression(new TChildExpression())).isEmpty();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfSameInstance() {
+        Expression expression = new TContext();
+        assertThat(isSameOrConditionalBranchOf(expression, expression)).isTrue();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfAnotherInstance() {
+        // two contexts that look the same are different expressions, only the very same instance is accepted
+        assertThat(isSameOrConditionalBranchOf(new TContext(), new TContext())).isFalse();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfThenBranch() {
+        Expression expression = new TContext();
+        assertThat(isSameOrConditionalBranchOf(conditional(new TContext(), expression, new TContext()), expression)).isTrue();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfElseBranch() {
+        Expression expression = new TContext();
+        assertThat(isSameOrConditionalBranchOf(conditional(new TContext(), new TContext(), expression), expression)).isTrue();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfNestedConditionalBranch() {
+        Expression expression = new TContext();
+        Conditional nested = conditional(new TContext(), expression, new TContext());
+        assertThat(isSameOrConditionalBranchOf(conditional(new TContext(), new TContext(), nested), expression)).isTrue();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfIfCondition() {
+        Expression expression = new TContext();
+        assertThat(isSameOrConditionalBranchOf(conditional(expression, new TContext(), new TContext()), expression)).isFalse();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfConditionalWithoutBranches() {
+        assertThat(isSameOrConditionalBranchOf(conditional(new TContext(), null, null), new TContext())).isFalse();
+    }
+
+    @Test
+    void isSameOrConditionalBranchOfNotConditional() {
+        Expression expression = new TContext();
+        TList list = new TList();
+        list.getExpression().add(expression);
+        assertThat(isSameOrConditionalBranchOf(list, expression)).isFalse();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMDecisionRootContext() {
+        Context context = new TContext();
+        assertThat(isResultOfDecisionOrBKM(context, decisionNode(context))).isTrue();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMDecisionNestedContext() {
+        Context context = new TContext();
+        TList list = new TList();
+        list.getExpression().add(context);
+        assertThat(isResultOfDecisionOrBKM(context, decisionNode(list))).isFalse();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMDecisionWithoutExpression() {
+        assertThat(isResultOfDecisionOrBKM(new TContext(), decisionNode(null))).isFalse();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMBKMRootContext() {
+        Context context = new TContext();
+        assertThat(isResultOfDecisionOrBKM(context, bkmNode(functionDefinition(context)))).isTrue();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMBKMConditionalBranchContext() {
+        Context context = new TContext();
+        Conditional conditional = conditional(new TContext(), context, new TContext());
+        assertThat(isResultOfDecisionOrBKM(context, bkmNode(functionDefinition(conditional)))).isTrue();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMBKMWithoutEncapsulatedLogic() {
+        assertThat(isResultOfDecisionOrBKM(new TContext(), bkmNode(null))).isFalse();
+    }
+
+    @Test
+    void isResultOfDecisionOrBKMDecisionContextNestedInTwoFors() {
+        Context context = new TContext();
+        TFor inner = new TFor();
+        inner.setReturn(childExpression(context));
+        TFor outer = new TFor();
+        outer.setReturn(childExpression(inner));
+        assertThat(isResultOfDecisionOrBKM(context, decisionNode(outer))).isFalse();
+    }
+
+    private static DMNBaseNode decisionNode(Expression expression) {
+        TDecision decision = new TDecision();
+        decision.setExpression(expression);
+        return new DecisionNodeImpl(decision);
+    }
+
+    private static DMNBaseNode bkmNode(FunctionDefinition encapsulatedLogic) {
+        TBusinessKnowledgeModel bkm = new TBusinessKnowledgeModel();
+        bkm.setEncapsulatedLogic(encapsulatedLogic);
+        return new BusinessKnowledgeModelNodeImpl(bkm);
+    }
+
+    private static FunctionDefinition functionDefinition(Expression body) {
+        FunctionDefinition toReturn = new TFunctionDefinition();
+        toReturn.setExpression(body);
+        return toReturn;
+    }
+
+    private static ChildExpression childExpression(Expression expression) {
+        if (expression == null) {
+            return null;
+        }
+        ChildExpression toReturn = new TChildExpression();
+        toReturn.setExpression(expression);
+        return toReturn;
+    }
+
+    private static Conditional conditional(Expression ifExpression, Expression thenExpression, Expression elseExpression) {
+        Conditional toReturn = new TConditional();
+        toReturn.setIf(childExpression(ifExpression));
+        toReturn.setThen(childExpression(thenExpression));
+        toReturn.setElse(childExpression(elseExpression));
+        return toReturn;
     }
 
     private LiteralExpression getLiteralExpression(String expressionLanguage) {

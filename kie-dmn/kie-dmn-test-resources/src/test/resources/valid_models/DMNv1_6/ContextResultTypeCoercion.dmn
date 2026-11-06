@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<semantic:definitions xmlns="https://github.com/kiegroup/drools/kie-dmn"
+                      xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                      xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                      xmlns:dmndi="https://www.omg.org/spec/DMN/20230324/DMNDI/"
+                      xmlns:feel="https://www.omg.org/spec/DMN/20240513/FEEL/"
+                      xmlns:semantic="https://www.omg.org/spec/DMN/20240513/MODEL/"
+                      id="_ContextResultTypeCoercion"
+                      name="ContextResultTypeCoercion"
+                      namespace="https://github.com/kiegroup/drools/kie-dmn">
+   <semantic:itemDefinition name="tStrList" isCollection="true">
+      <semantic:typeRef>string</semantic:typeRef>
+   </semantic:itemDefinition>
+   <semantic:itemDefinition name="tNumList" isCollection="true">
+      <semantic:typeRef>number</semantic:typeRef>
+   </semantic:itemDefinition>
+   <semantic:itemDefinition name="tAttribute" isCollection="false">
+      <semantic:itemComponent name="name" isCollection="false">
+         <semantic:typeRef>string</semantic:typeRef>
+      </semantic:itemComponent>
+   </semantic:itemDefinition>
+   <semantic:itemDefinition name="tAttributeList" isCollection="true">
+      <semantic:typeRef>tAttribute</semantic:typeRef>
+   </semantic:itemDefinition>
+   <semantic:itemDefinition name="tKeyValue" isCollection="false">
+      <semantic:itemComponent name="k" isCollection="false">
+         <semantic:typeRef>string</semantic:typeRef>
+      </semantic:itemComponent>
+   </semantic:itemDefinition>
+   <semantic:itemDefinition name="tStrListList" isCollection="true">
+      <semantic:typeRef>tStrList</semantic:typeRef>
+   </semantic:itemDefinition>
+   <semantic:decision id="d_ForReturnContextEntry" name="For Return Context Entry">
+      <semantic:variable name="For Return Context Entry" typeRef="tStrList"/>
+      <semantic:for iteratorVariable="x">
+         <semantic:in>
+            <semantic:literalExpression>
+               <semantic:text>["a", "b", "c"]</semantic:text>
+            </semantic:literalExpression>
+         </semantic:in>
+         <semantic:return>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:variable name="d" typeRef="string"/>
+                  <semantic:literalExpression>
+                     <semantic:text>x + x</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>d</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:return>
+      </semantic:for>
+   </semantic:decision>
+   <semantic:decision id="d_ForReturnContextGetValue" name="For Return Context Get Value">
+      <semantic:variable name="For Return Context Get Value" typeRef="tStrList"/>
+      <semantic:for iteratorVariable="x">
+         <semantic:in>
+            <semantic:literalExpression>
+               <semantic:text>["a", "b", "c"]</semantic:text>
+            </semantic:literalExpression>
+         </semantic:in>
+         <semantic:return>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:variable name="c" typeRef="tKeyValue"/>
+                  <semantic:literalExpression>
+                     <semantic:text>{k: x + x}</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>get value(c, "k")</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:return>
+      </semantic:for>
+   </semantic:decision>
+   <semantic:decision id="d_ForReturnContextStructEntry" name="For Return Context Struct Entry">
+      <semantic:variable name="For Return Context Struct Entry" typeRef="tAttributeList"/>
+      <semantic:for iteratorVariable="x">
+         <semantic:in>
+            <semantic:literalExpression>
+               <semantic:text>["a", "b", "c"]</semantic:text>
+            </semantic:literalExpression>
+         </semantic:in>
+         <semantic:return>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:variable name="attribute" typeRef="tAttribute"/>
+                  <semantic:literalExpression>
+                     <semantic:text>{name: x}</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>attribute</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:return>
+      </semantic:for>
+   </semantic:decision>
+   <semantic:decision id="d_ForReturnContextWrongType" name="For Return Context Wrong Type">
+      <semantic:variable name="For Return Context Wrong Type" typeRef="tNumList"/>
+      <semantic:for iteratorVariable="x">
+         <semantic:in>
+            <semantic:literalExpression>
+               <semantic:text>["a", "b"]</semantic:text>
+            </semantic:literalExpression>
+         </semantic:in>
+         <semantic:return>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>x</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:return>
+      </semantic:for>
+   </semantic:decision>
+   <semantic:decision id="d_ListOfContexts" name="List Of Contexts">
+      <semantic:variable name="List Of Contexts" typeRef="tStrList"/>
+      <semantic:list>
+         <semantic:context>
+            <semantic:contextEntry>
+               <semantic:literalExpression>
+                  <semantic:text>"a"</semantic:text>
+               </semantic:literalExpression>
+            </semantic:contextEntry>
+         </semantic:context>
+         <semantic:context>
+            <semantic:contextEntry>
+               <semantic:literalExpression>
+                  <semantic:text>"b"</semantic:text>
+               </semantic:literalExpression>
+            </semantic:contextEntry>
+         </semantic:context>
+      </semantic:list>
+   </semantic:decision>
+   <semantic:businessKnowledgeModel id="k_Echo" name="Echo">
+      <semantic:variable name="Echo" typeRef="string"/>
+      <semantic:encapsulatedLogic>
+         <semantic:formalParameter name="p" typeRef="Any"/>
+         <semantic:literalExpression>
+            <semantic:text>p + "!"</semantic:text>
+         </semantic:literalExpression>
+      </semantic:encapsulatedLogic>
+   </semantic:businessKnowledgeModel>
+   <semantic:decision id="d_ContextAsInvocationBinding" name="Context As Invocation Binding">
+      <semantic:variable name="Context As Invocation Binding" typeRef="tStrList"/>
+      <semantic:knowledgeRequirement>
+         <semantic:requiredKnowledge href="#k_Echo"/>
+      </semantic:knowledgeRequirement>
+      <semantic:invocation>
+         <semantic:literalExpression>
+            <semantic:text>Echo</semantic:text>
+         </semantic:literalExpression>
+         <semantic:binding>
+            <semantic:parameter name="p"/>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>"a"</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:binding>
+      </semantic:invocation>
+   </semantic:decision>
+   <semantic:decision id="d_ContextInNestedFunctionBody" name="Context In Nested Function Body">
+      <semantic:variable name="Context In Nested Function Body" typeRef="tStrList"/>
+      <semantic:context>
+         <semantic:contextEntry>
+            <semantic:variable name="f" typeRef="function"/>
+            <semantic:functionDefinition kind="FEEL">
+               <semantic:formalParameter name="x" typeRef="string"/>
+               <semantic:context>
+                  <semantic:contextEntry>
+                     <semantic:literalExpression>
+                        <semantic:text>x</semantic:text>
+                     </semantic:literalExpression>
+                  </semantic:contextEntry>
+               </semantic:context>
+            </semantic:functionDefinition>
+         </semantic:contextEntry>
+         <semantic:contextEntry>
+            <semantic:literalExpression>
+               <semantic:text>f("a") + "!"</semantic:text>
+            </semantic:literalExpression>
+         </semantic:contextEntry>
+      </semantic:context>
+   </semantic:decision>
+   <semantic:decision id="d_ForContextInTypedEntry" name="For Context In Typed Entry">
+      <semantic:variable name="For Context In Typed Entry" typeRef="tStrList"/>
+      <semantic:context>
+         <semantic:contextEntry>
+            <semantic:variable name="doubled" typeRef="tStrList"/>
+            <semantic:for iteratorVariable="x">
+               <semantic:in>
+                  <semantic:literalExpression>
+                     <semantic:text>["a", "b", "c"]</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:in>
+               <semantic:return>
+                  <semantic:context>
+                     <semantic:contextEntry>
+                        <semantic:variable name="d" typeRef="string"/>
+                        <semantic:literalExpression>
+                           <semantic:text>x + x</semantic:text>
+                        </semantic:literalExpression>
+                     </semantic:contextEntry>
+                     <semantic:contextEntry>
+                        <semantic:literalExpression>
+                           <semantic:text>d</semantic:text>
+                        </semantic:literalExpression>
+                     </semantic:contextEntry>
+                  </semantic:context>
+               </semantic:return>
+            </semantic:for>
+         </semantic:contextEntry>
+         <semantic:contextEntry>
+            <semantic:literalExpression>
+               <semantic:text>doubled</semantic:text>
+            </semantic:literalExpression>
+         </semantic:contextEntry>
+      </semantic:context>
+   </semantic:decision>
+   <semantic:decision id="d_RootContext" name="Root Context">
+      <semantic:variable name="Root Context" typeRef="tStrList"/>
+      <semantic:context>
+         <semantic:contextEntry>
+            <semantic:literalExpression>
+               <semantic:text>"a"</semantic:text>
+            </semantic:literalExpression>
+         </semantic:contextEntry>
+      </semantic:context>
+   </semantic:decision>
+   <semantic:decision id="d_RootConditionalOfContexts" name="Root Conditional Of Contexts">
+      <semantic:variable name="Root Conditional Of Contexts" typeRef="tStrList"/>
+      <semantic:conditional>
+         <semantic:if>
+            <semantic:literalExpression>
+               <semantic:text>true</semantic:text>
+            </semantic:literalExpression>
+         </semantic:if>
+         <semantic:then>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>"a"</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:then>
+         <semantic:else>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>"b"</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:else>
+      </semantic:conditional>
+   </semantic:decision>
+   <semantic:decision id="d_RootConditionalElseContext" name="Root Conditional Else Context">
+      <semantic:variable name="Root Conditional Else Context" typeRef="tStrList"/>
+      <semantic:conditional>
+         <semantic:if>
+            <semantic:literalExpression>
+               <semantic:text>false</semantic:text>
+            </semantic:literalExpression>
+         </semantic:if>
+         <semantic:then>
+            <semantic:literalExpression>
+               <semantic:text>"b"</semantic:text>
+            </semantic:literalExpression>
+         </semantic:then>
+         <semantic:else>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>"a"</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:else>
+      </semantic:conditional>
+   </semantic:decision>
+   <semantic:decision id="d_TypedEntryContext" name="Typed Entry Context">
+      <semantic:variable name="Typed Entry Context" typeRef="tStrList"/>
+      <semantic:context>
+         <semantic:contextEntry>
+            <semantic:variable name="inner" typeRef="tStrList"/>
+            <semantic:context>
+               <semantic:contextEntry>
+                  <semantic:literalExpression>
+                     <semantic:text>"b"</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:contextEntry>
+            </semantic:context>
+         </semantic:contextEntry>
+         <semantic:contextEntry>
+            <semantic:literalExpression>
+               <semantic:text>inner</semantic:text>
+            </semantic:literalExpression>
+         </semantic:contextEntry>
+      </semantic:context>
+   </semantic:decision>
+   <semantic:businessKnowledgeModel id="k_RootContextBKM" name="Root Context BKM">
+      <semantic:variable name="Root Context BKM" typeRef="tStrList"/>
+      <semantic:encapsulatedLogic>
+         <semantic:context>
+            <semantic:contextEntry>
+               <semantic:literalExpression>
+                  <semantic:text>"a"</semantic:text>
+               </semantic:literalExpression>
+            </semantic:contextEntry>
+         </semantic:context>
+      </semantic:encapsulatedLogic>
+   </semantic:businessKnowledgeModel>
+   <semantic:decision id="d_CallRootContextBKM" name="Call Root Context BKM">
+      <semantic:variable name="Call Root Context BKM" typeRef="Any"/>
+      <semantic:knowledgeRequirement>
+         <semantic:requiredKnowledge href="#k_RootContextBKM"/>
+      </semantic:knowledgeRequirement>
+      <semantic:literalExpression>
+         <semantic:text>Root Context BKM()</semantic:text>
+      </semantic:literalExpression>
+   </semantic:decision>
+   <semantic:businessKnowledgeModel id="k_RootConditionalBKM" name="Root Conditional BKM">
+      <semantic:variable name="Root Conditional BKM" typeRef="tStrList"/>
+      <semantic:encapsulatedLogic>
+         <semantic:conditional>
+            <semantic:if>
+               <semantic:literalExpression>
+                  <semantic:text>true</semantic:text>
+               </semantic:literalExpression>
+            </semantic:if>
+            <semantic:then>
+               <semantic:context>
+                  <semantic:contextEntry>
+                     <semantic:literalExpression>
+                        <semantic:text>"a"</semantic:text>
+                     </semantic:literalExpression>
+                  </semantic:contextEntry>
+               </semantic:context>
+            </semantic:then>
+            <semantic:else>
+               <semantic:context>
+                  <semantic:contextEntry>
+                     <semantic:literalExpression>
+                        <semantic:text>"b"</semantic:text>
+                     </semantic:literalExpression>
+                  </semantic:contextEntry>
+               </semantic:context>
+            </semantic:else>
+         </semantic:conditional>
+      </semantic:encapsulatedLogic>
+   </semantic:businessKnowledgeModel>
+   <semantic:decision id="d_CallRootConditionalBKM" name="Call Root Conditional BKM">
+      <semantic:variable name="Call Root Conditional BKM" typeRef="Any"/>
+      <semantic:knowledgeRequirement>
+         <semantic:requiredKnowledge href="#k_RootConditionalBKM"/>
+      </semantic:knowledgeRequirement>
+      <semantic:literalExpression>
+         <semantic:text>Root Conditional BKM()</semantic:text>
+      </semantic:literalExpression>
+   </semantic:decision>
+   <semantic:businessKnowledgeModel id="k_ForContextBKM" name="For Context BKM">
+      <semantic:variable name="For Context BKM" typeRef="tStrList"/>
+      <semantic:encapsulatedLogic>
+         <semantic:for iteratorVariable="x">
+            <semantic:in>
+               <semantic:literalExpression>
+                  <semantic:text>["a", "b", "c"]</semantic:text>
+               </semantic:literalExpression>
+            </semantic:in>
+            <semantic:return>
+               <semantic:context>
+                  <semantic:contextEntry>
+                     <semantic:variable name="d" typeRef="string"/>
+                     <semantic:literalExpression>
+                        <semantic:text>x + x</semantic:text>
+                     </semantic:literalExpression>
+                  </semantic:contextEntry>
+                  <semantic:contextEntry>
+                     <semantic:literalExpression>
+                        <semantic:text>d</semantic:text>
+                     </semantic:literalExpression>
+                  </semantic:contextEntry>
+               </semantic:context>
+            </semantic:return>
+         </semantic:for>
+      </semantic:encapsulatedLogic>
+   </semantic:businessKnowledgeModel>
+   <semantic:decision id="d_CallForContextBKM" name="Call For Context BKM">
+      <semantic:variable name="Call For Context BKM" typeRef="Any"/>
+      <semantic:knowledgeRequirement>
+         <semantic:requiredKnowledge href="#k_ForContextBKM"/>
+      </semantic:knowledgeRequirement>
+      <semantic:literalExpression>
+         <semantic:text>For Context BKM()</semantic:text>
+      </semantic:literalExpression>
+   </semantic:decision>
+   <semantic:decision id="d_NestedForInForContext" name="Nested For In For Context">
+      <semantic:variable name="Nested For In For Context" typeRef="tStrListList"/>
+      <semantic:for iteratorVariable="x">
+         <semantic:in>
+            <semantic:literalExpression>
+               <semantic:text>["a", "b"]</semantic:text>
+            </semantic:literalExpression>
+         </semantic:in>
+         <semantic:return>
+            <semantic:for iteratorVariable="y">
+               <semantic:in>
+                  <semantic:literalExpression>
+                     <semantic:text>["1", "2"]</semantic:text>
+                  </semantic:literalExpression>
+               </semantic:in>
+               <semantic:return>
+                  <semantic:context>
+                     <semantic:contextEntry>
+                        <semantic:literalExpression>
+                           <semantic:text>x + y</semantic:text>
+                        </semantic:literalExpression>
+                     </semantic:contextEntry>
+                  </semantic:context>
+               </semantic:return>
+            </semantic:for>
+         </semantic:return>
+      </semantic:for>
+   </semantic:decision>
+</semantic:definitions>

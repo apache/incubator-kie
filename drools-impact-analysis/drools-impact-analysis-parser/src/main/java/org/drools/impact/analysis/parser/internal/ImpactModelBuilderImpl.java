@@ -28,6 +28,7 @@ import org.drools.compiler.builder.impl.TypeDeclarationFactory;
 import org.drools.compiler.builder.impl.processors.AnnotationNormalizer;
 import org.drools.compiler.builder.impl.processors.OtherDeclarationCompilationPhase;
 import org.drools.compiler.compiler.PackageRegistry;
+import org.drools.compiler.compiler.TypeDeclarationError;
 import org.drools.compiler.lang.descr.CompositePackageDescr;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.rule.TypeDeclaration;
@@ -45,6 +46,7 @@ import org.drools.util.StringUtils;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.io.Resource;
 import org.kie.internal.builder.conf.LanguageLevelOption;
+import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static java.util.Collections.emptyList;
 import static org.drools.compiler.builder.impl.ClassDefinitionFactory.createClassDefinition;
@@ -197,13 +199,21 @@ public class ImpactModelBuilderImpl extends KnowledgeBuilderImpl {
             if (hasMvel()) {
                 type.setTypeClassDef( createClassDefinition( typeClass, typeDescr.getResource() ) );
             }
-            TypeDeclarationFactory.processAnnotations(typeDescr, type);
+            processAnnotations(typeDescr, type);
             getOrCreatePackageRegistry(new PackageDescr(typePkg)).getPackage().addTypeDeclaration(type );
         } catch (ClassNotFoundException e) {
             TypeDeclaration type = new TypeDeclaration( typeDescr.getTypeName() );
             type.setResource( typeDescr.getResource() );
-            TypeDeclarationFactory.processAnnotations(typeDescr, type);
+            processAnnotations(typeDescr, type);
             pkg.addTypeDeclaration( type );
+        }
+    }
+
+    private void processAnnotations(AbstractClassTypeDeclarationDescr typeDescr, TypeDeclaration type) {
+        try {
+            TypeDeclarationFactory.processAnnotations(typeDescr, type, getBuilderConfiguration().getOption(PropertySpecificOption.KEY));
+        } catch (Exception e) {
+            addBuilderResult(new TypeDeclarationError(typeDescr, e.getMessage()));
         }
     }
 
