@@ -18,6 +18,7 @@
  */
 package org.kie.kogito.event.impl.adapter;
 
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +118,21 @@ public abstract class AbstractDataEventAdapter implements DataEventAdapter {
                 .build();
     }
 
+    /**
+     * Node events are adapted after the node logic has run (e.g. after a synchronous work item completes),
+     * so the adaptation time is not the time the node was actually entered or left.
+     * Use the times recorded by the node instance when available.
+     */
+    private static Date nodeEventDate(KogitoNodeInstance nodeInstance, int eventType) {
+        Date date = null;
+        if (eventType == ProcessInstanceNodeEventBody.EVENT_TYPE_ENTER) {
+            date = nodeInstance.getTriggerTime();
+        } else if (eventType != ProcessInstanceNodeEventBody.EVENT_TYPE_UPDATED) {
+            date = nodeInstance.getLeaveTime();
+        }
+        return date != null ? date : new Date();
+    }
+
     private String getHeader(Map<String, List<String>> headers, String key) {
         List<String> value = headers.get(key);
         return value != null ? value.get(0).toString() : null;
@@ -135,8 +151,9 @@ public abstract class AbstractDataEventAdapter implements DataEventAdapter {
         Map<String, Object> metadata = AdapterHelper.buildProcessMetadata((KogitoWorkflowProcessInstance) event.getProcessInstance());
         KogitoWorkflowProcessInstance pi = (KogitoWorkflowProcessInstance) event.getProcessInstance();
         KogitoNodeInstance nodeInstance = (KogitoNodeInstance) event.getNodeInstance();
+        Date eventDate = nodeEventDate(nodeInstance, eventType);
         ProcessInstanceNodeEventBody.Builder builder = ProcessInstanceNodeEventBody.create()
-                .eventDate(new Date())
+                .eventDate(eventDate)
                 .eventUser(event.getEventIdentity())
                 .eventType(eventType)
                 .processId(pi.getProcessId())
@@ -166,6 +183,7 @@ public abstract class AbstractDataEventAdapter implements DataEventAdapter {
         ProcessInstanceNodeEventBody body = builder.build();
 
         return ProcessInstanceNodeDataEvent.builder()
+                .time(eventDate.toInstant().atZone(ZoneId.systemDefault()).toOffsetDateTime())
                 .source(AdapterHelper.buildSource(getConfig().service(), pi.getProcessId()))
                 .kogitoAddons(getConfig().addons().toString())
                 .kogitoIdentity(event.getEventIdentity())
