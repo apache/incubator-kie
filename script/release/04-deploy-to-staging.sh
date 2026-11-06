@@ -111,6 +111,20 @@ if ! git rev-parse "${TAG_NAME}" &>/dev/null; then
     exit 1
 fi
 
+# Check there are no uncommitted changes (staged, unstaged, or untracked) before
+# deploying. Any local modifications could otherwise be included in the deployed artifacts.
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "ERROR: There are uncommitted changes in the working tree."
+    echo "       Commit, stash, or clean them before running this script."
+    exit 1
+fi
+if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+    echo "ERROR: There are untracked files in the working tree:"
+    git ls-files --others --exclude-standard | sed 's/^/  /'
+    echo "       Remove or .gitignore them before running this script."
+    exit 1
+fi
+
 # ── Assemble Maven flags ─────────────────────────────────────────────────────
 
 DEPLOY_MVN_FLAGS=(

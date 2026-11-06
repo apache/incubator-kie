@@ -125,12 +125,32 @@ pipeline {
                     }
                     configFileProvider([configFile(fileId: params.MAVEN_SETTINGS_CONFIG_FILE_ID, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials(creds) {
-                            // Import the signing key so the apache-release profile can sign
-                            // artifacts. Passphrase is supplied later via MAVEN_GPG_PASSPHRASE.
-                            sh '''#!/usr/bin/env bash
+                            def gnupgHome = "${WORKSPACE}/.gnupg"
+                            def streamBranch = params.RELEASE_VERSION.replaceAll(/^(\d+\.\d+)\..*$/, '$1.x')
+
+                            // When CREATE_STREAM_BRANCH is false, ensure we checkout the stream branch
+                            // corresponding to RELEASE_VERSION rather than tagging an arbitrary default checkout.
+                            if (!params.CREATE_STREAM_BRANCH) {
+                                sh """#!/usr/bin/env bash
+                                set -euo pipefail
+                                git fetch origin "${streamBranch}"
+                                if git show-ref --verify --quiet "refs/heads/${streamBranch}"; then
+                                    git checkout "${streamBranch}"
+                                    git reset --hard "origin/${streamBranch}"
+                                else
+                                    git checkout -b "${streamBranch}" "origin/${streamBranch}"
+                                fi
+                                """
+                            }
+
+                            // Import the signing key into an isolated GNUPGHOME inside the workspace so
+                            // the key is not retained in the agent's ~/.gnupg across jobs.
+                            sh """#!/usr/bin/env bash
                             set -euo pipefail
-                            gpg --batch --pinentry-mode=loopback --import "$GPG_KEY_FILE_PATH"
-                            '''
+                            mkdir -p -m 700 "${gnupgHome}"
+                            export GNUPGHOME="${gnupgHome}"
+                            gpg --batch --pinentry-mode=loopback --import "\$GPG_KEY_FILE_PATH"
+                            """
 
                             // Configure Git identity for the R commit and authenticate the
                             // raw `git push` in 02-rc-commit.sh. The credential helper reads
@@ -157,9 +177,10 @@ pipeline {
                             if (params.DRY_RUN)                releaseArgs << '--dry-run'
 
                             // MAVEN_SETTINGS_FILE is injected by configFileProvider above.
+                            // GNUPGHOME isolates GPG keys to this workspace.
                             // If a passphrase credential was given, MAVEN_GPG_PASSPHRASE is in
                             // env and read by the GPG plugin directly (not a CLI arg).
-                            withEnv(["MAVEN_SETTINGS=${MAVEN_SETTINGS_FILE}"]) {
+                            withEnv(["MAVEN_SETTINGS=${MAVEN_SETTINGS_FILE}", "GNUPGHOME=${gnupgHome}"]) {
                                 sh """#!/usr/bin/env bash
                                 set -euo pipefail
                                 chmod +x script/release/*.sh
@@ -175,6 +196,15 @@ pipeline {
 
     post {
         always {
+            script {
+                sh '''#!/usr/bin/env bash
+                if [ -n "${WORKSPACE:-}" ] && [ -d "${WORKSPACE}/.gnupg" ]; then
+                    export GNUPGHOME="${WORKSPACE}/.gnupg"
+                    gpgconf --kill gpg-agent 2>/dev/null || true
+                    rm -rf "${WORKSPACE}/.gnupg"
+                fi
+                '''
+            }
             cleanWs()
         }
     }
