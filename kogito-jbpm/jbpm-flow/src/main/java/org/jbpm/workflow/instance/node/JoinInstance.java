@@ -234,7 +234,8 @@ public class JoinInstance extends NodeInstanceImpl {
                     xorCopy.add(nextNode.getId());
                     if (!nextNode.getId().equals(lookFor.getId())) {
 
-                        checkNodes(xorCopy, currentNode, nextNode, lookFor);
+                        // keep the original start node as loop anchor so that further XOR splits down the path are still explored
+                        checkNodes(xorCopy, startAt, nextNode, lookFor);
                     }
                 }
 

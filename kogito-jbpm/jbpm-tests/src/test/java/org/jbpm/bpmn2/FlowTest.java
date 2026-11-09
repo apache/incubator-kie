@@ -50,6 +50,8 @@ import org.jbpm.bpmn2.flow.GatewayTestModel;
 import org.jbpm.bpmn2.flow.GatewayTestProcess;
 import org.jbpm.bpmn2.flow.InclusiveGatewayNestedModel;
 import org.jbpm.bpmn2.flow.InclusiveGatewayNestedProcess;
+import org.jbpm.bpmn2.flow.InclusiveGatewayWithChainedXorSplitsInLoopModel;
+import org.jbpm.bpmn2.flow.InclusiveGatewayWithChainedXorSplitsInLoopProcess;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithDefaultModel;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithDefaultProcess;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithHumanTasksProcessModel;
@@ -907,6 +909,48 @@ public class FlowTest extends JbpmBpmn2TestCase {
         assertThat((int) nodeInstanceExecutionCounter.get("XOR diverging")).isEqualTo(2);
         assertThat((int) nodeInstanceExecutionCounter.get("XOR converging")).isEqualTo(2);
         assertThat((int) nodeInstanceExecutionCounter.get("End")).isEqualTo(1);
+    }
+
+    @Test
+    public void testInclusiveJoinWaitsForLoopWithChainedXorSplits() {
+        Application app = ProcessTestHelper.newApplication();
+        TestWorkItemHandler taskA = new TestWorkItemHandler();
+        TestWorkItemHandler taskB1 = new TestWorkItemHandler();
+        TestWorkItemHandler taskB2 = new TestWorkItemHandler();
+        TestWorkItemHandler afterJoin = new TestWorkItemHandler();
+        ProcessTestHelper.registerHandler(app, "taskA", taskA);
+        ProcessTestHelper.registerHandler(app, "taskB1", taskB1);
+        ProcessTestHelper.registerHandler(app, "taskB2", taskB2);
+        ProcessTestHelper.registerHandler(app, "afterJoin", afterJoin);
+
+        org.kie.kogito.process.Process<InclusiveGatewayWithChainedXorSplitsInLoopModel> definition = InclusiveGatewayWithChainedXorSplitsInLoopProcess.newProcess(app);
+        InclusiveGatewayWithChainedXorSplitsInLoopModel model = definition.createModel();
+        model.setX(0);
+        ProcessInstance<InclusiveGatewayWithChainedXorSplitsInLoopModel> processInstance = definition.createInstance(model);
+        processInstance.start();
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        KogitoWorkItem taskAWorkItem = taskA.getWorkItem();
+        assertThat(taskAWorkItem).isNotNull();
+
+        // B1 completes first and the exclusive split sends the token to B2 (loop)
+        processInstance.completeWorkItem(taskB1.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        // completing A must not trigger the join since the loop token in B2 can still reach it
+        processInstance.completeWorkItem(taskAWorkItem.getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(afterJoin.getWorkItem()).isNull();
+
+        // B2 completes, loops back to B1 which now proceeds to the join
+        processInstance.completeWorkItem(taskB2.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(afterJoin.getWorkItem()).isNull();
+        processInstance.completeWorkItem(taskB1.getWorkItem().getStringId(), null);
+
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        processInstance.completeWorkItem(afterJoin.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
     }
 
     @Test
