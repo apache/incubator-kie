@@ -68,17 +68,22 @@ public class AbstractProcessInstanceTest {
 
     private AbstractProcessInstance<TestModel> processInstance;
 
+    private InternalProcessRuntime pr;
+
+    @SuppressWarnings("unchecked")
+    private AbstractProcess<TestModel> process;
+
     @SuppressWarnings("unchecked")
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        AbstractProcess<TestModel> process = mock(AbstractProcess.class);
+        process = mock(AbstractProcess.class);
         Process piProcess = mock(Process.class);
         when(process.process()).thenReturn(piProcess);
         when(process.instances()).thenReturn(instances);
         when(process.get()).thenReturn(piProcess);
-        InternalProcessRuntime pr = mock(InternalProcessRuntime.class);
+        pr = mock(InternalProcessRuntime.class);
         when(pr.createProcessInstance(any(), any(), any())).thenReturn(wpi);
         when(pr.getProcessInstanceManager()).thenReturn(pim);
         UnitOfWorkManager unitOfWorkManager = mock(UnitOfWorkManager.class);
@@ -133,6 +138,39 @@ public class AbstractProcessInstanceTest {
         NodeInstance nodeInstance = mock(NodeInstance.class);
         when(wpi.getNodeByPredicate(any(), any())).thenReturn(nodeInstance);
         return nodeInstance;
+    }
+
+    @Test
+    public void retriggerCancelsStaleAsyncWrapper() {
+        // the internal instance failed on the real work item, whose recorded instance id is gone
+        // after the rollback, and a restored persisted async node left its wrapper behind
+        when(wpi.getState()).thenReturn(org.kie.kogito.internal.process.runtime.KogitoProcessInstance.STATE_ERROR);
+        when(wpi.getNodeIdInError()).thenReturn("_2");
+        when(wpi.getNodeInstanceIdInError()).thenReturn("gone-instance-id");
+        org.jbpm.workflow.core.WorkflowProcess workflowProcess = mock(org.jbpm.workflow.core.WorkflowProcess.class);
+        when(workflowProcess.getOutputValidator()).thenReturn(Optional.empty());
+        when(process.get()).thenReturn(workflowProcess);
+        when(wpi.getNodeInstance("gone-instance-id", true)).thenReturn(null);
+
+        org.jbpm.workflow.instance.impl.NodeInstanceImpl fresh = mock(org.jbpm.workflow.instance.impl.NodeInstanceImpl.class);
+        when(wpi.getByNodeDefinitionId(any(), any())).thenReturn(fresh);
+        when(fresh.getNodeInstanceContainer()).thenReturn(mock(org.jbpm.workflow.instance.NodeInstanceContainer.class));
+
+        org.jbpm.workflow.core.node.AsyncEventNodeInstance staleWrapper = mock(org.jbpm.workflow.core.node.AsyncEventNodeInstance.class);
+        when(wpi.getNodeInstances(false)).thenReturn(Arrays.asList((org.jbpm.workflow.instance.NodeInstance) staleWrapper));
+
+        org.kie.kogito.internal.process.event.KogitoProcessEventSupport processEventSupport = mock(org.kie.kogito.internal.process.event.KogitoProcessEventSupport.class);
+        when(pr.getProcessEventSupport()).thenReturn(processEventSupport);
+
+        TestProcessInstance failed = new TestProcessInstance(process, new TestModel(), pr);
+        assertThat(failed.error()).isPresent();
+
+        failed.error().get().retrigger();
+
+        // the stale wrapper is cancelled — which also cancels the job it still references (#7274) —
+        // and the node definition is retriggered
+        verify(staleWrapper).cancel();
+        verify(fresh).trigger(null, Node.CONNECTION_DEFAULT_TYPE);
     }
 
     @Test

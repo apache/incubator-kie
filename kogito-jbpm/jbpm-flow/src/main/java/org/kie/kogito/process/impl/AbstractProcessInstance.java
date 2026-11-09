@@ -39,6 +39,7 @@ import org.jbpm.process.instance.InternalProcessRuntime;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.workflow.core.Node;
 import org.jbpm.workflow.core.WorkflowProcess;
+import org.jbpm.workflow.core.node.AsyncEventNodeInstance;
 import org.jbpm.workflow.instance.NodeInstance;
 import org.jbpm.workflow.instance.WorkflowProcessInstance;
 import org.jbpm.workflow.instance.impl.NodeInstanceImpl;
@@ -951,6 +952,19 @@ public abstract class AbstractProcessInstance<T extends Model> implements Proces
                         // Cancelling the node instance in error before retriggering if it is active to avoid duplicated node instances.
                         // This is required when dealing with work items (ej: Human Tasks)
                         nodeInstanceInError.cancel();
+                    }
+
+                    // A persisted async node can leave its wrapper behind when it fails: the
+                    // wrapper has its own instance id, so the cancel above never reaches it, and
+                    // retriggering the node spawns a fresh wrapper while the stale one keeps the
+                    // process from ever completing (#7274). Cancel every other pending wrapper of
+                    // the node, which also cancels the job it still references.
+                    for (NodeInstance pending : pi.getNodeInstances(false)) {
+                        if (pending != ni && pending != nodeInstanceInError
+                                && pending instanceof AsyncEventNodeInstance
+                                && pending.getLeaveTime() == null && pending.getCancelType() == null) {
+                            pending.cancel();
+                        }
                     }
 
                     ni.internalSetRetrigger(true);
