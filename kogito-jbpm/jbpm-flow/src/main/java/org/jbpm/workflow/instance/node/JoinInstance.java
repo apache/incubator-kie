@@ -192,11 +192,16 @@ public class JoinInstance extends NodeInstanceImpl {
         });
 
         for (NodeInstance nodeInstance : activeNodeInstances) {
-            // do not consider NodeInstanceContainers to be checked, enough to treat is as black box
-            if (((org.jbpm.workflow.instance.NodeInstance) nodeInstance).getLevel() != getLevel()) {
+            org.kie.api.definition.process.Node node = nodeInstance.getNode();
+            // An active node of another iteration (level) belongs to a different pass through the join and is ignored when it is
+            // part of a loop that goes through the join, or when it is not part of a loop at all (e.g. repeated timer or
+            // multi instance executions that pass the join independently).
+            // When it is part of a loop that is entirely within one of the branches leading to the join, a later iteration of that
+            // loop is still the same logical token and the join has to wait for it.
+            if (((org.jbpm.workflow.instance.NodeInstance) nodeInstance).getLevel() != getLevel()
+                    && (isReachable(lookFor, node) || !isReachable(node, node))) {
                 continue;
             }
-            org.kie.api.definition.process.Node node = nodeInstance.getNode();
             Set<WorkflowElementIdentifier> vistedNodes = new HashSet<>();
             checkNodes(vistedNodes, node, node, lookFor);
             if (vistedNodes.contains(lookFor.getId()) && !vistedNodes.contains(node.getId())) {
@@ -204,6 +209,37 @@ public class JoinInstance extends NodeInstanceImpl {
             }
         }
 
+        return false;
+    }
+
+    /**
+     * Checks whether {@code target} can be reached by following the outgoing connections starting at {@code from}.
+     */
+    private boolean isReachable(org.kie.api.definition.process.Node from, org.kie.api.definition.process.Node target) {
+        if (from == null || target == null) {
+            return false;
+        }
+        Set<WorkflowElementIdentifier> visited = new HashSet<>();
+        List<org.kie.api.definition.process.Node> pending = new ArrayList<>();
+        pending.add(from);
+        while (!pending.isEmpty()) {
+            org.kie.api.definition.process.Node current = pending.remove(pending.size() - 1);
+            if (current instanceof AsyncEventNode) {
+                current = ((AsyncEventNode) current).getActualNode();
+            }
+            for (Connection conn : current.getOutgoingConnections(Node.CONNECTION_DEFAULT_TYPE)) {
+                org.kie.api.definition.process.Node next = conn.getTo();
+                if (next == null) {
+                    continue;
+                }
+                if (next.getId().equals(target.getId())) {
+                    return true;
+                }
+                if (visited.add(next.getId())) {
+                    pending.add(next);
+                }
+            }
+        }
         return false;
     }
 

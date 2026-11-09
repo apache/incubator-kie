@@ -60,6 +60,8 @@ import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideModel;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideProcess;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideSubprocessModel;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideSubprocessProcess;
+import org.jbpm.bpmn2.flow.InclusiveJoinWithLoopIterationsModel;
+import org.jbpm.bpmn2.flow.InclusiveJoinWithLoopIterationsProcess;
 import org.jbpm.bpmn2.flow.InclusiveNestedInParallelNestedInExclusiveModel;
 import org.jbpm.bpmn2.flow.InclusiveNestedInParallelNestedInExclusiveProcess;
 import org.jbpm.bpmn2.flow.InclusiveSplitAndJoinEmbeddedModel;
@@ -950,6 +952,55 @@ public class FlowTest extends JbpmBpmn2TestCase {
 
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
         processInstance.completeWorkItem(afterJoin.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+    }
+
+    @Test
+    public void testInclusiveJoinWaitsForActiveNodeOfLaterLoopIteration() {
+        Application app = ProcessTestHelper.newApplication();
+        TestWorkItemHandler faReview = new TestWorkItemHandler();
+        TestWorkItemHandler qsReview = new TestWorkItemHandler();
+        TestWorkItemHandler requestClarification = new TestWorkItemHandler();
+        TestWorkItemHandler notification = new TestWorkItemHandler();
+        TestWorkItemHandler afterJoin = new TestWorkItemHandler();
+        ProcessTestHelper.registerHandler(app, "faReview", faReview);
+        ProcessTestHelper.registerHandler(app, "qsReview", qsReview);
+        ProcessTestHelper.registerHandler(app, "requestClarification", requestClarification);
+        ProcessTestHelper.registerHandler(app, "notification", notification);
+        ProcessTestHelper.registerHandler(app, "afterJoin", afterJoin);
+
+        org.kie.kogito.process.Process<InclusiveJoinWithLoopIterationsModel> definition = InclusiveJoinWithLoopIterationsProcess.newProcess(app);
+        InclusiveJoinWithLoopIterationsModel model = definition.createModel();
+        model.setRounds(0);
+        ProcessInstance<InclusiveJoinWithLoopIterationsModel> processInstance = definition.createInstance(model);
+        processInstance.start();
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        KogitoWorkItem faWorkItem = faReview.getWorkItem();
+        assertThat(faWorkItem).isNotNull();
+
+        // first round: QS Review requests a clarification which is answered
+        processInstance.completeWorkItem(qsReview.getWorkItem().getStringId(), null);
+        processInstance.completeWorkItem(requestClarification.getWorkItem().getStringId(), null);
+
+        // second round: QS Review requests a clarification again and it stays pending
+        processInstance.completeWorkItem(qsReview.getWorkItem().getStringId(), null);
+        KogitoWorkItem secondClarification = requestClarification.getWorkItem();
+        assertThat(secondClarification).isNotNull();
+
+        // FA Review arrives at the join while the clarification of the second round is still active
+        processInstance.completeWorkItem(faWorkItem.getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(afterJoin.getWorkItem()).as("join must wait for the pending clarification of the second round").isNull();
+
+        // clarification answered, QS Review is approved in the third round and the join can proceed
+        processInstance.completeWorkItem(secondClarification.getStringId(), null);
+        processInstance.completeWorkItem(qsReview.getWorkItem().getStringId(), null);
+        KogitoWorkItem afterJoinWorkItem = afterJoin.getWorkItem();
+        assertThat(afterJoinWorkItem).isNotNull();
+
+        notification.getWorkItems().forEach(workItem -> processInstance.completeWorkItem(workItem.getStringId(), null));
+        processInstance.completeWorkItem(afterJoinWorkItem.getStringId(), null);
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
     }
 
