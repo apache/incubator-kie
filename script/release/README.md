@@ -47,7 +47,7 @@ To avoid confusion between different release phases:
 | **`build`** | Automation D.2 | Compiles the full Maven reactor and installs artifacts to the local `~/.m2/repository`. |
 | **`deploy` / `staging`** | Automation D.3 | GPG signs artifacts and deploys them to the Apache Nexus Staging repository for release vote inspection. |
 | **`tag-release`** | Automation F | Promotes an approved RC tag (e.g., `10.3.0-rc2`) to the final release tag (`10.3.0`) once the release vote passes. |
-| **`promote` / `publish`** | Automation G | Releases the staging repository in Nexus to Maven Central and publishes release distribution files. |
+| **`promote` / `publish`** | Automation G | Manual: **Release** the closed staging repository in the Nexus UI, which publishes the artifacts to Maven Central. No script does this. |
 
 ---
 

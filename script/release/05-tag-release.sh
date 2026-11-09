@@ -128,7 +128,6 @@ if [[ "${PUSH}" == "false" ]]; then
 fi
 echo ""
 echo "Next steps (AUTOMATION G — promote artifacts):"
-echo "  1. Promote the Nexus staging repository to release."
-echo "  2. Run svn mv to move dist artifacts from dev/ to release/."
-echo "  3. Announce the release on dev@kie.apache.org."
+echo "  1. Release the Nexus staging repository (manual, in https://repository.apache.org)."
+echo "  2. Announce the release on dev@kie.apache.org."
 echo "========================================"
