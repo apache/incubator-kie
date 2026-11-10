@@ -87,6 +87,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-scenario-simulation-api</artifactId>
         </dependency>
@@ -95,6 +101,11 @@
             <groupId>org.drools</groupId>
             <artifactId>drools-scenario-simulation-backend</artifactId>
             <exclusions>
+
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
 
                 <!-- JSON/XML utils -->
                 <exclusion>

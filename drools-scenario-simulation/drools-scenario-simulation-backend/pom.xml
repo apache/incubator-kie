@@ -84,6 +84,11 @@
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-engine</artifactId>
     </dependency>
+    <!-- To be deleted when removing the old Test Scenario based on JUnit4 -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
 
     <!-- Drools dependencies -->
     <dependency>

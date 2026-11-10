@@ -28,15 +28,15 @@ import org.drools.util.ResourceHelper;
 import org.drools.scenariosimulation.backend.util.ScenarioSimulationXMLPersistence;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.model.InitializationError;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Deprecated
@@ -58,7 +58,7 @@ class ScenarioJunitActivatorTest {
     private ScenarioSimulationModel scenarioSimulationModelMock;
 
     @Mock
-    private ScenarioExecutionListener listenerMock;
+    private RunNotifier runNotifierMock;
 
     @Test
     void getChildrenTest() throws Exception {
@@ -78,13 +78,13 @@ class ScenarioJunitActivatorTest {
     }
 
     @Test
-    void runChildTest() {
-        getScenarioJunitActivator().runChild(scenarioRunnerDTOMock, listenerMock);
-        verify(runnerMock, times(1)).run(listenerMock);
+    void runChildTest() throws InitializationError {
+        getScenarioJunitActivator().runChild(scenarioRunnerDTOMock, runNotifierMock);
+        verify(runnerMock, times(1)).run(runNotifierMock);
     }
 
-    private ScenarioJunitActivator getScenarioJunitActivator() {
-        return new ScenarioJunitActivator() {
+    private ScenarioJunitActivator getScenarioJunitActivator() throws InitializationError {
+        return new ScenarioJunitActivator(ScenarioJunitActivator.class) {
             @Override
             ScenarioSimulationXMLPersistence getXmlReader() {
                 return xmlReaderMock;

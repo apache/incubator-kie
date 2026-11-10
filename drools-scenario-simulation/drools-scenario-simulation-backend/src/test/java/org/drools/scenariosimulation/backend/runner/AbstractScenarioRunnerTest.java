@@ -33,6 +33,9 @@ import org.drools.scenariosimulation.backend.util.ScenarioSimulationServerMessag
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunNotifier;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -80,7 +83,7 @@ class AbstractScenarioRunnerTest {
 
     @Test
     void getDescriptionForSimulationByClassNameAndSimulation() {
-        List<String> retrieved = AbstractScenarioRunner.getDescriptionForSimulation(Optional.empty(), scenarioRunnerDTOLocal.getScenarioWithIndices());
+        Description retrieved = AbstractScenarioRunner.getDescriptionForSimulation(Optional.empty(), scenarioRunnerDTOLocal.getScenarioWithIndices());
         commonVerifyDescriptionForSimulation(retrieved, AbstractScenarioRunner.class.getSimpleName());
         retrieved = AbstractScenarioRunner.getDescriptionForSimulation(Optional.of("src/test/Test.scesim"), scenarioRunnerDTOLocal.getScenarioWithIndices());
         commonVerifyDescriptionForSimulation(retrieved, "Test");
@@ -89,19 +92,19 @@ class AbstractScenarioRunnerTest {
     @Test
     void getDescriptionForScenario() {
         final Scenario scenario = scenarioRunnerDTOLocal.getScenarioWithIndices().get(2).getScesimData();
-        String retrieved = AbstractScenarioRunner.getDescriptionForScenario(Optional.empty(), 1, scenario.getDescription());
-
+        Description retrieved = AbstractScenarioRunner.getDescriptionForScenario(Optional.empty(), 1, scenario.getDescription());
+        
         commonVerifyDescriptionForScenario(retrieved, 1, scenario.getDescription(), AbstractScenarioRunner.class.getSimpleName());
 
         retrieved = AbstractScenarioRunner.getDescriptionForScenario(Optional.of("src/test/Test.scesim"), 1, scenario.getDescription());
-
+       
         commonVerifyDescriptionForScenario(retrieved, 1, scenario.getDescription(), "Test");
     }
 
     @Test
     void getSpecificRunnerProvider() {
         // all existing types should have a dedicated runner
-        assertThat(ScenarioSimulationModel.Type.values()).extracting(x -> AbstractScenarioRunner.getSpecificRunnerProvider(x)).isNotNull();
+    	assertThat(ScenarioSimulationModel.Type.values()).extracting(x -> AbstractScenarioRunner.getSpecificRunnerProvider(x)).isNotNull();
     }
 
     @Test
@@ -112,8 +115,8 @@ class AbstractScenarioRunnerTest {
     }
 
     @Test
-    void testRun() {
-        ArgumentCaptor<Throwable> failureArgumentCaptor = ArgumentCaptor.forClass(Throwable.class);
+     void testRun() {
+        ArgumentCaptor<Failure> failureArgumentCaptor = ArgumentCaptor.forClass(Failure.class);
 
         doThrow(new ScenarioException("Failed assertion", true))
                 .when(abstractScenarioRunnerLocal).internalRunScenario(eq(scenarioRunnerDTOLocal.getScenarioWithIndices().get(0)),
@@ -132,29 +135,24 @@ class AbstractScenarioRunnerTest {
                                                                        isA(ScenarioRunnerData.class),
                                                                        any(), any());
         assertThat(abstractScenarioRunnerLocal.simulationRunMetadataBuilder).isNull();
-        ScenarioExecutionListener listener = spy(new ScenarioExecutionListener() {
-        });
+        RunNotifier runNotifier = spy(new RunNotifier());
 
-        abstractScenarioRunnerLocal.run(listener);
+        abstractScenarioRunnerLocal.run(runNotifier);
 
         assertThat(abstractScenarioRunnerLocal.simulationRunMetadataBuilder).isNotNull();
-        // suite start + each scenario start
-        verify(listener, times(SCENARIO_DATA + 1)).executionStarted(isA(String.class));
-        // four stubbed failures + fifth scenario NPE from null runner helper
-        verify(listener, times(SCENARIO_DATA)).executionFailed(isA(String.class), failureArgumentCaptor.capture());
-        // suite finish only (no successful scenarios)
-        verify(listener, times(1)).executionFinished(isA(String.class));
+        verify(runNotifier, times(SCENARIO_DATA + 2)).fireTestStarted(isA(Description.class));
+        verify(runNotifier, times(SCENARIO_DATA)).fireTestFailure(failureArgumentCaptor.capture());
+        verify(runNotifier, times(SCENARIO_DATA)).fireTestFinished(isA(Description.class));
 
-        List<Throwable> capturedFailures = failureArgumentCaptor.getAllValues();
-        assertThat(capturedFailures.get(0)).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Failed assertion", 1, "INDEX-0", "test"));
-        assertThat(capturedFailures.get(0)).isInstanceOf(IndexedScenarioAssertionError.class);
-        assertThat(capturedFailures.get(1)).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Generic exception", 2, "INDEX-1", "test"));
-        assertThat(capturedFailures.get(1)).isInstanceOf(IndexedScenarioException.class);
-        assertThat(capturedFailures.get(2)).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Wrong argument", 3, "INDEX-2", "test"));
-        assertThat(capturedFailures.get(2)).isInstanceOf(IndexedScenarioException.class);
-        assertThat(capturedFailures.get(3)).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Unknown exception", 4, "INDEX-3", "test"));
-        assertThat(capturedFailures.get(3)).isInstanceOf(IndexedScenarioException.class);
-        assertThat(capturedFailures.get(4)).isInstanceOf(IndexedScenarioException.class);
+        List<Failure> capturedFailures = failureArgumentCaptor.getAllValues();
+        assertThat(capturedFailures.get(0).getException()).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Failed assertion", 1, "INDEX-0", "test"));
+        assertThat(capturedFailures.get(0).getException()).isInstanceOf(IndexedScenarioAssertionError.class);
+        assertThat(capturedFailures.get(1).getException()).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Generic exception", 2, "INDEX-1", "test"));
+        assertThat(capturedFailures.get(1).getException()).isInstanceOf(IndexedScenarioException.class);
+        assertThat(capturedFailures.get(2).getException()).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Wrong argument", 3, "INDEX-2", "test"));
+        assertThat(capturedFailures.get(2).getException()).isInstanceOf(IndexedScenarioException.class);
+        assertThat(capturedFailures.get(3).getException()).hasMessage(ScenarioSimulationServerMessages.getIndexedScenarioMessage("Unknown exception", 4, "INDEX-3", "test"));
+        assertThat(capturedFailures.get(3).getException()).isInstanceOf(IndexedScenarioException.class);
     }
 
     @Test
@@ -166,19 +164,21 @@ class AbstractScenarioRunnerTest {
         assertThat(AbstractScenarioRunner.getScesimFileName(null)).isEqualTo(null);
     }
 
-    private void commonVerifyDescriptionForSimulation(final List<String> retrieved, final String className) {
+    private void commonVerifyDescriptionForSimulation(final Description retrieved, final String className) {
         assertThat(retrieved).isNotNull();
-        assertThat(retrieved).hasSize(SCENARIO_DATA + 1);
-        assertThat(retrieved.get(0)).isEqualTo(className);
+        assertThat(retrieved.getDisplayName()).isEqualTo(className);
+        assertThat(retrieved.getChildren()).hasSize(SCENARIO_DATA);
+        assertThat(retrieved.getTestClass()).isNull();
+        assertThat(retrieved.getClassName()).isEqualTo(className);
         IntStream.range(0, SCENARIO_DATA).forEach(index -> {
-            final String description = retrieved.get(index + 1);
+            final Description description = retrieved.getChildren().get(index);
             commonVerifyDescriptionForScenario(description, index + 1, scenarioRunnerDTOLocal.getScenarioWithIndices().get(index).getScesimData().getDescription(), className);
         });
     }
 
-    private void commonVerifyDescriptionForScenario(final String description, int index, final String scenarioDescription, final String className) {
+    private void commonVerifyDescriptionForScenario(final Description description, int index, final String scenarioDescription, final String className) {
         String expected = String.format("#%1$d: %2$s(%3$s)", index, scenarioDescription, className);
-        assertThat(description).isEqualTo(expected);
+        assertThat(description.getDisplayName()).isEqualTo(expected);
     }
 
     private ScenarioRunnerDTO getScenarioRunnerDTO() {

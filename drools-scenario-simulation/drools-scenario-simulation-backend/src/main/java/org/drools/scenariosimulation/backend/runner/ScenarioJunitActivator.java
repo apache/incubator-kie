@@ -21,6 +21,7 @@ package org.drools.scenariosimulation.backend.runner;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,6 +30,10 @@ import org.drools.scenariosimulation.api.model.ScenarioSimulationModel;
 import org.drools.scenariosimulation.api.model.Settings;
 import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerDTO;
 import org.drools.scenariosimulation.backend.util.ScenarioSimulationXMLPersistence;
+import org.junit.runner.Description;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.ParentRunner;
+import org.junit.runners.model.InitializationError;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 
@@ -42,24 +47,29 @@ import static org.drools.util.ResourceHelper.getResourcesByExtension;
  * {@code @TestScenarioActivator}
  */
 @Deprecated(since = "10.2.0", forRemoval = true)
-public class ScenarioJunitActivator {
+public class ScenarioJunitActivator extends ParentRunner<ScenarioRunnerDTO> {
 
-    public List<ScenarioRunnerDTO> getChildren() {
+    public ScenarioJunitActivator(Class<?> testClass) throws InitializationError {
+        super(testClass);
+    }
+
+    @Override
+    protected List<ScenarioRunnerDTO> getChildren() {
         return getResources().map(this::parseFile)
                 .filter(item -> isNotSkipFromBuild(item.getSettings()))
                 .collect(Collectors.toList());
     }
 
-    public void runChild(ScenarioRunnerDTO child, ScenarioExecutionListener listener) {
-        KieContainer kieClasspathContainer = getKieContainer();
-        AbstractScenarioRunner scenarioRunner = newRunner(kieClasspathContainer, child);
-        scenarioRunner.run(listener);
+    @Override
+    protected Description describeChild(ScenarioRunnerDTO child) {
+        return AbstractScenarioRunner.getDescriptionForSimulation(Optional.of(child.getFileName()), child.getScenarioWithIndices());
     }
 
-    public void runAll(ScenarioExecutionListener listener) {
-        for (ScenarioRunnerDTO child : getChildren()) {
-            runChild(child, listener);
-        }
+    @Override
+    protected void runChild(ScenarioRunnerDTO child, RunNotifier notifier) {
+        KieContainer kieClasspathContainer = getKieContainer();
+        AbstractScenarioRunner scenarioRunner = newRunner(kieClasspathContainer, child);
+        scenarioRunner.run(notifier);
     }
 
     protected ScenarioRunnerDTO parseFile(String path) {

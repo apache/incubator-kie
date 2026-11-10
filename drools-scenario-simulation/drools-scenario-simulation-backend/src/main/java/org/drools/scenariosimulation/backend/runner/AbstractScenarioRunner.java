@@ -18,7 +18,6 @@
  */
 package org.drools.scenariosimulation.backend.runner;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +30,10 @@ import org.drools.scenariosimulation.backend.expression.ExpressionEvaluatorFacto
 import org.drools.scenariosimulation.backend.runner.model.ScenarioResultMetadata;
 import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerDTO;
 import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerData;
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunNotifier;
 import org.kie.api.runtime.KieContainer;
 
 import static org.drools.scenariosimulation.api.model.ScenarioSimulationModel.Type;
@@ -40,11 +43,11 @@ import static org.drools.scenariosimulation.api.model.ScenarioSimulationModel.Ty
  * {@link org.junit.runner.Runner} JUnit 4 API. Replaced by {@link TestScenarioEngine}
  */
 @Deprecated(since = "10.2.0", forRemoval = true)
-public abstract class AbstractScenarioRunner {
+public abstract class AbstractScenarioRunner extends Runner {
 
     protected final ClassLoader classLoader;
     protected final ExpressionEvaluatorFactory expressionEvaluatorFactory;
-    protected final String suiteDisplayName;
+    protected final Description desc;
     protected final KieContainer kieContainer;
     protected final ScenarioRunnerDTO scenarioRunnerDTO;
     protected SimulationRunMetadataBuilder simulationRunMetadataBuilder;
@@ -54,44 +57,25 @@ public abstract class AbstractScenarioRunner {
                                      ExpressionEvaluatorFactory expressionEvaluatorFactory) {
         this.kieContainer = kieContainer;
         this.scenarioRunnerDTO = scenarioRunnerDTO;
-        this.suiteDisplayName = getSuiteDisplayName(getFilePath());
+        this.desc = getDescriptionForSimulation(getFilePath(), scenarioRunnerDTO.getScenarioWithIndices());
         this.classLoader = kieContainer.getClassLoader();
         this.expressionEvaluatorFactory = expressionEvaluatorFactory;
     }
 
-    public static String getSuiteDisplayName(Optional<String> fullFileName) {
-        return fullFileName.map(AbstractScenarioRunner::getScesimFileName)
-                .orElse(AbstractScenarioRunner.class.getSimpleName());
+    public static Description getDescriptionForSimulation(Optional<String> fullFileName, List<ScenarioWithIndex> scenarios) {
+        String testSuiteName = fullFileName.isPresent() ? getScesimFileName(fullFileName.get()) : AbstractScenarioRunner.class.getSimpleName();
+        Description suiteDescription = Description.createSuiteDescription(testSuiteName);
+        scenarios.forEach(scenarioWithIndex -> suiteDescription.addChild(
+                getDescriptionForScenario(fullFileName,
+                                          scenarioWithIndex.getIndex(),
+                                          scenarioWithIndex.getScesimData().getDescription())));
+        return suiteDescription;
     }
 
-    /**
-     * @return suite display name followed by each scenario display name
-     */
-    public static List<String> getDescriptionForSimulation(Optional<String> fullFileName, List<ScenarioWithIndex> scenarios) {
-        List<String> descriptions = new ArrayList<>();
-        String suiteName = getSuiteDisplayName(fullFileName);
-        descriptions.add(suiteName);
-        scenarios.forEach(scenarioWithIndex -> descriptions.add(
-                getScenarioDisplayName(fullFileName,
-                                       scenarioWithIndex.getIndex(),
-                                       scenarioWithIndex.getScesimData().getDescription())));
-        return descriptions;
-    }
-
-    public static String getScenarioDisplayName(Optional<String> fullFileName, int index, String description) {
-        String testName = getSuiteDisplayName(fullFileName);
-        return String.format("#%d: %s(%s)", index, description, testName);
-    }
-
-    /**
-     * Display name matching {@link TestScenarioTestDescriptor} (used when bridging to the TestEngine).
-     */
-    public static String getScenarioDisplayNameWithoutClassName(int index, String description) {
-        return String.format("#%d: %s", index, description);
-    }
-
-    public static String getDescriptionForScenario(Optional<String> fullFileName, int index, String description) {
-        return getScenarioDisplayName(fullFileName, index, description);
+    public static Description getDescriptionForScenario(Optional<String> fullFileName, int index, String description) {
+        String testName = fullFileName.isPresent() ? getScesimFileName(fullFileName.get()) : AbstractScenarioRunner.class.getSimpleName();
+        return Description.createTestDescription(testName,
+                                                 String.format("#%d: %s", index, description));
     }
 
     public static String getScesimFileName(String fileFullPath) {
@@ -115,37 +99,40 @@ public abstract class AbstractScenarioRunner {
         }
     }
 
-    public void run(ScenarioExecutionListener listener) {
+    @Override
+    public void run(RunNotifier notifier) {
         simulationRunMetadataBuilder = SimulationRunMetadataBuilder.create();
 
-        listener.executionStarted(suiteDisplayName);
+        notifier.fireTestStarted(getDescription());
         for (ScenarioWithIndex scenarioWithIndex : scenarioRunnerDTO.getScenarioWithIndices()) {
-            singleRunScenario(scenarioWithIndex, listener, scenarioRunnerDTO.getSettings(), scenarioRunnerDTO.getBackground())
+            singleRunScenario(scenarioWithIndex, notifier, scenarioRunnerDTO.getSettings(), scenarioRunnerDTO.getBackground())
                     .ifPresent(simulationRunMetadataBuilder::addScenarioResultMetadata);
         }
-        listener.executionFinished(suiteDisplayName);
+        notifier.fireTestStarted(getDescription());
     }
 
-    public String getDescription() {
-        return suiteDisplayName;
+    @Override
+    public Description getDescription() {
+        return this.desc;
     }
 
-    protected Optional<ScenarioResultMetadata> singleRunScenario(ScenarioWithIndex scenarioWithIndex,
-                                                                 ScenarioExecutionListener listener,
-                                                                 Settings settings,
-                                                                 Background background) {
+    protected Optional<ScenarioResultMetadata> singleRunScenario(ScenarioWithIndex scenarioWithIndex, RunNotifier runNotifier, Settings settings, Background background) {
         ScenarioRunnerData scenarioRunnerData = new ScenarioRunnerData();
         String scenarioName = scenarioWithIndex.getScesimData().getDescription();
         int index = scenarioWithIndex.getIndex();
-        String displayName = getScenarioDisplayNameWithoutClassName(index, scenarioName);
-        listener.executionStarted(displayName);
+        Description descriptionForScenario = getDescriptionForScenario(getFilePath(),
+                                                                       index,
+                                                                       scenarioName);
+        runNotifier.fireTestStarted(descriptionForScenario);
 
         try {
             internalRunScenario(scenarioWithIndex, scenarioRunnerData, settings, background);
-            listener.executionFinished(displayName);
         } catch (Exception e) {
-            listener.executionFailed(displayName, defineFailureException(e, index, scenarioName));
+            runNotifier.fireTestFailure(new Failure(descriptionForScenario,
+                                                    defineFailureException(e, index, scenarioName)));
         }
+
+        runNotifier.fireTestFinished(descriptionForScenario);
 
         return scenarioRunnerData.getMetadata();
     }
