@@ -21,7 +21,9 @@
 
 All notable changes to the kie-api module will be documented in this file.
 
-## [Unreleased]
+## [10.3.0] - 2026-11-xx
+
+No API changes.
 
 ## [10.2.0] - 2026-03-28
 
@@ -59,7 +61,7 @@ All notable changes to the kie-api module will be documented in this file.
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/apache/incubator-kie-drools/compare/10.2.0...HEAD
+[10.3.0]: https://github.com/apache/incubator-kie-drools/compare/10.2.0...HEAD
 [10.2.0]: https://github.com/apache/incubator-kie-drools/compare/10.1.0...10.2.0
 [10.1.0]: https://github.com/apache/incubator-kie-drools/compare/10.0.0...10.1.0
 [10.0.0]: https://github.com/apache/incubator-kie-drools/releases/tag/10.0.0
