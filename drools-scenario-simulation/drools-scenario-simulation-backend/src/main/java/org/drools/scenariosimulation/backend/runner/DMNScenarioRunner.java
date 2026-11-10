@@ -23,8 +23,10 @@ import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerDTO;
 import org.kie.api.runtime.KieContainer;
 
 /**
- * Programmatic runner for DMN-type Test Scenario ({@code *.scesim}) files.
+ * @deprecated This is the JUnit 4 implementation of Test Scenario, based on
+ * {@link org.junit.runner.Runner} JUnit 4 API. Replaced by {@link TestScenarioEngine}
  */
+@Deprecated(since = "10.2.0", forRemoval = true)
 public class DMNScenarioRunner extends AbstractScenarioRunner {
 
     public DMNScenarioRunner(KieContainer kieContainer, ScenarioRunnerDTO scenarioRunnerDTO) {

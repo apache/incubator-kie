@@ -49,6 +49,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@Deprecated
 class AbstractScenarioRunnerTest {
 
     private final static int SCENARIO_DATA = 5;

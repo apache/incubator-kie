@@ -36,9 +36,10 @@ import org.kie.api.runtime.KieContainer;
 import static org.drools.scenariosimulation.api.model.ScenarioSimulationModel.Type;
 
 /**
- * Programmatic runner for a single {@code *.scesim} file. Invoked by
- * {@link TestScenarioEngine} and by {@link ScenarioJunitActivator}.
+ * @deprecated This is the JUnit 4 implementation of Test Scenario, based on
+ * {@link org.junit.runner.Runner} JUnit 4 API. Replaced by {@link TestScenarioEngine}
  */
+@Deprecated(since = "10.2.0", forRemoval = true)
 public abstract class AbstractScenarioRunner {
 
     protected final ClassLoader classLoader;

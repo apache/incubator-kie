@@ -22,8 +22,10 @@ import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerDTO;
 import org.kie.api.runtime.KieContainer;
 
 /**
- * Factory for {@link AbstractScenarioRunner} instances.
+ * @deprecated This is the JUnit 4 implementation of Test Scenario, based on
+ * {@link org.junit.runner.Runner} JUnit 4 API. Replaced by {@link TestScenarioEngine}
  */
+@Deprecated
 @FunctionalInterface
 public interface ScenarioRunnerProvider {
 

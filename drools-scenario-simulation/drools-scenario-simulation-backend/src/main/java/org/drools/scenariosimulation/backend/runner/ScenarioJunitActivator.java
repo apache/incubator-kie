@@ -36,10 +36,12 @@ import static org.drools.scenariosimulation.api.utils.ScenarioSimulationSharedUt
 import static org.drools.util.ResourceHelper.getResourcesByExtension;
 
 /**
- * Programmatic facade that discovers {@code *.scesim} files and executes them via
- * {@link AbstractScenarioRunner}. For Surefire/IDE discovery prefer annotating a test
- * class with {@link TestScenarioActivator} so {@link TestScenarioEngine} runs them.
+ * @deprecated This is the JUnit 4 implementation of Test Scenario, based on
+ * {@link org.junit.runner.Runner} JUnit 4 API. Replaced by {@link TestScenarioActivator}
+ * Please replace {@code @org.junit.runner.RunWith(ScenarioJunitActivator.class)} with
+ * {@code @TestScenarioActivator}
  */
+@Deprecated(since = "10.2.0", forRemoval = true)
 public class ScenarioJunitActivator {
 
     public List<ScenarioRunnerDTO> getChildren() {
