@@ -34,7 +34,7 @@
     <maven.compiler.release>${maven.compiler.release}</maven.compiler.release>
     <drools-version>${project.version}</drools-version>
     <slf4j-version>${version.org.slf4j}</slf4j-version>
-    <junit-version>${version.junit}</junit-version>
+    <junit-version>${version.org.junit}</junit-version>
     <logback-version>${version.ch.qos.logback}</logback-version>
   </properties>
 
@@ -58,8 +58,8 @@
     </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <version>${junit-version}</version>
       <scope>test</scope>
     </dependency>

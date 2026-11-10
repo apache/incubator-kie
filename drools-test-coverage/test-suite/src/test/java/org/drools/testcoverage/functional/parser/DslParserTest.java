@@ -29,16 +29,14 @@ import org.drools.testcoverage.common.util.KieUtil;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.runners.Parameterized.Parameters;
 import org.kie.api.KieServices;
 import org.kie.api.io.Resource;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-public class DslParserTest extends ParserTest {
+class DslParserTest extends ParserTest {
 
-    @Parameters
-    public static Stream<Arguments> parameters() {
+    static Stream<Arguments> parameters() {
         final Set<Arguments> set = new HashSet<>();
 
         for (File f : getFiles("dsl", "dslr")) {
@@ -53,7 +51,7 @@ public class DslParserTest extends ParserTest {
 
     @ParameterizedTest
     @MethodSource("parameters")
-    public void testParserDsl(File dslr, File dsl, KieBaseTestConfiguration kieBaseTestConfiguration) {
+    void testParserDsl(File dslr, File dsl, KieBaseTestConfiguration kieBaseTestConfiguration) {
         final Resource dslResource = KieServices.Factory.get().getResources().newFileSystemResource(dsl);
         final Resource dslrResource = KieServices.Factory.get().getResources().newFileSystemResource(dslr);
         KieUtil.getKieBuilderFromResources(kieBaseTestConfiguration, true, dslResource, dslrResource);
@@ -61,7 +59,7 @@ public class DslParserTest extends ParserTest {
 
     @ParameterizedTest
     @MethodSource("parameters")
-    public void testParserDsl2(File dslr, File dsl, KieBaseTestConfiguration kieBaseTestConfiguration) {
+    void testParserDsl2(File dslr, File dsl, KieBaseTestConfiguration kieBaseTestConfiguration) {
         final Resource dslResource = KieServices.Factory.get().getResources().newFileSystemResource(dsl);
         final Resource dslrResource = KieServices.Factory.get().getResources().newFileSystemResource(dslr);
         KieUtil.getKieBuilderFromResources(kieBaseTestConfiguration, true, dslrResource, dslResource);

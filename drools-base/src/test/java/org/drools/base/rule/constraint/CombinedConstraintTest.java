@@ -26,15 +26,15 @@ import org.drools.base.base.ValueResolver;
 import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.Declaration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CombinedConstraintTest {
+class CombinedConstraintTest {
 
     @Test
-    public void mixedStepWithNegConstraintMustEvaluateAlphaDuringLeftEvaluation() {
+    void mixedStepWithNegConstraintMustEvaluateAlphaDuringLeftEvaluation() {
         // Real production AlphaNodeFieldConstraint from drools-base:
         // NegConstraint(true) checks handle.isNegated() == true.
         // For a normal (non-negated) fact handle, isAllowed() returns false.

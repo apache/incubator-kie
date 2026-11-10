@@ -20,16 +20,16 @@ package org.kie.test.util;
 
 import static org.kie.test.util.StaticMethodTestHelper.*;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StaticMethodTestHelperTest {
+class StaticMethodTestHelperTest {
 
-    @Ignore("Not working with \"quarkus-3-SNAPSHOT\" maven version")
+    @Disabled("Not working with \"quarkus-3-SNAPSHOT\" maven version")
     @Test
-    public void versionIsLessThanProjectVersion() {
+    void versionIsLessThanProjectVersion() {
         double version = 6.2d;
         assertThat(projectVersionIsLessThan(version)).isFalse();
 
