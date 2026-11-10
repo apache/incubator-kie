@@ -23,12 +23,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
@@ -97,6 +97,60 @@ public class SubnetworkSegmentSplitIntegrationTest {
             ks.delete(fh);
             ks.fireAllRules();
             assertThat(results).as("After retraction: not-rule fires again, exists does not").containsExactly("not-rule");
+        } finally {
+            ks.dispose();
+        }
+    }
+
+    private static final String TP03_EXISTS_RULE_PACKAGE = """
+            package repro.tp03.b;
+            import %s;
+            global java.util.List results;
+            rule "exists-rule"
+            when
+                exists ( $c : Container() and String( this == "match" ) from $c.items )
+            then
+                results.add("exists-rule");
+            end
+            """.formatted(Container.class.getCanonicalName());
+
+    private static final String TP03_NOT_RULE_PACKAGE = """
+            package repro.tp03.a;
+            import %s;
+            global java.util.List results;
+            rule "not-rule"
+            when
+                not ( $c : Container() and String( this == "match" ) from $c.items )
+            then
+                results.add("not-rule");
+            end
+            """.formatted(Container.class.getCanonicalName());
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTP03RuleRemovalOnSplitSubnetwork(KieBaseTestConfiguration cfg) {
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl(
+                "tp03", cfg, TP03_NOT_RULE_PACKAGE, TP03_EXISTS_RULE_PACKAGE);
+        KieSession ks = kbase.newKieSession();
+        try {
+            List<String> fired = new ArrayList<>();
+            ks.setGlobal("results", fired);
+
+            // STEP 1: insert a container with 'match'. exists-rule fires, not-rule is blocked.
+            FactHandle container = ks.insert(new Container("match"));
+            ks.fireAllRules();
+            assertThat(fired).as("Step 1: Container('match') inserted").containsExactly("exists-rule");
+            fired.clear();
+
+            // STEP 2: remove exists-rule. The two rules shared a condition, so this
+            //         touches the chain that not-rule depends on.
+            kbase.removeRule("repro.tp03.b", "exists-rule");
+
+            // STEP 3: delete the container. not-rule must still wake up.
+            ks.delete(container);
+            ks.fireAllRules();
+            assertThat(fired).as("Step 3: not-rule must survive the removal of its sibling")
+                    .containsExactly("not-rule");
         } finally {
             ks.dispose();
         }

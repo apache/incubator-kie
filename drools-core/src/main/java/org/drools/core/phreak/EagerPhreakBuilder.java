@@ -637,6 +637,10 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                 }
 
                 for (PathEndNode endNode : tn.getPathEndNodes()) {
+                    if (endNode.getAssociatedTerminalsSize() > 1) {
+                        // do nothing, this whole subnetwork is still shared
+                        continue;
+                    }
                     PathMemory pmem = (PathMemory) wm.getNodeMemories().peekNodeMemory(endNode);
 
                     // Iterate from root to tip.
