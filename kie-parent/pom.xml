@@ -1000,6 +1000,17 @@
         <artifactId>json-schema-validator</artifactId>
         <version>${version.io.rest-assured}</version>
         <scope>test</scope>
+        <exclusions>
+          <!-- CVE fix: jackson-coreutils pulled transitively via json-schema-validator -->
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>jackson-coreutils</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-patch</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.rest-assured</groupId>
@@ -1126,6 +1137,15 @@
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <!-- CVE fix: json-patch/jackson-coreutils pulled in transitively via swagger-compat-spec-parser -->
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-patch</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>jackson-coreutils</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1952,6 +1972,17 @@
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-jackson2-provider</artifactId>
         <version>${version.org.jboss.resteasy}</version>
+        <exclusions>
+          <!-- CVE fix: no patched version of json-patch/jackson-coreutils exists -->
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-patch</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>jackson-coreutils</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.jboss.resteasy</groupId>

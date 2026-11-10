@@ -889,6 +889,36 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
     }
 
     @Test
+    public void testEventSubprocessSignalInterruptingWaitingHandler() {
+        Application app = ProcessTestHelper.newApplication();
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ProcessTestHelper.registerHandler(app, "Human Task", workItemHandler);
+
+        org.kie.kogito.process.Process<EventSubprocessSignalInterruptingWaitingModel> processDefinition = EventSubprocessSignalInterruptingWaitingProcess.newProcess(app);
+        org.kie.kogito.process.ProcessInstance<EventSubprocessSignalInterruptingWaitingModel> instance = processDefinition.createInstance(processDefinition.createModel());
+        instance.start();
+        assertThat(instance.status()).isEqualTo(org.kie.kogito.process.ProcessInstance.STATE_ACTIVE);
+        assertThat(instance.workItems()).extracting(WorkItem::getNodeInstanceId).hasSize(1);
+        KogitoWorkItem mainTask = workItemHandler.getWorkItem();
+
+        instance.send(SignalFactory.of("MySignal"));
+
+        // the interrupting handler is running: the parent flow was interrupted, only the handler's task is left
+        assertThat(instance.status()).isEqualTo(org.kie.kogito.process.ProcessInstance.STATE_ACTIVE);
+        KogitoWorkItem handlerTask = workItemHandler.getWorkItem();
+        assertThat(handlerTask.getStringId()).isNotEqualTo(mainTask.getStringId());
+        assertThat(instance.workItems()).extracting(WorkItem::getId).containsExactly(handlerTask.getStringId());
+
+        // a second trigger must not start another handler while the parent is being terminated
+        instance.send(SignalFactory.of("MySignal"));
+        assertThat(instance.workItems()).extracting(WorkItem::getId).containsExactly(handlerTask.getStringId());
+
+        // the parent reaches its final state once the handler is done
+        instance.completeWorkItem(handlerTask.getStringId(), null);
+        assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_ABORTED);
+    }
+
+    @Test
     public void testEventSubprocessMessage() throws Exception {
         Application app = ProcessTestHelper.newApplication();
 
