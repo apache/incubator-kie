@@ -20,9 +20,7 @@ package org.drools.scenariosimulation.backend.runner;
 
 import org.drools.scenariosimulation.api.model.ScenarioSimulationModel;
 import org.drools.scenariosimulation.api.utils.ConstantsHolder;
-import org.drools.scenariosimulation.backend.expression.ExpressionEvaluatorFactory;
 import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerDTO;
-import org.drools.scenariosimulation.backend.runner.model.ScenarioRunnerData;
 import org.drools.scenariosimulation.backend.util.ScenarioSimulationXMLPersistence;
 import org.junit.platform.commons.support.AnnotationSupport;
 
@@ -47,8 +45,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -98,44 +99,59 @@ public class TestScenarioEngine implements TestEngine {
                         listener.executionSkipped(testSuiteDescriptor, testSuiteDescriptor.getDisplayName() + " skipped from the build");
                         return;
                     }
-                    listener.executionStarted(testSuiteDescriptor);
-                    AbstractRunnerHelper runnerHelper = getRunnerHelper(testSuiteDescriptor.getTestScenarioType());
-
-                    testSuiteDescriptor.getChildren().stream()
-                            .map(TestScenarioTestDescriptor.class::cast)
-                            .forEach(testDescriptor -> {
-                                LOGGER.debug("Executing {} scenario", testSuiteDescriptor.getDisplayName());
-                                listener.executionStarted(testDescriptor);
-
-                                KieContainer kieContainer = KieServices.get().getKieClasspathContainer();
-                                ExpressionEvaluatorFactory expressionEvaluatorFactory = ExpressionEvaluatorFactory.create(
-                                        kieContainer.getClassLoader(),
-                                        scenarioRunnerDTO.getSettings().getType());
-
-                                try {
-                                    runnerHelper.run(kieContainer,
-                                            scenarioRunnerDTO.getSimulationModelDescriptor(),
-                                            testDescriptor.getScenarioWithIndex(),
-                                            expressionEvaluatorFactory,
-                                            kieContainer.getClassLoader(),
-                                            new ScenarioRunnerData(),
-                                            scenarioRunnerDTO.getSettings(),
-                                            scenarioRunnerDTO.getBackground());
-
-                                    LOGGER.debug("{} scenario successful", testSuiteDescriptor.getDisplayName());
-                                    listener.executionFinished(testDescriptor, TestExecutionResult.successful());
-                                } catch (Exception e) {
-                                    LOGGER.debug("{} scenario failed", testSuiteDescriptor.getDisplayName());
-                                    listener.executionFinished(testDescriptor,
-                                            TestExecutionResult.failed(defineFailureException(e,
-                                                    testDescriptor.getScenarioWithIndex().getIndex(),
-                                                    testDescriptor.getScenarioWithIndex().getScesimData().getDescription(),
-                                                    testSuiteDescriptor.getDisplayName())));
-                                }
-                            });
+                    KieContainer kieContainer = KieServices.get().getKieClasspathContainer();
+                    AbstractScenarioRunner scenarioRunner = AbstractScenarioRunner
+                            .getSpecificRunnerProvider(testSuiteDescriptor.getTestScenarioType())
+                            .create(kieContainer, scenarioRunnerDTO);
+                    scenarioRunner.run(adaptEngineListener(listener, testSuiteDescriptor));
                     LOGGER.debug("{} Test Scenario suite executed", testSuiteDescriptor.getDisplayName());
-                    listener.executionFinished(testSuiteDescriptor, TestExecutionResult.successful());
                 });
+    }
+
+    static ScenarioExecutionListener adaptEngineListener(EngineExecutionListener listener,
+                                                         TestScenarioTestSuiteDescriptor testSuiteDescriptor) {
+        Set<String> failedScenarios = new HashSet<>();
+        return new ScenarioExecutionListener() {
+            @Override
+            public void executionStarted(String displayName) {
+                findDescriptor(displayName).ifPresent(listener::executionStarted);
+            }
+
+            @Override
+            public void executionFinished(String displayName) {
+                if (failedScenarios.contains(displayName)) {
+                    return;
+                }
+                findDescriptor(displayName).ifPresent(descriptor ->
+                        listener.executionFinished(descriptor, TestExecutionResult.successful()));
+            }
+
+            @Override
+            public void executionFailed(String displayName, Throwable cause) {
+                failedScenarios.add(displayName);
+                findDescriptor(displayName).ifPresent(descriptor ->
+                        listener.executionFinished(descriptor, TestExecutionResult.failed(cause)));
+            }
+
+            @Override
+            public void executionSkipped(String displayName, String reason) {
+                findDescriptor(displayName).ifPresent(descriptor ->
+                        listener.executionSkipped(descriptor, reason));
+            }
+
+            private Optional<TestDescriptor> findDescriptor(String displayName) {
+                if (testSuiteDescriptor.getDisplayName().equals(displayName)
+                        || (testSuiteDescriptor.getScenarioRunnerDTO().getFileName() != null
+                        && AbstractScenarioRunner.getScesimFileName(
+                                testSuiteDescriptor.getScenarioRunnerDTO().getFileName()).equals(displayName))) {
+                    return Optional.of(testSuiteDescriptor);
+                }
+                return testSuiteDescriptor.getChildren().stream()
+                        .filter(child -> child.getDisplayName().equals(displayName))
+                        .findFirst()
+                        .map(TestDescriptor.class::cast);
+            }
+        };
     }
 
     static void appendTestSuites(Class<?> javaClass, TestDescriptor engineDescriptor) {
