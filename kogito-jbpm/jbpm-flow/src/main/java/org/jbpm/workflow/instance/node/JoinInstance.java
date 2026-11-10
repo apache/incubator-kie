@@ -267,8 +267,9 @@ public class JoinInstance extends NodeInstanceImpl {
                 if (nextNode == null) {
                     continue;
                 } else {
-                    xorCopy.add(nextNode.getId());
-                    if (!nextNode.getId().equals(lookFor.getId())) {
+                    boolean alreadyVisited = !xorCopy.add(nextNode.getId());
+                    // a node already visited on this path must not be explored again, otherwise a cycle of XOR splits never ends
+                    if (!alreadyVisited && !nextNode.getId().equals(lookFor.getId())) {
 
                         // keep the original start node as loop anchor so that further XOR splits down the path are still explored
                         checkNodes(xorCopy, startAt, nextNode, lookFor);

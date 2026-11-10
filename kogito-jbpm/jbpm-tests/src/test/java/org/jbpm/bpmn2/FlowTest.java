@@ -60,6 +60,8 @@ import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideModel;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideProcess;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideSubprocessModel;
 import org.jbpm.bpmn2.flow.InclusiveGatewayWithLoopInsideSubprocessProcess;
+import org.jbpm.bpmn2.flow.InclusiveGatewayWithXorOnlyCycleModel;
+import org.jbpm.bpmn2.flow.InclusiveGatewayWithXorOnlyCycleProcess;
 import org.jbpm.bpmn2.flow.InclusiveJoinWithLoopIterationsModel;
 import org.jbpm.bpmn2.flow.InclusiveJoinWithLoopIterationsProcess;
 import org.jbpm.bpmn2.flow.InclusiveNestedInParallelNestedInExclusiveModel;
@@ -950,6 +952,32 @@ public class FlowTest extends JbpmBpmn2TestCase {
         assertThat(afterJoin.getWorkItem()).isNull();
         processInstance.completeWorkItem(taskB1.getWorkItem().getStringId(), null);
 
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        processInstance.completeWorkItem(afterJoin.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+    }
+
+    @Test
+    public void testInclusiveJoinWithCycleOfDirectlyConnectedXorSplits() {
+        Application app = ProcessTestHelper.newApplication();
+        TestWorkItemHandler taskA = new TestWorkItemHandler();
+        TestWorkItemHandler taskB = new TestWorkItemHandler();
+        TestWorkItemHandler afterJoin = new TestWorkItemHandler();
+        ProcessTestHelper.registerHandler(app, "taskA", taskA);
+        ProcessTestHelper.registerHandler(app, "taskB", taskB);
+        ProcessTestHelper.registerHandler(app, "afterJoin", afterJoin);
+
+        org.kie.kogito.process.Process<InclusiveGatewayWithXorOnlyCycleModel> definition = InclusiveGatewayWithXorOnlyCycleProcess.newProcess(app);
+        ProcessInstance<InclusiveGatewayWithXorOnlyCycleModel> processInstance = definition.createInstance(definition.createModel());
+        processInstance.start();
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+
+        // checking if TaskB can still reach the join must terminate although the exclusive splits form a cycle
+        processInstance.completeWorkItem(taskA.getWorkItem().getStringId(), null);
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
+        assertThat(afterJoin.getWorkItem()).isNull();
+
+        processInstance.completeWorkItem(taskB.getWorkItem().getStringId(), null);
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
         processInstance.completeWorkItem(afterJoin.getWorkItem().getStringId(), null);
         assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
