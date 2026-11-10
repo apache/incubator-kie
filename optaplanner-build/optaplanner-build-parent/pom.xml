@@ -52,7 +52,7 @@
     <version.com.thoughtworks.xstream>1.4.21</version.com.thoughtworks.xstream>
     <version.io.micrometer>1.17.1</version.io.micrometer>
     <version.io.quarkiverse.operatorsdk>6.6.7</version.io.quarkiverse.operatorsdk>
-    <version.io.netty>4.1.139.Final</version.io.netty>
+    <version.io.netty>4.1.140.Final</version.io.netty>
     <version.io.quarkus>3.33.4.1</version.io.quarkus>
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
     <version.org.apache.commons.text>1.14.0</version.org.apache.commons.text>
