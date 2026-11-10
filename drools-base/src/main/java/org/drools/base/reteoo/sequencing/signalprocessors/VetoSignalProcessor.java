@@ -83,10 +83,7 @@ public class VetoSignalProcessor extends SignalProcessor {
 
     @Override
     public void consume(SequenceMemory memory, ValueResolver valueResolver) {
-        int step = memory.getStep();
-        memory.getSequence().getSteps()[step].deactivate(memory, valueResolver);
-        memory.setStep(0);
-        memory.getSequence().getSteps()[0].activate(memory, valueResolver);
+        memory.getSequence().restart(memory, valueResolver);
     }
 
     @Override

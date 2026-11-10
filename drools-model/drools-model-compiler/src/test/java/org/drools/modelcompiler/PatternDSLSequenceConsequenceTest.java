@@ -27,8 +27,10 @@ import org.drools.model.impl.ModelImpl;
 import org.drools.modelcompiler.domain.Person;
 import org.drools.modelcompiler.domain.Relationship;
 import org.drools.modelcompiler.domain.SensorEvents.AlarmRaised;
+import org.drools.modelcompiler.domain.SensorEvents.CalibrationPassed;
 import org.drools.modelcompiler.domain.SensorEvents.HeartbeatOk;
 import org.drools.modelcompiler.domain.SensorEvents.MonitoringStation;
+import org.drools.modelcompiler.domain.SensorEvents.OperatorAcknowledged;
 import org.drools.modelcompiler.domain.SensorEvents.SensorActivated;
 import org.drools.modelcompiler.domain.Toy;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +42,7 @@ import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.model.DSL.declarationOf;
+import static org.drools.model.PatternDSL.absent;
 import static org.drools.model.PatternDSL.on;
 import static org.drools.model.PatternDSL.or;
 import static org.drools.model.PatternDSL.pattern;
@@ -391,6 +394,104 @@ public class PatternDSLSequenceConsequenceTest {
     }
 
     @Test
+    public void vetoDoesNotLeakStaleBindingFromAbortedAttemptIntoConsequence() {
+        Variable<MonitoringStation>    stationV   = declarationOf(MonitoringStation.class);
+        Variable<SensorActivated>      startV     = declarationOf(SensorActivated.class);
+        Variable<HeartbeatOk>          heartbeatV = declarationOf(HeartbeatOk.class);
+        Variable<AlarmRaised>          alarmV     = declarationOf(AlarmRaised.class);
+        Variable<CalibrationPassed>    calibV     = declarationOf(CalibrationPassed.class);
+        Variable<OperatorAcknowledged> ackV       = declarationOf(OperatorAcknowledged.class);
+
+        Rule rule = rule("veto-stale-binding").build(
+                pattern(stationV),
+                sequence(
+                        pattern(startV),
+                        or(
+                                pattern(heartbeatV),
+                                pattern(alarmV)
+                        ),
+                        absent(pattern(calibV)),
+                        pattern(ackV)
+                ),
+                on(alarmV).execute(al -> results.add(al == null ? "alarm:none" : "alarm:" + al.getSeverity()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new MonitoringStation("s1"));
+        insertAndFire(new SensorActivated("s1"));
+        insertAndFire(new AlarmRaised("s1", "stale"));   // attempt 1 binds the alarm slot
+        insertAndFire(new CalibrationPassed("s1"));      // veto: attempt 1 is aborted
+
+        insertAndFire(new SensorActivated("s1"));        // attempt 2
+        insertAndFire(new HeartbeatOk("s1"));            // alarm branch does not match this time
+        insertAndFire(new OperatorAcknowledged("s1", "op"));
+
+        assertThat(results)
+                .as("a veto discards the aborted attempt's bindings; attempt 2 must fire once with no alarm binding")
+                .containsExactly("alarm:none");
+    }
+
+    @Test
+    public void unmatchedOrBranchBindsNullInConsequence() {
+        Variable<MonitoringStation> stationV   = declarationOf(MonitoringStation.class);
+        Variable<SensorActivated>   activatedV = declarationOf(SensorActivated.class);
+        Variable<HeartbeatOk>       heartbeatV = declarationOf(HeartbeatOk.class);
+        Variable<AlarmRaised>       alarmV     = declarationOf(AlarmRaised.class);
+
+        Rule rule = rule("or-unmatched-branch-null").build(
+                pattern(stationV),
+                sequence(
+                        pattern(activatedV).expr("act", a -> a.getSensorId().equals("s1")),
+                        or(
+                                pattern(heartbeatV).expr("hb", h -> h.getSensorId().equals("s1")),
+                                pattern(alarmV).expr("hi",     al -> al.getSeverity().equals("high"))
+                        )
+                ),
+                on(alarmV).execute(al -> results.add(al == null ? "alarm:none" : "alarm:" + al.getSeverity()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new MonitoringStation("s1"));
+        insertAndFire(new SensorActivated("s1"));
+        insertAndFire(new HeartbeatOk("s1"));   // alarm branch never matches
+
+        assertThat(results).containsExactly("alarm:none");
+    }
+
+    @Test
+    public void unmatchedOrBranchBindsNullWhenConsequenceUsesDrools() {
+        Variable<MonitoringStation> stationV   = declarationOf(MonitoringStation.class);
+        Variable<SensorActivated>   activatedV = declarationOf(SensorActivated.class);
+        Variable<HeartbeatOk>       heartbeatV = declarationOf(HeartbeatOk.class);
+        Variable<AlarmRaised>       alarmV     = declarationOf(AlarmRaised.class);
+
+        Rule rule = rule("or-unmatched-branch-null-drools").build(
+                pattern(stationV),
+                sequence(
+                        pattern(activatedV).expr("act", a -> a.getSensorId().equals("s1")),
+                        or(
+                                pattern(heartbeatV).expr("hb", h -> h.getSensorId().equals("s1")),
+                                pattern(alarmV).expr("hi",     al -> al.getSeverity().equals("high"))
+                        )
+                ),
+                on(alarmV).execute((drools, al) -> results.add(al == null ? "alarm:none" : "alarm:" + al.getSeverity()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new MonitoringStation("s1"));
+        insertAndFire(new SensorActivated("s1"));
+        insertAndFire(new HeartbeatOk("s1"));
+
+        assertThat(results).containsExactly("alarm:none");
+    }
+
+     @Test
     public void stepVariableResolvedWhenLhsHasFirstLevelOr() {
         Variable<Person>       personV  = declarationOf(Person.class);
         Variable<Toy>          toyV     = declarationOf(Toy.class);
@@ -416,5 +517,101 @@ public class PatternDSLSequenceConsequenceTest {
         insertAndFire(new Relationship("go", "done"));
 
         assertThat(results).containsExactly("ball+go");
+    }
+
+    @Test
+    public void unmatchedOrBranchBindsNullWhenLhsHasFirstLevelOr() {
+        Variable<MonitoringStation> stationV   = declarationOf(MonitoringStation.class);
+        Variable<SensorActivated>   activatedV = declarationOf(SensorActivated.class);
+        Variable<HeartbeatOk>       heartbeatV = declarationOf(HeartbeatOk.class);
+        Variable<AlarmRaised>       alarmV     = declarationOf(AlarmRaised.class);
+
+        Rule rule = rule("or-unmatched-branch-null-first-level-or").build(
+                or(
+                        pattern(stationV).expr("is-s1", s -> s.getId().equals("s1")),
+                        pattern(stationV).expr("is-s2", s -> s.getId().equals("s2"))
+                ),
+                sequence(
+                        pattern(activatedV).expr("act", a -> a.getSensorId().equals("s1")),
+                        or(
+                                pattern(heartbeatV).expr("hb", h -> h.getSensorId().equals("s1")),
+                                pattern(alarmV).expr("hi",     al -> al.getSeverity().equals("high"))
+                        )
+                ),
+                on(alarmV).execute(al -> results.add(al == null ? "alarm:none" : "alarm:" + al.getSeverity()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new MonitoringStation("s1"));
+        insertAndFire(new SensorActivated("s1"));
+        insertAndFire(new HeartbeatOk("s1"));   // alarm branch never matches
+
+        assertThat(results).containsExactly("alarm:none");
+    }
+
+    @Test
+    public void unmatchedOrBranchBindsNullWithDroolsWhenLhsHasFirstLevelOr() {
+        Variable<MonitoringStation> stationV   = declarationOf(MonitoringStation.class);
+        Variable<SensorActivated>   activatedV = declarationOf(SensorActivated.class);
+        Variable<HeartbeatOk>       heartbeatV = declarationOf(HeartbeatOk.class);
+        Variable<AlarmRaised>       alarmV     = declarationOf(AlarmRaised.class);
+
+        Rule rule = rule("or-unmatched-branch-null-drools-first-level-or").build(
+                or(
+                        pattern(stationV).expr("is-s1", s -> s.getId().equals("s1")),
+                        pattern(stationV).expr("is-s2", s -> s.getId().equals("s2"))
+                ),
+                sequence(
+                        pattern(activatedV).expr("act", a -> a.getSensorId().equals("s1")),
+                        or(
+                                pattern(heartbeatV).expr("hb", h -> h.getSensorId().equals("s1")),
+                                pattern(alarmV).expr("hi",     al -> al.getSeverity().equals("high"))
+                        )
+                ),
+                on(alarmV).execute((drools, al) -> results.add(al == null ? "alarm:none" : "alarm:" + al.getSeverity()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new MonitoringStation("s1"));
+        insertAndFire(new SensorActivated("s1"));
+        insertAndFire(new HeartbeatOk("s1"));   // alarm branch never matches
+
+        assertThat(results).containsExactly("alarm:none");
+    }
+
+    @Test
+    public void matchedOrBranchVariableWithDroolsWhenLhsHasFirstLevelOr() {
+        Variable<MonitoringStation> stationV   = declarationOf(MonitoringStation.class);
+        Variable<SensorActivated>   activatedV = declarationOf(SensorActivated.class);
+        Variable<HeartbeatOk>       heartbeatV = declarationOf(HeartbeatOk.class);
+        Variable<AlarmRaised>       alarmV     = declarationOf(AlarmRaised.class);
+
+        Rule rule = rule("or-matched-branch-drools-first-level-or").build(
+                or(
+                        pattern(stationV).expr("is-s1", s -> s.getId().equals("s1")),
+                        pattern(stationV).expr("is-s2", s -> s.getId().equals("s2"))
+                ),
+                sequence(
+                        pattern(activatedV).expr("act", a -> a.getSensorId().equals("s1")),
+                        or(
+                                pattern(heartbeatV).expr("hb", h -> h.getSensorId().equals("s1")),
+                                pattern(alarmV).expr("hi",     al -> al.getSeverity().equals("high"))
+                        )
+                ),
+                on(alarmV).execute((drools, al) -> results.add(al == null ? "alarm:none" : "alarm:" + al.getSeverity()))
+        );
+
+        KieBase kbase = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(rule));
+        ksession = kbase.newKieSession();
+
+        insertAndFire(new MonitoringStation("s1"));
+        insertAndFire(new SensorActivated("s1"));
+        insertAndFire(new AlarmRaised("s1", "high"));
+
+        assertThat(results).containsExactly("alarm:high");
     }
 }
