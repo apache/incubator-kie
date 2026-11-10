@@ -208,9 +208,11 @@ public class ResourceType implements Serializable {
                                                                           "src/main/resources",
                                                                           "drl.template");
     /**
-     * @deprecated Since 8. Consider <code>drools-decisiontables</code> or third party templating features
+     * @deprecated since 8.28.0, consider using <code>drools-decisiontables</code> or third party
+     *             templating features instead. DRT format is no longer actively maintained.
+     *             Will be removed in a future version.
      */
-    @Deprecated
+    @Deprecated(since = "8.28.0", forRemoval = true)
     public static final ResourceType DRT = addResourceTypeToRegistry("DRT",
                                                                      "Drools Rule Template",
                                                                      "src/main/resources",

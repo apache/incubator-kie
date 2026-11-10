@@ -65,6 +65,7 @@ public class TimerJobFactoryOption implements SingleValueKieSessionOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

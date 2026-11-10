@@ -1,40 +1,32 @@
-{
-    "filters": {
-        "revapi": {
-            "java": {
-                "filter": {
-                    "classes": {
-                        "regex": true,
-                        "exclude": []
-                    }
-                }
-            }
+[
+  {
+    "extension": "revapi.differences",
+    "configuration": {
+      "ignore": true,
+      "differences": [
+        {
+          "code": "java.annotation.attributeAdded",
+          "annotationType": "java.lang.Deprecated",
+          "justification": "Adding version information (since/forRemoval attributes) to existing @Deprecated annotations is a documentation improvement that does not affect binary or source compatibility"
         }
-    },
-    "ignores": {
-        "revapi": {
-            "_comment": "Changes between 7.52.0.Final and the current branch. These changes are desired and thus ignored.",
-            "ignore": [
-              {
-                "code": "java.method.addedToInterface",
-                "new": "method boolean org.kie.api.builder.model.KieSessionModel::isAccumulateNullPropagation()",
-                "package": "org.kie.api.builder.model",
-                "classSimpleName": "KieSessionModel",
-                "methodName": "isAccumulateNullPropagation",
-                "elementKind": "method",
-                "justification": "configuration switch for allowing null propagation in accumulate"
-              },
-              {
-                "code": "java.method.addedToInterface",
-                "new": "method org.kie.api.builder.model.KieSessionModel org.kie.api.builder.model.KieSessionModel::setAccumulateNullPropagation(boolean)",
-                "package": "org.kie.api.builder.model",
-                "classSimpleName": "KieSessionModel",
-                "methodName": "setAccumulateNullPropagation",
-                "elementKind": "method",
-                "justification": "configuration switch for allowing null propagation in accumulate"
-              }
-            ]
-        }
+      ]
     }
-}
-
+  },
+  {
+    "extension": "revapi.filter",
+    "configuration": {
+      "elements": {
+        "exclude": [
+          {
+            "matcher": "java-package",
+            "match": "org.kie.internal.**"
+          },
+          {
+            "matcher": "java-package",
+            "match": "org.kie.api.internal.**"
+          }
+        ]
+      }
+    }
+  }
+]
