@@ -37,8 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Optional Surefire/JUnit Platform listener that records test lifecycle events
- * to {@code target/testStatusListener.*.log}. Enable with {@code -DenableTestStatusListener}.
+ * JUnit Platform {@link TestExecutionListener} that records test lifecycle events
+ * to {@code target/testStatusListener.*.log}.
+ * <p>
+ * Registration is opt-in: enable the {@code enableTestStatusListener} Maven profile
+ * (for example {@code -DenableTestStatusListener} on {@code drools-compiler}), which
+ * puts a {@code META-INF/services/org.junit.platform.launcher.TestExecutionListener}
+ * descriptor on the Surefire classpath so the Platform launcher discovers this class.
  */
 public class TestStatusListener implements TestExecutionListener {
 
@@ -55,6 +60,62 @@ public class TestStatusListener implements TestExecutionListener {
                                       + ".log"));
         } catch (final IOException e) {
             throw new RuntimeException( "TestStatusListener unable to open writer for logging to file test status updates.", e );
+        }
+    }
+
+    @Override
+    public void testPlanExecutionStarted(final TestPlan testPlan) {
+        try {
+            write("testPlanExecutionStarted", "tests=" + testPlan.countTestIdentifiers(TestIdentifier::isTest));
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void testPlanExecutionFinished(final TestPlan testPlan) {
+        try {
+            write("testPlanExecutionFinished", "tests=" + testPlan.countTestIdentifiers(TestIdentifier::isTest));
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void executionStarted(final TestIdentifier testIdentifier) {
+        try {
+            write("executionStarted", testIdentifier);
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void executionFinished(final TestIdentifier testIdentifier, final TestExecutionResult testExecutionResult) {
+        try {
+            if (testExecutionResult.getStatus() == TestExecutionResult.Status.FAILED) {
+                final Optional<Throwable> throwable = testExecutionResult.getThrowable();
+                if (throwable.isPresent() && isTimeoutFailure(throwable.get())) {
+                    writeThreadDump();
+                }
+                write("executionFailed", testIdentifier.getDisplayName() + "\t" + throwable.map(Throwable::toString).orElse(""));
+            } else if (testExecutionResult.getStatus() == TestExecutionResult.Status.ABORTED) {
+                write("executionAborted", testIdentifier.getDisplayName() + "\t"
+                        + testExecutionResult.getThrowable().map(Throwable::toString).orElse(""));
+            } else {
+                write("executionFinished", testIdentifier);
+            }
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void executionSkipped(final TestIdentifier testIdentifier, final String reason) {
+        try {
+            write("executionSkipped", testIdentifier.getDisplayName() + "\t" + reason);
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
         }
     }
 
@@ -125,62 +186,6 @@ public class TestStatusListener implements TestExecutionListener {
             }
         }
         return false;
-    }
-
-    @Override
-    public void testPlanExecutionStarted(final TestPlan testPlan) {
-        try {
-            write("testPlanExecutionStarted", "tests=" + testPlan.countTestIdentifiers(TestIdentifier::isTest));
-        } catch (final IOException e) {
-            LOG.error("Exception", e);
-        }
-    }
-
-    @Override
-    public void testPlanExecutionFinished(final TestPlan testPlan) {
-        try {
-            write("testPlanExecutionFinished", "tests=" + testPlan.countTestIdentifiers(TestIdentifier::isTest));
-        } catch (final IOException e) {
-            LOG.error("Exception", e);
-        }
-    }
-
-    @Override
-    public void executionStarted(final TestIdentifier testIdentifier) {
-        try {
-            write("executionStarted", testIdentifier);
-        } catch (final IOException e) {
-            LOG.error("Exception", e);
-        }
-    }
-
-    @Override
-    public void executionFinished(final TestIdentifier testIdentifier, final TestExecutionResult testExecutionResult) {
-        try {
-            if (testExecutionResult.getStatus() == TestExecutionResult.Status.FAILED) {
-                final Optional<Throwable> throwable = testExecutionResult.getThrowable();
-                if (throwable.isPresent() && isTimeoutFailure(throwable.get())) {
-                    writeThreadDump();
-                }
-                write("executionFailed", testIdentifier.getDisplayName() + "\t" + throwable.map(Throwable::toString).orElse(""));
-            } else if (testExecutionResult.getStatus() == TestExecutionResult.Status.ABORTED) {
-                write("executionAborted", testIdentifier.getDisplayName() + "\t"
-                        + testExecutionResult.getThrowable().map(Throwable::toString).orElse(""));
-            } else {
-                write("executionFinished", testIdentifier);
-            }
-        } catch (final IOException e) {
-            LOG.error("Exception", e);
-        }
-    }
-
-    @Override
-    public void executionSkipped(final TestIdentifier testIdentifier, final String reason) {
-        try {
-            write("executionSkipped", testIdentifier.getDisplayName() + "\t" + reason);
-        } catch (final IOException e) {
-            LOG.error("Exception", e);
-        }
     }
 
 }
