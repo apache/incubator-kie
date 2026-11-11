@@ -163,6 +163,9 @@ public class TestStatusListener implements TestExecutionListener {
                     writeThreadDump();
                 }
                 write("executionFailed", testIdentifier.getDisplayName() + "\t" + throwable.map(Throwable::toString).orElse(""));
+            } else if (testExecutionResult.getStatus() == TestExecutionResult.Status.ABORTED) {
+                write("executionAborted", testIdentifier.getDisplayName() + "\t"
+                        + testExecutionResult.getThrowable().map(Throwable::toString).orElse(""));
             } else {
                 write("executionFinished", testIdentifier);
             }
