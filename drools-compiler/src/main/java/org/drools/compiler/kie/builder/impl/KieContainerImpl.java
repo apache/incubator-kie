@@ -543,7 +543,7 @@ public class KieContainerImpl
             log.error("Unknown KieSession name: " + kSessionName);
             return null;
         }
-        InternalKnowledgeBase kBase = (InternalKnowledgeBase) getKieBaseFromKieSessionModel(kSessionModel);
+        InternalKnowledgeBase kBase = (InternalKnowledgeBase) getKieBaseFromKieSessionModel(kSessionModel, stateless);
         return kBase == null ? null : new StatefulSessionPool(kBase, initialSize, () -> {
             SessionConfiguration sessConf = conf != null ? conf.as(SessionConfiguration.KEY) : kBase.getSessionConfiguration().as(SessionConfiguration.KEY);
             StatefulKnowledgeSessionImpl kSession = stateless ?
@@ -607,7 +607,7 @@ public class KieContainerImpl
             return null;
         }
 
-        KieBase kBase = getKieBaseFromKieSessionModel( kSessionModel );
+        KieBase kBase = getKieBaseFromKieSessionModel( kSessionModel, false );
         if ( kBase == null ) {
             return null;
         }
@@ -629,8 +629,8 @@ public class KieContainerImpl
         kSessions.put(kSessionModel.getName(), kSession);
     }
 
-    private KieBase getKieBaseFromKieSessionModel( KieSessionModel kSessionModel ) {
-        if (kSessionModel.getType() == KieSessionModel.KieSessionType.STATELESS) {
+    private KieBase getKieBaseFromKieSessionModel( KieSessionModel kSessionModel, boolean stateless ) {
+        if (!stateless && kSessionModel.getType() == KieSessionModel.KieSessionType.STATELESS) {
             throw new RuntimeException("Trying to create a stateful KieSession from a stateless KieSessionModel: " + kSessionModel.getName());
         }
         KieBase kBase = getKieBase( kSessionModel.getKieBaseModel().getName() );

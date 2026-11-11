@@ -19,6 +19,7 @@
 package org.drools.mvel.integrationtests.session;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -36,6 +37,7 @@ import org.drools.mvel.compiler.FactB;
 import org.drools.mvel.compiler.FactC;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
+import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -206,6 +208,36 @@ public class SessionsPoolTest {
         list.clear();
         session.execute( "test" );
         assertThat(list.size()).isEqualTo(1);
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStatelessKieSessionsPoolWithStatelessKieSessionModel(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // incubator-kie#6938
+        String drl =
+                "global java.util.List list\n" +
+                        "rule R1 when\n" +
+                        "  $s: String()\n" +
+                        "then\n" +
+                        "  list.add($s);\n" +
+                        "end\n";
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls(KieUtil.generateReleaseId("test"), kieBaseTestConfiguration,
+                                                                 KieSessionTestConfiguration.STATELESS_REALTIME, new HashMap<>(), drl);
+        KieContainerSessionsPool pool = KieServices.get().newKieContainer(kieModule.getReleaseId()).newKieSessionsPool( 1 );
+        try {
+            StatelessKieSession session = pool.newStatelessKieSession( KieSessionTestConfiguration.KIE_SESSION_MODEL_NAME );
+
+            List<String> list = new ArrayList<>();
+            session.setGlobal( "list", list );
+            session.execute( "test" );
+            assertThat(list).containsExactly("test");
+
+            list.clear();
+            session.execute( "test" );
+            assertThat(list).containsExactly("test");
+        } finally {
+            pool.shutdown();
+        }
     }
 
     private KieContainer getKieContainer(KieBaseTestConfiguration kieBaseTestConfiguration) {
