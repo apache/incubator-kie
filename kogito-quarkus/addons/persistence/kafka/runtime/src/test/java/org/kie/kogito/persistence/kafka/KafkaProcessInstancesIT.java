@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import org.apache.kafka.clients.admin.Admin;
@@ -62,6 +63,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.kie.api.runtime.process.ProcessInstance.STATE_ACTIVE;
 import static org.kie.kogito.persistence.kafka.KafkaPersistenceUtils.createTopologyForProcesses;
 import static org.kie.kogito.persistence.kafka.KafkaPersistenceUtils.topicName;
@@ -86,16 +88,26 @@ public class KafkaProcessInstancesIT {
     KafkaStreamsStateListener listener;
 
     @BeforeEach
-    void start() throws Exception {
-        // With Kafka Streams >= 4.2 the global table fails to initialize ("no partitions available") if its source topic
-        // does not exist yet, so create it before the topology starts.
-        try (Admin admin = Admin.create(singletonMap(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()))) {
-            admin.createTopics(List.of(new NewTopic(topicName(), 1, (short) 1))).all().get();
-        }
+    void start() {
         listener = new KafkaStreamsStateListener();
         factory = new KafkaProcessInstancesFactory();
         factory.setKafkaConfig(singletonMap(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()));
         factory.setStateListener(listener);
+        createTopic();
+    }
+
+    // With Kafka Streams >= 4.2 the global table fails to initialize ("no partitions available") if its source topic
+    // does not exist yet, so create it before the topology starts.
+    private void createTopic() {
+        String topic = topicName();
+        try (Admin admin = Admin.create(singletonMap(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()))) {
+            admin.createTopics(List.of(new NewTopic(topic, 1, (short) 1))).all().get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Interrupted while creating Kafka topic '" + topic + "'", e);
+        } catch (ExecutionException e) {
+            fail("Unable to create Kafka topic '" + topic + "': " + e.getCause(), e.getCause());
+        }
     }
 
     @AfterEach
