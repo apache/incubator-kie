@@ -66,7 +66,7 @@
     <version.com.github.stephenc.jcip>1.0-1</version.com.github.stephenc.jcip>
     <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
     <version.org.jredisearch>2.2.0</version.org.jredisearch>
-    <version.org.json>20231013</version.org.json>
+    <version.org.json>20260719</version.org.json>
     <version.io.projectreactor>3.8.7</version.io.projectreactor>
 </properties>
   <dependencyManagement>
