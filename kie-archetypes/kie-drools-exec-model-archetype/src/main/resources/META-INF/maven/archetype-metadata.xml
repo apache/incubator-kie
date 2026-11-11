@@ -35,6 +35,9 @@
         <requiredProperty key="junitVersion">
             <defaultValue>${version.org.junit}</defaultValue>
         </requiredProperty>
+        <requiredProperty key="assertjVersion">
+            <defaultValue>${version.org.assertj}</defaultValue>
+        </requiredProperty>
         <requiredProperty key="logbackVersion">
             <defaultValue>${version.ch.qos.logback}</defaultValue>
         </requiredProperty>
