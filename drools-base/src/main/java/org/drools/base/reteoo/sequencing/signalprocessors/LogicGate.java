@@ -41,6 +41,17 @@ public class LogicGate extends SignalProcessor {
 
     private boolean statusCanRevert;
 
+    /**
+     * When true, {@link #activate} does not register this gate's signal adapters. They are
+     * registered later by {@link #arm}, when the gate that owns this one in {@link #armOnMatch}
+     * becomes MATCHED. Used for an {@code absent()} written after a {@code oneOf()}/{@code noneOrAll()}
+     * inside a folded composite: its veto window opens only once the preceding gate is satisfied.
+     */
+    private boolean deferredActivation;
+
+    /** Deferred gates to arm when this gate transitions to MATCHED. */
+    private LogicGate[] armOnMatch = EMPTY_INPUT_GATES;
+
     private static final LogicGate[] EMPTY_INPUT_GATES = new LogicGate[0];
 
     public LogicGate(LongBiPredicate predicate, int gateIndex, int[] filterIndexes, int[] signalAdapterIndexes, int nbrOfInputGates) {
@@ -73,6 +84,25 @@ public class LogicGate extends SignalProcessor {
 
     public int[] getSignalAdapterIndexes() {
         return signalAdapterIndexes;
+    }
+
+    public void setDeferredActivation(boolean deferredActivation) {
+        this.deferredActivation = deferredActivation;
+    }
+
+    public void addArmOnMatch(LogicGate gate) {
+        LogicGate[] extended = java.util.Arrays.copyOf(armOnMatch, armOnMatch.length + 1);
+        extended[armOnMatch.length] = gate;
+        armOnMatch = extended;
+    }
+
+    /** Registers the signal adapters of a deferred gate; a no-op for adapters that are already active. */
+    public void arm(SequenceMemory memory) {
+        for (int i = 0; i < filterIndexes.length; i++) {
+            if (memory.getActiveSignalAdapters()[signalAdapterIndexes[i]] == null) {
+                memory.activateSignalAdapter(filterIndexes[i], this, signalAdapterIndexes[i], i + 1);
+            }
+        }
     }
 
     public void setInputGates(LogicGate... inputGates) {
@@ -139,6 +169,11 @@ public class LogicGate extends SignalProcessor {
 
     public void propagate(SequenceMemory memory, ValueResolver valueResolver) {
         resetPrior(memory, valueResolver);
+        // Arm before consuming the output: the output may complete the step, whose deactivation
+        // must then also remove the adapters armed here.
+        for (LogicGate gate : armOnMatch) {
+            gate.arm(memory);
+        }
         output.consume(memory, valueResolver);
     }
 
@@ -158,8 +193,10 @@ public class LogicGate extends SignalProcessor {
     }
 
     public void activate(SequenceMemory memory, ValueResolver valueResolver) {
-        for (int i = 0; i < filterIndexes.length; i++) {
-            memory.activateSignalAdapter(filterIndexes[i], this, signalAdapterIndexes[i], i + 1); // bit indexes start at 1
+        if (!deferredActivation) {
+            for (int i = 0; i < filterIndexes.length; i++) {
+                memory.activateSignalAdapter(filterIndexes[i], this, signalAdapterIndexes[i], i + 1); // bit indexes start at 1
+            }
         }
         if (!memory.isLogicGateMatched(gateIndex) && predicate.test(memory.getLogicGateMemory()[gateIndex], allMatched)) {
             memory.setLogicGateMatched(gateIndex, true);

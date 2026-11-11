@@ -186,7 +186,8 @@ public class ViewPatternBuilder implements ViewBuilder {
 
         if (ruleItem instanceof SequenceViewItem) {
             SequenceViewItem sv = (SequenceViewItem) ruleItem;
-            SequenceStep[] rawSteps = rewriteRevertingGateSteps(flattenNonPositiveAndSteps(sv.getSteps()));
+            SequenceStep[] writtenSteps = flattenNonPositiveAndSteps(sv.getSteps());
+            SequenceStep[] rawSteps = rewriteRevertingGateSteps(writtenSteps);
             if (rawSteps.length > 0) {
                 SequenceStep last = rawSteps[rawSteps.length - 1];
                 if (!hasPositiveTrigger(last)) {
@@ -194,9 +195,16 @@ public class ViewPatternBuilder implements ViewBuilder {
                         "sequence(): trailing absent()/oneOf()/noneOrAll() requires a following positive step. " +
                         "Trailing absence with completeWithin is planned but not yet implemented.");
                 }
-                for (SequenceStep step : rawSteps) {
-                    if (hasPositiveTrigger(step)) {
-                        break; // reached a positive step — prefix is fine
+                // Leading-absence check: absent() as the first step (or all steps before the first
+                // positive trigger are absent()) is vacuous. VetoSignalProcessor resets to step 0,
+                // which is the same step — the blocker can never permanently prevent the positive
+                // trigger from firing. Reject early with a clear message.
+                // Checked on the user-written steps: rewriteRevertingGateSteps() folds a
+                // oneOf()/noneOrAll() run into its trigger, which must not hide or invent a
+                // leading absent(). A leading oneOf()/noneOrAll() has non-vacuous semantics.
+                for (SequenceStep step : writtenSteps) {
+                    if (hasPositiveTrigger(step) || isRevertingGateStep(step)) {
+                        break; // reached a positive or oneOf/noneOrAll step — prefix is fine
                     }
                     if (isAbsenceStep(step)) {
                         throw new IllegalArgumentException(
@@ -262,6 +270,20 @@ public class ViewPatternBuilder implements ViewBuilder {
         return true;
     }
 
+    private static boolean isRevertingGateStep(SequenceStep step) {
+        if (step instanceof CombinedExprViewItem) {
+            Condition.Type type = ((CombinedExprViewItem) step).getType();
+            return type == Condition.Type.XOR || type == Condition.Type.XNOR;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true when the step is an absence gate — i.e. an {@code absent()} call, which compiles
+     * to a NOT (single-pattern) or NOR (multi-pattern) condition type. XOR/XNOR (oneOf/noneOrAll)
+     * are deliberately excluded: they have non-vacuous semantics at the leading position and are
+     * handled separately.
+     */
     private static boolean isAbsenceStep(SequenceStep step) {
         if (step instanceof ExistentialExprViewItem) {
             return ((ExistentialExprViewItem) step).getType() == Condition.Type.NOT;
@@ -354,9 +376,9 @@ public class ViewPatternBuilder implements ViewBuilder {
      * Standalone XOR/XNOR gates are non-propagating on their own within the sequence pipeline and require
      * a following positive pattern step to act as the activation trigger. This transformation:
      * <ul>
-     *   <li>Separates and emits any interleaved absence guards ({@code NOT}/{@code NOR}/{@code absent()})
-     *       before the folded composite so that compiler accumulation loops build them as independent
-     *       veto side-channels.</li>
+     *   <li>Keeps any interleaved absence guards ({@code NOT}/{@code NOR}/{@code absent()}) in their
+     *       written position inside the folded composite, so the compiler can arm each guard's veto
+     *       side-channel only once the gate written before it is matched.</li>
      *   <li>Folds consecutive XOR/XNOR gate steps and the subsequent positive trigger step into a single
      *       {@link CombinedExprViewItem} of type {@link Condition.Type#AND}.</li>
      * </ul>
@@ -380,23 +402,16 @@ public class ViewPatternBuilder implements ViewBuilder {
             SequenceStep step = steps[i];
             if (isNonPositiveGuardStep(step)) {
                 // Collect the full run of consecutive non-positive guard steps.
-                // Interleaved absent() absence guards are held in a separate list —
-                // they will be emitted BEFORE the folded and(...) composite so that
-                // KiePackagesBuilder's top-level NOT accumulation loop handles them as
-                // independent veto side-channels, which is the same circuit it builds for
-                // standalone absent() steps.
+                // Interleaved absent() absence guards stay in their written position inside the
+                // run: KiePackagesBuilder arms each guard's veto only once the gate written
+                // before it is MATCHED, so a blocker that arrived earlier is outside the
+                // guard's window (arrival order governs, as for a standalone absent() step).
                 List<ViewItem> guardRun = new ArrayList<>();
-                List<SequenceStep> absenceGuards = new ArrayList<>();
                 guardRun.add((ViewItem) step);
                 while (i + 1 < steps.length) {
                     SequenceStep next = steps[i + 1];
-                    if (isNonPositiveGuardStep(next)) {
+                    if (isNonPositiveGuardStep(next) || isAbsenceStep(next)) {
                         guardRun.add((ViewItem) next);
-                        i++;
-                        continue;
-                    }
-                    if (isAbsenceStep(next)) {
-                        absenceGuards.add(next);
                         i++;
                         continue;
                     }
@@ -406,7 +421,6 @@ public class ViewPatternBuilder implements ViewBuilder {
                 if (i + 1 >= steps.length) {
                     // No following step at all — the trailing-gate check in the caller handles this.
                     result.addAll(guardRun.stream().map(v -> (SequenceStep) v).collect(java.util.stream.Collectors.toList()));
-                    result.addAll(absenceGuards);
                     continue;
                 }
                 SequenceStep trigger = steps[i + 1];
@@ -417,9 +431,6 @@ public class ViewPatternBuilder implements ViewBuilder {
                             "guard step(s) followed by another non-positive step. " +
                             "Each guard step run must be immediately followed by a positive step.");
                 }
-                // Emit absence guards first so KiePackagesBuilder's NOT accumulation loop
-                // picks them up as veto side-channels before the positive trigger.
-                result.addAll(absenceGuards);
                 // Fold the guardRun + trigger into and(guard1, ..., trigger).
                 List<ViewItem> run = new ArrayList<>(guardRun);
                 run.add((ViewItem) trigger);
