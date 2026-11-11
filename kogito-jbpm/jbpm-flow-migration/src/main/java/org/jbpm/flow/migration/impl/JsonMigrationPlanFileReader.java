@@ -57,7 +57,7 @@ public class JsonMigrationPlanFileReader implements MigrationPlanFileReader {
         } catch (IOException e) {
             throw new MigrationPlanFileFormatException("Error during marshalling", e);
         } catch (IllegalArgumentException e) {
-            throw new MigrationPlanFileFormatException("Invalid variable migration plan: " + e.getMessage());
+            throw new MigrationPlanFileFormatException("Invalid variable migration plan: " + e.getMessage(), e);
         }
     }
 

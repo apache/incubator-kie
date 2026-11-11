@@ -24,10 +24,13 @@ import java.util.Objects;
  * A rule that changes a process instance variable while the instance is migrated.
  * Which fields are used depends on the {@link VariableMigrationAction}:
  * <ul>
- * <li>{@code rename}: {@code from} and {@code to}</li>
- * <li>{@code default}: {@code name} and {@code value}</li>
+ * <li>{@code rename}: {@code from} and {@code to}. An existing value in {@code to} is overwritten (a warning is logged).</li>
+ * <li>{@code default}: {@code name} and {@code value}. Only applied when the variable has no value.</li>
  * <li>{@code remove}: {@code name}</li>
  * </ul>
+ * {@code rename} and {@code remove} set the old variable to {@code null}; the variable name itself stays in the
+ * process instance variables. Values written to a variable declared in the target process must match its type,
+ * otherwise the migration fails.
  */
 public class VariableMigrationPlan {
 
@@ -92,7 +95,8 @@ public class VariableMigrationPlan {
     /**
      * Checks that the fields required by the action are present.
      *
-     * @throws IllegalArgumentException if the action or one of its required fields is missing
+     * @throws IllegalArgumentException if the action or one of its required fields is missing,
+     *         or if a rename has the same {@code from} and {@code to}
      */
     public void validate() {
         if (action == null) {
@@ -102,6 +106,9 @@ public class VariableMigrationPlan {
             case RENAME:
                 requireField("from", from);
                 requireField("to", to);
+                if (from.equals(to)) {
+                    throw new IllegalArgumentException("Variable migration plan " + this + " renames a variable to itself");
+                }
                 break;
             case DEFAULT:
                 requireField("name", name);

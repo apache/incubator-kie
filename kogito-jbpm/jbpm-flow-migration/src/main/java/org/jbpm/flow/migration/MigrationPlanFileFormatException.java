@@ -28,7 +28,7 @@ public class MigrationPlanFileFormatException extends IOException {
         super(msg);
     }
 
-    public MigrationPlanFileFormatException(String msg, IOException e) {
+    public MigrationPlanFileFormatException(String msg, Throwable e) {
         super(msg, e);
     }
 

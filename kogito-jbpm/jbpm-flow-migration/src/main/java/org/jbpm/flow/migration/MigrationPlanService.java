@@ -19,18 +19,15 @@
 package org.jbpm.flow.migration;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.jbpm.flow.migration.model.MigrationPlan;
 import org.jbpm.flow.migration.model.ProcessDefinitionMigrationPlan;
-import org.jbpm.flow.migration.model.VariableMigrationPlan;
-import org.jbpm.process.core.context.variable.VariableScope;
-import org.jbpm.process.instance.context.variable.VariableScopeInstance;
 import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
 import org.jbpm.workflow.instance.impl.NodeInstanceImpl;
 import org.kie.kogito.Model;
 import org.kie.kogito.internal.process.runtime.KogitoNodeInstance;
+import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcessInstance;
 import org.kie.kogito.process.Processes;
 import org.slf4j.Logger;
@@ -61,6 +58,13 @@ public class MigrationPlanService {
     }
 
     public void migrateProcessElement(Processes processes, KogitoWorkflowProcessInstance processInstance) {
+        migrateProcessElement(null, processes, processInstance);
+    }
+
+    /**
+     * @param runtime runtime used to fire variable changed events for migrated variables; when {@code null} no events are fired
+     */
+    public void migrateProcessElement(KogitoProcessRuntime runtime, Processes processes, KogitoWorkflowProcessInstance processInstance) {
         MigrationPlan plan = getMigrationPlan(processes, processInstance);
         if (plan != null) {
             // the process will have to do nothing as it is done by the engine itself
@@ -73,36 +77,9 @@ public class MigrationPlanService {
             RuleFlowProcessInstance ruleFlowProcessInstance = (RuleFlowProcessInstance) processInstance;
             ruleFlowProcessInstance.setProcessId(plan.getProcessMigrationPlan().getTargetProcessDefinition().getProcessId());
             ruleFlowProcessInstance.setProcessVersion(plan.getProcessMigrationPlan().getTargetProcessDefinition().getProcessVersion());
-            migrateVariables(ruleFlowProcessInstance, plan.getProcessMigrationPlan().getVariableMigrationPlan());
+            VariableMigrator.migrate(runtime, ruleFlowProcessInstance, plan.getProcessMigrationPlan().getVariableMigrationPlan());
         } else {
             LOGGER.debug("Process instance {} won't be migrated", processInstance);
-        }
-    }
-
-    private void migrateVariables(RuleFlowProcessInstance processInstance, List<VariableMigrationPlan> variableMigrationPlans) {
-        if (variableMigrationPlans.isEmpty()) {
-            return;
-        }
-        VariableScopeInstance variableScope = (VariableScopeInstance) processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
-        for (VariableMigrationPlan variablePlan : variableMigrationPlans) {
-            LOGGER.debug("Applying {} to process instance {}", variablePlan, processInstance.getStringId());
-            switch (variablePlan.getAction()) {
-                case RENAME:
-                    Object value = variableScope.getVariables().get(variablePlan.getFrom());
-                    if (value != null) {
-                        variableScope.internalSetVariable(variablePlan.getTo(), value);
-                        variableScope.internalSetVariable(variablePlan.getFrom(), null);
-                    }
-                    break;
-                case DEFAULT:
-                    if (variableScope.getVariables().get(variablePlan.getName()) == null) {
-                        variableScope.internalSetVariable(variablePlan.getName(), variablePlan.getValue());
-                    }
-                    break;
-                case REMOVE:
-                    variableScope.internalSetVariable(variablePlan.getName(), null);
-                    break;
-            }
         }
     }
 

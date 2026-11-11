@@ -93,6 +93,16 @@ public class MigrationPlanProviderTest {
     }
 
     @Test
+    public void testReadingVariableMigrationPlanRenamingToItself() {
+        String json = "{ \"processMigrationPlan\" : { \"variableMigrationPlan\" : [ { \"action\" : \"rename\", \"from\" : \"custName\", \"to\" : \"custName\" } ] } }";
+
+        assertThatThrownBy(() -> new JsonMigrationPlanFileReader().read(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))))
+                .isInstanceOf(MigrationPlanFileFormatException.class)
+                .hasMessageContaining("renames a variable to itself")
+                .hasCauseInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     public void testReadingVariableMigrationPlanWithUnknownAction() {
         String json = "{ \"processMigrationPlan\" : { \"variableMigrationPlan\" : [ { \"action\" : \"copy\", \"name\" : \"custName\" } ] } }";
 
