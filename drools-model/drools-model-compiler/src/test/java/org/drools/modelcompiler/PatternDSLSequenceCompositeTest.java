@@ -130,6 +130,37 @@ public class PatternDSLSequenceCompositeTest {
     }
 
     @Test
+    public void sequenceFiresWithAndOfTwoReverseInsertOrder() {
+        // Same circuit as sequenceFiresWithAndOfTwo but alarm arrives before heartbeat.
+        // Proves AND is order-independent: both children are listening simultaneously.
+        final List<String> results = new ArrayList<>();
+
+        Rule andRule =
+                rule("and-rule-reverse").build(
+                        pattern(station),
+                        sequence(
+                                pattern(sensorActivated).expr("anchor", a -> a.getSensorId().equals("sensor-1")),
+                                and(
+                                        pattern(heartbeat).expr("ok", h -> h.getSensorId().equals("sensor-1")),
+                                        pattern(alarm).expr("hi", al -> al.getSeverity().equals("high"))
+                                ),
+                                pattern(ack).expr("ack", a -> a.getOperator().equals("alice"))
+                        ),
+                        execute(() -> results.add("acknowledged"))
+                );
+
+        ksession = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(andRule)).newKieSession();
+
+        insertAndFire(new MonitoringStation("station-1"));
+        insertAndFire(new SensorActivated("sensor-1"));
+        insertAndFire(new AlarmRaised("sensor-1", "high"));           // AND child #2 fires first → step still waiting
+        insertAndFire(new HeartbeatOk("sensor-1"));                   // AND child #1 fires → step advances
+        insertAndFire(new OperatorAcknowledged("sensor-1", "alice"));
+
+        assertThat(results).containsExactly("acknowledged");
+    }
+
+    @Test
     public void sequenceFiresWithNestedAndInsideOr() {
         // Step 1 is or(heartbeat, and(calibration, alarm)).
         // Either branch suffices: a heartbeat alone, or calibration + alarm together.
@@ -195,41 +226,6 @@ public class PatternDSLSequenceCompositeTest {
     }
 
     @Test
-    public void orBranchRetractAfterStepConsumedIsNoOp() {
-        final List<String> localResults = new ArrayList<>();
-
-        Rule orRule =
-                rule("or-retract-noop").build(
-                        pattern(station),
-                        sequence(
-                                pattern(sensorActivated).expr("anchor", a -> a.getSensorId().equals("sensor-1")),
-                                or(
-                                        pattern(heartbeat).expr("ok", h -> h.getSensorId().equals("sensor-1")),
-                                        pattern(alarm).expr("hi", al -> al.getSeverity().equals("high"))
-                                ),
-                                pattern(ack).expr("ack", a -> a.getOperator().equals("alice"))
-                        ),
-                        execute(() -> localResults.add("acknowledged"))
-                );
-
-        ksession = KieBaseBuilder.createKieBaseFromModel(new ModelImpl().addRule(orRule)).newKieSession();
-
-        insertAndFire(new MonitoringStation("station-1"));
-        insertAndFire(new SensorActivated("sensor-1"));                   // anchor fires; OR step activates
-
-        FactHandle hbHandle = ksession.insert(new HeartbeatOk("sensor-1"));
-        ksession.fireAllRules();                                          // OR branch fires; step deactivates, ack step activates
-
-        ksession.retract(hbHandle);
-        ksession.fireAllRules();                                          // no-op: OR step already deactivated
-
-        insertAndFire(new AlarmRaised("sensor-1", "high"));               // no-op: OR step gone, no listener
-        insertAndFire(new OperatorAcknowledged("sensor-1", "alice"));     // ack step matches; rule fires
-
-        assertThat(localResults).containsExactly("acknowledged");
-    }
-
-    @Test
     public void orBranchRetractAndReinsertAfterStepConsumedIsNoOp() {
         final List<String> localResults = new ArrayList<>();
 
@@ -258,7 +254,8 @@ public class PatternDSLSequenceCompositeTest {
         ksession.retract(hbHandle);
         ksession.fireAllRules();                                          // no-op: OR step already deactivated
 
-        insertAndFire(new HeartbeatOk("sensor-1"));                       // no-op: no listener for OR branch any more
+        insertAndFire(new AlarmRaised("sensor-1", "high"));               // no-op: sibling OR branch ignored after step deactivated
+        insertAndFire(new HeartbeatOk("sensor-1"));                       // no-op: re-inserted branch fact ignored after step deactivated
         insertAndFire(new OperatorAcknowledged("sensor-1", "alice"));     // ack step matches; rule fires
 
         assertThat(localResults).containsExactly("acknowledged");
