@@ -74,7 +74,7 @@ import io.vertx.core.WorkerExecutor;
  */
 public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
-    private record TimerInfo(String jobId, Integer retries, Long timerId, Date timeout, String processInstanceId) {
+    private record TimerInfo(String jobId, Integer retries, Long timerId, Date timeout) {
 
     }
 
@@ -419,12 +419,16 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         reconcileScheduling(null, jobContext, cancelledJobDetails);
     }
 
-    private void timeout(Long timerId, String mapKey, String jobId) {
+    private void timeout(Long timerId, String mapKey, String jobId, String processInstanceId) {
         LOG.debug("Executing timeout with timer Id {} and jobId {}", timerId, jobId);
-        workerExecutor.executeBlocking(newTimeoutTask(timerId, mapKey, jobId), false);
+        workerExecutor.executeBlocking(newTimeoutTask(timerId, mapKey, jobId, processInstanceId), false);
     }
 
-    private Callable<JobTimeoutExecution> newTimeoutTask(Long timerId, String mapKey, String jobId) {
+    /**
+     * @param processInstanceId the process instance the job belongs to, resolved when the timer was created (not at fire time,
+     *        as the scheduled entry may have been removed in the meantime), or null if the job is not bound to a process instance
+     */
+    private Callable<JobTimeoutExecution> newTimeoutTask(Long timerId, String mapKey, String jobId, String processInstanceId) {
         Callable<JobTimeoutExecution> current = new Callable<JobTimeoutExecution>() {
             @Override
             public JobTimeoutExecution call() throws Exception {
@@ -473,9 +477,7 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
             current = interceptor.chainIntercept(current);
         }
 
-        TimerInfo timerInfo = jobsScheduled.get(mapKey);
         // only jobs bound to a process instance (process instance and user task timers) are locked, process definition jobs are not
-        final String processInstanceId = timerInfo != null ? timerInfo.processInstanceId() : null;
         if (processInstanceId != null) {
             final Callable<JobTimeoutExecution> intercepted = current;
             return () -> {
@@ -616,13 +618,14 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         Long diff = ChronoUnit.MILLIS.between(now, trigger);
         Long delay = Math.max(1, diff);
         String mapKey = getMapKey(jobDetails);
+        String processInstanceId = JobDetailsHelper.resolveProcessInstanceId(jobDetails);
         Long timerId = this.vertx.setTimer(delay, new Handler<Long>() {
             @Override
             public void handle(Long timerId) {
-                timeout(timerId, mapKey, jobDetails.getId());
+                timeout(timerId, mapKey, jobDetails.getId(), processInstanceId);
             }
         });
-        return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime(), JobDetailsHelper.resolveProcessInstanceId(jobDetails));
+        return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime());
     }
 
     private void removeTimerInfo(TimerInfo timerInfo) {
