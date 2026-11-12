@@ -177,4 +177,13 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>sonarcloud-analysis</id>
+      <properties>
+        <sonar.coverage.exclusions>**/runner/DMNScenarioRunner.java,**/runner/RuleScenarioRunner.java</sonar.coverage.exclusions>
+      </properties>
+    </profile>
+  </profiles>
+
 </project>
