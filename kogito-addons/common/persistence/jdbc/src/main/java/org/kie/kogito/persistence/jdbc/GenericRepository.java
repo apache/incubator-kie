@@ -259,15 +259,16 @@ public class GenericRepository extends Repository {
                 PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(DELETE, processVersion));
                 PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE)) {
 
-            eventStatement.setString(1, id.toString());
-            eventStatement.executeUpdate();
-
+            // process_instances first, then event_types: same lock order as insert/update, to avoid deadlocks between concurrent writers
             statement.setString(1, processId);
             statement.setString(2, id.toString());
             if (processVersion != null) {
                 statement.setString(3, processVersion);
             }
             int count = statement.executeUpdate();
+
+            eventStatement.setString(1, id.toString());
+            eventStatement.executeUpdate();
             return count == 1;
         } catch (Exception e) {
             throw uncheckedException(e, "Error deleting process instance %s", id);
