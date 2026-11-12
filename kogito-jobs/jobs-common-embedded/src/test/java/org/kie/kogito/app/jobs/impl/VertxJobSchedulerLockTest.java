@@ -16,25 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.kie.kogito.app.jobs.impl;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.concurrent.Callable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.app.jobs.api.JobDescriptionMerger;
 import org.kie.kogito.app.jobs.api.JobDetailsEventAdapter;
+import org.kie.kogito.app.jobs.api.JobExecutor;
 import org.kie.kogito.app.jobs.api.JobScheduler;
 import org.kie.kogito.app.jobs.api.JobSchedulerBuilder;
-import org.kie.kogito.app.jobs.api.JobTimeoutExecution;
 import org.kie.kogito.app.jobs.api.JobTimeoutInterceptor;
 import org.kie.kogito.app.jobs.integrations.ProcessInstanceJobDescriptionJobInstanceEventAdapter;
 import org.kie.kogito.app.jobs.integrations.ProcessInstanceJobDescriptionMerger;
@@ -42,7 +45,7 @@ import org.kie.kogito.app.jobs.integrations.ProcessJobDescriptionJobInstanceEven
 import org.kie.kogito.app.jobs.integrations.ProcessJobDescriptionMerger;
 import org.kie.kogito.app.jobs.integrations.UserTaskInstanceJobDescriptionJobInstanceEventAdapter;
 import org.kie.kogito.app.jobs.integrations.UserTaskInstanceJobDescriptorMerger;
-import org.kie.kogito.app.jobs.spi.JobContextFactory;
+import org.kie.kogito.app.jobs.spi.JobContext;
 import org.kie.kogito.app.jobs.spi.JobStore;
 import org.kie.kogito.app.jobs.spi.memory.MemoryJobContextFactory;
 import org.kie.kogito.app.jobs.spi.memory.MemoryJobStore;
@@ -51,218 +54,107 @@ import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessJobDescription;
 import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescription;
+import org.kie.kogito.jobs.service.model.JobDetails;
 import org.kie.kogito.process.impl.lock.ProcessInstanceAtomicLockStrategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-public class VertxJobSchedulerLockTest {
+class VertxJobSchedulerLockTest {
+
+    private static final String SERVICE_URL = "http://localhost:8080";
+
+    private JobScheduler jobScheduler;
+
+    @AfterEach
+    void closeScheduler() {
+        if (jobScheduler != null) {
+            jobScheduler.close();
+            jobScheduler = null;
+        }
+    }
 
     /**
-     * Interceptor Lock-Order Verification Test.
-     * <p>
-     * Verifies that the in-memory ProcessInstanceAtomicLockStrategy lock is acquired
-     * by the timer thread BEFORE any JobTimeoutInterceptor (such as a transaction interceptor)
-     * is invoked, and that the lock is cleanly released afterwards.
+     * Records what the Vert.x worker thread sees when a transaction-like interceptor starts.
+     */
+    private static class LockObservation {
+        final AtomicBoolean executed = new AtomicBoolean();
+        final AtomicBoolean lockedKey = new AtomicBoolean();
+        final AtomicBoolean lockedOtherKey = new AtomicBoolean();
+    }
+
+    private JobScheduler newScheduler(JobStore jobStore, JobDetailsEventAdapter adapter, JobDescriptionMerger merger,
+            LatchExecutionJobSchedulerListener listener, JobExecutor executor, JobTimeoutInterceptor... interceptors) {
+        jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
+                .withJobExecutors(executor)
+                .withJobEventAdapters(adapter)
+                .withEventPublishers(new TestEventPublisher())
+                .withJobContextFactory(new MemoryJobContextFactory())
+                .withJobStore(jobStore)
+                .withJobSchedulerListeners(listener)
+                .withJobDescriptorMergers(merger)
+                .withTimeoutInterceptor(interceptors)
+                .build();
+        jobScheduler.init();
+        return jobScheduler;
+    }
+
+    /**
+     * Schedules the job and observes, from the worker thread and at the point where a transaction interceptor would start,
+     * whether the lock for {@code key} and for {@code otherKey} is held. Then verifies the lock for {@code key} was released.
+     */
+    private LockObservation runAndObserveLocks(JobDescription jobDescription, JobDetailsEventAdapter adapter, JobDescriptionMerger merger,
+            String key, String otherKey) throws Exception {
+        LockObservation observation = new LockObservation();
+        ProcessInstanceAtomicLockStrategy locks = ProcessInstanceAtomicLockStrategy.instance();
+
+        JobTimeoutInterceptor observingInterceptor = callable -> () -> {
+            observation.lockedKey.set(locks.isLockedByCurrentThread(key));
+            observation.lockedOtherKey.set(locks.isLockedByCurrentThread(otherKey));
+            return callable.call();
+        };
+
+        LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
+        TestJobExecutor executor = new TestJobExecutor();
+        newScheduler(new MemoryJobStore(), adapter, merger, listener, executor, observingInterceptor);
+
+        jobScheduler.schedule(jobDescription);
+        listener.waitForExecution(3000L);
+        observation.executed.set(listener.isExecuted() && executor.getJobsExecuted().contains(jobDescription.id()));
+
+        // the lock must not leak: it can be acquired from another thread once the timeout task finished
+        assertTimeoutPreemptively(Duration.ofSeconds(3), () -> locks.executeOperation(key, () -> null));
+        return observation;
+    }
+
+    private static ProcessInstanceJobDescription processInstanceJob(String jobId, String processInstanceId, ZonedDateTime when) {
+        return ProcessInstanceJobDescription.newProcessInstanceJobDescriptionBuilder()
+                .id(jobId)
+                .timerId("timer-" + jobId)
+                .processId("testProcess")
+                .processInstanceId(processInstanceId)
+                .expirationTime(ExactExpirationTime.of(when))
+                .build();
+    }
+
+    /**
+     * The lock for the process instance must already be held by the worker thread when the transaction interceptor starts.
      */
     @Test
-    public void testLockAcquiredBeforeInterceptorRuns() throws Exception {
+    void testProcessInstanceJobLocksBeforeInterceptorRuns() throws Exception {
         final String jobId = "lock-order-job-1";
         final String processInstanceId = "pi-lock-order-123";
 
-        final AtomicBoolean lockHeldDuringInterceptor = new AtomicBoolean(false);
-        final AtomicBoolean interceptorExecuted = new AtomicBoolean(false);
+        LockObservation observation = runAndObserveLocks(
+                processInstanceJob(jobId, processInstanceId, ZonedDateTime.now().plus(Duration.ofMillis(50))),
+                new ProcessInstanceJobDescriptionJobInstanceEventAdapter(SERVICE_URL),
+                new ProcessInstanceJobDescriptionMerger(),
+                processInstanceId, jobId);
 
-        JobTimeoutInterceptor mockTransactionInterceptor = new JobTimeoutInterceptor() {
-            @Override
-            public Callable<JobTimeoutExecution> chainIntercept(Callable<JobTimeoutExecution> callable) {
-                return () -> {
-                    // Simulates transaction begin: at this moment, ProcessInstanceAtomicLockStrategy lock
-                    // MUST already be held by the current thread
-                    boolean isLocked = ProcessInstanceAtomicLockStrategy.instance()
-                            .isLockedByCurrentThread(processInstanceId);
-                    lockHeldDuringInterceptor.set(isLocked);
-                    interceptorExecuted.set(true);
-                    return callable.call();
-                };
-            }
-        };
-
-        LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
-        TestJobExecutor executor = new TestJobExecutor();
-        JobStore jobStore = new MemoryJobStore();
-        JobContextFactory jobContextFactory = new MemoryJobContextFactory();
-
-        JobScheduler jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
-                .withJobExecutors(executor)
-                .withJobEventAdapters(new ProcessInstanceJobDescriptionJobInstanceEventAdapter("http://localhost:8080"))
-                .withEventPublishers(new TestEventPublisher())
-                .withJobContextFactory(jobContextFactory)
-                .withJobStore(jobStore)
-                .withJobSchedulerListeners(listener)
-                .withJobDescriptorMergers(new ProcessInstanceJobDescriptionMerger())
-                .withTimeoutInterceptor(mockTransactionInterceptor)
-                .build();
-
-        jobScheduler.init();
-
-        ProcessInstanceJobDescription jobDescription = ProcessInstanceJobDescription.newProcessInstanceJobDescriptionBuilder()
-                .id(jobId)
-                .timerId("timer-1")
-                .processId("testProcess")
-                .processInstanceId(processInstanceId)
-                .expirationTime(ExactExpirationTime.of(ZonedDateTime.now().plus(Duration.ofMillis(50))))
-                .build();
-
-        jobScheduler.schedule(jobDescription);
-        listener.waitForExecution(3000L);
-
-        assertThat(listener.isExecuted()).isTrue();
-        assertThat(executor.getJobsExecuted()).contains(jobId);
-        assertThat(interceptorExecuted.get())
-                .as("Transaction interceptor must have been executed")
-                .isTrue();
-        assertThat(lockHeldDuringInterceptor.get())
-                .as("ProcessInstance lock must already be held by current thread when transaction interceptor starts")
-                .isTrue();
-        assertThat(ProcessInstanceAtomicLockStrategy.instance().isLockedByCurrentThread(processInstanceId))
-                .as("ProcessInstance lock must be released after timeout execution finishes")
-                .isFalse();
-
-        jobScheduler.close();
-    }
-
-    /**
-     * Simulated Concurrent Lock Contention & Transaction Snapshot Isolation Test.
-     * <p>
-     * Verifies that when a concurrent thread holds the ProcessInstanceAtomicLockStrategy lock
-     * and modifies the state (e.g. increments version), the Vert.x timer thread waits for the lock
-     * BEFORE opening its transaction/interceptor, guaranteeing that the transaction observes
-     * the latest committed state rather than a stale snapshot.
-     */
-    @Test
-    public void testConcurrentLockContentionGuaranteesFreshTransactionSnapshot() throws Exception {
-        final String jobId = "concurrent-lock-job-2";
-        final String processInstanceId = "pi-concurrent-456";
-
-        final AtomicInteger simulatedDbVersion = new AtomicInteger(1);
-        final AtomicInteger versionObservedAtTxStart = new AtomicInteger(-1);
-
-        JobTimeoutInterceptor mockTransactionInterceptor = new JobTimeoutInterceptor() {
-            @Override
-            public Callable<JobTimeoutExecution> chainIntercept(Callable<JobTimeoutExecution> callable) {
-                return () -> {
-                    // Record DB version observed at the exact moment the transaction starts
-                    versionObservedAtTxStart.set(simulatedDbVersion.get());
-                    return callable.call();
-                };
-            }
-        };
-
-        LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
-        TestJobExecutor executor = new TestJobExecutor();
-        JobStore jobStore = new MemoryJobStore();
-        JobContextFactory jobContextFactory = new MemoryJobContextFactory();
-
-        JobScheduler jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
-                .withJobExecutors(executor)
-                .withJobEventAdapters(new ProcessInstanceJobDescriptionJobInstanceEventAdapter("http://localhost:8080"))
-                .withEventPublishers(new TestEventPublisher())
-                .withJobContextFactory(jobContextFactory)
-                .withJobStore(jobStore)
-                .withJobSchedulerListeners(listener)
-                .withJobDescriptorMergers(new ProcessInstanceJobDescriptionMerger())
-                .withTimeoutInterceptor(mockTransactionInterceptor)
-                .build();
-
-        jobScheduler.init();
-
-        CountDownLatch externalLockAcquiredLatch = new CountDownLatch(1);
-        CountDownLatch externalHoldLatch = new CountDownLatch(1);
-
-        ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
-        backgroundExecutor.submit(() -> {
-            // Concurrent external thread (e.g. incoming REST request on same process instance)
-            ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
-                externalLockAcquiredLatch.countDown();
-                try {
-                    // Hold lock and simulate external work
-                    externalHoldLatch.await(2000L, TimeUnit.MILLISECONDS);
-                    // Update state/version before releasing lock
-                    simulatedDbVersion.set(2);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return null;
-            });
-        });
-
-        // Wait until external thread holds the lock
-        assertThat(externalLockAcquiredLatch.await(2000L, TimeUnit.MILLISECONDS)).isTrue();
-
-        // Schedule timer to fire immediately while external thread is still holding lock
-        ProcessInstanceJobDescription jobDescription = ProcessInstanceJobDescription.newProcessInstanceJobDescriptionBuilder()
-                .id(jobId)
-                .timerId("timer-2")
-                .processId("testProcess")
-                .processInstanceId(processInstanceId)
-                .expirationTime(ExactExpirationTime.of(ZonedDateTime.now().plus(Duration.ofMillis(10))))
-                .build();
-
-        jobScheduler.schedule(jobDescription);
-
-        // Sleep briefly to ensure timer fires and reaches the lock acquisition step
-        Thread.sleep(100);
-
-        // Allow external thread to update version to 2 and release the lock
-        externalHoldLatch.countDown();
-        backgroundExecutor.shutdown();
-        backgroundExecutor.awaitTermination(2000L, TimeUnit.MILLISECONDS);
-
-        // Wait for job execution to complete
-        listener.waitForExecution(3000L);
-
-        assertThat(listener.isExecuted()).isTrue();
-        assertThat(executor.getJobsExecuted()).contains(jobId);
-
-        // Verification: The timer thread must have waited for the lock BEFORE starting the transaction interceptor.
-        // Thus, when the transaction started, it observed the updated version (2), NOT the stale version (1).
-        assertThat(versionObservedAtTxStart.get())
-                .as("Transaction must start AFTER lock is acquired, observing latest state (version 2)")
-                .isEqualTo(2);
-
-        jobScheduler.close();
-    }
-
-    /**
-     * Verifies that jobs without correlationId (e.g. standard non-process jobs)
-     * continue to execute normally without lock strategy overhead.
-     */
-    @Test
-    public void testJobWithoutCorrelationIdExecutesNormally() throws Exception {
-        final String jobId = "no-correlation-job-3";
-        LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
-        TestJobExecutor executor = new TestJobExecutor();
-        JobStore jobStore = new MemoryJobStore();
-        JobContextFactory jobContextFactory = new MemoryJobContextFactory();
-
-        JobScheduler jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
-                .withJobExecutors(executor)
-                .withJobEventAdapters(new TestJobDetailsEventAdapter())
-                .withEventPublishers(new TestEventPublisher())
-                .withJobContextFactory(jobContextFactory)
-                .withJobStore(jobStore)
-                .withJobSchedulerListeners(listener)
-                .withJobDescriptorMergers(new TestJobDescriptionMerger())
-                .build();
-
-        jobScheduler.init();
-        jobScheduler.schedule(new TestJobDescription(jobId, ZonedDateTime.now().plus(Duration.ofMillis(50))));
-        listener.waitForExecution(3000L);
-
-        assertThat(listener.isExecuted()).isTrue();
-        assertThat(executor.getJobsExecuted()).contains(jobId);
-
-        jobScheduler.close();
+        assertThat(observation.executed).isTrue();
+        assertThat(observation.lockedKey).as("process instance lock must be held when the transaction interceptor starts").isTrue();
+        assertThat(observation.lockedOtherKey).as("job id must not be used as lock key").isFalse();
     }
 
     /**
@@ -270,21 +162,21 @@ public class VertxJobSchedulerLockTest {
      * (which is what the job correlationId holds for this kind of job).
      */
     @Test
-    public void testUserTaskJobLocksOnProcessInstanceId() throws Exception {
+    void testUserTaskJobLocksOnProcessInstanceId() throws Exception {
         final String jobId = "usertask-job-4";
         final String processInstanceId = "pi-usertask-789";
 
         UserTaskInstanceJobDescription jobDescription = UserTaskInstanceJobDescription.newUserTaskInstanceJobDescriptionBuilder()
                 .id(jobId)
                 .userTaskInstanceId("ut-1")
-                .metadata(new java.util.HashMap<>())
+                .metadata(new HashMap<>())
                 .processId("testProcess")
                 .processInstanceId(processInstanceId)
                 .expirationTime(ExactExpirationTime.of(ZonedDateTime.now().plus(Duration.ofMillis(50))))
                 .build();
 
         LockObservation observation = runAndObserveLocks(jobDescription,
-                new UserTaskInstanceJobDescriptionJobInstanceEventAdapter("http://localhost:8080"),
+                new UserTaskInstanceJobDescriptionJobInstanceEventAdapter(SERVICE_URL),
                 new UserTaskInstanceJobDescriptorMerger(),
                 processInstanceId, jobId);
 
@@ -298,14 +190,14 @@ public class VertxJobSchedulerLockTest {
      * so no lock must be taken, in particular not on the process id.
      */
     @Test
-    public void testProcessDefinitionJobIsNotLocked() throws Exception {
+    void testProcessDefinitionJobIsNotLocked() throws Exception {
         final String processId = "testProcessDefinition";
 
         ProcessJobDescription jobDescription = ProcessJobDescription.of(
                 ExactExpirationTime.of(ZonedDateTime.now().plus(Duration.ofMillis(50))), processId, "1.0");
 
         LockObservation observation = runAndObserveLocks(jobDescription,
-                new ProcessJobDescriptionJobInstanceEventAdapter("http://localhost:8080"),
+                new ProcessJobDescriptionJobInstanceEventAdapter(SERVICE_URL),
                 new ProcessJobDescriptionMerger(),
                 processId, jobDescription.id());
 
@@ -314,44 +206,157 @@ public class VertxJobSchedulerLockTest {
         assertThat(observation.lockedOtherKey).as("process definition jobs must not lock on the job id").isFalse();
     }
 
-    private static class LockObservation {
-        boolean executed;
-        boolean lockedKey;
-        boolean lockedOtherKey;
+    /**
+     * Jobs that are not related to processes at all must not take any lock.
+     */
+    @Test
+    void testJobWithoutProcessInstanceIsNotLocked() throws Exception {
+        final String jobId = "no-process-job-3";
+
+        LockObservation observation = runAndObserveLocks(
+                new TestJobDescription(jobId, ZonedDateTime.now().plus(Duration.ofMillis(50))),
+                new TestJobDetailsEventAdapter(),
+                new TestJobDescriptionMerger(),
+                jobId, jobId);
+
+        assertThat(observation.executed).isTrue();
+        assertThat(observation.lockedKey).as("jobs without a process instance must not be locked").isFalse();
     }
 
-    private LockObservation runAndObserveLocks(JobDescription jobDescription, JobDetailsEventAdapter adapter, JobDescriptionMerger merger,
-            String key, String otherKey) throws Exception {
-        LockObservation observation = new LockObservation();
+    /**
+     * While another thread holds the process instance lock (e.g. an incoming REST request), the timer thread must wait for it
+     * BEFORE the transaction interceptor starts, so the transaction observes the latest committed state rather than a stale snapshot.
+     */
+    @Test
+    void testConcurrentLockContentionGuaranteesFreshTransactionSnapshot() throws Exception {
+        final String jobId = "concurrent-lock-job-2";
+        final String processInstanceId = "pi-concurrent-456";
 
-        JobTimeoutInterceptor observingInterceptor = callable -> () -> {
-            observation.lockedKey = ProcessInstanceAtomicLockStrategy.instance().isLockedByCurrentThread(key);
-            observation.lockedOtherKey = ProcessInstanceAtomicLockStrategy.instance().isLockedByCurrentThread(otherKey);
-            return callable.call();
+        final AtomicInteger simulatedDbVersion = new AtomicInteger(1);
+        final AtomicInteger versionObservedAtTxStart = new AtomicInteger(-1);
+        final CountDownLatch jobExecuted = new CountDownLatch(1);
+        // the periodic job store sync goes through the interceptors too, so the job itself is what tells us which transaction is relevant
+        final ThreadLocal<Integer> versionAtCurrentTxStart = new ThreadLocal<>();
+
+        JobTimeoutInterceptor mockTransactionInterceptor = callable -> () -> {
+            // the DB version observed at the exact moment the transaction starts
+            versionAtCurrentTxStart.set(simulatedDbVersion.get());
+            try {
+                return callable.call();
+            } finally {
+                versionAtCurrentTxStart.remove();
+            }
+        };
+
+        JobExecutor executor = new JobExecutor() {
+            @Override
+            public boolean accept(JobDetails jobDetails) {
+                return true;
+            }
+
+            @Override
+            public void execute(JobDetails jobDetails) {
+                versionObservedAtTxStart.set(versionAtCurrentTxStart.get());
+                jobExecuted.countDown();
+            }
         };
 
         LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
-        TestJobExecutor executor = new TestJobExecutor();
+        newScheduler(new MemoryJobStore(), new ProcessInstanceJobDescriptionJobInstanceEventAdapter(SERVICE_URL),
+                new ProcessInstanceJobDescriptionMerger(), listener, executor, mockTransactionInterceptor);
 
-        JobScheduler jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
-                .withJobExecutors(executor)
-                .withJobEventAdapters(adapter)
-                .withEventPublishers(new TestEventPublisher())
-                .withJobContextFactory(new MemoryJobContextFactory())
-                .withJobStore(new MemoryJobStore())
-                .withJobSchedulerListeners(listener)
-                .withJobDescriptorMergers(merger)
-                .withTimeoutInterceptor(observingInterceptor)
-                .build();
+        CountDownLatch externalLockAcquired = new CountDownLatch(1);
+        CountDownLatch externalRelease = new CountDownLatch(1);
 
+        ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
         try {
-            jobScheduler.init();
-            jobScheduler.schedule(jobDescription);
-            listener.waitForExecution(3000L);
-            observation.executed = listener.isExecuted() && executor.getJobsExecuted().contains(jobDescription.id());
+            Future<?> external = backgroundExecutor.submit(() -> ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
+                externalLockAcquired.countDown();
+                try {
+                    externalRelease.await(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                // update the state/version before releasing the lock
+                simulatedDbVersion.set(2);
+                return null;
+            }));
+
+            assertThat(externalLockAcquired.await(2, TimeUnit.SECONDS)).isTrue();
+
+            // the timer fires while the external thread still holds the lock
+            jobScheduler.schedule(processInstanceJob(jobId, processInstanceId, ZonedDateTime.now().plus(Duration.ofMillis(10))));
+
+            // the job (and so its transaction) must not run while the lock is held by someone else
+            assertThat(jobExecuted.await(300, TimeUnit.MILLISECONDS))
+                    .as("job must not run while the process instance lock is held by another thread")
+                    .isFalse();
+
+            externalRelease.countDown();
+            external.get(3, TimeUnit.SECONDS);
         } finally {
-            jobScheduler.close();
+            externalRelease.countDown();
+            backgroundExecutor.shutdownNow();
         }
-        return observation;
+
+        assertThat(jobExecuted.await(3, TimeUnit.SECONDS)).isTrue();
+        assertThat(versionObservedAtTxStart.get())
+                .as("transaction must start AFTER the lock is acquired, observing the latest state (version 2)")
+                .isEqualTo(2);
+    }
+
+    /**
+     * A timer that finds its job should not run (e.g. it was rescheduled in the meantime) must only drop its own entry
+     * from the scheduled jobs, not the entry of the timer that replaced it under the same key.
+     */
+    @Test
+    void testShouldNotRunDoesNotRemoveEntryOfRescheduledTimer() throws Exception {
+        final String jobId = "reschedule-job-5";
+        final String processInstanceId = "pi-reschedule-321";
+
+        CountDownLatch shouldRunEntered = new CountDownLatch(1);
+        CountDownLatch shouldRunRelease = new CountDownLatch(1);
+        AtomicBoolean firstCall = new AtomicBoolean(true);
+
+        // the first timeout is held inside shouldRun and then told not to run, later calls behave normally
+        JobStore blockingStore = new MemoryJobStore() {
+            @Override
+            public boolean shouldRun(JobContext jobContext, String id) {
+                if (firstCall.compareAndSet(true, false)) {
+                    shouldRunEntered.countDown();
+                    try {
+                        shouldRunRelease.await(5, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    return false;
+                }
+                return super.shouldRun(jobContext, id);
+            }
+        };
+
+        newScheduler(blockingStore, new ProcessInstanceJobDescriptionJobInstanceEventAdapter(SERVICE_URL),
+                new ProcessInstanceJobDescriptionMerger(), new LatchExecutionJobSchedulerListener(), new TestJobExecutor());
+
+        jobScheduler.schedule(processInstanceJob(jobId, processInstanceId, ZonedDateTime.now().plus(Duration.ofMillis(50))));
+        assertThat(shouldRunEntered.await(3, TimeUnit.SECONDS)).isTrue();
+
+        // while the first timer is still in flight, the job is rescheduled and gets a new timer under the same key
+        jobScheduler.reschedule(processInstanceJob(jobId, processInstanceId, ZonedDateTime.now().plus(Duration.ofMinutes(10))));
+        shouldRunRelease.countDown();
+
+        Map<String, ?> jobsScheduled = jobsScheduled();
+        String mapKey = jobId + "-0";
+        assertThat(jobsScheduled).containsKey(mapKey);
+        // the first timeout has now completed its "should not run" handling, the entry of the rescheduled timer must survive
+        await().during(500, TimeUnit.MILLISECONDS).atMost(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> assertThat(jobsScheduled).containsKey(mapKey));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, ?> jobsScheduled() throws Exception {
+        Field field = VertxJobScheduler.class.getDeclaredField("jobsScheduled");
+        field.setAccessible(true);
+        return (Map<String, ?>) field.get(jobScheduler);
     }
 }
