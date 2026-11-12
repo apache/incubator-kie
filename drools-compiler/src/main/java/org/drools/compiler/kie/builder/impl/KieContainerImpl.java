@@ -543,7 +543,11 @@ public class KieContainerImpl
             log.error("Unknown KieSession name: " + kSessionName);
             return null;
         }
-        InternalKnowledgeBase kBase = (InternalKnowledgeBase) getKieBaseFromKieSessionModel(kSessionModel, stateless);
+        if (kSessionModel.getType() == KieSessionModel.KieSessionType.STATELESS) {
+            throw new RuntimeException("KieSessionModel " + kSessionModel.getName() + " is stateless, but a KieContainerSessionsPool only pools sessions of a stateful KieSessionModel. " +
+                                       "Use KieContainer.newStatelessKieSession(\"" + kSessionModel.getName() + "\") for a stateless session.");
+        }
+        InternalKnowledgeBase kBase = (InternalKnowledgeBase) getKieBaseFromKieSessionModel(kSessionModel);
         return kBase == null ? null : new StatefulSessionPool(kBase, initialSize, () -> {
             SessionConfiguration sessConf = conf != null ? conf.as(SessionConfiguration.KEY) : kBase.getSessionConfiguration().as(SessionConfiguration.KEY);
             StatefulKnowledgeSessionImpl kSession = stateless ?
@@ -607,7 +611,7 @@ public class KieContainerImpl
             return null;
         }
 
-        KieBase kBase = getKieBaseFromKieSessionModel( kSessionModel, false );
+        KieBase kBase = getKieBaseFromKieSessionModel( kSessionModel );
         if ( kBase == null ) {
             return null;
         }
@@ -629,8 +633,8 @@ public class KieContainerImpl
         kSessions.put(kSessionModel.getName(), kSession);
     }
 
-    private KieBase getKieBaseFromKieSessionModel( KieSessionModel kSessionModel, boolean stateless ) {
-        if (!stateless && kSessionModel.getType() == KieSessionModel.KieSessionType.STATELESS) {
+    private KieBase getKieBaseFromKieSessionModel( KieSessionModel kSessionModel ) {
+        if (kSessionModel.getType() == KieSessionModel.KieSessionType.STATELESS) {
             throw new RuntimeException("Trying to create a stateful KieSession from a stateless KieSessionModel: " + kSessionModel.getName());
         }
         KieBase kBase = getKieBase( kSessionModel.getKieBaseModel().getName() );

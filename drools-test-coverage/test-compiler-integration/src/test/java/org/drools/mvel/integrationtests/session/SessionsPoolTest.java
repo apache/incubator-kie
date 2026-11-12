@@ -59,6 +59,7 @@ import org.kie.internal.event.rule.RuleEventListener;
 import org.kie.internal.event.rule.RuleEventManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 
 public class SessionsPoolTest {
@@ -212,29 +213,18 @@ public class SessionsPoolTest {
 
     @ParameterizedTest(name = "KieBase type={0}")
     @MethodSource("parameters")
-    public void testStatelessKieSessionsPoolWithStatelessKieSessionModel(KieBaseTestConfiguration kieBaseTestConfiguration) {
-        // incubator-kie#6938
-        String drl =
-                "global java.util.List list\n" +
-                        "rule R1 when\n" +
-                        "  $s: String()\n" +
-                        "then\n" +
-                        "  list.add($s);\n" +
-                        "end\n";
+    public void testKieSessionsPoolWithStatelessKieSessionModel(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // incubator-kie#6938: a pool only holds stateful sessions, so a stateless model gets a clear error
         final KieModule kieModule = KieUtil.getKieModuleFromDrls(KieUtil.generateReleaseId("test"), kieBaseTestConfiguration,
-                                                                 KieSessionTestConfiguration.STATELESS_REALTIME, new HashMap<>(), drl);
+                                                                 KieSessionTestConfiguration.STATELESS_REALTIME, new HashMap<>(),
+                                                                 "rule R1 when then end\n");
         KieContainerSessionsPool pool = KieServices.get().newKieContainer(kieModule.getReleaseId()).newKieSessionsPool( 1 );
         try {
-            StatelessKieSession session = pool.newStatelessKieSession( KieSessionTestConfiguration.KIE_SESSION_MODEL_NAME );
-
-            List<String> list = new ArrayList<>();
-            session.setGlobal( "list", list );
-            session.execute( "test" );
-            assertThat(list).containsExactly("test");
-
-            list.clear();
-            session.execute( "test" );
-            assertThat(list).containsExactly("test");
+            String name = KieSessionTestConfiguration.KIE_SESSION_MODEL_NAME;
+            String expected = "KieSessionModel " + name + " is stateless, but a KieContainerSessionsPool only pools sessions of a stateful KieSessionModel. " +
+                              "Use KieContainer.newStatelessKieSession(\"" + name + "\") for a stateless session.";
+            assertThatThrownBy(() -> pool.newStatelessKieSession( name )).hasMessage(expected);
+            assertThatThrownBy(() -> pool.newKieSession( name )).hasMessage(expected);
         } finally {
             pool.shutdown();
         }
