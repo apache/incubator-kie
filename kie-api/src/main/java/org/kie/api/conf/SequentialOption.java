@@ -46,6 +46,7 @@ public enum SequentialOption implements SingleValueRuleBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

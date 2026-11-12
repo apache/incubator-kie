@@ -31,9 +31,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.kie.kogito.test.utils.JsonSchemaMatchers.matchesJsonSchema;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = KogitoSpringbootApplication.class)

@@ -43,6 +43,7 @@ public class SessionsPoolOption implements SingleValueRuleBaseOption {
         return new SessionsPoolOption( size );
     }
 
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

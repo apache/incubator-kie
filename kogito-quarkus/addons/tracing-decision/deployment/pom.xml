@@ -55,7 +55,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-jackson-deployment</artifactId>
+      <artifactId>quarkus-rest-jackson-deployment</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

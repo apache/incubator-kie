@@ -40,6 +40,7 @@ import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestConstants;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
@@ -147,6 +148,96 @@ public class TypeDeclarationTest {
         assertThat(typeDeclaration.getRole()).isEqualTo(Role.Type.EVENT);
         assertThat(typeDeclaration.getDurationAttribute()).isEqualTo("duration");
 
+    }
+
+    private static final String EVENT_WITH_DURATION =
+            "package org.kie \n" +
+            "declare org.kie.EventA \n" +
+            "    @role (event) \n" +
+            "    @duration (duration) \n" +
+            "    name : String \n" +
+            "    duration : Long \n" +
+            "    duration2 : Long \n" +
+            "end \n";
+
+    @Test
+    public void testDurationRedeclarationWithSameDuration() {
+        KnowledgeBuilder kbuilder = buildTwice(EVENT_WITH_DURATION, EVENT_WITH_DURATION);
+
+        assertThat(kbuilder.hasErrors()).as(kbuilder.getErrors().toString()).isFalse();
+        TypeDeclaration typeDeclaration = ((KnowledgePackageImpl)kbuilder.getKnowledgePackages().iterator().next()).getTypeDeclaration("EventA");
+        assertThat(typeDeclaration.getDurationAttribute()).isEqualTo("duration");
+    }
+
+    @Test
+    public void testDurationRedeclarationWithoutDurationKeepsIt() {
+        String str2 = EVENT_WITH_DURATION.replace("    @duration (duration) \n", "");
+
+        KnowledgeBuilder kbuilder = buildTwice(EVENT_WITH_DURATION, str2);
+
+        assertThat(kbuilder.hasErrors()).as(kbuilder.getErrors().toString()).isFalse();
+        TypeDeclaration typeDeclaration = ((KnowledgePackageImpl)kbuilder.getKnowledgePackages().iterator().next()).getTypeDeclaration("EventA");
+        assertThat(typeDeclaration.getDurationAttribute()).isEqualTo("duration");
+    }
+
+    @Test
+    public void testDurationRedeclarationWithDifferentDuration() {
+        String str2 = EVENT_WITH_DURATION.replace("@duration (duration)", "@duration (duration2)");
+
+        KnowledgeBuilder kbuilder = buildTwice(EVENT_WITH_DURATION, str2);
+
+        assertThat(kbuilder.getErrors().toString()).contains("has a different duration: duration2 != duration");
+    }
+
+    private static final String FACT_FOO =
+            "package org.kie \n" +
+            "declare org.kie.Foo \n" +
+            "    name : String \n" +
+            "end \n";
+
+    private static String redeclareFoo(String annotations) {
+        return "package org.kie \n" +
+               "declare org.kie.Foo \n" +
+               "    " + annotations + " \n" +
+               "end \n";
+    }
+
+    private static TypeDeclaration getFooAfterRedeclaration(String drl1, String drl2) {
+        KnowledgeBuilder kbuilder = buildTwice(drl1, drl2);
+        assertThat(kbuilder.hasErrors()).as(kbuilder.getErrors().toString()).isFalse();
+        return ((KnowledgePackageImpl)kbuilder.getKnowledgePackages().iterator().next()).getTypeDeclaration("Foo");
+    }
+
+    @Test
+    public void testRedeclarationWithClassReactive() {
+        TypeDeclaration typeDeclaration = getFooAfterRedeclaration(FACT_FOO, redeclareFoo("@classReactive"));
+        assertThat(typeDeclaration.isPropertyReactive()).isFalse();
+    }
+
+    @Test
+    public void testRedeclarationWithPropertyChangeSupport() {
+        TypeDeclaration typeDeclaration = getFooAfterRedeclaration(FACT_FOO, redeclareFoo("@propertyChangeSupport"));
+        assertThat(typeDeclaration.isDynamic()).isTrue();
+    }
+
+    @Test
+    public void testRedeclarationWithRoleFact() {
+        String eventFoo = FACT_FOO.replace("declare org.kie.Foo \n", "declare org.kie.Foo \n    @role (event) \n");
+        TypeDeclaration typeDeclaration = getFooAfterRedeclaration(eventFoo, redeclareFoo("@role(fact)"));
+        assertThat(typeDeclaration.getRole()).isEqualTo(Role.Type.FACT);
+    }
+
+    @Test
+    public void testRedeclarationWithExpiresWithoutRole() {
+        TypeDeclaration typeDeclaration = getFooAfterRedeclaration(FACT_FOO, redeclareFoo("@expires(10s)"));
+        assertThat(typeDeclaration.getExpirationOffset()).isEqualTo(10_000L);
+    }
+
+    private static KnowledgeBuilder buildTwice(String drl1, String drl2) {
+        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+        kbuilder.add( ResourceFactory.newByteArrayResource( drl1.getBytes() ), ResourceType.DRL );
+        kbuilder.add( ResourceFactory.newByteArrayResource( drl2.getBytes() ), ResourceType.DRL );
+        return kbuilder;
     }
 
     @ParameterizedTest(name = "KieBase type={0}")

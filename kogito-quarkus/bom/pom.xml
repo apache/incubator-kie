@@ -52,7 +52,6 @@
     <version.io.smallrye.reactive.messaging.in.memory>4.33.0</version.io.smallrye.reactive.messaging.in.memory>
     <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
     <version.org.hibernate>7.2.19.Final</version.org.hibernate>
-    <version.org.postgresql>42.7.13</version.org.postgresql>
     <!-- Quarkus 3.33 hard requirements: smallrye-config 3.16 (quarkus-core/junit-config reference io.smallrye.config.Config)
          and jandex 3.5 (arc-processor uses MethodParameterInfo.nameOrDefault). The two smallrye-config properties are one
          artifact family in kie-parent (they map to smallrye-config-core / smallrye-config) and must move together. -->
@@ -67,7 +66,7 @@
     <version.com.github.stephenc.jcip>1.0-1</version.com.github.stephenc.jcip>
     <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
     <version.org.jredisearch>2.2.0</version.org.jredisearch>
-    <version.org.json>20231013</version.org.json>
+    <version.org.json>20260719</version.org.json>
     <version.io.projectreactor>3.8.7</version.io.projectreactor>
 </properties>
   <dependencyManagement>

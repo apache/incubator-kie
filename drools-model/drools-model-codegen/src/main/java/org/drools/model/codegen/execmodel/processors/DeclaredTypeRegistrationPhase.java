@@ -23,6 +23,7 @@ import org.drools.compiler.builder.impl.TypeDeclarationFactory;
 import org.drools.compiler.builder.impl.processors.AbstractPackageCompilationPhase;
 import org.drools.compiler.builder.impl.processors.AnnotationNormalizer;
 import org.drools.compiler.compiler.PackageRegistry;
+import org.drools.compiler.compiler.TypeDeclarationError;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.drl.ast.descr.AbstractClassTypeDeclarationDescr;
@@ -32,6 +33,7 @@ import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.drl.ast.descr.TypeDeclarationDescr;
 import org.drools.model.codegen.execmodel.errors.UnsupportedFeatureError;
 import org.drools.util.TypeResolver;
+import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static org.drools.compiler.builder.impl.ClassDefinitionFactory.createClassDefinition;
 import static org.drools.base.util.Drools.hasMvel;
@@ -39,10 +41,12 @@ import static org.drools.base.util.Drools.hasMvel;
 public class DeclaredTypeRegistrationPhase extends AbstractPackageCompilationPhase {
 
     private final PackageRegistryManager pkgRegistryManager;
+    private final PropertySpecificOption propertySpecificOption;
 
-    public DeclaredTypeRegistrationPhase(PackageRegistry pkgRegistry, PackageDescr packageDescr, PackageRegistryManager pkgRegistryManager) {
+    public DeclaredTypeRegistrationPhase(PackageRegistry pkgRegistry, PackageDescr packageDescr, PackageRegistryManager pkgRegistryManager, PropertySpecificOption propertySpecificOption) {
         super(pkgRegistry, packageDescr);
         this.pkgRegistryManager = pkgRegistryManager;
+        this.propertySpecificOption = propertySpecificOption;
     }
 
     @Override
@@ -68,7 +72,7 @@ public class DeclaredTypeRegistrationPhase extends AbstractPackageCompilationPha
             if (hasMvel()) {
                 type.setTypeClassDef( createClassDefinition( typeClass, typeDescr.getResource() ) );
             }
-            TypeDeclarationFactory.processAnnotations(typeDescr, type);
+            processAnnotations(typeDescr, type);
             if (!type.isTypesafe()) {
                 results.addBuilderResult(new UnsupportedFeatureError("@typesafe(false) is not supported in executable model : " + type));
             }
@@ -77,8 +81,16 @@ public class DeclaredTypeRegistrationPhase extends AbstractPackageCompilationPha
         } catch (ClassNotFoundException e) {
             TypeDeclaration type = new TypeDeclaration( typeDescr.getTypeName() );
             type.setResource( typeDescr.getResource() );
-            TypeDeclarationFactory.processAnnotations(typeDescr, type);
+            processAnnotations(typeDescr, type);
             pkg.addTypeDeclaration( type );
+        }
+    }
+
+    private void processAnnotations(AbstractClassTypeDeclarationDescr typeDescr, TypeDeclaration type) {
+        try {
+            TypeDeclarationFactory.processAnnotations(typeDescr, type, propertySpecificOption);
+        } catch (Exception e) {
+            results.addBuilderResult(new TypeDeclarationError(typeDescr, e.getMessage()));
         }
     }
 

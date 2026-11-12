@@ -39,7 +39,7 @@ import org.kie.kogito.usertask.model.ProcessInfo;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
-import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.PARAMETER_NOTIFY;
+import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.PARAMETER_NOTIFY_LISTENERS;
 import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.WORKFLOW_ENGINE_USER;
 
 /**
@@ -59,6 +59,8 @@ public class UserTaskKogitoWorkItemHandler extends DefaultKogitoWorkItemHandler 
     private static final String BUSINESSADMINISTRATOR_ID = "BusinessAdministratorId";
     private static final String BUSINESSADMINISTRATOR_GROUP_ID = "BusinessAdministratorGroupId";
     private static final String EXCLUDED_OWNER_ID = "ExcludedOwnerId";
+
+    public static final String PARAMETER_NOTIFY_PROCESS = "Notify";
 
     private static final String NOT_STARTED_NOTIFY = "NotStartedNotify";
     private static final String NOT_STARTED_REASSIGN = "NotStartedReassign";
@@ -151,7 +153,7 @@ public class UserTaskKogitoWorkItemHandler extends DefaultKogitoWorkItemHandler 
 
     @Override
     public Optional<WorkItemTransition> completeWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
-        if (transition.data().containsKey("Notify")) {
+        if (transition.data().containsKey(PARAMETER_NOTIFY_PROCESS)) {
             return Optional.empty();
         }
         UserTasks userTasks = handler.getApplication().get(UserTasks.class);
@@ -160,14 +162,16 @@ public class UserTaskKogitoWorkItemHandler extends DefaultKogitoWorkItemHandler 
             if (workItem instanceof InternalKogitoWorkItem ikw) {
                 ikw.setActualOwner(ut.getActualOwner());
             }
-            ut.transition(DefaultUserTaskLifeCycle.SKIP, Collections.singletonMap(PARAMETER_NOTIFY, Boolean.FALSE), IdentityProviders.of(WORKFLOW_ENGINE_USER));
+            Map<String, Object> data = new HashMap<>(transition.data());
+            data.put(PARAMETER_NOTIFY_LISTENERS, Boolean.FALSE);
+            ut.transition(DefaultUserTaskLifeCycle.SKIP, data, IdentityProviders.of(WORKFLOW_ENGINE_USER));
         });
         return Optional.empty();
     }
 
     @Override
     public Optional<WorkItemTransition> abortWorkItemHandler(KogitoWorkItemManager manager, KogitoWorkItemHandler handler, KogitoWorkItem workItem, WorkItemTransition transition) {
-        if (transition.data().containsKey("Notify")) {
+        if (transition.data().containsKey(PARAMETER_NOTIFY_PROCESS)) {
             return Optional.empty();
         }
         UserTasks userTasks = handler.getApplication().get(UserTasks.class);
@@ -176,7 +180,9 @@ public class UserTaskKogitoWorkItemHandler extends DefaultKogitoWorkItemHandler 
             if (workItem instanceof InternalKogitoWorkItem ikw) {
                 ikw.setActualOwner(ut.getActualOwner());
             }
-            ut.transition(ut.getUserTaskLifeCycle().abortTransition(), Collections.singletonMap(PARAMETER_NOTIFY, Boolean.FALSE), IdentityProviders.of(WORKFLOW_ENGINE_USER));
+            Map<String, Object> data = new HashMap<>(transition.data());
+            data.put(PARAMETER_NOTIFY_LISTENERS, Boolean.FALSE);
+            ut.transition(ut.getUserTaskLifeCycle().abortTransition(), data, IdentityProviders.of(WORKFLOW_ENGINE_USER));
         });
         return Optional.empty();
     }

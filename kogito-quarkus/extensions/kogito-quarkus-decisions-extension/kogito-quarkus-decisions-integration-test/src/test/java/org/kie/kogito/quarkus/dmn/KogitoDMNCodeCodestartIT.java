@@ -53,7 +53,7 @@ public class KogitoDMNCodeCodestartIT {
     @RegisterExtension
     public static QuarkusCodestartTest codestartTest = QuarkusCodestartTest.builder()
             .setupStandaloneExtensionTest("org.drools:drools-quarkus-decisions")
-            .extension(ArtifactKey.fromString("io.quarkus:quarkus-resteasy-jackson")) // account for KOGITO-5817
+            .extension(ArtifactKey.fromString("io.quarkus:quarkus-rest-jackson")) // account for KOGITO-5817
             .extension(ArtifactCoords.fromString("org.assertj:assertj-core:" + assertjVersion()))
             .putData(QuarkusDataKey.APP_CONFIG, Map.of("quarkus.http.test-port", "0"))
             .languages(JAVA)

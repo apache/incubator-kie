@@ -107,7 +107,7 @@
     <version.com.github.victools>4.37.0</version.com.github.victools>
     <version.com.google.collections>1.0</version.com.google.collections>
     <version.com.google.gson>2.13.2</version.com.google.gson>
-    <version.com.google.guava>33.5.0-jre</version.com.google.guava>
+    <version.com.google.guava>33.7.2-jre</version.com.google.guava>
     <version.com.google.protobuf>3.25.5</version.com.google.protobuf>
     <version.com.graphql-java>25.0</version.com.graphql-java>
     <version.com.graphql-java-extended-scalars>24.0</version.com.graphql-java-extended-scalars>
@@ -150,7 +150,7 @@
     <version.io.fabric8>7.3.1</version.io.fabric8>
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
-    <version.io.micrometer>1.16.7</version.io.micrometer>
+    <version.io.micrometer>1.17.1</version.io.micrometer>
     <version.io.netty>4.1.138.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
@@ -182,6 +182,7 @@
     <version.jakarta.validation-api>3.1.1</version.jakarta.validation-api>
     <version.jakarta.ws.rs>3.1.0</version.jakarta.ws.rs>
     <version.jakarta.xml.bind-api>4.0.4</version.jakarta.xml.bind-api>
+    <version.japicmp.maven.plugin>0.18.3</version.japicmp.maven.plugin>
     <version.javax.inject>1</version.javax.inject>
     <version.jaxb2-maven-plugin>2.2</version.jaxb2-maven-plugin>
     <!-- JDepend plugin -->
@@ -196,7 +197,7 @@
     <!-- These are added as part of the migration from JBoss to Apache parent pom.xml. They may be extracted to a KIE parent bom. -->
     <version.maven-checkstyle>3.3.0</version.maven-checkstyle>
     <version.maven.enforcer>3.3.0</version.maven.enforcer>
-    <version.maven-javadoc-plugin.override>3.6.2</version.maven-javadoc-plugin.override>
+    <version.maven-javadoc-plugin>3.12.0</version.maven-javadoc-plugin>
     <!-- Note: following ones are two different plugins -->
     <version.maven.invoker>3.2.0</version.maven.invoker>
     <version.maven-invoker-plugin>3.6.1</version.maven-invoker-plugin>
@@ -286,7 +287,8 @@
     <version.org.mvel>2.5.4.Final</version.org.mvel>
     <!-- Version of JMH -->
     <version.org.openjdk.jmh>1.21</version.org.openjdk.jmh>
-    <version.org.postgresql>42.7.12</version.org.postgresql>
+    <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
+    <version.org.postgresql>42.7.14</version.org.postgresql>
     <version.org.powermock>2.0.9</version.org.powermock>
     <version.org.reactivestreams>1.0.4</version.org.reactivestreams>
     <version.org.reflections>0.10.2</version.org.reflections>
@@ -308,6 +310,7 @@
     <version.org.wildfly.elytron>2.8.5.Final</version.org.wildfly.elytron>
     <version.org.wiremock>3.13.2</version.org.wiremock>
     <version.org.wiremock.webhooks>3.0.4</version.org.wiremock.webhooks>
+    <version.org.xerial.snappy>1.1.10.12</version.org.xerial.snappy>
     <version.org.xmlunit>2.10.4</version.org.xmlunit>
     <version.org.xmlunit-core>2.10.4</version.org.xmlunit-core>
     <version.org.yaml.snakeyaml>2.6</version.org.yaml.snakeyaml>
@@ -322,6 +325,8 @@
     <version.plugin.testing.harness>4.0.0-alpha-2</version.plugin.testing.harness>
     <version.project-sources-maven-plugin>0.3</version.project-sources-maven-plugin>
     <version.property-maven-plugin>1.2.1</version.property-maven-plugin>
+    <version.revapi.maven.plugin>0.15.1</version.revapi.maven.plugin>
+    <version.revapi.java>0.28.1</version.revapi.java>
     <!-- OpenRewrite plugin -->
     <version.rewrite.maven.plugin>4.42.0</version.rewrite.maven.plugin>
     <version.rewrite.testing.frameworks>1.22.0</version.rewrite.testing.frameworks>
@@ -336,7 +341,30 @@
     <version.wildfly-maven-plugin>1.2.0.Final</version.wildfly-maven-plugin>
     <version.xerces>2.12.2</version.xerces>
     <version.xml-maven-plugin>1.0</version.xml-maven-plugin>
+
+    <!-- Javadoc branding properties - can be overridden via -D flags or CI environment -->
+    <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
+    <javadoc.product.name>${project.name}</javadoc.product.name>
+    <javadoc.product.version>${project.version}</javadoc.product.version>
+    <javadoc.doctitle>${project.name} ${project.version} API</javadoc.doctitle>
+    <javadoc.windowtitle>${project.name} ${project.version} API</javadoc.windowtitle>
+    <javadoc.footer><![CDATA[Copyright &#169; ${project.inceptionYear}&#x2023;${maven.build.timestamp} Apache Software Foundation. All rights reserved.]]></javadoc.footer>
+    <javadoc.bottom><![CDATA[Copyright &#169; ${project.inceptionYear}&#x2023;${maven.build.timestamp} Apache Software Foundation. All rights reserved.]]></javadoc.bottom>
+
+    <!-- Latest released Apache KIE version for API compatibility checks -->
+    <kie.latest.released.version>10.2.0</kie.latest.released.version>
+
+    <!-- Revapi API Compatibility Check Configuration -->
+
+    <revapi.latestVersion>${kie.latest.released.version}</revapi.latestVersion>
+
+    <!-- JApiCmp API Compatibility Check Configuration -->
+
+    <japicmp.oldVersion.groupId>${project.groupId}</japicmp.oldVersion.groupId>
+    <japicmp.oldVersion.artifactId>${project.artifactId}</japicmp.oldVersion.artifactId>
+    <japicmp.oldVersion.version>${kie.latest.released.version}</japicmp.oldVersion.version>
   </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -797,10 +825,20 @@
         <artifactId>grpc-util</artifactId>
         <version>${version.io.grpc}</version>
       </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-commons</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
       <!-- Used by drools-metric -->
       <dependency>
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-core</artifactId>
+        <version>${version.io.micrometer}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-observation</artifactId>
         <version>${version.io.micrometer}</version>
       </dependency>
       <dependency>
@@ -962,6 +1000,17 @@
         <artifactId>json-schema-validator</artifactId>
         <version>${version.io.rest-assured}</version>
         <scope>test</scope>
+        <exclusions>
+          <!-- CVE fix: jackson-coreutils pulled transitively via json-schema-validator -->
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>jackson-coreutils</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-patch</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.rest-assured</groupId>
@@ -1088,6 +1137,15 @@
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <!-- CVE fix: json-patch/jackson-coreutils pulled in transitively via swagger-compat-spec-parser -->
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-patch</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>jackson-coreutils</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1914,6 +1972,17 @@
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-jackson2-provider</artifactId>
         <version>${version.org.jboss.resteasy}</version>
+        <exclusions>
+          <!-- CVE fix: no patched version of json-patch/jackson-coreutils exists -->
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-patch</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>jackson-coreutils</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.jboss.resteasy</groupId>
@@ -2063,6 +2132,31 @@
         <artifactId>nashorn-core</artifactId>
         <version>${version.nashorn}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-analysis</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-commons</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-tree</artifactId>
+        <version>${version.org.ow2.asm}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm-util</artifactId>
+        <version>${version.org.ow2.asm}</version>
       </dependency>
       <dependency>
         <groupId>org.postgresql</groupId>
@@ -2308,6 +2402,11 @@
         <artifactId>xmlunit-matchers</artifactId>
         <version>${version.org.xmlunit}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${version.org.xerial.snappy}</version>
       </dependency>
       <dependency>
         <groupId>simple-jndi</groupId>
@@ -2595,6 +2694,18 @@
                </configuration>
              </execution>-->
           </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.revapi</groupId>
+          <artifactId>revapi-maven-plugin</artifactId>
+          <version>${version.revapi.maven.plugin}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.revapi</groupId>
+              <artifactId>revapi-java</artifactId>
+              <version>${version.revapi.java}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.openrewrite.maven</groupId>
@@ -2942,16 +3053,21 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>${version.maven-javadoc-plugin.override}</version>
+          <version>${version.maven-javadoc-plugin}</version>
           <configuration>
             <header><![CDATA[<b>${project.name} ${project.version}</b>]]></header>
-            <footer><![CDATA[<b>${project.name} ${project.version}</b>]]></footer>
             <archive>
               <index>true</index>
             </archive>
             <quiet>true</quiet>
             <doclint>none</doclint>
-            <legacyMode>true</legacyMode>
+            <tags>
+              <tag>
+                <name>apiNote</name>
+                <placement>a</placement>
+                <head>API Note:</head>
+              </tag>
+            </tags>
           </configuration>
         </plugin>
         <plugin>
@@ -3179,22 +3295,7 @@
               </execution>
             </executions>
           </plugin>-->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-                <phase>package</phase>
-                <configuration>
-                  <source>${maven.compiler.release}</source>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
+       </plugins>
       </build>
     </profile>
     <!--

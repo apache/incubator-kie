@@ -55,6 +55,7 @@ import org.drools.model.codegen.execmodel.processors.GeneratedPojoCompilationPha
 import org.drools.model.codegen.execmodel.processors.ModelGeneratorPhase;
 import org.drools.model.codegen.execmodel.processors.PojoStoragePhase;
 import org.drools.model.codegen.execmodel.processors.SourceCodeGenerationPhase;
+import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.kie.util.maven.support.ReleaseIdImpl;
 
 /**
@@ -129,7 +130,7 @@ public class ExplicitCanonicalModelCompiler<T extends PackageSources> {
     public void process() {
         List<CompilationPhase> phases = new ArrayList<>();
 
-        phases.add(iteratingPhase((reg, acc) -> new DeclaredTypeRegistrationPhase(reg, acc, pkgRegistryManager)));
+        phases.add(iteratingPhase((reg, acc) -> new DeclaredTypeRegistrationPhase(reg, acc, pkgRegistryManager, configuration.getOption(PropertySpecificOption.KEY))));
         phases.add(iteratingPhase((reg, acc) ->
                 new POJOGenerator(reg.getPackage(), acc, packageModelManager.getPackageModel(acc, reg, reg.getPackage().getName()), packages, pkgRegistryManager)));
         phases.add(new GeneratedPojoCompilationPhase(

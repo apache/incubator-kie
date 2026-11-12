@@ -38,14 +38,13 @@ import org.drools.drl.ast.descr.EnumDeclarationDescr;
 import org.drools.drl.ast.descr.TypeDeclarationDescr;
 import org.drools.drl.ast.descr.TypeFieldDescr;
 import org.kie.api.definition.type.FactField;
-import org.kie.api.definition.type.PropertyChangeSupport;
-import org.kie.api.definition.type.Role;
 import org.kie.api.definition.type.TypeSafe;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.drools.compiler.rule.builder.util.AnnotationFactory.getTypedAnnotation;
+import static org.drools.compiler.rule.builder.util.AnnotationFactory.toAnnotated;
 
 public class TypeDeclarationFactory {
     private static final Logger LOG = LoggerFactory.getLogger(TypeDeclarationFactory.class);
@@ -66,45 +65,28 @@ public class TypeDeclarationFactory {
             type = new TypeDeclaration( typeDescr.getTypeName() );
             type.setResource( typeDescr.getResource() );
 
-            // if is not new, search the already existing declaration and
-            // compare them o see if they are at least compatibles
-            // check whether it is necessary to build the class or not
             Class<?> existingClass = TypeDeclarationUtils.getExistingDeclarationClass( typeDescr, pkgRegistry );
             type.setTypeClass( existingClass );
             type.setNovel( existingClass == null );
             type.setNature( existingClass == null ? TypeDeclaration.Nature.DEFINITION : TypeDeclaration.Nature.DECLARATION );
-
-            // Pre-populate from Java class annotations so that finalizeConfigurator()
-            // (which runs before wireFieldAccessors) sees the correct role, expiration,
-            // reactivity, and dynamic settings. DRL annotations applied next will override.
-            if ( existingClass != null ) {
-                TypeDeclaration.processTypeAnnotations( type,
-                        new Annotated.ClassAdapter( existingClass ),
-                        context.getBuilderConfiguration().getOption( PropertySpecificOption.KEY ) );
-            }
         }
 
-        processTypeAnnotations(typeDescr, type);
-        return type;
-    }
-
-    private void processTypeAnnotations( AbstractClassTypeDeclarationDescr typeDescr, TypeDeclaration type ) {
         try {
-            processAnnotations( typeDescr, type );
+            processAnnotations( typeDescr, type, context.getBuilderConfiguration().getOption( PropertySpecificOption.KEY ) );
         } catch (Exception e) {
             results.addBuilderResult(new TypeDeclarationError(typeDescr, e.getMessage() ) );
         }
+        return type;
     }
 
-    // Processes annotations from the DRL descriptor, overriding values pre-populated from
-    // Java class annotations in processTypeDeclaration(). Runs before finalizeConfigurator(),
-    // which needs @Role and @PropertyChangeSupport already set.
-    public static void processAnnotations( AbstractClassTypeDeclarationDescr typeDescr, TypeDeclaration type ) {
-        Role role = getTypedAnnotation(typeDescr, Role.class);
-        if (role != null) {
-            type.setRole(role.value());
+    public static void processAnnotations( AbstractClassTypeDeclarationDescr typeDescr, TypeDeclaration type, PropertySpecificOption propertySpecificOption ) {
+        Annotated annotated = toAnnotated(typeDescr);
+        if (type.getTypeClass() != null) {
+            annotated = Annotated.withFallback(annotated, new Annotated.ClassAdapter(type.getTypeClass()));
         }
+        TypeDeclaration.processTypeAnnotations( type, annotated, propertySpecificOption );
 
+        // @TypeSafe is read from DRL only, not from the Java class (see AlignAnnotationTest)
         TypeSafe typeSafe = getTypedAnnotation(typeDescr, TypeSafe.class);
         if (typeSafe != null) {
             type.setTypesafe(typeSafe.value());
@@ -114,10 +96,6 @@ public class TypeDeclarationFactory {
             type.setKind(TypeDeclaration.Kind.ENUM);
         } else if (typeDescr instanceof TypeDeclarationDescr && ((TypeDeclarationDescr)typeDescr).isTrait()) {
             type.setKind(TypeDeclaration.Kind.TRAIT);
-        }
-
-        if (typeDescr.hasAnnotation(PropertyChangeSupport.class)) {
-            type.setDynamic(true);
         }
     }
 
@@ -253,8 +231,9 @@ public class TypeDeclarationFactory {
                 }
         }
 
-        //different duration -> Incompatible
-        if (!nullSafeEqualityComparison(oldDeclaration.getDurationAttribute(), newDeclaration.getDurationAttribute())) {
+        //different duration -> Incompatible (a redeclaration may add a duration, but not change or remove it)
+        if (oldDeclaration.getDurationAttribute() != null
+                && !nullSafeEqualityComparison(oldDeclaration.getDurationAttribute(), newDeclaration.getDurationAttribute())) {
             throw new IncompatibleClassChangeError("Type Declaration " + newDeclaration.getTypeName() + " has a different"
                                                    + " duration: " + newDeclaration.getDurationAttribute()
                                                    + " != " + oldDeclaration.getDurationAttribute());

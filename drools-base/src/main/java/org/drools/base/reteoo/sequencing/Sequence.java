@@ -147,10 +147,20 @@ public class Sequence implements RuleConditionElement {
          controller.next(sequenceMemory, valueResolver);
     }
 
+    public void restart(SequenceMemory sequenceMemory, ValueResolver valueResolver) {
+        controller.restart(sequenceMemory, valueResolver);
+    }
+
     public interface SequenceController {
         default void start(SequenceMemory sequenceMemory, ValueResolver valueResolver) {
             sequenceMemory.setStep(0);
             sequenceMemory.sequence.steps[0].activate(sequenceMemory, valueResolver);
+        }
+
+        default void restart(SequenceMemory sequenceMemory, ValueResolver valueResolver) {
+            sequenceMemory.sequence.steps[sequenceMemory.getStep()].deactivate(sequenceMemory, valueResolver);
+            sequenceMemory.clearData();
+            start(sequenceMemory, valueResolver);
         }
 
         default void next(SequenceMemory memory, ValueResolver valueResolver) {
@@ -265,6 +275,10 @@ public class Sequence implements RuleConditionElement {
 
         public void setData(int filterIndex, FactHandle handle) {
             data.put(filterIndex, handle);
+        }
+
+        public void clearData() {
+            data.clearSlots();
         }
 
         public SignalAdapter activateSignalAdapter(int filterIndex, LogicGate gate, int signalAdapterIndex, int signalBitIndex) {

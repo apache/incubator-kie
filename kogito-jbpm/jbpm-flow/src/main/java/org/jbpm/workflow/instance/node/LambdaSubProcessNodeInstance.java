@@ -37,7 +37,6 @@ import org.jbpm.process.instance.context.exception.ExceptionScopeInstance;
 import org.jbpm.process.instance.impl.ContextInstanceFactory;
 import org.jbpm.process.instance.impl.ContextInstanceFactoryRegistry;
 import org.jbpm.process.instance.impl.ProcessInstanceImpl;
-import org.jbpm.ruleflow.core.Metadata;
 import org.jbpm.workflow.core.Node;
 import org.jbpm.workflow.core.impl.NodeIoHelper;
 import org.jbpm.workflow.core.node.SubProcessNode;
@@ -65,7 +64,6 @@ public class LambdaSubProcessNodeInstance extends StateBasedNodeInstance impleme
     private Map<String, List<ContextInstance>> subContextInstances = new HashMap<>();
 
     private String processInstanceId;
-    private boolean asyncWaitingNodeInstance;
 
     protected SubProcessNode getSubProcessNode() {
         return (SubProcessNode) getNode();
@@ -117,7 +115,6 @@ public class LambdaSubProcessNodeInstance extends StateBasedNodeInstance impleme
         subProcessInstance.start();
 
         this.processInstanceId = subProcessInstance.id();
-        this.asyncWaitingNodeInstance = hasAsyncNodeInstance(pi);
 
         if (!getSubProcessNode().isWaitForCompletion()) {
             triggerCompleted();
@@ -131,14 +128,6 @@ public class LambdaSubProcessNodeInstance extends StateBasedNodeInstance impleme
 
             addProcessListener();
         }
-    }
-
-    private boolean hasAsyncNodeInstance(org.kie.api.runtime.process.ProcessInstance pi) {
-        return Optional.ofNullable(pi)
-                .map(ProcessInstanceImpl.class::cast)
-                .map(instance -> instance.getMetaData().get(Metadata.ASYNC_WAITING))
-                .map(Boolean.class::cast)
-                .orElse(false);
     }
 
     @Override
@@ -161,10 +150,6 @@ public class LambdaSubProcessNodeInstance extends StateBasedNodeInstance impleme
 
     public String getProcessInstanceId() {
         return processInstanceId;
-    }
-
-    public boolean isAsyncWaitingNodeInstance() {
-        return asyncWaitingNodeInstance;
     }
 
     public void internalSetProcessInstanceId(String processInstanceId) {
