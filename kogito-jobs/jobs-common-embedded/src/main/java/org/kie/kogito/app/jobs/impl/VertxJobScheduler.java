@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.kie.kogito.app.jobs.api.JobDescriptionMerger;
 import org.kie.kogito.app.jobs.api.JobDetailsEventAdapter;
@@ -481,22 +482,20 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         if (processInstanceId != null) {
             final Callable<JobTimeoutExecution> intercepted = current;
             return () -> {
-                try {
-                    return ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
-                        try {
-                            return intercepted.call();
-                        } catch (RuntimeException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (RuntimeException e) {
-                    if (e.getCause() instanceof Exception && !(e.getCause() instanceof RuntimeException)) {
-                        throw (Exception) e.getCause();
+                // the lock executor cannot throw checked exceptions, so the failure is captured and rethrown as is once the lock is released
+                AtomicReference<Exception> failure = new AtomicReference<>();
+                JobTimeoutExecution execution = ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
+                    try {
+                        return intercepted.call();
+                    } catch (Exception e) {
+                        failure.set(e);
+                        return null;
                     }
-                    throw e;
+                });
+                if (failure.get() != null) {
+                    throw failure.get();
                 }
+                return execution;
             };
         }
 
