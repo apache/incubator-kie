@@ -440,7 +440,8 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
                 boolean shouldRun = jobStore.shouldRun(jobContext, jobId);
                 if (!shouldRun) {
                     LOG.trace("Timeout {} with jobId {} won't run", timerId, jobId);
-                    VertxJobScheduler.this.jobsScheduled.remove(mapKey);
+                    // only drop the entry if it still belongs to the timer that fired, it may have been rescheduled under the same key
+                    VertxJobScheduler.this.jobsScheduled.computeIfPresent(mapKey, (key, timerInfo) -> timerId.equals(timerInfo.timerId()) ? null : timerInfo);
                     return null;
                 }
 
