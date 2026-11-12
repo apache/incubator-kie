@@ -30,18 +30,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.kie.kogito.app.jobs.api.JobDescriptionMerger;
+import org.kie.kogito.app.jobs.api.JobDetailsEventAdapter;
 import org.kie.kogito.app.jobs.api.JobScheduler;
 import org.kie.kogito.app.jobs.api.JobSchedulerBuilder;
 import org.kie.kogito.app.jobs.api.JobTimeoutExecution;
 import org.kie.kogito.app.jobs.api.JobTimeoutInterceptor;
 import org.kie.kogito.app.jobs.integrations.ProcessInstanceJobDescriptionJobInstanceEventAdapter;
 import org.kie.kogito.app.jobs.integrations.ProcessInstanceJobDescriptionMerger;
+import org.kie.kogito.app.jobs.integrations.ProcessJobDescriptionJobInstanceEventAdapter;
+import org.kie.kogito.app.jobs.integrations.ProcessJobDescriptionMerger;
+import org.kie.kogito.app.jobs.integrations.UserTaskInstanceJobDescriptionJobInstanceEventAdapter;
+import org.kie.kogito.app.jobs.integrations.UserTaskInstanceJobDescriptorMerger;
 import org.kie.kogito.app.jobs.spi.JobContextFactory;
 import org.kie.kogito.app.jobs.spi.JobStore;
 import org.kie.kogito.app.jobs.spi.memory.MemoryJobContextFactory;
 import org.kie.kogito.app.jobs.spi.memory.MemoryJobStore;
 import org.kie.kogito.jobs.ExactExpirationTime;
+import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescription;
+import org.kie.kogito.jobs.descriptors.ProcessJobDescription;
+import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescription;
 import org.kie.kogito.process.impl.lock.ProcessInstanceAtomicLockStrategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -254,5 +263,95 @@ public class VertxJobSchedulerLockTest {
         assertThat(executor.getJobsExecuted()).contains(jobId);
 
         jobScheduler.close();
+    }
+
+    /**
+     * User task timers must lock on the owning process instance id, not on the job id
+     * (which is what the job correlationId holds for this kind of job).
+     */
+    @Test
+    public void testUserTaskJobLocksOnProcessInstanceId() throws Exception {
+        final String jobId = "usertask-job-4";
+        final String processInstanceId = "pi-usertask-789";
+
+        UserTaskInstanceJobDescription jobDescription = UserTaskInstanceJobDescription.newUserTaskInstanceJobDescriptionBuilder()
+                .id(jobId)
+                .userTaskInstanceId("ut-1")
+                .metadata(new java.util.HashMap<>())
+                .processId("testProcess")
+                .processInstanceId(processInstanceId)
+                .expirationTime(ExactExpirationTime.of(ZonedDateTime.now().plus(Duration.ofMillis(50))))
+                .build();
+
+        LockObservation observation = runAndObserveLocks(jobDescription,
+                new UserTaskInstanceJobDescriptionJobInstanceEventAdapter("http://localhost:8080"),
+                new UserTaskInstanceJobDescriptorMerger(),
+                processInstanceId, jobId);
+
+        assertThat(observation.executed).isTrue();
+        assertThat(observation.lockedKey).as("process instance lock must be held for user task jobs").isTrue();
+        assertThat(observation.lockedOtherKey).as("job id must not be used as lock key").isFalse();
+    }
+
+    /**
+     * Process definition timers (e.g. start timers) are not bound to any process instance,
+     * so no lock must be taken, in particular not on the process id.
+     */
+    @Test
+    public void testProcessDefinitionJobIsNotLocked() throws Exception {
+        final String processId = "testProcessDefinition";
+
+        ProcessJobDescription jobDescription = ProcessJobDescription.of(
+                ExactExpirationTime.of(ZonedDateTime.now().plus(Duration.ofMillis(50))), processId, "1.0");
+
+        LockObservation observation = runAndObserveLocks(jobDescription,
+                new ProcessJobDescriptionJobInstanceEventAdapter("http://localhost:8080"),
+                new ProcessJobDescriptionMerger(),
+                processId, jobDescription.id());
+
+        assertThat(observation.executed).isTrue();
+        assertThat(observation.lockedKey).as("process definition jobs must not lock on the process id").isFalse();
+        assertThat(observation.lockedOtherKey).as("process definition jobs must not lock on the job id").isFalse();
+    }
+
+    private static class LockObservation {
+        boolean executed;
+        boolean lockedKey;
+        boolean lockedOtherKey;
+    }
+
+    private LockObservation runAndObserveLocks(JobDescription jobDescription, JobDetailsEventAdapter adapter, JobDescriptionMerger merger,
+            String key, String otherKey) throws Exception {
+        LockObservation observation = new LockObservation();
+
+        JobTimeoutInterceptor observingInterceptor = callable -> () -> {
+            observation.lockedKey = ProcessInstanceAtomicLockStrategy.instance().isLockedByCurrentThread(key);
+            observation.lockedOtherKey = ProcessInstanceAtomicLockStrategy.instance().isLockedByCurrentThread(otherKey);
+            return callable.call();
+        };
+
+        LatchExecutionJobSchedulerListener listener = new LatchExecutionJobSchedulerListener();
+        TestJobExecutor executor = new TestJobExecutor();
+
+        JobScheduler jobScheduler = JobSchedulerBuilder.newJobSchedulerBuilder()
+                .withJobExecutors(executor)
+                .withJobEventAdapters(adapter)
+                .withEventPublishers(new TestEventPublisher())
+                .withJobContextFactory(new MemoryJobContextFactory())
+                .withJobStore(new MemoryJobStore())
+                .withJobSchedulerListeners(listener)
+                .withJobDescriptorMergers(merger)
+                .withTimeoutInterceptor(observingInterceptor)
+                .build();
+
+        try {
+            jobScheduler.init();
+            jobScheduler.schedule(jobDescription);
+            listener.waitForExecution(3000L);
+            observation.executed = listener.isExecuted() && executor.getJobsExecuted().contains(jobDescription.id());
+        } finally {
+            jobScheduler.close();
+        }
+        return observation;
     }
 }

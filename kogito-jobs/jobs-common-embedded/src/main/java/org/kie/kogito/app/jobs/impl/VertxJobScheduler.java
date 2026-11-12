@@ -74,7 +74,7 @@ import io.vertx.core.WorkerExecutor;
  */
 public class VertxJobScheduler implements JobScheduler, Handler<Long> {
 
-    private record TimerInfo(String jobId, Integer retries, Long timerId, Date timeout, String correlationId) {
+    private record TimerInfo(String jobId, Integer retries, Long timerId, Date timeout, String processInstanceId) {
 
     }
 
@@ -474,10 +474,10 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         }
 
         TimerInfo timerInfo = jobsScheduled.get(mapKey);
-        String correlationId = timerInfo != null ? timerInfo.correlationId() : null;
-        if (correlationId != null) {
+        // only jobs bound to a process instance (process instance and user task timers) are locked, process definition jobs are not
+        final String processInstanceId = timerInfo != null ? timerInfo.processInstanceId() : null;
+        if (processInstanceId != null) {
             final Callable<JobTimeoutExecution> intercepted = current;
-            final String processInstanceId = correlationId;
             return () -> {
                 try {
                     return ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
@@ -622,7 +622,7 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
                 timeout(timerId, mapKey, jobDetails.getId());
             }
         });
-        return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime(), jobDetails.getCorrelationId());
+        return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime(), JobDetailsHelper.resolveProcessInstanceId(jobDetails));
     }
 
     private void removeTimerInfo(TimerInfo timerInfo) {
