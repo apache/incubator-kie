@@ -51,6 +51,7 @@ import org.drools.commands.runtime.process.AbortWorkItemCommand;
 import org.drools.commands.runtime.process.CompleteWorkItemCommand;
 import org.drools.commands.runtime.process.SignalEventCommand;
 import org.drools.commands.runtime.process.StartProcessCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -92,6 +93,7 @@ public class XStreamXML {
         xstream.addImplicitCollection( BatchExecutionCommandImpl.class,
                                        "commands" );
 
+        xstream.registerConverter( new ActivateRuleFlowGroupConverter( xstream ) );
         xstream.registerConverter( new AgendaGroupSetFocusConverter( xstream ) );
         xstream.registerConverter( new ClearActivationGroupConverter( xstream ) );
         xstream.registerConverter( new ClearAgendaConverter( xstream ) );
@@ -1212,6 +1214,36 @@ public class XStreamXML {
 
         public boolean canConvert(Class clazz) {
             return QueryResults.class.isAssignableFrom( clazz );
+        }
+    }
+
+    public static class ActivateRuleFlowGroupConverter extends AbstractCollectionConverter
+            implements
+            Converter {
+
+        public ActivateRuleFlowGroupConverter(XStream xstream) {
+            super( xstream.getMapper() );
+        }
+
+        public void marshal(Object object,
+                            HierarchicalStreamWriter writer,
+                            MarshallingContext context) {
+            ActivateRuleFlowGroupCommand cmd = (ActivateRuleFlowGroupCommand) object;
+
+            writer.addAttribute( "name",
+                                 cmd.getName() );
+        }
+
+        public Object unmarshal(HierarchicalStreamReader reader,
+                                UnmarshallingContext context) {
+            String name = reader.getAttribute( "name" );
+
+            ActivateRuleFlowGroupCommand cmd = new ActivateRuleFlowGroupCommand( name );
+            return cmd;
+        }
+
+        public boolean canConvert(Class clazz) {
+            return clazz.equals( ActivateRuleFlowGroupCommand.class );
         }
     }
 

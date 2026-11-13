@@ -30,6 +30,15 @@ public interface Drools extends DroolsEntryPoint {
 
     void setFocus(String focus);
 
+    /**
+     * Activates the given ruleflow-group.
+     * @param name the name of the ruleflow-group to activate
+     * @since 10.4.0
+     * @apiNote Equivalent to {@code getKieRuntime().getAgenda().getRuleFlowGroup(name).activate()}.
+     *          This is the ruleflow-group counterpart of {@link #setFocus(String)}.
+     */
+    void activateRuleFlowGroup(String name);
+
     Channel getChannel(String name);
 
     void logicalInsert(Object object);

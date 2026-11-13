@@ -143,7 +143,17 @@ public interface KieCommands extends KieService {
     Command<FactHandle> fromExternalFactHandleCommand(String factHandleExternalForm, boolean disconnected);
 
     Command newAgendaGroupSetFocus(String name);
-    
+
+    /**
+     * Creates a command that activates the given ruleflow-group.
+     * @param name the name of the ruleflow-group to activate
+     * @return the command
+     * @since 10.4.0
+     * @apiNote Equivalent to {@code ksession.getAgenda().getRuleFlowGroup(name).activate()}.
+     *          This is the ruleflow-group counterpart of {@link #newAgendaGroupSetFocus(String)}.
+     */
+    Command newActivateRuleFlowGroup(String name);
+
     Command newGetFactHandles();
 
     Command newGetFactHandles(String outIdentifier);

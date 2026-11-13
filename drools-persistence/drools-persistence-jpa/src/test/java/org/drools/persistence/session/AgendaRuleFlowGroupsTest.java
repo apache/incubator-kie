@@ -100,6 +100,25 @@ public class AgendaRuleFlowGroupsTest {
         assertThat(groups[1].getName()).isEqualTo("ruleflow-group");
 	}
 
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testRuleFlowGroupActivateViaPublicApi(boolean locking) throws Exception {
+        // CommandBasedStatefulKnowledgeSessionImpl.getAgenda().getRuleFlowGroup().activate() goes through ActivateRuleFlowGroupCommand
+        CommandBasedStatefulKnowledgeSessionImpl ksession = createSession(locking, -1, "ruleflow-groups.drl");
+        try {
+            List<String> list = new ArrayList<String>();
+            list.add("Test");
+            ksession.insert(list);
+
+            assertThat(ksession.fireAllRules()).isEqualTo(0);
+
+            ksession.getAgenda().getRuleFlowGroup("ruleflow-group").activate();
+            assertThat(ksession.fireAllRules()).isEqualTo(1);
+        } finally {
+            ksession.dispose();
+        }
+    }
+
     @DisabledIfSystemProperty(named = "drools.drl.antlr4.parser.enabled", matches = "true")
     @ParameterizedTest
     @MethodSource("parameters")
