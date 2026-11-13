@@ -3061,6 +3061,7 @@
             </archive>
             <quiet>true</quiet>
             <doclint>none</doclint>
+            <legacyMode>true</legacyMode>
             <tags>
               <tag>
                 <name>apiNote</name>
