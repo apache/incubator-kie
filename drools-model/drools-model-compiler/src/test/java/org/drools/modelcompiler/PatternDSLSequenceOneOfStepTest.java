@@ -33,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -1516,6 +1517,268 @@ public class PatternDSLSequenceOneOfStepTest {
         assertThat(results)
             .as("after veto-reset the sequence is reusable: second attempt with start+alarmC+dFact must fire once")
             .containsExactly("fired");
+    }
+
+    // ── oneOf() as the FIRST step, followed by absent() ──────────────────────
+    //
+    // Shape: sequence(oneOf(a, b), absent(blocker), done)
+    //
+    // rewriteRevertingGateSteps() folds oneOf(a, b), absent(blocker) and done
+    // into one composite and keeps the absent() in its written position.
+    // The leading-absence check in ViewPatternBuilder runs on the steps as
+    // the user wrote them, so the leading oneOf() is seen and the rule is not
+    // rejected with "leading absent()".
+    // oneOf() at the leading position is valid (see
+    // specs/2026-10-21-leading-absent-rejection-design.md), so this shape
+    // must build and behave like the start-prefixed variant.
+    @Test
+    public void leadingOneOfFollowedByAbsentThenPositive_fires() {
+        Variable<Toy> alarmA  = declarationOf(Toy.class);
+        Variable<Toy> alarmB  = declarationOf(Toy.class);
+        Variable<Toy> blocker = declarationOf(Toy.class);
+
+        Rule rule = rule("leading-xor-absent-positive-fires").build(
+                pattern(person),
+                sequence(
+                        oneOf(
+                                pattern(alarmA).expr("isAlarmA", t -> t.getName().equals("alarmA")),
+                                pattern(alarmB).expr("isAlarmB", t -> t.getName().equals("alarmB"))
+                        ),
+                        absent(pattern(blocker).expr("isBlocker", t -> t.getName().equals("blocker"))),
+                        pattern(toy).expr("isDone", t -> t.getName().equals("done"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("alarmA")); // exactly one XOR child matched
+        insertAndFire(new Toy("done"));   // no blocker → rule fires
+        assertThat(results)
+                .as("sequence(oneOf, absent, positive) must build and fire; oneOf() is valid in the leading position")
+                .containsExactly("fired");
+    }
+
+    // ── absent() after a oneOf() run: window semantics ───────────────────────
+    //
+    // rewriteRevertingGateSteps() keeps an interleaved absent() in its written
+    // position inside the folded and(oneOf, absent, ..., trigger) composite, and
+    // KiePackagesBuilder arms its veto only once the gate written before it is
+    // MATCHED.  absent(blocker) sits AFTER oneOf(a, b), so it only guards the
+    // window between the oneOf() being satisfied and the trigger.  A blocker
+    // arriving before the oneOf() is satisfied is outside that window and must
+    // not veto.
+
+    @Test
+    public void oneOfThenAbsent_blockerBeforeAlarm_isOutsideWindow_fires() {
+        // sequence(start, oneOf(a,b), absent(blocker), done)
+        Variable<Toy> alarmA  = declarationOf(Toy.class);
+        Variable<Toy> alarmB  = declarationOf(Toy.class);
+        Variable<Toy> blocker = declarationOf(Toy.class);
+
+        Rule rule = rule("xor-absent-blocker-before-alarm").build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("isStart", t -> t.getName().equals("start")),
+                        oneOf(
+                                pattern(alarmA).expr("isAlarmA", t -> t.getName().equals("alarmA")),
+                                pattern(alarmB).expr("isAlarmB", t -> t.getName().equals("alarmB"))
+                        ),
+                        absent(pattern(blocker).expr("isBlocker", t -> t.getName().equals("blocker"))),
+                        pattern(toy).expr("isDone", t -> t.getName().equals("done"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("blocker")); // before oneOf() satisfied: outside absent() window
+        insertAndFire(new Toy("alarmA"));  // exactly one XOR child matched
+        insertAndFire(new Toy("done"));
+        assertThat(results)
+                .as("absent() written after oneOf() must not veto on a blocker that arrived before the oneOf() was satisfied")
+                .containsExactly("fired");
+    }
+
+    // ── oneOf(), absent(), oneOf() in one run ────────────────────────────────
+    //
+    // Shape: sequence(start, oneOf(a, b), absent(blocker), oneOf(c, d), done)
+    // The absent() is interleaved inside a run of two XOR steps; the rewrite
+    // collects it into the same run and keeps it in its written position,
+    // between the two oneOf() gates.
+
+    private Rule buildOneOfAbsentOneOfRule(String name) {
+        Variable<Toy> alarmA  = declarationOf(Toy.class);
+        Variable<Toy> alarmB  = declarationOf(Toy.class);
+        Variable<Toy> alarmC  = declarationOf(Toy.class);
+        Variable<Toy> alarmD  = declarationOf(Toy.class);
+        Variable<Toy> blocker = declarationOf(Toy.class);
+
+        return rule(name).build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("isStart", t -> t.getName().equals("start")),
+                        oneOf(
+                                pattern(alarmA).expr("isAlarmA", t -> t.getName().equals("alarmA")),
+                                pattern(alarmB).expr("isAlarmB", t -> t.getName().equals("alarmB"))
+                        ),
+                        absent(pattern(blocker).expr("isBlocker", t -> t.getName().equals("blocker"))),
+                        oneOf(
+                                pattern(alarmC).expr("isAlarmC", t -> t.getName().equals("alarmC")),
+                                pattern(alarmD).expr("isAlarmD", t -> t.getName().equals("alarmD"))
+                        ),
+                        pattern(toy).expr("isDone", t -> t.getName().equals("done"))
+                ),
+                execute(() -> results.add("fired"))
+        );
+    }
+
+    @Test
+    public void oneOfAbsentOneOf_noBlocker_fires() {
+        ksession = makeKSession(buildOneOfAbsentOneOfRule("xor-absent-xor-fires"));
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("alarmC"));
+        insertAndFire(new Toy("done"));
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void oneOfAbsentOneOf_blockerBetweenGroups_vetoes() {
+        ksession = makeKSession(buildOneOfAbsentOneOfRule("xor-absent-xor-veto"));
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("blocker")); // between the two oneOf() groups: inside the absent() window
+        insertAndFire(new Toy("alarmC"));
+        insertAndFire(new Toy("done"));
+        assertThat(results)
+                .as("blocker between oneOf(a,b) and oneOf(c,d) must veto")
+                .isEmpty();
+    }
+
+    @Test
+    public void oneOfAbsentOneOf_blockerBeforeFirstGroup_isOutsideWindow_fires() {
+        ksession = makeKSession(buildOneOfAbsentOneOfRule("xor-absent-xor-blocker-early"));
+        insertAndFire(new Person("anchor"));
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("blocker")); // before the first oneOf() is satisfied: outside the window
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("alarmC"));
+        insertAndFire(new Toy("done"));
+        assertThat(results)
+                .as("blocker before oneOf(a,b) is outside the absent() window and must not veto")
+                .containsExactly("fired");
+    }
+
+    // ── re-arming after a veto reset ─────────────────────────────────────────
+    //
+    // The deferred absent() adapters are registered only when the preceding oneOf() is
+    // MATCHED. After a veto reset the step is deactivated and re-activated, so the guard
+    // must be disarmed again (outside the window) and re-armed on the next attempt.
+
+    @Test
+    public void oneOfThenAbsent_afterVetoReset_guardIsDisarmedUntilOneOfMatchesAgain() {
+        ksession = makeKSession(buildOneOfAbsentRule("xor-absent-rearm-disarmed"));
+        insertAndFire(new Person("anchor"));
+
+        // Attempt 1: oneOf satisfied, then blocker vetoes -> reset to step 0.
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("blocker"));
+        assertThat(results).isEmpty();
+
+        // Attempt 2: blocker arrives BEFORE the oneOf is satisfied -> outside the window.
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("blocker"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("done"));
+        assertThat(results)
+                .as("after a veto reset the deferred absent() must be disarmed until oneOf() matches again")
+                .containsExactly("fired");
+    }
+
+    @Test
+    public void oneOfThenAbsent_afterVetoReset_guardIsRearmedOnceOneOfMatchesAgain() {
+        ksession = makeKSession(buildOneOfAbsentRule("xor-absent-rearm-armed"));
+        insertAndFire(new Person("anchor"));
+
+        // Attempt 1: veto -> reset.
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("blocker"));
+
+        // Attempt 2: oneOf satisfied again, then a blocker -> must veto a second time.
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmB"));
+        insertAndFire(new Toy("blocker"));
+        insertAndFire(new Toy("done"));
+        assertThat(results)
+                .as("the absent() guard must be re-armed when oneOf() matches in the next attempt")
+                .isEmpty();
+
+        // Attempt 3: clean path still works after two resets.
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("done"));
+        assertThat(results).containsExactly("fired");
+    }
+
+    @Test
+    public void oneOfThenAbsent_afterCompletionAndAnchorUpdate_nextAttemptStillHonoursWindow() {
+        // A completed sequence does not restart by itself (see
+        // PatternDSLSequenceLifecycleTest.sequenceDoesNotFireAgainAfterCompletion);
+        // an anchor update restarts it. The restarted run must honour the same window.
+        ksession = makeKSession(buildOneOfAbsentRule("xor-absent-after-fire"));
+        Person anchor = new Person("anchor");
+        FactHandle anchorHandle = ksession.insert(anchor);
+        ksession.fireAllRules();
+
+        // Attempt 1: completes and fires.
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("done"));
+        assertThat(results).containsExactly("fired");
+
+        // Attempt 2: anchor update restarts; blocker before oneOf is outside the window -> fires again.
+        ksession.update(anchorHandle, anchor);
+        ksession.fireAllRules();
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("blocker"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("done"));
+        assertThat(results).containsExactly("fired", "fired");
+
+        // Attempt 3: anchor update restarts; blocker after oneOf vetoes -> no third firing.
+        ksession.update(anchorHandle, anchor);
+        ksession.fireAllRules();
+        insertAndFire(new Toy("start"));
+        insertAndFire(new Toy("alarmA"));
+        insertAndFire(new Toy("blocker"));
+        insertAndFire(new Toy("done"));
+        assertThat(results).containsExactly("fired", "fired");
+    }
+
+    private Rule buildOneOfAbsentRule(String name) {
+        Variable<Toy> alarmA  = declarationOf(Toy.class);
+        Variable<Toy> alarmB  = declarationOf(Toy.class);
+        Variable<Toy> blocker = declarationOf(Toy.class);
+
+        return rule(name).build(
+                pattern(person),
+                sequence(
+                        pattern(toy).expr("isStart", t -> t.getName().equals("start")),
+                        oneOf(
+                                pattern(alarmA).expr("isAlarmA", t -> t.getName().equals("alarmA")),
+                                pattern(alarmB).expr("isAlarmB", t -> t.getName().equals("alarmB"))
+                        ),
+                        absent(pattern(blocker).expr("isBlocker", t -> t.getName().equals("blocker"))),
+                        pattern(toy).expr("isDone", t -> t.getName().equals("done"))
+                ),
+                execute(() -> results.add("fired"))
+        );
     }
 
     @AfterEach
