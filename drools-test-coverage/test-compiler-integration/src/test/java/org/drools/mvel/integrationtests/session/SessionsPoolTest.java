@@ -19,6 +19,7 @@
 package org.drools.mvel.integrationtests.session;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -36,6 +37,7 @@ import org.drools.mvel.compiler.FactB;
 import org.drools.mvel.compiler.FactC;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
+import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -57,6 +59,7 @@ import org.kie.internal.event.rule.RuleEventListener;
 import org.kie.internal.event.rule.RuleEventManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 
 public class SessionsPoolTest {
@@ -206,6 +209,25 @@ public class SessionsPoolTest {
         list.clear();
         session.execute( "test" );
         assertThat(list.size()).isEqualTo(1);
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKieSessionsPoolWithStatelessKieSessionModel(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // incubator-kie#6938: a pool only holds stateful sessions, so a stateless model gets a clear error
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls(KieUtil.generateReleaseId("test"), kieBaseTestConfiguration,
+                                                                 KieSessionTestConfiguration.STATELESS_REALTIME, new HashMap<>(),
+                                                                 "rule R1 when then end\n");
+        KieContainerSessionsPool pool = KieServices.get().newKieContainer(kieModule.getReleaseId()).newKieSessionsPool( 1 );
+        try {
+            String name = KieSessionTestConfiguration.KIE_SESSION_MODEL_NAME;
+            String expected = "KieSessionModel " + name + " is stateless, but a KieContainerSessionsPool only pools sessions of a stateful KieSessionModel. " +
+                              "Use KieContainer.newStatelessKieSession(\"" + name + "\") for a stateless session.";
+            assertThatThrownBy(() -> pool.newStatelessKieSession( name )).hasMessage(expected);
+            assertThatThrownBy(() -> pool.newKieSession( name )).hasMessage(expected);
+        } finally {
+            pool.shutdown();
+        }
     }
 
     private KieContainer getKieContainer(KieBaseTestConfiguration kieBaseTestConfiguration) {
