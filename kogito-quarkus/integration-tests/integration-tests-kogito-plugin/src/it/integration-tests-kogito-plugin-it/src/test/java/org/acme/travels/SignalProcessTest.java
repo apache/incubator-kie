@@ -51,7 +51,7 @@ public class SignalProcessTest {
         given()
                 .contentType(ContentType.JSON)
             .when()
-                .body("testvalue")
+                .body("\"testvalue\"")
                 .post("/greetings/{pid}/signalwithdata", pid)
             .then()
                 .statusCode(200)
