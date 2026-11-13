@@ -65,6 +65,7 @@
     <version.io.smallrye-health>4.3.0</version.io.smallrye-health>
     <version.com.github.stephenc.jcip>1.0-1</version.com.github.stephenc.jcip>
     <version.org.graalvm.nativeimage>23.1.2</version.org.graalvm.nativeimage>
+    <version.org.jboss.resteasy.core>6.2.20.Final</version.org.jboss.resteasy.core>
     <version.org.jredisearch>2.2.0</version.org.jredisearch>
     <version.org.json>20260719</version.org.json>
     <version.io.projectreactor>3.8.7</version.io.projectreactor>
@@ -196,6 +197,44 @@
         <groupId>org.mongodb</groupId>
         <artifactId>mongodb-crypt</artifactId>
         <version>${version.mongodb-driver-sync}</version>
+      </dependency>
+      <!-- Pin to 6.2.20.Final (version.org.jboss.resteasy.core). Remove when quarkus-bom ships >= 6.2.20.Final.
+           Must appear before the quarkus-bom import to take precedence
+           (first explicit entry wins in Maven dependencyManagement). -->
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-core</artifactId>
+        <version>${version.org.jboss.resteasy.core}</version>
+        <!-- Mirror the exclusions quarkus-bom declares for resteasy-core; a pin replaces them. -->
+        <exclusions>
+          <exclusion>
+            <groupId>org.jboss.spec.javax.annotation</groupId>
+            <artifactId>jboss-annotations-api_1.3_spec</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss</groupId>
+            <artifactId>jandex</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-core-spi</artifactId>
+        <version>${version.org.jboss.resteasy.core}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.jboss.spec.javax.annotation</groupId>
+            <artifactId>jboss-annotations-api_1.3_spec</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.opentelemetry.instrumentation</groupId>
