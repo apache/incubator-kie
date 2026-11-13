@@ -63,6 +63,19 @@ public class JobDescriptionHelper {
         return correlationId;
     }
 
+    /**
+     * Resolves the id of the process instance that owns the job, if any. Process definition jobs
+     * (e.g. start timers) are not bound to a process instance and return null.
+     */
+    public static <T extends JobDescription> String resolveProcessInstanceId(T jobDescription) {
+        if (jobDescription instanceof ProcessInstanceJobDescription processInstanceJobDescription) {
+            return processInstanceJobDescription.processInstanceId();
+        } else if (jobDescription instanceof UserTaskInstanceJobDescription userTaskInstanceJobDescription) {
+            return userTaskInstanceJobDescription.processInstanceId();
+        }
+        return null;
+    }
+
     public static <T extends JobDescription> String resolveProcessId(T jobDescription) {
         String processId = null;
         if (jobDescription instanceof ProcessJobDescription processJobDescription) {

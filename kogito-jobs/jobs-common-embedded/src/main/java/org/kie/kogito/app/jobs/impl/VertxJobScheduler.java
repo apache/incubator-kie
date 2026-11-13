@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.kie.kogito.app.jobs.api.JobDescriptionMerger;
 import org.kie.kogito.app.jobs.api.JobDetailsEventAdapter;
@@ -59,6 +60,7 @@ import org.kie.kogito.jobs.service.model.JobExecutionExceptionDetails;
 import org.kie.kogito.jobs.service.model.JobStatus;
 import org.kie.kogito.jobs.service.model.RecipientInstance;
 import org.kie.kogito.jobs.service.utils.DateUtil;
+import org.kie.kogito.process.impl.lock.ProcessInstanceAtomicLockStrategy;
 import org.kie.kogito.timer.Trigger;
 import org.kie.kogito.timer.impl.SimpleTimerTrigger;
 import org.slf4j.Logger;
@@ -418,12 +420,16 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         reconcileScheduling(null, jobContext, cancelledJobDetails);
     }
 
-    private void timeout(Long timerId, String jobId) {
+    private void timeout(Long timerId, String mapKey, String jobId, String processInstanceId) {
         LOG.debug("Executing timeout with timer Id {} and jobId {}", timerId, jobId);
-        workerExecutor.executeBlocking(newTimeoutTask(timerId, jobId), false);
+        workerExecutor.executeBlocking(newTimeoutTask(timerId, mapKey, jobId, processInstanceId), false);
     }
 
-    private Callable<JobTimeoutExecution> newTimeoutTask(Long timerId, String jobId) {
+    /**
+     * @param processInstanceId the process instance the job belongs to, resolved when the timer was created (not at fire time,
+     *        as the scheduled entry may have been removed in the meantime), or null if the job is not bound to a process instance
+     */
+    private Callable<JobTimeoutExecution> newTimeoutTask(Long timerId, String mapKey, String jobId, String processInstanceId) {
         Callable<JobTimeoutExecution> current = new Callable<JobTimeoutExecution>() {
             @Override
             public JobTimeoutExecution call() throws Exception {
@@ -434,7 +440,8 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
                 boolean shouldRun = jobStore.shouldRun(jobContext, jobId);
                 if (!shouldRun) {
                     LOG.trace("Timeout {} with jobId {} won't run", timerId, jobId);
-                    VertxJobScheduler.this.jobsScheduled.remove(jobId);
+                    // only drop the entry if it still belongs to the timer that fired, it may have been rescheduled under the same key
+                    VertxJobScheduler.this.jobsScheduled.computeIfPresent(mapKey, (key, timerInfo) -> timerId.equals(timerInfo.timerId()) ? null : timerInfo);
                     return null;
                 }
 
@@ -471,6 +478,28 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         for (JobTimeoutInterceptor interceptor : interceptors) {
             current = interceptor.chainIntercept(current);
         }
+
+        // only jobs bound to a process instance (process instance and user task timers) are locked, process definition jobs are not
+        if (processInstanceId != null) {
+            final Callable<JobTimeoutExecution> intercepted = current;
+            return () -> {
+                // the lock executor cannot throw checked exceptions, so the failure is captured and rethrown as is once the lock is released
+                AtomicReference<Exception> failure = new AtomicReference<>();
+                JobTimeoutExecution execution = ProcessInstanceAtomicLockStrategy.instance().executeOperation(processInstanceId, () -> {
+                    try {
+                        return intercepted.call();
+                    } catch (Exception e) {
+                        failure.set(e);
+                        return null;
+                    }
+                });
+                if (failure.get() != null) {
+                    throw failure.get();
+                }
+                return execution;
+            };
+        }
+
         return current;
     }
 
@@ -588,10 +617,12 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         ZonedDateTime now = DateUtil.now();
         Long diff = ChronoUnit.MILLIS.between(now, trigger);
         Long delay = Math.max(1, diff);
+        String mapKey = getMapKey(jobDetails);
+        String processInstanceId = JobDetailsHelper.resolveProcessInstanceId(jobDetails);
         Long timerId = this.vertx.setTimer(delay, new Handler<Long>() {
             @Override
             public void handle(Long timerId) {
-                timeout(timerId, jobDetails.getId());
+                timeout(timerId, mapKey, jobDetails.getId(), processInstanceId);
             }
         });
         return new TimerInfo(jobDetails.getId(), jobDetails.getRetries(), timerId, jobDetails.getTrigger().hasNextFireTime());
