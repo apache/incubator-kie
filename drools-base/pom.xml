@@ -38,6 +38,7 @@
   <properties>
     <java.module.name>org.drools.base</java.module.name>
     <surefire.forkCount>2</surefire.forkCount>
+    <maven.javadoc.skip>false</maven.javadoc.skip>
   </properties>
 
   <dependencies>

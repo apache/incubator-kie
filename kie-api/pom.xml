@@ -36,6 +36,7 @@
 
   <properties>
     <java.module.name>org.kie.api</java.module.name>
+    <maven.javadoc.skip>false</maven.javadoc.skip>
   </properties>
 
   <build>
