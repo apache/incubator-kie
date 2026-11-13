@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<!--
+  An inclusive split starts "TaskA" and "TaskB". "TaskB" is followed by two directly connected exclusive splits
+  that form a cycle without any activity in between, so the reachability check of the inclusive join must
+  not follow the cycle endlessly.
+  Multiple incoming connections to a split are only allowed with jbpm.enable.multi.con.
+-->
+<definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:tns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd" id="Definition" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+  <process id="InclusiveGatewayWithXorOnlyCycle" tns:version="1" tns:packageName="org.jbpm.bpmn2.flow" tns:adHoc="false" name="InclusiveGatewayWithXorOnlyCycle" isExecutable="true" processType="Private">
+    <extensionElements>
+      <tns:metaData name="jbpm.enable.multi.con">
+        <tns:metaValue>true</tns:metaValue>
+      </tns:metaData>
+    </extensionElements>
+    <startEvent id="_1" name="Start">
+      <outgoing>_1-_2</outgoing>
+    </startEvent>
+    <inclusiveGateway id="_2" name="OR diverging" gatewayDirection="Diverging">
+      <incoming>_1-_2</incoming>
+      <outgoing>_2-_3</outgoing>
+      <outgoing>_2-_4</outgoing>
+    </inclusiveGateway>
+    <task id="_3" tns:taskName="taskA" name="TaskA">
+      <incoming>_2-_3</incoming>
+      <outgoing>_3-_10</outgoing>
+    </task>
+    <task id="_4" tns:taskName="taskB" name="TaskB">
+      <incoming>_2-_4</incoming>
+      <outgoing>_4-_5</outgoing>
+    </task>
+    <exclusiveGateway id="_5" name="XOR 1" gatewayDirection="Diverging" default="_5-_10">
+      <incoming>_4-_5</incoming>
+      <incoming>_6-_5</incoming>
+      <outgoing>_5-_6</outgoing>
+      <outgoing>_5-_10</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="_6" name="XOR 2" gatewayDirection="Diverging" default="_6-_10">
+      <incoming>_5-_6</incoming>
+      <outgoing>_6-_5</outgoing>
+      <outgoing>_6-_10</outgoing>
+    </exclusiveGateway>
+    <inclusiveGateway id="_10" name="OR converging" gatewayDirection="Converging">
+      <incoming>_3-_10</incoming>
+      <incoming>_5-_10</incoming>
+      <incoming>_6-_10</incoming>
+      <outgoing>_10-_11</outgoing>
+    </inclusiveGateway>
+    <task id="_11" tns:taskName="afterJoin" name="AfterJoinTask">
+      <incoming>_10-_11</incoming>
+      <outgoing>_11-_13</outgoing>
+    </task>
+    <endEvent id="_13" name="End">
+      <incoming>_11-_13</incoming>
+    </endEvent>
+    <sequenceFlow id="_1-_2" tns:priority="1" sourceRef="_1" targetRef="_2"/>
+    <sequenceFlow id="_2-_3" tns:priority="1" sourceRef="_2" targetRef="_3">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return true;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_2-_4" tns:priority="1" sourceRef="_2" targetRef="_4">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return true;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_3-_10" tns:priority="1" sourceRef="_3" targetRef="_10"/>
+    <sequenceFlow id="_4-_5" tns:priority="1" sourceRef="_4" targetRef="_5"/>
+    <sequenceFlow id="_5-_6" tns:priority="1" sourceRef="_5" targetRef="_6">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return false;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_5-_10" tns:priority="2" sourceRef="_5" targetRef="_10"/>
+    <sequenceFlow id="_6-_5" tns:priority="1" sourceRef="_6" targetRef="_5">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return false;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_6-_10" tns:priority="2" sourceRef="_6" targetRef="_10"/>
+    <sequenceFlow id="_10-_11" tns:priority="1" sourceRef="_10" targetRef="_11"/>
+    <sequenceFlow id="_11-_13" tns:priority="1" sourceRef="_11" targetRef="_13"/>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="InclusiveGatewayWithXorOnlyCycle">
+      <bpmndi:BPMNShape id="BPMNShape_1" bpmnElement="_1">
+        <dc:Bounds height="48.0" width="48.0" x="30.0" y="177.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_2" bpmnElement="_2">
+        <dc:Bounds height="48.0" width="48.0" x="130.0" y="177.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_3" bpmnElement="_3">
+        <dc:Bounds height="48.0" width="100.0" x="300.0" y="60.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_4" bpmnElement="_4">
+        <dc:Bounds height="48.0" width="100.0" x="230.0" y="300.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_5" bpmnElement="_5">
+        <dc:Bounds height="48.0" width="48.0" x="380.0" y="300.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_6" bpmnElement="_6">
+        <dc:Bounds height="48.0" width="48.0" x="500.0" y="300.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_7" bpmnElement="_10">
+        <dc:Bounds height="48.0" width="48.0" x="700.0" y="177.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_8" bpmnElement="_11">
+        <dc:Bounds height="48.0" width="100.0" x="800.0" y="177.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_9" bpmnElement="_13">
+        <dc:Bounds height="48.0" width="48.0" x="950.0" y="177.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_1" bpmnElement="_1-_2">
+        <di:waypoint xsi:type="dc:Point" x="78.0" y="201.0"/>
+        <di:waypoint xsi:type="dc:Point" x="130.0" y="201.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_2" bpmnElement="_2-_3">
+        <di:waypoint xsi:type="dc:Point" x="154.0" y="177.0"/>
+        <di:waypoint xsi:type="dc:Point" x="154.0" y="84.0"/>
+        <di:waypoint xsi:type="dc:Point" x="300.0" y="84.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_3" bpmnElement="_2-_4">
+        <di:waypoint xsi:type="dc:Point" x="154.0" y="225.0"/>
+        <di:waypoint xsi:type="dc:Point" x="154.0" y="324.0"/>
+        <di:waypoint xsi:type="dc:Point" x="230.0" y="324.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_4" bpmnElement="_3-_10">
+        <di:waypoint xsi:type="dc:Point" x="400.0" y="84.0"/>
+        <di:waypoint xsi:type="dc:Point" x="724.0" y="84.0"/>
+        <di:waypoint xsi:type="dc:Point" x="724.0" y="177.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_5" bpmnElement="_4-_5">
+        <di:waypoint xsi:type="dc:Point" x="330.0" y="324.0"/>
+        <di:waypoint xsi:type="dc:Point" x="380.0" y="324.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_6" bpmnElement="_5-_6">
+        <di:waypoint xsi:type="dc:Point" x="428.0" y="324.0"/>
+        <di:waypoint xsi:type="dc:Point" x="500.0" y="324.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_7" bpmnElement="_5-_10">
+        <di:waypoint xsi:type="dc:Point" x="404.0" y="300.0"/>
+        <di:waypoint xsi:type="dc:Point" x="404.0" y="201.0"/>
+        <di:waypoint xsi:type="dc:Point" x="700.0" y="201.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_8" bpmnElement="_6-_5">
+        <di:waypoint xsi:type="dc:Point" x="524.0" y="348.0"/>
+        <di:waypoint xsi:type="dc:Point" x="524.0" y="400.0"/>
+        <di:waypoint xsi:type="dc:Point" x="404.0" y="400.0"/>
+        <di:waypoint xsi:type="dc:Point" x="404.0" y="348.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_9" bpmnElement="_6-_10">
+        <di:waypoint xsi:type="dc:Point" x="548.0" y="324.0"/>
+        <di:waypoint xsi:type="dc:Point" x="724.0" y="324.0"/>
+        <di:waypoint xsi:type="dc:Point" x="724.0" y="225.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_10" bpmnElement="_10-_11">
+        <di:waypoint xsi:type="dc:Point" x="748.0" y="201.0"/>
+        <di:waypoint xsi:type="dc:Point" x="800.0" y="201.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_11" bpmnElement="_11-_13">
+        <di:waypoint xsi:type="dc:Point" x="900.0" y="201.0"/>
+        <di:waypoint xsi:type="dc:Point" x="950.0" y="201.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
