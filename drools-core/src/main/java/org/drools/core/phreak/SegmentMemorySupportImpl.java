@@ -498,7 +498,7 @@ public class SegmentMemorySupportImpl implements SegmentMemorySupport {
 
         // iterate to find root and determine the SegmentNodes position in the RuleSegment
         LeftTupleSource pathRoot = segmentRoot;
-        int ruleSegmentPosMask = 1;
+        long ruleSegmentPosMask = 1;
         int counter = 0;
         while (!NodeTypeEnums.isLeftInputAdapterNode(pathRoot)) {
             LeftTupleSource leftTupleSource = pathRoot.getLeftTupleSource();

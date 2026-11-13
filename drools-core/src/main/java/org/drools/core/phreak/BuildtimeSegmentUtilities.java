@@ -166,7 +166,7 @@ public class BuildtimeSegmentUtilities {
         } while (segmentRoot != null); // it's after lian
 
         // reset to find the next segments and set their position and their bit mask
-        int ruleSegmentPosMask = 1;
+        long ruleSegmentPosMask = 1;
         for (int i = 0; i < smems.size(); i++) {
             if (start >= 0 && smems.get(i) != null) { // The segments before the start of a subnetwork, will be null for a TupleToObjectNode path.
                 smems.get(i).setPos(i);
