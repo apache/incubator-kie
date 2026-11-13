@@ -640,7 +640,7 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
                                 false);
                     } else {
                         Interval interval = utnToInterval(ut, minMax, discreteValues, rule, col);
-                        results.add(interval);
+                        results.add(alignToDiscreteValues(interval, minMax, discreteValues));
                     }
                 }
             }
@@ -713,6 +713,29 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
         } else {
             return new Interval(RangeBoundary.CLOSED, lowValue, (Comparable<?>) discreteValues.get(upperBoundIdx + 1), RangeBoundary.OPEN, rule, col);
         }
+    }
+
+    /**
+     * On a discrete domain, express the interval by the discrete values it includes, the same way as for EQ unary tests
+     */
+    private static Interval alignToDiscreteValues(Interval interval, Interval minMax, List discreteValues) {
+        if (discreteValues == null || discreteValues.isEmpty() || !minMax.includes(interval)) {
+            return interval;
+        }
+        int lowerBoundIdx = -1;
+        int upperBoundIdx = -1;
+        for (int i = 0; i < discreteValues.size(); i++) {
+            if (interval.asRangeIncludes(discreteValues.get(i))) {
+                if (lowerBoundIdx < 0) {
+                    lowerBoundIdx = i;
+                }
+                upperBoundIdx = i;
+            }
+        }
+        if (lowerBoundIdx < 0) {
+            return interval;
+        }
+        return createIntervalOfRule(discreteValues, interval.getRule(), interval.getCol(), lowerBoundIdx, upperBoundIdx);
     }
 
     private static boolean areAllEQUnaryTest(List<BaseNode> elements) {

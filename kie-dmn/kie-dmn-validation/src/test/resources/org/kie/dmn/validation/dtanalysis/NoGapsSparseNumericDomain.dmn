@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+
+<definitions xmlns="https://www.omg.org/spec/DMN/20230324/MODEL/" id="_f3a1c2d4-7b8e-4c5a-9d0e-1a2b3c4d5e6f" name="NoGapsSparseNumericDomain" namespace="https://kie.apache.org/dmn/_f3a1c2d4-7b8e-4c5a-9d0e-1a2b3c4d5e6f">
+  <inputData id="_score" name="score">
+    <variable id="_score_var" name="score" typeRef="number"/>
+  </inputData>
+  <decision id="_refund" name="Refund">
+    <variable id="_refund_var" name="Refund" typeRef="string"/>
+    <informationRequirement id="_needs_score">
+      <requiredInput href="#_score"/>
+    </informationRequirement>
+    <decisionTable id="_refund_dt" hitPolicy="UNIQUE">
+      <input id="_refund_dt_i1">
+        <inputExpression id="_refund_dt_i1_expr" typeRef="number">
+          <text>score</text>
+        </inputExpression>
+        <inputValues id="_refund_dt_i1_values">
+          <text>0, 2, 4</text>
+        </inputValues>
+      </input>
+      <output id="_refund_dt_o1">
+        <outputValues id="_refund_dt_o1_values">
+          <text>"full", "none"</text>
+        </outputValues>
+      </output>
+      <rule id="_refund_dt_r1">
+        <inputEntry id="_refund_dt_r1_i1">
+          <text>&lt;= 0</text>
+        </inputEntry>
+        <outputEntry id="_refund_dt_r1_o1">
+          <text>"none"</text>
+        </outputEntry>
+      </rule>
+      <rule id="_refund_dt_r2">
+        <inputEntry id="_refund_dt_r2_i1">
+          <text>&gt;= 2</text>
+        </inputEntry>
+        <outputEntry id="_refund_dt_r2_o1">
+          <text>"full"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
