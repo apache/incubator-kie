@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<!--
+  Simplified version of a real world process:
+
+  - an inclusive split starts two independent reviews: "FA Review" and a "QS Review" loop
+  - QS Review is followed by an exclusive split: pending (-> notification + "Request Clarification" and back
+    to QS Review), or approved (-> inclusive join)
+  - FA Review goes straight to the inclusive join
+  - the notification branches dead-end in an end event
+
+  The loop is executed twice (variable "rounds"), so "Request Clarification" of the second round is an
+  active node instance of a higher loop level than the inclusive join when "FA Review" arrives at the join.
+-->
+<definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:tns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd" id="Definition" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+  <itemDefinition id="_roundsItem" structureRef="Integer"/>
+  <process id="InclusiveJoinWithLoopIterations" tns:version="1" tns:packageName="org.jbpm.bpmn2.flow" tns:adHoc="false" name="InclusiveJoinWithLoopIterations" isExecutable="true" processType="Private">
+    <property id="rounds" itemSubjectRef="_roundsItem"/>
+    <startEvent id="_start" name="Start">
+      <outgoing>_start-_orSplit</outgoing>
+    </startEvent>
+    <inclusiveGateway id="_orSplit" name="OR split" gatewayDirection="Diverging">
+      <incoming>_start-_orSplit</incoming>
+      <outgoing>_orSplit-_fa</outgoing>
+      <outgoing>_orSplit-_xorJoin</outgoing>
+    </inclusiveGateway>
+    <!-- FA branch -->
+    <task id="_fa" tns:taskName="faReview" name="FA Review">
+      <incoming>_orSplit-_fa</incoming>
+      <outgoing>_fa-_orJoin</outgoing>
+    </task>
+    <!-- QS branch (loop) -->
+    <exclusiveGateway id="_xorJoin" name="XOR join" gatewayDirection="Converging">
+      <incoming>_orSplit-_xorJoin</incoming>
+      <incoming>_rc-_xorJoin</incoming>
+      <outgoing>_xorJoin-_andSplit1</outgoing>
+    </exclusiveGateway>
+    <parallelGateway id="_andSplit1" name="AND split (QS)" gatewayDirection="Diverging">
+      <incoming>_xorJoin-_andSplit1</incoming>
+      <outgoing>_andSplit1-_notifQs</outgoing>
+      <outgoing>_andSplit1-_qs</outgoing>
+    </parallelGateway>
+    <task id="_notifQs" tns:taskName="notification" name="QS Notification">
+      <incoming>_andSplit1-_notifQs</incoming>
+      <outgoing>_notifQs-_endQs</outgoing>
+    </task>
+    <endEvent id="_endQs" name="End QS notification">
+      <incoming>_notifQs-_endQs</incoming>
+    </endEvent>
+    <task id="_qs" tns:taskName="qsReview" name="QS Review">
+      <incoming>_andSplit1-_qs</incoming>
+      <outgoing>_qs-_xorSplit</outgoing>
+    </task>
+    <exclusiveGateway id="_xorSplit" name="XOR split (QS result)" gatewayDirection="Diverging" default="_xorSplit-_orJoin">
+      <incoming>_qs-_xorSplit</incoming>
+      <outgoing>_xorSplit-_andSplit2</outgoing>
+      <outgoing>_xorSplit-_orJoin</outgoing>
+    </exclusiveGateway>
+    <parallelGateway id="_andSplit2" name="AND split (pending)" gatewayDirection="Diverging">
+      <incoming>_xorSplit-_andSplit2</incoming>
+      <outgoing>_andSplit2-_notifRc</outgoing>
+      <outgoing>_andSplit2-_rc</outgoing>
+    </parallelGateway>
+    <task id="_notifRc" tns:taskName="notification" name="RC Notification">
+      <incoming>_andSplit2-_notifRc</incoming>
+      <outgoing>_notifRc-_endRc</outgoing>
+    </task>
+    <endEvent id="_endRc" name="End RC notification">
+      <incoming>_notifRc-_endRc</incoming>
+    </endEvent>
+    <task id="_rc" tns:taskName="requestClarification" name="Request Clarification">
+      <extensionElements>
+        <tns:onExit-script scriptFormat="http://www.java.com/java">
+          <tns:script>kcontext.setVariable(&quot;rounds&quot;, rounds + 1);</tns:script>
+        </tns:onExit-script>
+      </extensionElements>
+      <incoming>_andSplit2-_rc</incoming>
+      <outgoing>_rc-_xorJoin</outgoing>
+    </task>
+    <!-- Join and rest of the process -->
+    <inclusiveGateway id="_orJoin" name="OR join" gatewayDirection="Converging">
+      <incoming>_fa-_orJoin</incoming>
+      <incoming>_xorSplit-_orJoin</incoming>
+      <outgoing>_orJoin-_after</outgoing>
+    </inclusiveGateway>
+    <task id="_after" tns:taskName="afterJoin" name="AfterJoinTask">
+      <incoming>_orJoin-_after</incoming>
+      <outgoing>_after-_end</outgoing>
+    </task>
+    <endEvent id="_end" name="End">
+      <incoming>_after-_end</incoming>
+    </endEvent>
+    <sequenceFlow id="_start-_orSplit" tns:priority="1" sourceRef="_start" targetRef="_orSplit"/>
+    <sequenceFlow id="_orSplit-_fa" tns:priority="1" sourceRef="_orSplit" targetRef="_fa">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return true;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_orSplit-_xorJoin" tns:priority="1" sourceRef="_orSplit" targetRef="_xorJoin">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return true;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_fa-_orJoin" tns:priority="1" sourceRef="_fa" targetRef="_orJoin"/>
+    <sequenceFlow id="_xorJoin-_andSplit1" tns:priority="1" sourceRef="_xorJoin" targetRef="_andSplit1"/>
+    <sequenceFlow id="_andSplit1-_notifQs" tns:priority="1" sourceRef="_andSplit1" targetRef="_notifQs"/>
+    <sequenceFlow id="_andSplit1-_qs" tns:priority="1" sourceRef="_andSplit1" targetRef="_qs"/>
+    <sequenceFlow id="_notifQs-_endQs" tns:priority="1" sourceRef="_notifQs" targetRef="_endQs"/>
+    <sequenceFlow id="_qs-_xorSplit" tns:priority="1" sourceRef="_qs" targetRef="_xorSplit"/>
+    <sequenceFlow id="_xorSplit-_andSplit2" tns:priority="1" name="pending" sourceRef="_xorSplit" targetRef="_andSplit2">
+      <conditionExpression xsi:type="tFormalExpression" language="http://www.java.com/java">return rounds &lt; 2;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_xorSplit-_orJoin" tns:priority="2" name="approved" sourceRef="_xorSplit" targetRef="_orJoin"/>
+    <sequenceFlow id="_andSplit2-_notifRc" tns:priority="1" sourceRef="_andSplit2" targetRef="_notifRc"/>
+    <sequenceFlow id="_andSplit2-_rc" tns:priority="1" sourceRef="_andSplit2" targetRef="_rc"/>
+    <sequenceFlow id="_notifRc-_endRc" tns:priority="1" sourceRef="_notifRc" targetRef="_endRc"/>
+    <sequenceFlow id="_rc-_xorJoin" tns:priority="1" sourceRef="_rc" targetRef="_xorJoin"/>
+    <sequenceFlow id="_orJoin-_after" tns:priority="1" sourceRef="_orJoin" targetRef="_after"/>
+    <sequenceFlow id="_after-_end" tns:priority="1" sourceRef="_after" targetRef="_end"/>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="InclusiveJoinWithLoopIterations">
+      <bpmndi:BPMNShape id="S_start" bpmnElement="_start"><dc:Bounds height="48.0" width="48.0" x="30.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_orSplit" bpmnElement="_orSplit"><dc:Bounds height="48.0" width="48.0" x="120.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_fa" bpmnElement="_fa"><dc:Bounds height="48.0" width="100.0" x="300.0" y="40.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_xorJoin" bpmnElement="_xorJoin"><dc:Bounds height="48.0" width="48.0" x="220.0" y="300.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_andSplit1" bpmnElement="_andSplit1"><dc:Bounds height="48.0" width="48.0" x="310.0" y="300.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_notifQs" bpmnElement="_notifQs"><dc:Bounds height="48.0" width="100.0" x="400.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_endQs" bpmnElement="_endQs"><dc:Bounds height="48.0" width="48.0" x="550.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_qs" bpmnElement="_qs"><dc:Bounds height="48.0" width="100.0" x="400.0" y="300.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_xorSplit" bpmnElement="_xorSplit"><dc:Bounds height="48.0" width="48.0" x="550.0" y="300.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_andSplit2" bpmnElement="_andSplit2"><dc:Bounds height="48.0" width="48.0" x="550.0" y="400.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_notifRc" bpmnElement="_notifRc"><dc:Bounds height="48.0" width="100.0" x="640.0" y="480.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_endRc" bpmnElement="_endRc"><dc:Bounds height="48.0" width="48.0" x="790.0" y="480.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_rc" bpmnElement="_rc"><dc:Bounds height="48.0" width="100.0" x="400.0" y="400.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_orJoin" bpmnElement="_orJoin"><dc:Bounds height="48.0" width="48.0" x="700.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_after" bpmnElement="_after"><dc:Bounds height="48.0" width="100.0" x="800.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_end" bpmnElement="_end"><dc:Bounds height="48.0" width="48.0" x="950.0" y="200.0"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E1" bpmnElement="_start-_orSplit"><di:waypoint xsi:type="dc:Point" x="78.0" y="224.0"/><di:waypoint xsi:type="dc:Point" x="120.0" y="224.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E2" bpmnElement="_orSplit-_fa"><di:waypoint xsi:type="dc:Point" x="144.0" y="200.0"/><di:waypoint xsi:type="dc:Point" x="144.0" y="64.0"/><di:waypoint xsi:type="dc:Point" x="300.0" y="64.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E3" bpmnElement="_orSplit-_xorJoin"><di:waypoint xsi:type="dc:Point" x="144.0" y="248.0"/><di:waypoint xsi:type="dc:Point" x="144.0" y="324.0"/><di:waypoint xsi:type="dc:Point" x="220.0" y="324.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E4" bpmnElement="_fa-_orJoin"><di:waypoint xsi:type="dc:Point" x="400.0" y="64.0"/><di:waypoint xsi:type="dc:Point" x="724.0" y="64.0"/><di:waypoint xsi:type="dc:Point" x="724.0" y="200.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E5" bpmnElement="_xorJoin-_andSplit1"><di:waypoint xsi:type="dc:Point" x="268.0" y="324.0"/><di:waypoint xsi:type="dc:Point" x="310.0" y="324.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E6" bpmnElement="_andSplit1-_notifQs"><di:waypoint xsi:type="dc:Point" x="334.0" y="300.0"/><di:waypoint xsi:type="dc:Point" x="334.0" y="224.0"/><di:waypoint xsi:type="dc:Point" x="400.0" y="224.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E7" bpmnElement="_andSplit1-_qs"><di:waypoint xsi:type="dc:Point" x="358.0" y="324.0"/><di:waypoint xsi:type="dc:Point" x="400.0" y="324.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E8" bpmnElement="_notifQs-_endQs"><di:waypoint xsi:type="dc:Point" x="500.0" y="224.0"/><di:waypoint xsi:type="dc:Point" x="550.0" y="224.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E9" bpmnElement="_qs-_xorSplit"><di:waypoint xsi:type="dc:Point" x="500.0" y="324.0"/><di:waypoint xsi:type="dc:Point" x="550.0" y="324.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E10" bpmnElement="_xorSplit-_andSplit2"><di:waypoint xsi:type="dc:Point" x="574.0" y="348.0"/><di:waypoint xsi:type="dc:Point" x="574.0" y="400.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E11" bpmnElement="_xorSplit-_orJoin"><di:waypoint xsi:type="dc:Point" x="598.0" y="324.0"/><di:waypoint xsi:type="dc:Point" x="724.0" y="324.0"/><di:waypoint xsi:type="dc:Point" x="724.0" y="248.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E12" bpmnElement="_andSplit2-_notifRc"><di:waypoint xsi:type="dc:Point" x="598.0" y="424.0"/><di:waypoint xsi:type="dc:Point" x="620.0" y="424.0"/><di:waypoint xsi:type="dc:Point" x="620.0" y="504.0"/><di:waypoint xsi:type="dc:Point" x="640.0" y="504.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E13" bpmnElement="_andSplit2-_rc"><di:waypoint xsi:type="dc:Point" x="550.0" y="424.0"/><di:waypoint xsi:type="dc:Point" x="500.0" y="424.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E14" bpmnElement="_notifRc-_endRc"><di:waypoint xsi:type="dc:Point" x="740.0" y="504.0"/><di:waypoint xsi:type="dc:Point" x="790.0" y="504.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E15" bpmnElement="_rc-_xorJoin"><di:waypoint xsi:type="dc:Point" x="400.0" y="424.0"/><di:waypoint xsi:type="dc:Point" x="244.0" y="424.0"/><di:waypoint xsi:type="dc:Point" x="244.0" y="348.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E16" bpmnElement="_orJoin-_after"><di:waypoint xsi:type="dc:Point" x="748.0" y="224.0"/><di:waypoint xsi:type="dc:Point" x="800.0" y="224.0"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E17" bpmnElement="_after-_end"><di:waypoint xsi:type="dc:Point" x="900.0" y="224.0"/><di:waypoint xsi:type="dc:Point" x="950.0" y="224.0"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
