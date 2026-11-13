@@ -56,6 +56,8 @@
     <java.module.name/>
     <latestReleasedVersionFromThisBranch>notYetReleased</latestReleasedVersionFromThisBranch>
     <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+    <!-- Javadoc is disabled by default; modules that publish a javadoc jar must set this property to false. -->
+    <maven.javadoc.skip>true</maven.javadoc.skip>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

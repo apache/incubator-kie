@@ -35,8 +35,6 @@
 
   <properties>
     <java.module.name>org.drools.scenariosimulation.integrationtest</java.module.name>
-    <!-- javadoc plugin 3.12.0 rejects the pom-type kie-pmml-dependencies on its classpath; this module only holds a test fixture class -->
-    <maven.javadoc.skip>true</maven.javadoc.skip>
   </properties>
 
   <dependencies>
