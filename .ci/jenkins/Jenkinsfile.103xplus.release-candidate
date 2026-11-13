@@ -26,7 +26,7 @@
 // MANDATORY parameters : RELEASE_VERSION, TAG_NAME
 // Real RC run          : DEPLOY=true, PUSH_TAG=true, DRY_RUN=false (the defaults)
 // Branch cut (once per minor, before rc1 only):
-//                        CREATE_STREAM_BRANCH=true -> creates X.Y.x from main,
+//                        CREATE_STREAM_BRANCH=true -> creates X.Y.x from BASE_BRANCH (default main),
 //                        sets X.Y.999-SNAPSHOT, pushes it, then continues the RC on X.Y.x.
 //                        Leave it false for rc2, final and patch releases (branch already exists).
 
@@ -48,7 +48,8 @@ pipeline {
     parameters {
         string(name: 'RELEASE_VERSION', defaultValue: '', description: 'MANDATORY. Exact release version, e.g. 10.3.0', trim: true)
         string(name: 'TAG_NAME', defaultValue: '', description: 'MANDATORY. RC tag name, e.g. 10.3.0-rc1 (must start with RELEASE_VERSION and be a new tag)', trim: true)
-        booleanParam(name: 'CREATE_STREAM_BRANCH', defaultValue: false, description: 'Branch cut: create X.Y.x (derived from RELEASE_VERSION) from main, set X.Y.999-SNAPSHOT and push it BEFORE building the RC. Only for the first RC of a new minor (e.g. 10.3.0-rc1). Fails if X.Y.x already exists')
+        booleanParam(name: 'CREATE_STREAM_BRANCH', defaultValue: false, description: 'Branch cut: create X.Y.x (derived from RELEASE_VERSION) from BASE_BRANCH, set X.Y.999-SNAPSHOT and push it BEFORE building the RC. Only for the first RC of a new minor (e.g. 10.3.0-rc1). Fails if X.Y.x already exists')
+        string(name: 'BASE_BRANCH', defaultValue: 'main', description: 'Branch the X.Y.x stream branch is cut from. Only used when CREATE_STREAM_BRANCH is true. Must exist on origin', trim: true)
         booleanParam(name: 'SKIP_TESTS', defaultValue: true, description: 'Skip running tests during reactor build')
         booleanParam(name: 'DEPLOY', defaultValue: true, description: 'Deploy artifacts to Apache Nexus staging')
         string(name: 'STAGING_URL', defaultValue: '', description: 'Custom Nexus staging URL (optional)')
@@ -76,6 +77,9 @@ pipeline {
                     if (!params.TAG_NAME.startsWith(params.RELEASE_VERSION)) {
                         error "TAG_NAME '${params.TAG_NAME}' must start with RELEASE_VERSION '${params.RELEASE_VERSION}'"
                     }
+                    if (params.CREATE_STREAM_BRANCH && !params.BASE_BRANCH?.trim()) {
+                        error 'BASE_BRANCH parameter is required when CREATE_STREAM_BRANCH is true'
+                    }
                     currentBuild.displayName = "Release ${params.RELEASE_VERSION} (${params.TAG_NAME})"
                 }
             }
@@ -91,7 +95,7 @@ pipeline {
                         def branchArgs = [
                             './script/release/00-create-stream-branch.sh',
                             '--version', params.RELEASE_VERSION,
-                            '--base',    'main',
+                            '--base',    params.BASE_BRANCH,
                             '--push'
                         ]
                         if (params.DRY_RUN) branchArgs << '--dry-run'
