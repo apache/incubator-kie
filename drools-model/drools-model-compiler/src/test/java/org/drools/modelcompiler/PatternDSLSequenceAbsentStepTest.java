@@ -40,6 +40,7 @@ import static org.drools.model.DSL.declarationOf;
 import static org.drools.model.DSL.execute;
 import static org.drools.model.PatternDSL.absent;
 import static org.drools.model.PatternDSL.and;
+import static org.drools.model.PatternDSL.or;
 import static org.drools.model.PatternDSL.pattern;
 import static org.drools.model.PatternDSL.on;
 import static org.drools.model.PatternDSL.rule;
@@ -477,6 +478,88 @@ public class PatternDSLSequenceAbsentStepTest {
     }
 
     @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void vetoOfOneAnchorDoesNotHideFactFromOtherAnchorsFilter() {
+        // sequence(start, absent(x owned by anchor), d owned by anchor, x)
+        // Two anchors, both reach the absence guard. A d owned by bob advances bob only.
+        // x owned by alice vetoes alice; the same x must still reach bob's final x filter.
+        Variable<Person> person  = declarationOf(Person.class);
+        Variable<Toy>    start   = declarationOf(Toy.class);
+        Variable<Toy>    blocker = declarationOf(Toy.class);
+        Variable<Toy>    ownedD  = declarationOf(Toy.class);
+        Variable<Toy>    finalX  = declarationOf(Toy.class);
+
+        Rule rule = rule("veto-hides-fact-from-other-anchor").build(
+            pattern(person),
+            sequence(
+                pattern(start).expr("isStart", t -> t.getName().equals("s")),
+                absent(pattern(blocker).expr("isX", t -> t.getName().equals("x"))
+                                       .expr("ownedByAnchor", person, (t, p) -> p.getName().equals(t.getOwner()))),
+                pattern(ownedD).expr("isD", t -> t.getName().equals("d"))
+                               .expr("dOwnedByAnchor", person, (t, p) -> p.getName().equals(t.getOwner())),
+                pattern(finalX).expr("isFinalX", t -> t.getName().equals("x"))
+            ),
+            on(person).execute(p -> results.add("fired:" + p.getName()))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("alice"), new Person("bob"));
+        insertAndFire(new Toy("s"));         // both anchors reach the absence guard
+        Toy d = new Toy("d");
+        d.setOwner("bob");
+        insertAndFire(d);                    // bob advances to the final x step
+        Toy x = new Toy("x");
+        x.setOwner("alice");
+        insertAndFire(x);                    // vetoes alice; must still complete bob
+
+        assertThat(results)
+                .as("a filter still active for the fact must receive it even when an earlier filter's anchor left its step")
+                .containsExactly("fired:bob");
+    }
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void anchorLeavingStepDoesNotHideFactFromOtherAnchorsFilter() {
+        // Same shape without a veto: sequence(start, or(x owned by anchor, d owned by anchor), x)
+        // A d owned by bob advances bob to the final x step.
+        // x owned by alice satisfies alice's or-step; the same x must still reach bob's final x filter.
+        Variable<Person> person = declarationOf(Person.class);
+        Variable<Toy>    start  = declarationOf(Toy.class);
+        Variable<Toy>    ownedX = declarationOf(Toy.class);
+        Variable<Toy>    ownedD = declarationOf(Toy.class);
+        Variable<Toy>    finalX = declarationOf(Toy.class);
+
+        Rule rule = rule("leaving-anchor-hides-fact-from-other-anchor").build(
+            pattern(person),
+            sequence(
+                pattern(start).expr("isStart", t -> t.getName().equals("s")),
+                or(
+                    pattern(ownedX).expr("isX", t -> t.getName().equals("x"))
+                                   .expr("xOwnedByAnchor", person, (t, p) -> p.getName().equals(t.getOwner())),
+                    pattern(ownedD).expr("isD", t -> t.getName().equals("d"))
+                                   .expr("dOwnedByAnchor", person, (t, p) -> p.getName().equals(t.getOwner()))
+                ),
+                pattern(finalX).expr("isFinalX", t -> t.getName().equals("x"))
+            ),
+            on(person).execute(p -> results.add("fired:" + p.getName()))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Person("alice"), new Person("bob"));
+        insertAndFire(new Toy("s"));         // both anchors reach the or-step
+        Toy d = new Toy("d");
+        d.setOwner("bob");
+        insertAndFire(d);                    // bob advances to the final x step
+        Toy x = new Toy("x");
+        x.setOwner("alice");
+        insertAndFire(x);                    // alice leaves the or-step; must still complete bob
+
+        assertThat(results)
+                .as("a filter still active for the fact must receive it even when an earlier filter's anchor left its step")
+                .containsExactly("fired:bob");
+    }
+
+    @Test
     public void absentThreePatternsBothAbsentFires() {
         Variable<Toy> blockerA = declarationOf(Toy.class);
         Variable<Toy> blockerB = declarationOf(Toy.class);
@@ -546,6 +629,232 @@ public class PatternDSLSequenceAbsentStepTest {
         ).isInstanceOf(IllegalArgumentException.class)
          .as("multi-argument absent() as a leading sequence step must be rejected just like single-argument absent()")
          .hasMessageContaining("leading");
+    }
+
+    @Test
+    public void vetoingFactThatIsAlsoStepZeroFactSameShape() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Toy> first   = declarationOf(Toy.class);
+        Variable<Toy> vetoer  = declarationOf(Toy.class);
+        Variable<Toy> done    = declarationOf(Toy.class);
+
+        Rule rule = rule("veto-also-step0-same-shape").build(
+            sequence(
+                pattern(first).expr("isS", t -> t.getName().equals("s")),
+                absent(pattern(vetoer).expr("isS2", t -> t.getName().equals("s"))),
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("d"));
+
+        assertThat(results).as("veto only: s, s, d").isEmpty();
+    }
+
+    @Test
+    public void vetoingFactThatIsAlsoStepZeroFactDifferentPatterns() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Toy> first   = declarationOf(Toy.class);
+        Variable<Toy> vetoer  = declarationOf(Toy.class);
+        Variable<Toy> done    = declarationOf(Toy.class);
+
+        Rule rule = rule("veto-also-step0-different-patterns").build(
+            sequence(
+                pattern(first).expr("isSOrX", t -> t.getName().equals("s") || t.getName().equals("x")),
+                absent(pattern(vetoer).expr("isX", t -> t.getName().equals("x"))),
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("x"));
+        insertAndFire(new Toy("d"));
+
+        assertThat(results).as("veto only: s, x, d").isEmpty();
+    }
+
+    @Test
+    public void vetoingFactThatIsAlsoStepZeroFactPatternsBuiltInOtherOrder() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        // Absence pattern and its variable are created before the step-0 pattern and variable.
+        Variable<Toy> vetoer  = declarationOf(Toy.class);
+        Variable<Toy> first   = declarationOf(Toy.class);
+        Variable<Toy> done    = declarationOf(Toy.class);
+        var absentPattern = absent(pattern(vetoer).expr("isS2", t -> t.getName().equals("s")));
+
+        Rule rule = rule("veto-also-step0-other-order").build(
+            sequence(
+                pattern(first).expr("isS", t -> t.getName().equals("s")),
+                absentPattern,
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("d"));
+
+        assertThat(results).as("veto only: s, s, d, other build order").isEmpty();
+    }
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void vetoingFactDoesNotRestartAnchorStepZeroFilterDeliveredBeforeAbsenceFilter() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Person> person  = declarationOf(Person.class);
+        Variable<Toy>    first   = declarationOf(Toy.class);
+        Variable<Toy>    vetoer  = declarationOf(Toy.class);
+        Variable<Toy>    done    = declarationOf(Toy.class);
+
+        ksession = makeKSession(buildVetoOnlyAnchoredRule(person, first, vetoer, done));
+        insertAndFire(new Person("alice"), new Person("bob"));
+        insertAndFire(ownedToy("s", "alice"));   // alice -> absence guard; bob stays at step 0
+        insertAndFire(ownedToy("s", "alice"));   // vetoes alice
+        insertAndFire(new Toy("d"));
+
+        assertThat(results)
+                .as("veto only: the vetoing fact never starts the next attempt (filter list [step-0, absence])")
+                .isEmpty();
+    }
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void vetoingFactDoesNotRestartAnchorAbsenceFilterDeliveredBeforeStepZeroFilter() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Person> person  = declarationOf(Person.class);
+        Variable<Toy>    first   = declarationOf(Toy.class);
+        Variable<Toy>    vetoer  = declarationOf(Toy.class);
+        Variable<Toy>    done    = declarationOf(Toy.class);
+
+        ksession = makeKSession(buildVetoOnlyAnchoredRule(person, first, vetoer, done));
+        insertAndFire(new Person("alice"), new Person("bob"));
+        insertAndFire(ownedToy("s", "alice"));   // alice -> absence guard
+        insertAndFire(ownedToy("s", "bob"));     // bob -> absence guard; step-0 filter now empty
+        insertAndFire(ownedToy("s", "bob"));     // vetoes bob; bob re-activates the step-0 filter
+        insertAndFire(ownedToy("s", "alice"));   // vetoes alice
+        insertAndFire(new Toy("d"));
+
+        assertThat(results)
+                .as("veto only: the vetoing fact never starts the next attempt (filter list [absence, step-0])")
+                .isEmpty();
+    }
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void vetoingFactDoesNotRestartSequenceStepZeroAndVetoPatternsOfDifferentTypes() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Object> first  = declarationOf(Object.class);
+        Variable<Toy>    vetoer = declarationOf(Toy.class);
+        Variable<Toy>    done   = declarationOf(Toy.class);
+
+        Rule rule = rule("veto-only-different-types").build(
+            sequence(
+                pattern(first).expr("isS", o -> o instanceof Toy && ((Toy) o).getName().equals("s")),
+                absent(pattern(vetoer).expr("isS2", t -> t.getName().equals("s"))),
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("d"));
+
+        assertThat(results).as("veto only: step-0 and veto patterns on different object types").isEmpty();
+    }
+
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void vetoingFactDoesNotRestartSequenceStepZeroOnToyVetoOnObject() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Toy>    first  = declarationOf(Toy.class);
+        Variable<Object> vetoer = declarationOf(Object.class);
+        Variable<Toy>    done   = declarationOf(Toy.class);
+
+        Rule rule = rule("veto-only-different-types-reversed").build(
+            sequence(
+                pattern(first).expr("isS", t -> t.getName().equals("s")),
+                absent(pattern(vetoer).expr("isS2", o -> o instanceof Toy && ((Toy) o).getName().equals("s"))),
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        ksession = makeKSession(rule);
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("d"));
+
+        assertThat(results).as("veto only: step-0 on Toy, veto pattern on Object").isEmpty();
+    }
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void vetoingFactDoesNotRestartSequenceVetoTypeAdapterDeliversBeforeStepZeroTypeAdapter() {
+        // This test locks down a decision that the same fact can not veto and activate the same sequence
+        Variable<Object> anyObject = declarationOf(Object.class);
+        Variable<Toy>    first     = declarationOf(Toy.class);
+        Variable<Object> vetoer    = declarationOf(Object.class);
+        Variable<Toy>    done      = declarationOf(Toy.class);
+
+        Rule creatorOfObjectNode = rule("creates-object-otn").build(
+            pattern(anyObject),
+            execute(() -> {})
+        );
+        Rule rule = rule("veto-only-veto-adapter-first").build(
+            sequence(
+                pattern(first).expr("isS", t -> t.getName().equals("s")),
+                absent(pattern(vetoer).expr("isS2", o -> o instanceof Toy && ((Toy) o).getName().equals("s"))),
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            execute(() -> results.add("fired"))
+        );
+
+        final Model model = new ModelImpl().addRule(creatorOfObjectNode).addRule(rule);
+        ksession = KieBaseBuilder.createKieBaseFromModel(model).newKieSession();
+        ksession.fireAllRules();
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("s"));
+        insertAndFire(new Toy("d"));
+
+        assertThat(results)
+                .as("veto only: the vetoing fact must not start a new attempt via a later object-type adapter")
+                .isEmpty();
+    }
+
+
+
+    private Rule buildVetoOnlyAnchoredRule(Variable<Person> person,
+                                           Variable<Toy> first,
+                                           Variable<Toy> vetoer,
+                                           Variable<Toy> done) {
+        return rule("veto-only-anchored").build(
+            pattern(person),
+            sequence(
+                pattern(first).expr("isS", t -> t.getName().equals("s"))
+                              .expr("sOwnedByAnchor", person, (t, p) -> p.getName().equals(t.getOwner())),
+                absent(pattern(vetoer).expr("isS2", t -> t.getName().equals("s"))
+                                      .expr("vetoOwnedByAnchor", person, (t, p) -> p.getName().equals(t.getOwner()))),
+                pattern(done).expr("isD", t -> t.getName().equals("d"))
+            ),
+            on(person).execute(p -> results.add("fired:" + p.getName()))
+        );
+    }
+
+    private static Toy ownedToy(String name, String owner) {
+        Toy toy = new Toy(name);
+        toy.setOwner(owner);
+        return toy;
     }
 
     @AfterEach

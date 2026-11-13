@@ -30,12 +30,13 @@ public class DynamicFilter extends AbstractLinkedListNode<DynamicFilter> {
     private AlphaNodeFieldConstraint  constraint;
     private LinkedList<SignalAdapter> signalAdapters;
     private int                       adapterIndex;
-    private long                      deliveryEpoch;
+    private final DeliveryClock       clock;
 
-    public DynamicFilter(DynamicFilterProto proto) {
+    public DynamicFilter(DynamicFilterProto proto, DeliveryClock clock) {
         this.constraint    = proto.getConstraint();
         this.adapterIndex  = proto.getAdapterIndex();
         this.signalAdapters = new LinkedList<>();
+        this.clock         = clock;
     }
 
     public int getAdapterIndex() {
@@ -43,7 +44,8 @@ public class DynamicFilter extends AbstractLinkedListNode<DynamicFilter> {
     }
 
     public void addSignalAdapter(SignalAdapter signalAdapter) {
-        signalAdapter.setRegistrationEpoch(deliveryEpoch);
+        signalAdapter.setRegistrationEpoch(clock.registrationEpoch());
+        signalAdapter.setRegistrationHandleId(clock.currentDeliveryHandleId());
         signalAdapters.add(signalAdapter);
     }
 
@@ -54,11 +56,23 @@ public class DynamicFilter extends AbstractLinkedListNode<DynamicFilter> {
     public LinkedList<SignalAdapter> getSignalAdapters() {
         return signalAdapters;
     }
-
+    /**
+     * Delivers the fact to the signal adapters registered before its delivery began. The delivery is
+     * opened on the shared {@link DeliveryClock} by the first filter that sees the fact, so an adapter
+     * registered while the fact is in flight (an anchor advanced or was reset), on this filter or on
+     * a filter handled in another adapter's pass, does not receive the same fact.
+     *
+     * <p>An adapter registered during a prior delivery of the same handle is also skipped. This
+     * prevents a re-insert of a disconnected handle (e.g. under
+     * {@code KieBaseMutabilityOption.DISABLED}) from reaching a step that the same handle advanced
+     * to in an earlier delivery.
+     */
     public void assertObject(final FactHandle factHandle,
                              final ValueResolver valueResolver) {
 
-        final long startEpoch = ++this.deliveryEpoch;
+        clock.beginDelivery(factHandle);
+        final long startEpoch    = clock.startEpoch();
+        final long deliveryHandleId = factHandle.getId();
 
         if (constraint.getRequiredDeclarations().length == 0) {
             if (constraint.isAllowed(factHandle, valueResolver)) {
@@ -67,7 +81,9 @@ public class DynamicFilter extends AbstractLinkedListNode<DynamicFilter> {
                         break;
                     }
                     SignalAdapter next = current.getNext();
-                    current.receive(valueResolver, factHandle);
+                    if (!current.wasRegisteredDuring(deliveryHandleId)) {
+                        current.receive(valueResolver, factHandle);
+                    }
                     current = next;
                 }
             }
@@ -77,7 +93,7 @@ public class DynamicFilter extends AbstractLinkedListNode<DynamicFilter> {
                     break;
                 }
                 SignalAdapter next = current.getNext();
-                if (test(factHandle, current.getAnchorTuple(), valueResolver)) {
+                if (!current.wasRegisteredDuring(deliveryHandleId) && test(factHandle, current.getAnchorTuple(), valueResolver)) {
                     current.receive(valueResolver, factHandle);
                 }
                 current = next;

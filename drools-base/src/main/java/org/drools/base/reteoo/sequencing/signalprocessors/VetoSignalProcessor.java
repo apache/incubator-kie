@@ -62,6 +62,18 @@ import org.drools.base.reteoo.sequencing.Sequence.SequenceMemory;
  *       new restart model not justified by any current use case.</li>
  * </ol>
  *
+ * <h3>The vetoing fact never starts the next attempt</h3>
+ * <p>A fact that vetoes an attempt is consumed by the veto. The reset re-activates step 0, but
+ * the vetoing fact is not offered to step 0, even when it also matches step 0's pattern.
+ * For {@code sequence(s, absent(s), d)} with arrivals {@code s, s, d}, the second {@code s}
+ * only vetoes: there are 0 firings, and the next attempt needs a later {@code s}.
+ * This class does not enforce that itself: {@code consume()} only resets. The guarantee comes from
+ * the {@link org.drools.base.reteoo.DeliveryClock} shared by all filters of a sequence node. The first
+ * filter that handles a fact opens its delivery, and every later filter, in the same object-type
+ * adapter or in the adapter of another object type, keeps that start. A signal adapter registered
+ * while the fact is being delivered, by this reset or by an advance, therefore does not receive that
+ * same fact. The outcome does not depend on the order of the filters or of the adapters.
+ *
  * <h3>Singleton design</h3>
  * <p>This class is a stateless singleton ({@link #get()}).  The inability to encode a
  * target step index is a deliberate design forcing function: if partial reset were ever
