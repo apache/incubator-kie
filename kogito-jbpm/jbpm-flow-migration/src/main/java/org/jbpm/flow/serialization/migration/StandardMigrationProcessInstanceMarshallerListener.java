@@ -53,7 +53,7 @@ public class StandardMigrationProcessInstanceMarshallerListener implements Proce
         }
         LOGGER.debug("Migration processInstance state {}-{} and definition {}-{}",
                 processInstance.getProcessId(), processInstance.getProcessVersion(), processInstance.getProcess().getId(), processInstance.getProcess().getVersion());
-        migrationPlanService.migrateProcessElement(runtime.getApplication().get(Processes.class), processInstance);
+        migrationPlanService.migrateProcessElement(runtime, runtime.getApplication().get(Processes.class), processInstance);
         runtime.getProcessEventSupport().fireOnMigration(processInstance, runtime.getKieRuntime());
 
     }
