@@ -31,21 +31,17 @@
     <!-- Used to define which poms are allowed to have dependencyManagement sections. This is to enforce the convention that only the root pom should have dependencyManagement, and all other poms should inherit from it. -->
     <allowedPomsList>org.kie.kogito:kogito-quarkus-bom</allowedPomsList>
     <quarkus.logging.manager>org.jboss.logmanager.LogManager</quarkus.logging.manager>
-    <!--
-      [CVE-2026-45292] opentelemetry-api 1.57.0 pulled in via smallrye-reactive-messaging-otel.
-      Pin to 1.62.0 before quarkus-bom import so this value takes precedence.
-      Should be removed in future Quarkus upgrades that include OpenTelemetry >= 1.62.0
-    -->
-    <version.io.opentelemetry.api>1.62.0</version.io.opentelemetry.api>
-    <version.io.opentelemetry.instrumentation>2.28.1-alpha</version.io.opentelemetry.instrumentation>
-    <version.io.quarkus>3.33.4</version.io.quarkus>
+    <version.com.aayushatharva.brotli4j>1.24.0</version.com.aayushatharva.brotli4j>
+    <version.io.opentelemetry.api>1.67.0</version.io.opentelemetry.api>
+    <version.io.opentelemetry.instrumentation>2.33.0-alpha</version.io.opentelemetry.instrumentation>
+    <version.io.quarkus>3.33.4.1</version.io.quarkus>
     <version.io.quarkus.quarkus-test>${version.io.quarkus}</version.io.quarkus.quarkus-test>
     <version.io.quarkiverse.jackson-jq>2.4.0</version.io.quarkiverse.jackson-jq>
     <version.io.quarkiverse.openapi.generator>2.17.0-lts</version.io.quarkiverse.openapi.generator>
     <version.io.quarkiverse.asyncapi>1.0.5</version.io.quarkiverse.asyncapi>
     <version.io.quarkiverse.reactivemessaging.http>2.7.1</version.io.quarkiverse.reactivemessaging.http>
     <version.io.quarkiverse.embedded.postgresql>0.8.0</version.io.quarkiverse.embedded.postgresql>
-    <version.io.quarkus.camel>3.33.2</version.io.quarkus.camel>
+    <version.io.quarkus.camel>3.33.3</version.io.quarkus.camel>
     <!-- Quarkus-platform-aligned pins. These live here, not in kie-parent, so that the Quarkus upgrade does not
          change what the Spring Boot side resolves. -->
     <version.io.grpc>1.81.0</version.io.grpc>
@@ -72,6 +68,66 @@
 </properties>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>brotli4j</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-armv7</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-ppc64le</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-riscv64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-s390x</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-linux-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-osx-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-osx-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-windows-aarch64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>native-windows-x86_64</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>service</artifactId>
+        <version>${version.com.aayushatharva.brotli4j}</version>
+      </dependency>
       <dependency>
         <groupId>com.github.stephenc.jcip</groupId>
         <artifactId>jcip-annotations</artifactId>
@@ -159,10 +215,6 @@
         <artifactId>reactor-core</artifactId>
         <version>${version.io.projectreactor}</version>
       </dependency>
-      <!-- CVE-2026-18710 (JAVA-6266): quarkus-bom:3.33.4 ships MongoDB driver artifacts at 5.6.4.
-           Pin to 5.11.1 (version.mongodb-driver-sync). Remove when quarkus-bom ships >= 5.11.1.
-           Must appear before the quarkus-bom import to take precedence
-           (first explicit entry wins in Maven dependencyManagement). -->
       <dependency>
         <groupId>org.mongodb</groupId>
         <artifactId>mongodb</artifactId>

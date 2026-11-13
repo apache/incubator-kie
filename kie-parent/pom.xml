@@ -82,15 +82,15 @@
     <version.archunit.maven.plugin>4.0.2</version.archunit.maven.plugin>
     <version.artifact.transfer>0.9.1</version.artifact.transfer>
     <version.asciidoctor-maven-plugin>2.0.0-RC.1</version.asciidoctor-maven-plugin>
-    <version.at.yawk.lz4.java>1.11.4</version.at.yawk.lz4.java>
+    <version.at.yawk.lz4.java>1.12.0</version.at.yawk.lz4.java>
     <version.black.ninia>4.2.0</version.black.ninia>
     <version.build.helper.maven.plugin>3.4.0</version.build.helper.maven.plugin>
     <version.ch.obermuhlner>2.0.1</version.ch.obermuhlner>
-    <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
-    <version.com.fasterxml.jackson>2.22.3</version.com.fasterxml.jackson>
+    <version.ch.qos.logback>1.6.5</version.ch.qos.logback>
+    <version.com.fasterxml.jackson>2.22.4</version.com.fasterxml.jackson>
     <version.com.fasterxml.jackson.annotations>2.22</version.com.fasterxml.jackson.annotations>
-    <version.com.fasterxml.jackson.databind>2.22.3</version.com.fasterxml.jackson.databind>
-    <version.com.fasterxml.jackson.datatype>2.22.1</version.com.fasterxml.jackson.datatype>
+    <version.com.fasterxml.jackson.databind>2.22.4</version.com.fasterxml.jackson.databind>
+    <version.com.fasterxml.jackson.datatype>2.22.4</version.com.fasterxml.jackson.datatype>
     <version.com.github.docker-java>3.7.1</version.com.github.docker-java><!-- align with testcontainers ABI; Quarkus BOM pins older docker-java missing ImageHistoryCmd -->
     <version.com.github.eirslett>1.15.1</version.com.github.eirslett>
     <version.com.github.haifengl.smile>1.5.2</version.com.github.haifengl.smile>
@@ -151,7 +151,7 @@
     <version.io.fabric8.kubernetes-client>7.3.1</version.io.fabric8.kubernetes-client>
     <version.io.grpc>1.76.0</version.io.grpc>
     <version.io.micrometer>1.17.1</version.io.micrometer>
-    <version.io.netty>4.1.138.Final</version.io.netty>
+    <version.io.netty>4.1.140.Final</version.io.netty>
     <version.io.opentelemetry>1.0.0-alpha</version.io.opentelemetry>
     <version.io.rest-assured>5.5.6</version.io.rest-assured>
     <version.io.smallrye-config>3.13.4</version.io.smallrye-config>
@@ -166,7 +166,7 @@
     <version.io.smallrye.reactive.mutiny-zero>1.1.1</version.io.smallrye.reactive.mutiny-zero>
     <version.io.swagger.core.v3>2.2.38</version.io.swagger.core.v3>
     <version.io.swagger.parser.v3>2.1.34</version.io.swagger.parser.v3>
-    <version.io.vertx>4.5.34</version.io.vertx>
+    <version.io.vertx>4.5.35</version.io.vertx>
     <version.it.unimi.dsi.fastutil>8.5.11</version.it.unimi.dsi.fastutil>
     <version.jacoco.plugin>0.8.11</version.jacoco.plugin>
     <version.jakarta.activation>2.0.3</version.jakarta.activation>
@@ -205,12 +205,11 @@
     <version.maven.plugin>3.15.1</version.maven.plugin>
     <version.maven.project>2.2.1</version.maven.project>
     <version.maven.resolver.api>1.9.27</version.maven.resolver.api>
-    <version.mongodb-driver-sync>5.11.1</version.mongodb-driver-sync>
+    <version.mongodb-driver-sync>5.14.0</version.mongodb-driver-sync>
     <version.nashorn>15.3</version.nashorn>
     <version.native2ascii-maven-plugin>1.0-beta-1</version.native2ascii-maven-plugin>
     <version.net.byte-buddy>1.17.6</version.net.byte-buddy>
     <version.net.java.dev.glazedlists>1.8.0</version.net.java.dev.glazedlists>
-    <version.net.minidev.jsonsmart>2.4.10</version.net.minidev.jsonsmart>
     <version.net.sf.saxon.Saxon-HE>12.10</version.net.sf.saxon.Saxon-HE>
     <version.net.thisptr.jackson-jq>1.0.0-preview.20240207</version.net.thisptr.jackson-jq>
     <version.org.antlr>3.5.2</version.org.antlr>
@@ -228,7 +227,7 @@
     <version.org.apache.commons.math3>3.6.1</version.org.apache.commons.math3>
     <version.org.apache.groovy>4.0.32</version.org.apache.groovy>
     <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
-    <version.org.apache.kafka>4.1.2</version.org.apache.kafka>
+    <version.org.apache.kafka>4.2.2</version.org.apache.kafka>
     <!-- CVE-2026-49844: poi-ooxml:5.4.1 pulls log4j-api:2.24.3 transitively via log4j-bom:2.24.3.
          quarkus-bom:3.33.4 promotes it to 2.25.3. Both are below the minimum safe version 2.25.5.
          This managed entry forces 2.26.1 across all modules inheriting kie-parent.
@@ -285,6 +284,7 @@
     <version.org.mongo>5.3.1</version.org.mongo>
     <version.org.mozilla.rhino>1.8.1</version.org.mozilla.rhino>
     <version.org.mvel>2.5.4.Final</version.org.mvel>
+    <version.org.objenesis>3.6</version.org.objenesis>
     <!-- Version of JMH -->
     <version.org.openjdk.jmh>1.21</version.org.openjdk.jmh>
     <version.org.ow2.asm>9.11.1</version.org.ow2.asm>
@@ -336,7 +336,7 @@
     <version.simple-jndi>0.11.4.1</version.simple-jndi>
     <version.sisu.inject>1.4.2</version.sisu.inject>
     <version.sonar-maven-plugin>3.6.0.1398</version.sonar-maven-plugin>
-    <version.tomcat.embed.core>11.0.26</version.tomcat.embed.core>
+    <version.tomcat.embed.core>11.0.27</version.tomcat.embed.core>
     <version.versions-maven-plugin>2.10.0</version.versions-maven-plugin>
     <version.wildfly-maven-plugin>1.2.0.Final</version.wildfly-maven-plugin>
     <version.xerces>2.12.2</version.xerces>
@@ -984,6 +984,11 @@
         <version>${version.io.netty}</version>
       </dependency>
       <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport-native-unix-common</artifactId>
+        <version>${version.io.netty}</version>
+      </dependency>
+      <dependency>
         <groupId>io.opentelemetry.proto</groupId>
         <artifactId>opentelemetry-proto</artifactId>
         <version>${version.io.opentelemetry}</version>
@@ -1000,17 +1005,6 @@
         <artifactId>json-schema-validator</artifactId>
         <version>${version.io.rest-assured}</version>
         <scope>test</scope>
-        <exclusions>
-          <!-- CVE fix: jackson-coreutils pulled transitively via json-schema-validator -->
-          <exclusion>
-            <groupId>com.github.java-json-tools</groupId>
-            <artifactId>jackson-coreutils</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.github.java-json-tools</groupId>
-            <artifactId>json-patch</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.rest-assured</groupId>
@@ -1138,15 +1132,6 @@
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
           </exclusion>
-          <!-- CVE fix: json-patch/jackson-coreutils pulled in transitively via swagger-compat-spec-parser -->
-          <exclusion>
-            <groupId>com.github.java-json-tools</groupId>
-            <artifactId>json-patch</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.github.java-json-tools</groupId>
-            <artifactId>jackson-coreutils</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
       <!-- Vertx libraries, including PostgreSQL client -->
@@ -1258,11 +1243,6 @@
         <artifactId>json-unit-assertj</artifactId>
         <version>${version.org.json-unit-assertj}</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>net.minidev</groupId>
-        <artifactId>json-smart</artifactId>
-        <version>${version.net.minidev.jsonsmart}</version>
       </dependency>
       <dependency>
         <groupId>net.sf.saxon</groupId>
@@ -1399,6 +1379,11 @@
             <artifactId>lz4-java</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-streams</artifactId>
+        <version>${version.org.apache.kafka}</version>
       </dependency>
       <dependency>
         <!-- CVE-2026-49844: override log4j-api version pulled in transitively by poi-ooxml:5.4.1
@@ -1972,17 +1957,6 @@
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-jackson2-provider</artifactId>
         <version>${version.org.jboss.resteasy}</version>
-        <exclusions>
-          <!-- CVE fix: no patched version of json-patch/jackson-coreutils exists -->
-          <exclusion>
-            <groupId>com.github.java-json-tools</groupId>
-            <artifactId>json-patch</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.github.java-json-tools</groupId>
-            <artifactId>jackson-coreutils</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.jboss.resteasy</groupId>
@@ -2113,6 +2087,11 @@
         <groupId>org.mvel</groupId>
         <artifactId>mvel2</artifactId>
         <version>${version.org.mvel}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.objenesis</groupId>
+        <artifactId>objenesis</artifactId>
+        <version>${version.org.objenesis}</version>
       </dependency>
       <!--JMH (Benchmarks)-->
       <dependency>
