@@ -19,6 +19,8 @@
 
 package org.optaplanner.quarkus;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.concurrent.ExecutionException;
 
 import jakarta.inject.Inject;
@@ -34,8 +36,6 @@ import org.optaplanner.quarkus.testdata.gizmo.PrivateNoArgsConstructorEntity;
 import org.optaplanner.quarkus.testdata.gizmo.PrivateNoArgsConstructorSolution;
 
 import io.quarkus.test.QuarkusUnitTest;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class OptaPlannerProcessorOnlyMultiConstructorTest {
 

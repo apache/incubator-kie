@@ -19,7 +19,6 @@
 
 package org.optaplanner.benchmark.quarkus;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.ExecutionException;
@@ -56,7 +55,8 @@ class OptaPlannerBenchmarkProcessorMissingSpentLimitTest {
         assertThatThrownBy(() -> new OptaPlannerBenchmarkRecorder(new RuntimeValue<>(optaPlannerBenchmarkRuntimeConfig))
                 .benchmarkConfigSupplier(new PlannerBenchmarkConfig()).get())
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("At least one of the properties quarkus.optaplanner.benchmark.solver.termination.spent-limit, quarkus.optaplanner.benchmark.solver.termination.best-score-limit, quarkus.optaplanner.benchmark.solver.termination.unimproved-spent-limit is required if termination is not configured in the inherited solver benchmark config and solverBenchmarkBluePrint is used.");
+                .hasMessage(
+                        "At least one of the properties quarkus.optaplanner.benchmark.solver.termination.spent-limit, quarkus.optaplanner.benchmark.solver.termination.best-score-limit, quarkus.optaplanner.benchmark.solver.termination.unimproved-spent-limit is required if termination is not configured in the inherited solver benchmark config and solverBenchmarkBluePrint is used.");
     }
 
 }
