@@ -33,8 +33,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -82,37 +81,37 @@ class SpringbootMongoDBEventPublisherTest {
 
     @Test
     void mongoClient() {
-        assertEquals(mongoClient, publisher.mongoClient());
+        assertThat(publisher.mongoClient()).isEqualTo(mongoClient);
     }
 
     @Test
     void setTransactionManager() {
-        assertEquals(transactionManager, publisher.transactionManager());
+        assertThat(publisher.transactionManager()).isEqualTo(transactionManager);
     }
 
     @Test
     void processInstancesEvents() {
-        assertFalse(publisher.processInstancesEvents());
+        assertThat(publisher.processInstancesEvents()).isFalse();
     }
 
     @Test
     void userTasksEvents() {
-        assertFalse(publisher.userTasksEvents());
+        assertThat(publisher.userTasksEvents()).isFalse();
     }
 
     @Test
     void eventsDatabaseName() {
-        assertEquals("testDB", publisher.eventsDatabaseName());
+        assertThat(publisher.eventsDatabaseName()).isEqualTo("testDB");
     }
 
     @Test
     void processInstancesEventsCollection() {
-        assertEquals("testPICollection", publisher.processInstancesEventsCollection());
+        assertThat(publisher.processInstancesEventsCollection()).isEqualTo("testPICollection");
     }
 
     @Test
     void userTasksEventsCollection() {
-        assertEquals("testUTCollection", publisher.userTasksEventsCollection());
+        assertThat(publisher.userTasksEventsCollection()).isEqualTo("testUTCollection");
     }
 
 }

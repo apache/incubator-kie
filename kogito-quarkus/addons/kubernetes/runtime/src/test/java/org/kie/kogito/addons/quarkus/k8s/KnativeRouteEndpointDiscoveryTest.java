@@ -41,9 +41,8 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @QuarkusTest
 @QuarkusTestResource(KubernetesMockServerTestResource.class)
@@ -75,7 +74,7 @@ public class KnativeRouteEndpointDiscoveryTest {
         knativeClient.routes().resource(route).create();
 
         final Optional<Endpoint> endpoint = endpointDiscovery.findEndpoint("test", "ksvc1");
-        assertTrue(endpoint.isPresent());
+        assertThat(endpoint.isPresent()).isTrue();
 
         try {
             new URL(endpoint.get().getUrl());
@@ -104,7 +103,7 @@ public class KnativeRouteEndpointDiscoveryTest {
         knativeClient.routes().resource(route).create();
 
         final List<Endpoint> endpoint = endpointDiscovery.findEndpoint("test", labels);
-        assertFalse(endpoint.isEmpty());
+        assertThat(endpoint.isEmpty()).isFalse();
 
         try {
             new URL(endpoint.get(0).getUrl());
@@ -126,6 +125,6 @@ public class KnativeRouteEndpointDiscoveryTest {
         knativeClient.routes().resource(route).create();
 
         final Optional<Endpoint> endpoint = endpointDiscovery.findEndpoint("test", "ksvc3");
-        assertTrue(endpoint.isEmpty());
+        assertThat(endpoint.isEmpty()).isTrue();
     }
 }

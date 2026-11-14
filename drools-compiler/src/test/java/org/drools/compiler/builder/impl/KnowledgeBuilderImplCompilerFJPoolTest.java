@@ -27,7 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class KnowledgeBuilderImplCompilerFJPoolTest {
 
@@ -83,11 +83,7 @@ public class KnowledgeBuilderImplCompilerFJPoolTest {
 
         // Verify all worker threads have the expected classloader
         for (ClassLoader workerClassLoader : results) {
-            assertSame(
-                    customClassLoader,
-                    workerClassLoader,
-                    "Worker thread should have inherited the custom classloader"
-            );
+			assertThat(workerClassLoader).as("Worker thread should have inherited the custom classloader").isSameAs(customClassLoader);
         }
     }
 }

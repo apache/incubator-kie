@@ -22,8 +22,7 @@ import org.drools.ruleunits.api.RuleUnitProvider;
 import org.drools.ruleunits.api.RuleUnitInstance;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class OOPathTest {
 
@@ -33,7 +32,7 @@ public class OOPathTest {
         unit.getStrings().add("Hello World");
 
         RuleUnitInstance<OOPathTestUnit> unitInstance = RuleUnitProvider.get().createRuleUnitInstance(unit);
-        assertEquals(1, unitInstance.fire());
-        assertTrue(unit.getResults().contains("it worked!"));
+        assertThat(unitInstance.fire()).isEqualTo(1);
+        assertThat(unit.getResults().contains("it worked!")).isTrue();
     }
 }

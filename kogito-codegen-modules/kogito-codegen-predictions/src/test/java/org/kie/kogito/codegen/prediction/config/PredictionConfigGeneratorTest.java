@@ -24,9 +24,7 @@ import org.kie.kogito.codegen.api.context.KogitoBuildContext;
 import org.kie.kogito.codegen.api.context.impl.QuarkusKogitoBuildContext;
 import org.kie.kogito.codegen.api.context.impl.SpringBootKogitoBuildContext;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PredictionConfigGeneratorTest {
 
@@ -37,16 +35,16 @@ class PredictionConfigGeneratorTest {
         KogitoBuildContext context = QuarkusKogitoBuildContext.builder().withPackageName(PACKAGE_NAME).build();
         PredictionConfigGenerator predictionConfigGenerator = new PredictionConfigGenerator(context);
         GeneratedFile retrieved = predictionConfigGenerator.generate();
-        assertNotNull(retrieved);
+        assertThat(retrieved).isNotNull();
         String retrievedContent = new String(retrieved.contents());
         String expected = "@jakarta.inject.Singleton";
-        assertTrue(retrievedContent.contains(expected));
+        assertThat(retrievedContent.contains(expected)).isTrue();
         expected = "@jakarta.inject.Inject";
-        assertTrue(retrievedContent.contains(expected));
+        assertThat(retrievedContent.contains(expected)).isTrue();
         String unexpected = "@org.springframework.stereotype.Component";
-        assertFalse(retrievedContent.contains(unexpected));
+        assertThat(retrievedContent.contains(unexpected)).isFalse();
         unexpected = "@org.springframework.beans.factory.annotation.Autowired";
-        assertFalse(retrievedContent.contains(unexpected));
+        assertThat(retrievedContent.contains(unexpected)).isFalse();
     }
 
     @Test
@@ -54,15 +52,15 @@ class PredictionConfigGeneratorTest {
         KogitoBuildContext context = SpringBootKogitoBuildContext.builder().withPackageName(PACKAGE_NAME).build();
         PredictionConfigGenerator predictionConfigGenerator = new PredictionConfigGenerator(context);
         GeneratedFile retrieved = predictionConfigGenerator.generate();
-        assertNotNull(retrieved);
+        assertThat(retrieved).isNotNull();
         String retrievedContent = new String(retrieved.contents());
         String expected = "@org.springframework.stereotype.Component";
-        assertTrue(retrievedContent.contains(expected));
+        assertThat(retrievedContent.contains(expected)).isTrue();
         expected = "@org.springframework.beans.factory.annotation.Autowired";
-        assertTrue(retrievedContent.contains(expected));
+        assertThat(retrievedContent.contains(expected)).isTrue();
         String unexpected = "@jakarta.inject.Singleton";
-        assertFalse(retrievedContent.contains(unexpected));
+        assertThat(retrievedContent.contains(unexpected)).isFalse();
         unexpected = "@jakarta.inject.Inject";
-        assertFalse(retrievedContent.contains(unexpected));
+        assertThat(retrievedContent.contains(unexpected)).isFalse();
     }
 }

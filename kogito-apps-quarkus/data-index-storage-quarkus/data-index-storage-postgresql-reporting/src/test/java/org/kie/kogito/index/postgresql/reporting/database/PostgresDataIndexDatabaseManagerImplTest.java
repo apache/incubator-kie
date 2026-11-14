@@ -31,7 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class PostgresDataIndexDatabaseManagerImplTest {
@@ -54,20 +54,17 @@ class PostgresDataIndexDatabaseManagerImplTest {
 
     @Test
     void testGetEntityManager_Processes() {
-        assertEquals(entityManager,
-                manager.getEntityManager("processes"));
+        assertThat(manager.getEntityManager("processes")).isEqualTo(entityManager);
     }
 
     @Test
     void testGetEntityManager_UserTasks() {
-        assertEquals(entityManager,
-                manager.getEntityManager("tasks"));
+        assertThat(manager.getEntityManager("tasks")).isEqualTo(entityManager);
     }
 
     @Test
     void testGetEntityManager_Jobs() {
-        assertEquals(entityManager,
-                manager.getEntityManager("jobs"));
+        assertThat(manager.getEntityManager("jobs")).isEqualTo(entityManager);
     }
 
 }

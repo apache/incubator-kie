@@ -21,7 +21,6 @@ package org.kie.kogito.event.cloudevents.utils;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,9 +28,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import io.cloudevents.SpecVersion;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 abstract class BaseCloudEventValidatorTest<T extends BaseCloudEventValidator> {
 
@@ -75,26 +74,28 @@ abstract class BaseCloudEventValidatorTest<T extends BaseCloudEventValidator> {
         supportedVersion.getMandatoryAttributes().forEach(mandatoryAttribute -> {
             Map<String, Object> cloudEvent = cloudEventMissing(mandatoryAttribute);
 
-            InvalidCloudEventException ex = Assertions.assertThrows(InvalidCloudEventException.class,
-                    () -> cloudEventValidator.validateCloudEvent(cloudEvent));
-
-            assertThat(ex.getErrors())
-                    .hasSize(1)
-                    .contains("Missing mandatory attribute: " + mandatoryAttribute);
+            assertThatThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent))
+                    .isInstanceOfSatisfying(InvalidCloudEventException.class, ex -> assertThat(ex.getErrors())
+                            .hasSize(1)
+                            .contains("Missing mandatory attribute: " + mandatoryAttribute));
         });
     }
 
     @ParameterizedTest
     @MethodSource("testInvalidRfcXXXXAttributeSource")
-    void testInvalidRfc3339Attribute() {
+    void testInvalidRfc3339Attribute(Object invalidValue) {
         Map<String, Object> cloudEvent = createValidCloudEvent();
-        cloudEvent.put(cloudEventValidator.getRfc3339Attribute(), "invalid");
+        cloudEvent.put(cloudEventValidator.getRfc3339Attribute(), invalidValue);
 
-        InvalidCloudEventException ex = Assertions.assertThrows(InvalidCloudEventException.class,
-                () -> cloudEventValidator.validateCloudEvent(cloudEvent));
-
-        assertThat(ex.getErrors())
-                .containsOnly(cloudEventValidator.getRfc3339Attribute() + " MUST adhere to the format specified in RFC 3339 (https://datatracker.ietf.org/doc/html/rfc3339).");
+        if (invalidValue instanceof String) {
+            assertThatThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent))
+                    .isInstanceOfSatisfying(InvalidCloudEventException.class, ex -> assertThat(ex.getErrors())
+                            .containsOnly(cloudEventValidator.getRfc3339Attribute()
+                                    + " MUST adhere to the format specified in RFC 3339 (https://datatracker.ietf.org/doc/html/rfc3339)."));
+        } else {
+            assertThatThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent))
+                    .isInstanceOf(ClassCastException.class);
+        }
     }
 
     @Test
@@ -102,11 +103,10 @@ abstract class BaseCloudEventValidatorTest<T extends BaseCloudEventValidator> {
         Map<String, Object> cloudEvent = createValidCloudEvent();
         cloudEvent.put(cloudEventValidator.getRfc2046Attribute(), "invalid");
 
-        InvalidCloudEventException ex = Assertions.assertThrows(InvalidCloudEventException.class,
-                () -> cloudEventValidator.validateCloudEvent(cloudEvent));
-
-        assertThat(ex.getErrors())
-                .containsOnly(cloudEventValidator.getRfc2046Attribute() + " MUST adhere to the format specified in RFC 2046 (https://datatracker.ietf.org/doc/html/rfc2046).");
+        assertThatThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent))
+                .isInstanceOfSatisfying(InvalidCloudEventException.class, ex -> assertThat(ex.getErrors())
+                        .containsOnly(cloudEventValidator.getRfc2046Attribute()
+                                + " MUST adhere to the format specified in RFC 2046 (https://datatracker.ietf.org/doc/html/rfc2046)."));
     }
 
     @Test
@@ -114,8 +114,8 @@ abstract class BaseCloudEventValidatorTest<T extends BaseCloudEventValidator> {
         Map<String, Object> cloudEvent = createValidCloudEvent();
         cloudEvent.put(cloudEventValidator.getRfc2046Attribute(), new Object());
 
-        assertThatExceptionOfType(ClassCastException.class)
-                .isThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent));
+        assertThatThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent))
+                .isInstanceOf(ClassCastException.class);
     }
 
     @Test
@@ -123,11 +123,9 @@ abstract class BaseCloudEventValidatorTest<T extends BaseCloudEventValidator> {
         cloudEventValidator.getNonEmptyAttributes().forEach(nonEmptyAttribute -> {
             Map<String, Object> cloudEvent = cloudEventWithEmptyAttribute(nonEmptyAttribute);
 
-            InvalidCloudEventException ex = Assertions.assertThrows(InvalidCloudEventException.class,
-                    () -> cloudEventValidator.validateCloudEvent(cloudEvent));
-
-            assertThat(ex.getErrors())
-                    .contains(nonEmptyAttribute + " must be a non-empty String.");
+            assertThatThrownBy(() -> cloudEventValidator.validateCloudEvent(cloudEvent))
+                    .isInstanceOfSatisfying(InvalidCloudEventException.class, ex -> assertThat(ex.getErrors())
+                            .contains(nonEmptyAttribute + " must be a non-empty String."));
         });
     }
 }

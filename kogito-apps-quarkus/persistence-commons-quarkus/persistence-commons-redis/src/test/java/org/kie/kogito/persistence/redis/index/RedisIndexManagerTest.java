@@ -21,7 +21,6 @@ package org.kie.kogito.persistence.redis.index;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.persistence.redis.RedisClientManager;
 import org.kie.kogito.persistence.redis.RedisClientMock;
@@ -29,6 +28,7 @@ import org.mockito.Mockito;
 
 import io.redisearch.Schema;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.redis.Constants.INDEX_NAME_FIELD;
 import static org.kie.kogito.persistence.redis.Person.AGE_PROPERTY;
 import static org.kie.kogito.persistence.redis.Person.NAME_PROPERTY;
@@ -51,14 +51,14 @@ public class RedisIndexManagerTest {
         redisIndexManager.createIndex(redisCreateIndexEvent);
 
         List<Schema> schemas = redisClientMock.getSchemas();
-        Assertions.assertEquals(1, schemas.size());
+        assertThat(schemas.size()).isEqualTo(1);
 
         Schema personSchema = schemas.get(0);
-        Assertions.assertEquals(3, personSchema.fields.size());
+        assertThat(personSchema.fields.size()).isEqualTo(3);
 
         List<String> fieldNames = personSchema.fields.stream().map(x -> x.name).collect(Collectors.toList());
-        Assertions.assertTrue(fieldNames.contains(NAME_PROPERTY));
-        Assertions.assertTrue(fieldNames.contains(AGE_PROPERTY));
-        Assertions.assertTrue(fieldNames.contains(INDEX_NAME_FIELD));
+        assertThat(fieldNames.contains(NAME_PROPERTY)).isTrue();
+        assertThat(fieldNames.contains(AGE_PROPERTY)).isTrue();
+        assertThat(fieldNames.contains(INDEX_NAME_FIELD)).isTrue();
     }
 }

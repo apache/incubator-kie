@@ -34,11 +34,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.emptyOrNullString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = KogitoSpringbootApplication.class)
@@ -76,7 +76,7 @@ class EnumsTest extends BaseRestTest {
                 .extract()
                 .as(TestWorkItem[].class)[0];
 
-        assertEquals("ReviewRatingTask", task.getName());
+        assertThat(task.getName()).isEqualTo("ReviewRatingTask");
 
         given()
                 .contentType(ContentType.JSON)

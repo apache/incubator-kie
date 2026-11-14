@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class PostgresTriggerInsertSqlBuilderTest extends BaseSqlBuilderImplTest {
@@ -46,7 +46,7 @@ class PostgresTriggerInsertSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertCreateSql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "CREATE TRIGGER trgInsert_mappingId AFTER INSERT OR UPDATE ON sourceTableName",
                 "FOR EACH ROW",
@@ -55,7 +55,7 @@ class PostgresTriggerInsertSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertDestroySql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "DROP TRIGGER IF EXISTS trgInsert_mappingId ON sourceTableName");
     }
@@ -66,7 +66,7 @@ class PostgresTriggerInsertSqlBuilderTest extends BaseSqlBuilderImplTest {
 
         final String sql = getTriggerInsertBuilder().createInsertTriggerFunctionSql(context);
 
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "CREATE FUNCTION spInsert_mappingId() RETURNS trigger A",
                 "INSERT INTO targetTableName",
@@ -91,7 +91,7 @@ class PostgresTriggerInsertSqlBuilderTest extends BaseSqlBuilderImplTest {
 
         final String sql = getTriggerInsertBuilder().dropInsertTriggerFunctionSql(context);
 
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "DROP FUNCTION IF EXISTS spInsert_mappingId");
     }

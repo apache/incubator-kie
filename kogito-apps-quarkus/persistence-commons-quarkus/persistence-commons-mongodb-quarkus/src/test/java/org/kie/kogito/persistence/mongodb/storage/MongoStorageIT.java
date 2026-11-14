@@ -34,9 +34,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.mock.MockMongoEntityMapper.TEST_ATTRIBUTE;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 
@@ -66,7 +64,7 @@ class MongoStorageIT {
     void testContainsKey() {
         String testId = "testContains";
         collection.insertOne(new Document(MONGO_ID, testId));
-        assertTrue(storage.containsKey(testId));
+        assertThat(storage.containsKey(testId)).isTrue();
     }
 
     @Test
@@ -74,7 +72,7 @@ class MongoStorageIT {
         String testId = "testGet";
         String testValue = "testValue";
         collection.insertOne(new Document(MONGO_ID, testId).append(TEST_ATTRIBUTE, testValue));
-        assertEquals(testValue, storage.get(testId));
+        assertThat(storage.get(testId)).isEqualTo(testValue);
     }
 
     @Test
@@ -84,8 +82,8 @@ class MongoStorageIT {
         storage.put(testId, testValue);
         FindIterable<Document> findIterable = collection.find(new Document(MONGO_ID, testId));
         Document document = findIterable.first();
-        assertNotNull(document);
-        assertEquals(testValue, document.get(TEST_ATTRIBUTE));
+        assertThat(document).isNotNull();
+        assertThat(document.get(TEST_ATTRIBUTE)).isEqualTo(testValue);
     }
 
     @Test
@@ -94,7 +92,7 @@ class MongoStorageIT {
         String testValue = "testValue";
         collection.insertOne(new Document(MONGO_ID, testId).append(TEST_ATTRIBUTE, testValue));
         storage.clear();
-        assertEquals(0, collection.countDocuments());
+        assertThat(collection.countDocuments()).isEqualTo(0);
     }
 
     @Test
@@ -103,6 +101,6 @@ class MongoStorageIT {
         String testValue = "testValue";
         collection.insertOne(new Document(MONGO_ID, testId).append(TEST_ATTRIBUTE, testValue));
         storage.remove(testId);
-        assertEquals(0, collection.countDocuments());
+        assertThat(collection.countDocuments()).isEqualTo(0);
     }
 }

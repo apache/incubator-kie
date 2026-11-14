@@ -31,7 +31,7 @@ import static io.cloudevents.core.v03.CloudEventV03.SOURCE;
 import static io.cloudevents.core.v03.CloudEventV03.SPECVERSION;
 import static io.cloudevents.core.v03.CloudEventV03.TIME;
 import static io.cloudevents.core.v03.CloudEventV03.TYPE;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.kie.kogito.event.cloudevents.utils.CloudEventUtils.DATA;
 
 class CloudEventValidatorV03Test extends BaseCloudEventValidatorTest<CloudEventValidatorV03> {

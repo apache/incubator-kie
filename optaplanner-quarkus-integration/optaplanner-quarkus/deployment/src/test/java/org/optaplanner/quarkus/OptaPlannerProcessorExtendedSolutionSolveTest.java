@@ -19,10 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -71,14 +68,15 @@ class OptaPlannerProcessorExtendedSolutionSolveTest {
 
     @Test
     void singletonSolverFactory() {
-        assertNotNull(solverFactory);
+        assertThat(solverFactory).isNotNull();
         // There is only one ScoreDirectorFactory instance
-        assertSame(((DefaultSolverFactory<TestdataQuarkusSolution>) solverFactory).getScoreDirectorFactory(),
-                ((DefaultSolutionManager<TestdataQuarkusSolution, SimpleScore>) solutionManager).getScoreDirectorFactory());
-        assertNotNull(solverManager);
+        assertThat(((DefaultSolutionManager<TestdataQuarkusSolution, SimpleScore>) solutionManager).getScoreDirectorFactory())
+                .isSameAs(((DefaultSolverFactory<TestdataQuarkusSolution>) solverFactory).getScoreDirectorFactory());
+        assertThat(solverManager).isNotNull();
         // There is only one SolverFactory instance
-        assertSame(solverFactory, ((DefaultSolverManager<TestdataQuarkusSolution, Long>) solverManager).getSolverFactory());
-        assertNotNull(scoreManager);
+        assertThat(((DefaultSolverManager<TestdataQuarkusSolution, Long>) solverManager).getSolverFactory())
+                .isSameAs(solverFactory);
+        assertThat(scoreManager).isNotNull();
     }
 
     @Test
@@ -92,9 +90,9 @@ class OptaPlannerProcessorExtendedSolutionSolveTest {
                 .collect(Collectors.toList()));
         SolverJob<TestdataQuarkusSolution, Long> solverJob = solverManager.solve(1L, problem);
         TestdataExtendedQuarkusSolution solution = (TestdataExtendedQuarkusSolution) solverJob.getFinalBestSolution();
-        assertNotNull(solution);
-        assertTrue(solution.getScore().score() >= 0);
-        assertEquals("Extra Data", solution.getExtraData());
+        assertThat(solution).isNotNull();
+        assertThat(solution.getScore().score() >= 0).isTrue();
+        assertThat(solution.getExtraData()).isEqualTo("Extra Data");
     }
 
 }

@@ -21,7 +21,7 @@ package org.kie.kogito.persistence.postgresql.reporting.database.sqlbuilders;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class PostgresTableSqlBuilderTest extends BaseSqlBuilderImplTest {
@@ -45,7 +45,7 @@ class PostgresTableSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertCreateSql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "CREATE TABLE targetTableName",
                 "id text",
@@ -57,7 +57,7 @@ class PostgresTableSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertDestroySql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "DROP TABLE IF EXISTS targetTableName");
     }

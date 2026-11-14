@@ -25,7 +25,7 @@ import org.kie.api.runtime.KieSession;
 
 import java.io.ByteArrayOutputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -47,7 +47,7 @@ public class DefaultKieSessionFromFSExampleTest {
                           "Dave: Hello, HAL. Do you read me, HAL?" + NL +
                           "HAL: Dave. I read you." + NL;
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 
     public void go(PrintStream out) {

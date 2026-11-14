@@ -39,7 +39,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = KogitoSpringbootApplication.class)
 class BasicRestTest extends BaseRestTest {
@@ -144,8 +143,8 @@ class BasicRestTest extends BaseRestTest {
 
         // UUID is no longer the BusinessKey or generated from it
         String unexpectedId = UUID.nameUUIDFromBytes(businessKey.getBytes()).toString();
-        assertNotEquals(businessKey, id);
-        assertNotEquals(unexpectedId, id);
+        assertThat(id).isNotEqualTo(businessKey);
+        assertThat(id).isNotEqualTo(unexpectedId);
 
         given()
                 .contentType(ContentType.JSON)

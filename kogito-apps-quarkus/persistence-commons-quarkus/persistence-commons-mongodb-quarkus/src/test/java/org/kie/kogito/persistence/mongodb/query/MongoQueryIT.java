@@ -36,7 +36,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.api.query.QueryFilterFactory.orderBy;
 import static org.kie.kogito.persistence.api.query.SortDirection.ASC;
 import static org.kie.kogito.persistence.mongodb.mock.MockMongoEntityMapper.TEST_ATTRIBUTE;
@@ -78,7 +78,7 @@ class MongoQueryIT {
         mongoQuery.filter(List.of(QueryFilterFactory.in(TEST_ATTRIBUTE, List.of("2", "5", "7"))));
 
         List<String> results = mongoQuery.execute();
-        assertEquals(1, results.size());
-        assertEquals("5", results.get(0));
+        assertThat(results.size()).isEqualTo(1);
+        assertThat(results.get(0)).isEqualTo("5");
     }
 }

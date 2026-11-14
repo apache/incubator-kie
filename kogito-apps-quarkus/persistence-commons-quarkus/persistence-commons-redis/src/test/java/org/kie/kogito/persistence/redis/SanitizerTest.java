@@ -20,10 +20,11 @@ package org.kie.kogito.persistence.redis;
 
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SanitizerTest {
 
@@ -31,7 +32,7 @@ public class SanitizerTest {
     @MethodSource("provideSanitizeTestCases")
     public void sanitizeTest(String input, String expected) {
         String sanitized = (String) Sanitizer.sanitize(input);
-        Assertions.assertEquals(expected, sanitized);
+        assertThat(sanitized).isEqualTo(expected);
     }
 
     private static Stream<Arguments> provideSanitizeTestCases() {

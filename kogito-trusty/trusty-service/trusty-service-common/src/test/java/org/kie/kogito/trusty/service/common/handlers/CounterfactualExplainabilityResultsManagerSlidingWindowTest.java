@@ -29,7 +29,7 @@ import org.kie.kogito.explainability.api.ExplainabilityStatus;
 import org.kie.kogito.persistence.api.Storage;
 import org.kie.kogito.persistence.api.query.Query;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -66,12 +66,12 @@ public class CounterfactualExplainabilityResultsManagerSlidingWindowTest {
 
     @Test
     public void testInstantiationWithInvalidWindowSizeOfZero() {
-        assertThrows(IllegalArgumentException.class, () -> new CounterfactualExplainabilityResultsManagerSlidingWindow(0));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new CounterfactualExplainabilityResultsManagerSlidingWindow(0));
     }
 
     @Test
     public void testInstantiationWithInvalidWindowSizeNegative() {
-        assertThrows(IllegalArgumentException.class, () -> new CounterfactualExplainabilityResultsManagerSlidingWindow(-1));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new CounterfactualExplainabilityResultsManagerSlidingWindow(-1));
     }
 
     @Test

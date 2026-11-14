@@ -19,13 +19,15 @@
 
 package org.optaplanner.benchmark.quarkus;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.concurrent.ExecutionException;
 
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.optaplanner.benchmark.config.PlannerBenchmarkConfig;
@@ -51,13 +53,10 @@ class OptaPlannerBenchmarkProcessorMissingSpentLimitTest {
 
     @Test
     void benchmark() throws ExecutionException, InterruptedException {
-        IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class, () -> {
-            new OptaPlannerBenchmarkRecorder(new RuntimeValue<>(optaPlannerBenchmarkRuntimeConfig))
-                    .benchmarkConfigSupplier(new PlannerBenchmarkConfig()).get();
-        });
-        Assertions.assertEquals(
-                "At least one of the properties quarkus.optaplanner.benchmark.solver.termination.spent-limit, quarkus.optaplanner.benchmark.solver.termination.best-score-limit, quarkus.optaplanner.benchmark.solver.termination.unimproved-spent-limit is required if termination is not configured in the inherited solver benchmark config and solverBenchmarkBluePrint is used.",
-                exception.getMessage());
+        assertThatThrownBy(() -> new OptaPlannerBenchmarkRecorder(new RuntimeValue<>(optaPlannerBenchmarkRuntimeConfig))
+                .benchmarkConfigSupplier(new PlannerBenchmarkConfig()).get())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("At least one of the properties quarkus.optaplanner.benchmark.solver.termination.spent-limit, quarkus.optaplanner.benchmark.solver.termination.best-score-limit, quarkus.optaplanner.benchmark.solver.termination.unimproved-spent-limit is required if termination is not configured in the inherited solver benchmark config and solverBenchmarkBluePrint is used.");
     }
 
 }

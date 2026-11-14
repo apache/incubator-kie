@@ -24,7 +24,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class KogitoQuarkusApplicationPropertiesProviderTest {
 
@@ -46,40 +46,40 @@ class KogitoQuarkusApplicationPropertiesProviderTest {
 
     @Test
     void getApplicationProperty() {
-        DEFAULT_PROPERTIES.forEach((key, value) -> assertEquals(value, provider.getApplicationProperty(key).orElse(null)));
+        DEFAULT_PROPERTIES.forEach((key, value) -> assertThat(provider.getApplicationProperty(key).orElse(null)).isEqualTo(value));
     }
 
     @Test
     void getApplicationPropertyOverride() {
         DEFAULT_PROPERTIES.keySet().forEach(key -> System.setProperty(key, "overridden"));
         KogitoQuarkusApplicationPropertiesProvider providerWithOverrides = new KogitoQuarkusApplicationPropertiesProvider();
-        DEFAULT_PROPERTIES.keySet().forEach(key -> assertEquals("overridden", providerWithOverrides.getApplicationProperty(key).orElse(null)));
+        DEFAULT_PROPERTIES.keySet().forEach(key -> assertThat(providerWithOverrides.getApplicationProperty(key).orElse(null)).isEqualTo("overridden"));
         DEFAULT_PROPERTIES.keySet().forEach(System::clearProperty);
     }
 
     @Test
     void getApplicationProperties() {
         Collection<String> retrieved = provider.getApplicationProperties();
-        DEFAULT_PROPERTIES.forEach((key, value) -> assertTrue(retrieved.contains(key)));
+        DEFAULT_PROPERTIES.forEach((key, value) -> assertThat(retrieved).contains(key));
     }
 
     @Test
     void testGetApplicationProperty() {
-        DEFAULT_PROPERTIES.forEach((key, value) -> assertEquals(value, provider.getApplicationProperty(key, String.class).orElse(null)));
+        DEFAULT_PROPERTIES.forEach((key, value) -> assertThat(provider.getApplicationProperty(key, String.class).orElse(null)).isEqualTo(value));
     }
 
     @Test
     void setApplicationProperty() {
         provider.setApplicationProperty("test.key", "test.value");
-        assertEquals("test.value", provider.getApplicationProperty("test.key").orElse(null));
+        assertThat(provider.getApplicationProperty("test.key").orElse(null)).isEqualTo("test.value");
     }
 
     @Test
     void removeApplicationProperty() {
         provider.setApplicationProperty("test.key", "test.value");
-        assertTrue(provider.getApplicationProperties().contains("test.key"));
+        assertThat(provider.getApplicationProperties().contains("test.key")).isTrue();
         provider.removeApplicationProperty("test.key");
-        assertFalse(provider.getApplicationProperties().contains("test.key"));
+        assertThat(provider.getApplicationProperties().contains("test.key")).isFalse();
     }
 
 }

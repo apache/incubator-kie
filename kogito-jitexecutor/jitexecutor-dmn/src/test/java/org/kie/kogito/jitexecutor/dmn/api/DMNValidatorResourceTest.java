@@ -35,10 +35,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.getModelFromIoUtils;
 
 @QuarkusTest
@@ -69,9 +67,9 @@ public class DMNValidatorResourceTest {
 
         LOG.debug("Validate response: {}", response);
         List<JITDMNMessage> messages = MAPPER.readValue(response, LIST_OF_MSGS);
-        assertEquals(1, messages.size());
-        assertTrue(messages.stream().anyMatch(m -> m.getSourceId().equals("_E7994A2B-1189-4BE5-9382-891D48E87D47") &&
-                m.getMessage().equals("Decision Table Analysis of table 'Preapproval' finished with no messages to be reported.")));
+        assertThat(messages.size()).isEqualTo(1);
+        assertThat(messages.stream().anyMatch(m -> m.getSourceId().equals("_E7994A2B-1189-4BE5-9382-891D48E87D47") &&
+                m.getMessage().equals("Decision Table Analysis of table 'Preapproval' finished with no messages to be reported."))).isTrue();
     }
 
     @Test
@@ -90,8 +88,8 @@ public class DMNValidatorResourceTest {
 
         LOG.debug("Validate response: {}", response);
         List<JITDMNMessage> messages = MAPPER.readValue(response, LIST_OF_MSGS);
-        assertFalse(messages.isEmpty());
-        assertTrue(messages.stream().anyMatch(m -> m.getSourceId().equals("_E7994A2B-1189-4BE5-9382-891D48E87D47") &&
-                m.getMessageType().equals(DMNMessageType.DECISION_TABLE_OVERLAP_HITPOLICY_UNIQUE)));
+        assertThat(messages.isEmpty()).isFalse();
+        assertThat(messages.stream().anyMatch(m -> m.getSourceId().equals("_E7994A2B-1189-4BE5-9382-891D48E87D47") &&
+                m.getMessageType().equals(DMNMessageType.DECISION_TABLE_OVERLAP_HITPOLICY_UNIQUE))).isTrue();
     }
 }

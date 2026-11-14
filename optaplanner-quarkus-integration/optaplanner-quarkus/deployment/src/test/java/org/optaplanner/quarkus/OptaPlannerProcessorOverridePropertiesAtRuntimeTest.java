@@ -19,7 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -121,8 +121,8 @@ class OptaPlannerProcessorOverridePropertiesAtRuntimeTest {
                 .when()
                 .get("/optaplanner/test/solver-config")
                 .asInputStream());
-        assertEquals("7", solverConfigProperties.get("termination.bestScoreLimit"));
-        assertEquals("3", solverConfigProperties.get("moveThreadCount"));
+        assertThat(solverConfigProperties.get("termination.bestScoreLimit")).isEqualTo("7");
+        assertThat(solverConfigProperties.get("moveThreadCount")).isEqualTo("3");
     }
 
     @Test
@@ -134,7 +134,7 @@ class OptaPlannerProcessorOverridePropertiesAtRuntimeTest {
                 .when()
                 .get("/optaplanner/test/solver-manager-config")
                 .asInputStream());
-        assertEquals("10", solverManagerProperties.get("parallelSolverCount"));
+        assertThat(solverManagerProperties.get("parallelSolverCount")).isEqualTo("10");
     }
 
 }

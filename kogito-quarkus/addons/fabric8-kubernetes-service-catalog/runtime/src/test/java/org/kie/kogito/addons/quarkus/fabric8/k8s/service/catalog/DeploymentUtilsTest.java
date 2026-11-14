@@ -38,8 +38,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(KubernetesMockServerTestResource.class)
@@ -59,8 +58,7 @@ public class DeploymentUtilsTest {
 
         KubeTestUtils.createWithStatusPreserved(client, deployment, namespace, Deployment.class);
 
-        assertEquals(Optional.empty(),
-                discovery.query(KubernetesResourceUri.parse("deployments.v1.apps/" + namespace + "/invalid")));
+        assertThat(discovery.query(KubernetesResourceUri.parse("deployments.v1.apps/" + namespace + "/invalid"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -76,7 +74,7 @@ public class DeploymentUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.11:80", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.11:80");
     }
 
     @Test
@@ -100,7 +98,7 @@ public class DeploymentUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.11:4009", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.11:4009");
     }
 
     @Test
@@ -123,7 +121,7 @@ public class DeploymentUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, pod, namespace, Pod.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://172.17.0.11:8080", url.get());
+        assertThat(url.get()).isEqualTo("http://172.17.0.11:8080");
     }
 
     @Test
@@ -149,7 +147,7 @@ public class DeploymentUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, pod, namespace, Pod.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertTrue(url.isEmpty());
+        assertThat(url.isEmpty()).isTrue();
     }
 
     @Test
@@ -177,6 +175,6 @@ public class DeploymentUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, pod, namespace, Pod.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://172.17.0.11:4009", url.get());
+        assertThat(url.get()).isEqualTo("http://172.17.0.11:4009");
     }
 }

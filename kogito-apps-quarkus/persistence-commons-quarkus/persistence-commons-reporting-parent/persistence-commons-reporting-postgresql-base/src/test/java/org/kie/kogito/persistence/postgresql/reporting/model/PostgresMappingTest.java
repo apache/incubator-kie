@@ -20,8 +20,7 @@ package org.kie.kogito.persistence.postgresql.reporting.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresMappingTest {
 
@@ -30,31 +29,23 @@ class PostgresMappingTest {
 
     @Test
     void testEquality() {
-        assertEquals(MAPPING,
-                MAPPING);
-        assertNotEquals(MAPPING,
-                new PostgresMapping("different",
-                        new PostgresJsonField("field1", JsonType.STRING)));
-        assertNotEquals(MAPPING,
-                new PostgresMapping("sourceJsonPath",
-                        new PostgresJsonField("field1", JsonType.NUMBER)));
-        assertNotEquals(MAPPING,
-                new PostgresMapping("sourceJsonPath",
-                        new PostgresJsonField("field2", JsonType.STRING)));
+        assertThat(MAPPING).isEqualTo(MAPPING);
+        assertThat(new PostgresMapping("different",
+                new PostgresJsonField("field1", JsonType.STRING))).isNotEqualTo(MAPPING);
+        assertThat(new PostgresMapping("sourceJsonPath",
+                new PostgresJsonField("field1", JsonType.NUMBER))).isNotEqualTo(MAPPING);
+        assertThat(new PostgresMapping("sourceJsonPath",
+                new PostgresJsonField("field2", JsonType.STRING))).isNotEqualTo(MAPPING);
     }
 
     @Test
     void testHashCode() {
-        assertEquals(MAPPING_HASHCODE,
-                MAPPING.hashCode());
-        assertNotEquals(MAPPING_HASHCODE,
-                new PostgresMapping("different",
-                        new PostgresJsonField("field1", JsonType.STRING)).hashCode());
-        assertNotEquals(MAPPING_HASHCODE,
-                new PostgresMapping("sourceJsonPath",
-                        new PostgresJsonField("field1", JsonType.NUMBER)).hashCode());
-        assertNotEquals(MAPPING_HASHCODE,
-                new PostgresMapping("sourceJsonPath",
-                        new PostgresJsonField("field2", JsonType.STRING)).hashCode());
+        assertThat(MAPPING.hashCode()).isEqualTo(MAPPING_HASHCODE);
+        assertThat(new PostgresMapping("different",
+                new PostgresJsonField("field1", JsonType.STRING)).hashCode()).isNotEqualTo(MAPPING_HASHCODE);
+        assertThat(new PostgresMapping("sourceJsonPath",
+                new PostgresJsonField("field1", JsonType.NUMBER)).hashCode()).isNotEqualTo(MAPPING_HASHCODE);
+        assertThat(new PostgresMapping("sourceJsonPath",
+                new PostgresJsonField("field2", JsonType.STRING)).hashCode()).isNotEqualTo(MAPPING_HASHCODE);
     }
 }

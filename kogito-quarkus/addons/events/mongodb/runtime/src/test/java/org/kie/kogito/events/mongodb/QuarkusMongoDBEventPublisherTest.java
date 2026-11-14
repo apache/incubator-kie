@@ -28,8 +28,7 @@ import io.quarkus.test.junit.mockito.InjectSpy;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -54,37 +53,37 @@ class QuarkusMongoDBEventPublisherTest {
 
     @Test
     void mongoClient() {
-        assertEquals(mongoClient.getDatabase("testDB"), publisher.mongoClient().getDatabase("testDB"));
+        assertThat(publisher.mongoClient().getDatabase("testDB")).isEqualTo(mongoClient.getDatabase("testDB"));
     }
 
     @Test
     void transactionManager() {
-        assertEquals(transactionManager, publisher.transactionManager());
+        assertThat(publisher.transactionManager()).isEqualTo(transactionManager);
     }
 
     @Test
     void processInstancesEvents() {
-        assertFalse(publisher.processInstancesEvents());
+        assertThat(publisher.processInstancesEvents()).isFalse();
     }
 
     @Test
     void userTasksEvents() {
-        assertFalse(publisher.userTasksEvents());
+        assertThat(publisher.userTasksEvents()).isFalse();
     }
 
     @Test
     void eventsDatabaseName() {
-        assertEquals("testDB", publisher.eventsDatabaseName());
+        assertThat(publisher.eventsDatabaseName()).isEqualTo("testDB");
     }
 
     @Test
     void processInstancesEventsCollection() {
-        assertEquals("testPICollection", publisher.processInstancesEventsCollection());
+        assertThat(publisher.processInstancesEventsCollection()).isEqualTo("testPICollection");
     }
 
     @Test
     void userTasksEventsCollection() {
-        assertEquals("testUTCollection", publisher.userTasksEventsCollection());
+        assertThat(publisher.userTasksEventsCollection()).isEqualTo("testUTCollection");
     }
 
 }

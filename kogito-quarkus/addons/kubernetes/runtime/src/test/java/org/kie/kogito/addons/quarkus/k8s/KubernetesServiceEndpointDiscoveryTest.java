@@ -42,9 +42,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @QuarkusTest
 @QuarkusTestResource(KubernetesMockServerTestResource.class)
@@ -90,8 +89,8 @@ public class KubernetesServiceEndpointDiscoveryTest {
     public void testGetURLOnStandardPort() {
         createServiceIfNotExist("svc1", Collections.emptyMap(), 80, 8776);
         final Optional<Endpoint> endpoint = endpointDiscovery.findEndpoint("test", "svc1");
-        assertTrue(endpoint.isPresent());
-        assertFalse(endpoint.get().getUrl().isEmpty());
+        assertThat(endpoint.isPresent()).isTrue();
+        assertThat(endpoint.get().getUrl().isEmpty()).isFalse();
         try {
             new URL(endpoint.get().getUrl());
         } catch (MalformedURLException e) {
@@ -103,8 +102,8 @@ public class KubernetesServiceEndpointDiscoveryTest {
     public void testGetURLOnRandomPort() {
         createServiceIfNotExist("svc2", Collections.singletonMap("app", "test1"), 8778);
         final List<Endpoint> endpoints = endpointDiscovery.findEndpoint("test", Collections.singletonMap("app", "test1"));
-        assertFalse(endpoints.isEmpty());
-        assertFalse(endpoints.get(0).getUrl().isEmpty());
+        assertThat(endpoints.isEmpty()).isFalse();
+        assertThat(endpoints.get(0).getUrl().isEmpty()).isFalse();
         try {
             new URL(endpoints.get(0).getUrl());
         } catch (MalformedURLException e) {

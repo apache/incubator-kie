@@ -45,7 +45,7 @@ import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class QuarkusTracingAddonDevServicesIT {
 
@@ -120,7 +120,7 @@ public class QuarkusTracingAddonDevServicesIT {
     private String executeAndGetExecutionId() {
         final Headers headers = execute().headers();
 
-        assertTrue(headers.hasHeaderWithName(KOGITO_EXECUTION_ID_HEADER));
+        assertThat(headers.hasHeaderWithName(KOGITO_EXECUTION_ID_HEADER)).isTrue();
         return headers.getValue(KOGITO_EXECUTION_ID_HEADER);
     }
 

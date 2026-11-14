@@ -24,7 +24,7 @@ import org.kie.kogito.addons.k8s.workitems.AbstractDiscoveredEndpointCaller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Very basic check to verify that our beans are being created.
@@ -41,8 +41,8 @@ public class BeansCreationSanityTest {
 
     @Test
     void verifyBeansCreation() {
-        assertNotNull(endpointDiscovery);
-        assertNotNull(discoveredEndpointCaller);
+        assertThat(endpointDiscovery).isNotNull();
+        assertThat(discoveredEndpointCaller).isNotNull();
     }
 
 }

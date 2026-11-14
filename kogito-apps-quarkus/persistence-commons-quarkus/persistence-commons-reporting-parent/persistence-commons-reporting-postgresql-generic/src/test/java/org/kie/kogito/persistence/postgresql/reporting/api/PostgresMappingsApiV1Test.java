@@ -38,9 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.ws.rs.core.Response;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -76,16 +74,16 @@ class PostgresMappingsApiV1Test {
 
         final Response response = service.getAllMappingDefinitions();
 
-        assertNotNull(response);
-        assertEquals(200, response.getStatus());
-        assertTrue(response.getEntity() instanceof PostgresMappingDefinitions);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat((response.getEntity() instanceof PostgresMappingDefinitions)).isTrue();
 
         final PostgresMappingDefinitions responseDefinitions = (PostgresMappingDefinitions) response.getEntity();
         final Collection<PostgresMappingDefinition> responseDefinitionsCollection = responseDefinitions.getMappingDefinitions();
-        assertEquals(1, responseDefinitionsCollection.size());
+        assertThat(responseDefinitionsCollection.size()).isEqualTo(1);
 
         final PostgresMappingDefinition responseDefinition = responseDefinitionsCollection.iterator().next();
-        assertEquals(definition, responseDefinition);
+        assertThat(responseDefinition).isEqualTo(definition);
     }
 
     @Test
@@ -103,12 +101,12 @@ class PostgresMappingsApiV1Test {
 
         final Response response = service.getMappingDefinitionById("mappingId");
 
-        assertNotNull(response);
-        assertEquals(200, response.getStatus());
-        assertTrue(response.getEntity() instanceof PostgresMappingDefinition);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat((response.getEntity() instanceof PostgresMappingDefinition)).isTrue();
 
         final PostgresMappingDefinition responseDefinition = (PostgresMappingDefinition) response.getEntity();
-        assertEquals(definition, responseDefinition);
+        assertThat(responseDefinition).isEqualTo(definition);
     }
 
     @Test
@@ -116,8 +114,8 @@ class PostgresMappingsApiV1Test {
         when(mappingService.getMappingDefinitionById(anyString())).thenReturn(null);
 
         final Response response = service.getMappingDefinitionById("mappingId");
-        assertNotNull(response);
-        assertEquals(400, response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(400);
     }
 
     @Test
@@ -125,8 +123,8 @@ class PostgresMappingsApiV1Test {
         when(mappingService.getMappingDefinitionById(anyString())).thenThrow(new IllegalArgumentException());
 
         final Response response = service.getMappingDefinitionById("mappingId");
-        assertNotNull(response);
-        assertEquals(400, response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(400);
     }
 
     @Test
@@ -142,8 +140,8 @@ class PostgresMappingsApiV1Test {
                                 JsonType.STRING))));
 
         final Response response = service.createMappingDefinition(definition);
-        assertNotNull(response);
-        assertEquals(200, response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(200);
 
         verify(mappingService).saveMappingDefinition(definition);
         verify(databaseManager).createArtifacts(definition);
@@ -164,8 +162,8 @@ class PostgresMappingsApiV1Test {
         when(mappingService.deleteMappingDefinitionById("mappingId")).thenReturn(definition);
 
         final Response response = service.deleteMappingDefinitionById("mappingId");
-        assertNotNull(response);
-        assertEquals(200, response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(200);
 
         verify(mappingService).deleteMappingDefinitionById("mappingId");
         verify(databaseManager).destroyArtifacts(definition);
@@ -176,8 +174,8 @@ class PostgresMappingsApiV1Test {
         when(mappingService.deleteMappingDefinitionById(anyString())).thenReturn(null);
 
         final Response response = service.deleteMappingDefinitionById("mappingId");
-        assertNotNull(response);
-        assertEquals(400, response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(400);
 
         verify(mappingService).deleteMappingDefinitionById("mappingId");
     }
@@ -187,8 +185,8 @@ class PostgresMappingsApiV1Test {
         when(mappingService.deleteMappingDefinitionById(anyString())).thenThrow(new IllegalArgumentException());
 
         final Response response = service.deleteMappingDefinitionById("mappingId");
-        assertNotNull(response);
-        assertEquals(400, response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(400);
 
         verify(mappingService).deleteMappingDefinitionById("mappingId");
     }

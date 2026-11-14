@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.awaitility.Awaitility;
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.event.cloudevents.utils.CloudEventUtils;
@@ -50,6 +49,7 @@ import io.smallrye.context.SmallRyeManagedExecutor;
 import jakarta.enterprise.inject.Instance;
 
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -184,7 +184,7 @@ class ExplainabilityResultConsumerTest {
                 emptyList())));
 
         doThrow(new RuntimeException("Something really bad")).when(trustyService).storeExplainabilityResult(any(String.class), any(BaseExplainabilityResult.class));
-        Assertions.assertDoesNotThrow(() -> consumer.handleMessage(message));
+        assertThatCode(() -> consumer.handleMessage(message)).doesNotThrowAnyException();
     }
 
     private Message<String> mockMessage(String payload) {

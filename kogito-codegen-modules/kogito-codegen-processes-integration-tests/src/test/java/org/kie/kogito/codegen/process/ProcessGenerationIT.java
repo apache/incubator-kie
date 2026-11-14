@@ -86,7 +86,6 @@ import static org.jbpm.workflow.core.Node.CONNECTION_DEFAULT_TYPE;
 import static org.jbpm.workflow.core.impl.ExtendedNodeImpl.EVENT_NODE_ENTER;
 import static org.jbpm.workflow.core.impl.ExtendedNodeImpl.EVENT_NODE_EXIT;
 import static org.jbpm.workflow.instance.WorkflowProcessParameters.WORKFLOW_PARAM_TRANSACTIONS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * ProcessGenerationTest iterates over all the process files in the project except the
@@ -291,9 +290,9 @@ public class ProcessGenerationIT extends AbstractCodegenIT {
         WorkItemNode current = (WorkItemNode) cNode;
         assertThat(current.isWaitForCompletion()).as("WaitForCompletion").isEqualTo(expected.isWaitForCompletion());
         assertThat(current.getInMappings()).as("inMappings").hasSameSizeAs(expected.getInMappings());
-        expected.getInMappings().forEach((k, v) -> assertEquals(v, current.getInMapping(k), "inMapping " + k));
+        expected.getInMappings().forEach((k, v) -> assertThat(current.getInMapping(k)).as("inMapping " + k).isEqualTo(v));
         assertThat(current.getOutMappings()).as("outMappings").hasSameSizeAs(expected.getOutMappings());
-        expected.getOutMappings().forEach((k, v) -> assertEquals(v, current.getOutMapping(k), "outMapping " + k));
+        expected.getOutMappings().forEach((k, v) -> assertThat(current.getOutMapping(k)).as("outMapping " + k).isEqualTo(v));
 
     };
 
@@ -371,11 +370,11 @@ public class ProcessGenerationIT extends AbstractCodegenIT {
         RuleSetNode expected = (RuleSetNode) eNode;
         RuleSetNode current = (RuleSetNode) cNode;
         expected.getInMappings()
-                .forEach((k, eMapping) -> assertEquals(eMapping, current.getInMapping(k), "inMapping: " + k));
+                .forEach((k, eMapping) -> assertThat(current.getInMapping(k)).as("inMapping: " + k).isEqualTo(eMapping));
         expected.getOutMappings()
-                .forEach((k, eMapping) -> assertEquals(eMapping, current.getOutMapping(k), "outMapping: " + k));
+                .forEach((k, eMapping) -> assertThat(current.getOutMapping(k)).as("outMapping: " + k).isEqualTo(eMapping));
         expected.getParameters()
-                .forEach((k, eParam) -> assertEquals(eParam, current.getParameter(k), "parameter: " + k));
+                .forEach((k, eParam) -> assertThat(current.getParameter(k)).as("parameter: " + k).isEqualTo(eParam));
     };
 
     private static final Map<Class<? extends Node>, BiConsumer<Node, Node>> nodeAsserters = new HashMap<>();

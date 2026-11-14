@@ -38,8 +38,6 @@ import io.restassured.response.ValidatableResponse;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class BaseJobResourceTest extends CommonBaseJobResourceTest {
 
@@ -64,7 +62,7 @@ public abstract class BaseJobResourceTest extends CommonBaseJobResourceTest {
         // Resetting the date to set the right UTC ZoneId. This is required due to recent changes on jackson-datatype-jsr310
         response.setExpirationTime(DateUtil.instantToZonedDateTime(response.getExpirationTime().toInstant()));
 
-        assertEquals(job, response);
+        assertThat(response).isEqualTo(job);
     }
 
     @Test
@@ -124,7 +122,7 @@ public abstract class BaseJobResourceTest extends CommonBaseJobResourceTest {
         // Resetting the date to set the right UTC ZoneId. This is required due to recent changes on jackson-datatype-jsr310
         response.setExpirationTime(DateUtil.instantToZonedDateTime(response.getExpirationTime().toInstant()));
 
-        assertEquals(job, response);
+        assertThat(response).isEqualTo(job);
     }
 
     @Test
@@ -141,10 +139,10 @@ public abstract class BaseJobResourceTest extends CommonBaseJobResourceTest {
         final Job job = buildJob(id);
         create(jobToJson(job));
         final ScheduledJob scheduledJob = assertGetScheduledJob(id);
-        assertEquals(scheduledJob.getId(), job.getId());
-        assertEquals(0, scheduledJob.getRetries());
-        assertEquals(JobStatus.SCHEDULED, scheduledJob.getStatus());
-        assertNotNull(scheduledJob.getScheduledId());
+        assertThat(job.getId()).isEqualTo(scheduledJob.getId());
+        assertThat(scheduledJob.getRetries()).isEqualTo(0);
+        assertThat(scheduledJob.getStatus()).isEqualTo(JobStatus.SCHEDULED);
+        assertThat(scheduledJob.getScheduledId()).isNotNull();
     }
 
     @Test
@@ -229,8 +227,8 @@ public abstract class BaseJobResourceTest extends CommonBaseJobResourceTest {
                 .extract()
                 .as(ScheduledJob.class);
 
-        assertEquals(scheduledJob.getId(), id);
-        assertEquals(JobStatus.CANCELED, scheduledJob.getStatus());
+        assertThat(id).isEqualTo(scheduledJob.getId());
+        assertThat(scheduledJob.getStatus()).isEqualTo(JobStatus.CANCELED);
         assertThat(scheduledJob.getScheduledId()).isNotBlank();
         return scheduledJob;
     }

@@ -42,9 +42,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 public class StatefulRuleUnitServiceTest {
@@ -66,8 +64,7 @@ public class StatefulRuleUnitServiceTest {
         var result = ruleUnitService.create(id, ExtendedReferenceContext.ofData(ruleUnitData));
         var meta = result.as(RuleUnitMetaDataContext.class);
         var instanceId = meta.id(RuleUnitInstanceId.class);
-        assertEquals("/rule-units/org.kie.kogito.quarkus.drools.AnotherService",
-                instanceId.ruleUnitId().asLocalUri().path());
+        assertThat(instanceId.ruleUnitId().asLocalUri().path()).isEqualTo("/rule-units/org.kie.kogito.quarkus.drools.AnotherService");
     }
 
     @Test
@@ -95,10 +92,10 @@ public class StatefulRuleUnitServiceTest {
                 .map(e -> e.data().as(MapDataContext.class).get("results", StringHolder.class).getValue())
                 .collect(Collectors.toList());
 
-        assertFalse(strings.isEmpty());
+        assertThat(strings.isEmpty()).isFalse();
 
         strings.removeAll(List.of("hello folks", "hello people", "hello Mario"));
-        assertTrue(strings.isEmpty());
+        assertThat(strings.isEmpty()).isTrue();
 
     }
 
@@ -125,10 +122,10 @@ public class StatefulRuleUnitServiceTest {
                 .map(e -> e.data().as(MapDataContext.class).get("results", StringHolder.class).getValue())
                 .collect(Collectors.toList());
 
-        assertFalse(strings.isEmpty());
+        assertThat(strings.isEmpty()).isFalse();
 
         strings.removeAll(List.of("hello folks", "hello people", "hello Mario"));
-        assertTrue(strings.isEmpty());
+        assertThat(strings.isEmpty()).isTrue();
 
     }
 

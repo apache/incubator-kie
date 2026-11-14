@@ -29,7 +29,7 @@ import org.kie.kogito.persistence.postgresql.reporting.model.PostgresMapping;
 import org.kie.kogito.persistence.postgresql.reporting.model.PostgresPartitionField;
 import org.kie.kogito.persistence.reporting.model.paths.PathSegment;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresContextTest {
 
@@ -52,23 +52,14 @@ class PostgresContextTest {
                 List.of(pathSegment),
                 sourceTableFieldTypes);
 
-        assertEquals("mappingId",
-                context.getMappingId());
-        assertEquals("sourceTableName",
-                context.getSourceTableName());
-        assertEquals("sourceTableJsonFieldName",
-                context.getSourceTableJsonFieldName());
-        assertEquals(List.of(field),
-                context.getSourceTableIdentityFields());
-        assertEquals(List.of(partitionField),
-                context.getSourceTablePartitionFields());
-        assertEquals("targetTableName",
-                context.getTargetTableName());
-        assertEquals(List.of(mapping),
-                context.getFieldMappings());
-        assertEquals(List.of(pathSegment),
-                context.getMappingPaths());
-        assertEquals(sourceTableFieldTypes,
-                context.getSourceTableFieldTypes());
+        assertThat(context.getMappingId()).isEqualTo("mappingId");
+        assertThat(context.getSourceTableName()).isEqualTo("sourceTableName");
+        assertThat(context.getSourceTableJsonFieldName()).isEqualTo("sourceTableJsonFieldName");
+        assertThat(context.getSourceTableIdentityFields()).isEqualTo(List.of(field));
+        assertThat(context.getSourceTablePartitionFields()).isEqualTo(List.of(partitionField));
+        assertThat(context.getTargetTableName()).isEqualTo("targetTableName");
+        assertThat(context.getFieldMappings()).isEqualTo(List.of(mapping));
+        assertThat(context.getMappingPaths()).isEqualTo(List.of(pathSegment));
+        assertThat(context.getSourceTableFieldTypes()).isEqualTo(sourceTableFieldTypes);
     }
 }

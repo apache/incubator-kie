@@ -32,7 +32,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextClosedEvent;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -86,7 +86,7 @@ public class ConditionalSpringBootTestResourceTest {
 
     @Test
     public void shouldReturnResource() {
-        assertEquals(resource, instance.getTestResource());
+        assertThat(instance.getTestResource()).isEqualTo(resource);
     }
 
     @Test
@@ -157,7 +157,7 @@ public class ConditionalSpringBootTestResourceTest {
 
     private void thenConfigMapIsUpdated() {
         String actual = actualOutput.get(KOGITO_PROPERTY);
-        assertEquals(KOGITO_PROPERTY_VALUE, actual);
+        assertThat(actual).isEqualTo(KOGITO_PROPERTY_VALUE);
     }
 
     private void thenShutdownHookIsRegistered() {

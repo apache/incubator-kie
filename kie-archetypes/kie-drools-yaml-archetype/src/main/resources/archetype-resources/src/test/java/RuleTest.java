@@ -55,8 +55,7 @@ import org.kie.api.runtime.KieSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RuleTest {
     static final Logger LOG = LoggerFactory.getLogger(RuleTest.class);
@@ -99,10 +98,10 @@ public class RuleTest {
 
             LOG.info("Final checks");
 
-            assertEquals(3, session.getObjects().size(), "Size of object in Working Memory is 3");
-            assertTrue(check.contains("red"), "contains red");
-            assertTrue(check.contains("green"), "contains green");
-            assertTrue(check.contains("blue"), "contains blue");
+            assertThat(session.getObjects()).as("Size of object in Working Memory is 3").hasSize(3);
+            assertThat(check).as("contains red").contains("red");
+            assertThat(check).as("contains green").contains("green");
+            assertThat(check).as("contains blue").contains("blue");
         } finally {
             session.dispose();
         }

@@ -42,8 +42,8 @@ import org.kie.dmn.model.api.DMNModelInstrumentedBase;
 import org.kie.internal.io.ResourceFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.getModelFromIoUtils;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -64,16 +64,14 @@ public class DMNEvaluatorTest {
         String modelXML = model;
 
         DMNEvaluator evaluator = DMNEvaluator.fromXML(modelXML);
-        assertNotNull(evaluator);
+        assertThat(evaluator).isNotNull();
     }
 
     @Test
     public void testFromXMLModelWithError() {
         String modelXML = invalidModel;
 
-        assertThrows(IllegalStateException.class, () -> {
-            DMNEvaluator.fromXML(modelXML);
-        });
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> DMNEvaluator.fromXML(modelXML));
     }
 
     @Test
@@ -87,8 +85,9 @@ public class DMNEvaluatorTest {
         when(dmnModel.hasErrors()).thenReturn(true);
         when(dmnModel.getMessages(DMNMessage.Severity.ERROR)).thenReturn(Collections.singletonList(message));
 
-        assertThrows(IllegalStateException.class,
-                () -> DMNEvaluator.validateForErrors(dmnModel, dmnRuntime), errorMessage);
+        assertThatThrownBy(() -> DMNEvaluator.validateForErrors(dmnModel, dmnRuntime))
+                .as(errorMessage)
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -99,7 +98,7 @@ public class DMNEvaluatorTest {
         when(dmnModel.hasErrors()).thenReturn(false);
         DMNEvaluator evaluator = DMNEvaluator.validateForErrors(dmnModel, dmnRuntime);
 
-        assertNotNull(evaluator);
+        assertThat(evaluator).isNotNull();
     }
 
     @Test
@@ -124,7 +123,7 @@ public class DMNEvaluatorTest {
                 List.of("_A40F3AA4-2832-4D98-83F0-7D604F9A090F", "_4AC1BD7D-5A8D-4A88-94F9-0B80BDF0D9B1"), List.of("_E9468D45-51EB-48DA-8B30-7D65696FDFB8"));
 
         List<List<String>> retrieved = DMNEvaluator.retrieveInvalidElementPaths(dmnResult.getMessages(), dmnModel);
-        assertNotNull(retrieved);
+        assertThat(retrieved).isNotNull();
         assertThat(invalidElementPaths.size()).isEqualTo(retrieved.size());
         assertThat(invalidElementPaths).isEqualTo(retrieved);
     }
@@ -144,7 +143,7 @@ public class DMNEvaluatorTest {
 
         List<String> retrieved = DMNEvaluator.getPathToRoot(dmnModel, id);
 
-        assertNotNull(retrieved);
+        assertThat(retrieved).isNotNull();
         assertThat(invalidPath).isEqualTo(retrieved);
     }
 
@@ -164,7 +163,7 @@ public class DMNEvaluatorTest {
 
         DMNModelInstrumentedBase node = DMNEvaluator.getNodeById(dmnModel, id);
 
-        assertNotNull(node);
+        assertThat(node).isNotNull();
         assertThat(dmnModelInstrumentedBaseNode.getIdentifierString()).isEqualTo(node.getIdentifierString());
     }
 
@@ -184,7 +183,7 @@ public class DMNEvaluatorTest {
 
         DMNModelInstrumentedBase node = DMNEvaluator.getNodeById(dmnModelInstrumentedBaseNode, id);
 
-        assertNotNull(node);
+        assertThat(node).isNotNull();
         assertThat(dmnModelInstrumentedBaseNode.getIdentifierString()).isEqualTo(node.getIdentifierString());
     }
 

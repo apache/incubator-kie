@@ -38,6 +38,7 @@
     <drools-version>${droolsVersion}</drools-version>
     <slf4j-version>${slf4jVersion}</slf4j-version>
     <junit-version>${junitVersion}</junit-version>
+    <assertj-version>${assertjVersion}</assertj-version>
     <logback-version>${logbackVersion}</logback-version>
   </properties>
 
@@ -72,6 +73,12 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

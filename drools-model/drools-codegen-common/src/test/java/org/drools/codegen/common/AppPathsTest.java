@@ -28,12 +28,11 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.codegen.common.AppPaths.MAIN_DIR;
 import static org.drools.codegen.common.AppPaths.RESOURCES_DIR;
 import static org.drools.codegen.common.AppPaths.SRC_DIR;
 import static org.drools.codegen.common.AppPaths.TEST_DIR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Execution(ExecutionMode.SAME_THREAD)
 class AppPathsTest {
@@ -103,19 +102,19 @@ class AppPathsTest {
 
     private void getFirstProjectPathTest(AppPaths toCheck, String expectedPath) {
         Path retrieved = toCheck.getFirstProjectPath();
-        assertEquals(Path.of(expectedPath), retrieved, "AppPathsTest.getFirstProjectPathTest");
+        assertThat(retrieved).as("AppPathsTest.getFirstProjectPathTest").isEqualTo(Path.of(expectedPath));
     }
 
     private void getResourceFilesTest(AppPaths toCheck, String projectDirPath, String outputDir, String generatedResourceDir, boolean isTestDir) {
         File[] retrieved = toCheck.getResourceFiles();
         int expected = 2;
-        assertEquals(expected, retrieved.length, "AppPathsTest.getResourceFilesTest");
+        assertThat(retrieved.length).as("AppPathsTest.getResourceFilesTest").isEqualTo(expected);
         String expectedPath;
         String sourceDir =  isTestDir ? TEST_DIR : MAIN_DIR;
         expectedPath = String.format("%s/%s/%s/%s", projectDirPath, SRC_DIR, sourceDir, RESOURCES_DIR).replace("/", File.separator);
-        assertEquals(new File(expectedPath), retrieved[0], "AppPathsTest.getResourceFilesTest");
+        assertThat(retrieved[0]).as("AppPathsTest.getResourceFilesTest").isEqualTo(new File(expectedPath));
         expectedPath = String.format("%s/%s/%s", projectDirPath, outputDir, generatedResourceDir).replace("/", File.separator);
-        assertEquals(new File(expectedPath), retrieved[1], "AppPathsTest.getResourceFilesTest");
+        assertThat(retrieved[1]).as("AppPathsTest.getResourceFilesTest").isEqualTo(new File(expectedPath));
     }
 
     private void getResourcePathsTest(AppPaths toCheck, String projectDirPath, boolean isGradle, boolean isTestDir) {
@@ -125,37 +124,37 @@ class AppPathsTest {
 
     private void getSourcePathsTest(AppPaths toCheck, String projectPath) {
         Path[] retrieved = toCheck.getSourcePaths();
-        assertEquals(1, retrieved.length, "AppPathsTest.getSourcePathsTest");
+        assertThat(retrieved.length).as("AppPathsTest.getSourcePathsTest").isEqualTo(1);
         String expectedPath = String.format("%s/src", projectPath).replace("/", File.separator);
-        assertEquals(Path.of(expectedPath), retrieved[0], "AppPathsTest.getSourcePathsTest");
+        assertThat(retrieved[0]).as("AppPathsTest.getSourcePathsTest").isEqualTo(Path.of(expectedPath));
     }
 
     private void getClassesPathsTest(AppPaths toCheck) {
         Collection<Path> retrieved = toCheck.getClassesPaths();
-        assertTrue(retrieved.isEmpty(), "AppPathsTest.getClassesPathsTest");
+        assertThat(retrieved.isEmpty()).as("AppPathsTest.getClassesPathsTest").isTrue();
     }
 
     private void getOutputTargetTest(AppPaths toCheck, String outputPath) {
         Path retrieved = toCheck.getOutputTarget();
         outputPath = String.format(".%s%s", File.separator, outputPath);
-        assertEquals(Path.of(outputPath), retrieved, "AppPathsTest.getOutputTargetTest");
+        assertThat(retrieved).as("AppPathsTest.getOutputTargetTest").isEqualTo(Path.of(outputPath));
     }
 
     private void commonCheckResourcePaths(Path[] toCheck, String projectDirPath, boolean isGradle, boolean isTestDir, String methodName) {
         int expected = 2;
-        assertEquals(expected, toCheck.length, String.format("AppPathsTest.%s", methodName));
+        assertThat(toCheck.length).as(String.format("AppPathsTest.%s", methodName)).isEqualTo(expected);
         String expectedPath;
         String sourceDir =  isTestDir ? "test" : "main";
         expectedPath = String.format("%s/src/%s/resources", projectDirPath, sourceDir).replace("/", File.separator);
-        assertEquals(Path.of(expectedPath), toCheck[0], String.format("AppPathsTest.%s", methodName));
+        assertThat(toCheck[0]).as(String.format("AppPathsTest.%s", methodName)).isEqualTo(Path.of(expectedPath));
         if (isGradle) {
             String toFormat = isTestDir ? "%s/build/generated/test/resources" : "%s/build/generated/resources";
             expectedPath = String.format(toFormat, projectDirPath).replace("/", File.separator);
-            assertEquals(Path.of(expectedPath), toCheck[1], String.format("AppPathsTest.%s", methodName));
+            assertThat(toCheck[1]).as(String.format("AppPathsTest.%s", methodName)).isEqualTo(Path.of(expectedPath));
         } else {
             String toFormat = isTestDir ? "%s/target/generated-test-resources" : "%s/target/generated-resources";
             expectedPath = String.format(toFormat, projectDirPath).replace("/", File.separator);
-            assertEquals(Path.of(expectedPath), toCheck[1], String.format("AppPathsTest.%s", methodName));
+            assertThat(toCheck[1]).as(String.format("AppPathsTest.%s", methodName)).isEqualTo(Path.of(expectedPath));
         }
     }
 }

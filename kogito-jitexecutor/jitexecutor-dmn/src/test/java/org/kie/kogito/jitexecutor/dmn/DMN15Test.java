@@ -40,9 +40,9 @@ import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.MAPPER;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.getModel;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.getModelFromIoUtils;
@@ -234,7 +234,7 @@ class DMN15Test {
                 .asString();
         LOG.debug("Validate response: {}", response);
         List<JITDMNMessage> messages = MAPPER.readValue(response, LIST_OF_MSGS);
-        assertEquals(0, messages.size());
+        assertThat(messages.size()).isEqualTo(0);
 
         jitdmnpayload = new JITDMNPayload(importingModelRef, List.of(model1, model2), context);
         given()
@@ -286,6 +286,6 @@ class DMN15Test {
                 .asString();
         LOG.debug("Validate response: {}", response);
         List<JITDMNMessage> messages = MAPPER.readValue(response, LIST_OF_MSGS);
-        assertEquals(0, messages.size());
+        assertThat(messages.size()).isEqualTo(0);
     }
 }

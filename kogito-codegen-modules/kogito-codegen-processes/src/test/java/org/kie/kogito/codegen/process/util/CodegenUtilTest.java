@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.kie.kogito.codegen.api.context.KogitoBuildContext;
 import org.kie.kogito.codegen.api.context.impl.QuarkusKogitoBuildContext;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.kogito.codegen.api.context.ContextAttributesConstants.KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR;
 import static org.kie.kogito.codegen.core.utils.CodegenUtil.*;
 
@@ -39,18 +39,17 @@ public class CodegenUtilTest {
 
     @Test
     public void testGetBooleanObjectAccessor() {
-        assertEquals("is", getBooleanObjectAccessor(context));
+        assertThat(getBooleanObjectAccessor(context)).isEqualTo("is");
 
         context.setApplicationProperty(KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR, "javaBeans");
-        assertEquals("get", getBooleanObjectAccessor(context));
+        assertThat(getBooleanObjectAccessor(context)).isEqualTo("get");
 
         context.setApplicationProperty(KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR, "isPrefix");
-        assertEquals("is", getBooleanObjectAccessor(context));
+        assertThat(getBooleanObjectAccessor(context)).isEqualTo("is");
 
         context.setApplicationProperty(KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR, "get1");
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            getBooleanObjectAccessor(context);
-        });
-        assertEquals("Property " + KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR + " defined but does not contain proper value: expected 'isPrefix' or 'javaBeans'", exception.getMessage());
+        assertThatThrownBy(() -> getBooleanObjectAccessor(context))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Property " + KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR + " defined but does not contain proper value: expected 'isPrefix' or 'javaBeans'");
     }
 }

@@ -39,7 +39,7 @@ import io.cloudevents.jackson.JsonFormat;
 import io.smallrye.reactive.messaging.ce.CloudEventMetadata;
 import io.smallrye.reactive.messaging.ce.DefaultCloudEventMetadataBuilder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,28 +80,28 @@ public class QuarkusDefaultUnmarshallerTest {
     void testStructureCloudEvent() throws IOException {
         Message<byte[]> message = getMessage(getStructureCE("1.0", "type", "/path", getPayload("Javierito")), null);
         DataEvent<JsonNode> ce = converter.convert(message);
-        assertEquals("type", ce.getType());
-        assertEquals("/path", ce.getSource().toString());
-        assertEquals(SpecVersion.V1, ce.getSpecVersion());
-        assertEquals("Javierito", ce.getData().get("name").asText());
+        assertThat(ce.getType()).isEqualTo("type");
+        assertThat(ce.getSource().toString()).isEqualTo("/path");
+        assertThat(ce.getSpecVersion()).isEqualTo(SpecVersion.V1);
+        assertThat(ce.getData().get("name").asText()).isEqualTo("Javierito");
     }
 
     @Test
     void testBynaryCloudEvent() throws IOException {
         Message<byte[]> message = getMessage(objectMapper.writeValueAsBytes(getPayload("Javierito")), getMetadata("0.3", "type", "/path"));
         DataEvent<JsonNode> ce = converter.convert(message);
-        assertEquals("type", ce.getType());
-        assertEquals("/path", ce.getSource().toString());
-        assertEquals(SpecVersion.V03, ce.getSpecVersion());
-        assertEquals("Javierito", ce.getData().get("name").asText());
+        assertThat(ce.getType()).isEqualTo("type");
+        assertThat(ce.getSource().toString()).isEqualTo("/path");
+        assertThat(ce.getSpecVersion()).isEqualTo(SpecVersion.V03);
+        assertThat(ce.getData().get("name").asText()).isEqualTo("Javierito");
     }
 
     @Test
     void testBynaryCEWithoutPayload() throws IOException {
         Message<byte[]> message = getMessage(null, getMetadata("0.3", "type", "/path"));
         DataEvent<JsonNode> ce = converter.convert(message);
-        assertEquals("type", ce.getType());
-        assertEquals("/path", ce.getSource().toString());
-        assertEquals(SpecVersion.V03, ce.getSpecVersion());
+        assertThat(ce.getType()).isEqualTo("type");
+        assertThat(ce.getSource().toString()).isEqualTo("/path");
+        assertThat(ce.getSpecVersion()).isEqualTo(SpecVersion.V03);
     }
 }

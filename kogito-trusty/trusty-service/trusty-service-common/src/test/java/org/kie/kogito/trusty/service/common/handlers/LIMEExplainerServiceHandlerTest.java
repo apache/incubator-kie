@@ -21,8 +21,8 @@ package org.kie.kogito.trusty.service.common.handlers;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.explainability.api.LIMEExplainabilityResult;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -51,7 +51,7 @@ public class LIMEExplainerServiceHandlerTest extends BaseExplainerServiceHandler
         when(storage.containsKey(anyString())).thenReturn(true);
         when(storage.get(eq(EXECUTION_ID))).thenReturn(result);
 
-        assertEquals(result, handler.getExplainabilityResultById(EXECUTION_ID));
+        assertThat(handler.getExplainabilityResultById(EXECUTION_ID)).isEqualTo(result);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class LIMEExplainerServiceHandlerTest extends BaseExplainerServiceHandler
     public void testGetExplainabilityResultById_WhenNotStored() {
         when(storage.containsKey(anyString())).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getExplainabilityResultById(EXECUTION_ID));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getExplainabilityResultById(EXECUTION_ID));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class LIMEExplainerServiceHandlerTest extends BaseExplainerServiceHandler
     public void testStoreExplainabilityResult_WhenAlreadyStored() {
         when(storage.containsKey(anyString())).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.storeExplainabilityResult(EXECUTION_ID, result));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.storeExplainabilityResult(EXECUTION_ID, result));
     }
 
     @Test

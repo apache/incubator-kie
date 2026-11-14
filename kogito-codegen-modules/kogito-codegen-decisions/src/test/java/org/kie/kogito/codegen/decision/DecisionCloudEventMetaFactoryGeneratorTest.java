@@ -29,9 +29,7 @@ import org.kie.kogito.codegen.api.context.impl.QuarkusKogitoBuildContext;
 import org.kie.kogito.codegen.api.io.CollectedResource;
 import org.kie.kogito.codegen.core.io.CollectedResourceProducer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DecisionCloudEventMetaFactoryGeneratorTest {
 
@@ -45,8 +43,8 @@ class DecisionCloudEventMetaFactoryGeneratorTest {
         DecisionCodegen codeGenerator = buildCodegen(true);
         Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
 
-        assertEquals(EXPECTED_FILES_WITH_CLOUDEVENTS, generatedFiles.size());
-        assertTrue(generatedFiles.stream().anyMatch(gf -> EXPECTED_FILE_PATH.equals(gf.relativePath())));
+        assertThat(generatedFiles.size()).isEqualTo(EXPECTED_FILES_WITH_CLOUDEVENTS);
+        assertThat(generatedFiles.stream().anyMatch(gf -> EXPECTED_FILE_PATH.equals(gf.relativePath()))).isTrue();
     }
 
     @Test
@@ -54,8 +52,8 @@ class DecisionCloudEventMetaFactoryGeneratorTest {
         DecisionCodegen codeGenerator = buildCodegen(false);
         Collection<GeneratedFile> generatedFiles = codeGenerator.generate();
 
-        assertEquals(EXPECTED_FILES_WITHOUT_CLOUDEVENTS, generatedFiles.size());
-        assertFalse(generatedFiles.stream().anyMatch(gf -> EXPECTED_FILE_PATH.equals(gf.relativePath())));
+        assertThat(generatedFiles.size()).isEqualTo(EXPECTED_FILES_WITHOUT_CLOUDEVENTS);
+        assertThat(generatedFiles.stream().anyMatch(gf -> EXPECTED_FILE_PATH.equals(gf.relativePath()))).isFalse();
     }
 
     private static DecisionCodegen buildCodegen(boolean withCloudEvents) {

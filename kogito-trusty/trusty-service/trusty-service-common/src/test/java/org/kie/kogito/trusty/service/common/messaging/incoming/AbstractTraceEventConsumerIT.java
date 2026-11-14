@@ -37,9 +37,9 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class AbstractTraceEventConsumerIT {
 
@@ -77,10 +77,10 @@ public abstract class AbstractTraceEventConsumerIT {
 
         await()
                 .atMost(5, SECONDS)
-                .untilAsserted(() -> assertDoesNotThrow(() -> trustyService.getDecisionById(TrustyServiceTestUtils.CORRECT_CLOUDEVENT_ID)));
+                .untilAsserted(() -> assertThatCode(() -> trustyService.getDecisionById(TrustyServiceTestUtils.CORRECT_CLOUDEVENT_ID)).doesNotThrowAnyException());
 
         Decision storedDecision = trustyService.getDecisionById(TrustyServiceTestUtils.CORRECT_CLOUDEVENT_ID);
-        assertNotNull(storedDecision);
+        assertThat(storedDecision).isNotNull();
         JSONAssert.assertEquals(MAPPER.writeValueAsString(TrustyServiceTestUtils.buildCorrectDecision(TrustyServiceTestUtils.CORRECT_CLOUDEVENT_ID)), MAPPER.writeValueAsString(storedDecision), true);
     }
 
@@ -92,10 +92,10 @@ public abstract class AbstractTraceEventConsumerIT {
 
         await()
                 .atMost(5, SECONDS)
-                .untilAsserted(() -> assertDoesNotThrow(() -> trustyService.getDecisionById(TrustyServiceTestUtils.CLOUDEVENT_WITH_ERRORS_ID)));
+                .untilAsserted(() -> assertThatCode(() -> trustyService.getDecisionById(TrustyServiceTestUtils.CLOUDEVENT_WITH_ERRORS_ID)).doesNotThrowAnyException());
 
         Decision storedDecision = trustyService.getDecisionById(TrustyServiceTestUtils.CLOUDEVENT_WITH_ERRORS_ID);
-        assertNotNull(storedDecision);
+        assertThat(storedDecision).isNotNull();
         JSONAssert.assertEquals(MAPPER.writeValueAsString(TrustyServiceTestUtils.buildDecisionWithErrors()), MAPPER.writeValueAsString(storedDecision), true);
     }
 }

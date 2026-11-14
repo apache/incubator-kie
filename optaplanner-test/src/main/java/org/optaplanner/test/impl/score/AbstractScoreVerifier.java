@@ -19,7 +19,7 @@
 
 package org.optaplanner.test.impl.score;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -100,27 +100,27 @@ public abstract class AbstractScoreVerifier<Solution_> {
         }
         if (matchTotal == null) {
             if (expectedWeight instanceof Byte) {
-                assertEquals(expectedWeight, (byte) 0);
+                assertThat((byte) 0).isEqualTo(expectedWeight);
             } else if (expectedWeight instanceof Short) {
-                assertEquals(expectedWeight, (short) 0);
+                assertThat((short) 0).isEqualTo(expectedWeight);
             } else if (expectedWeight instanceof Integer) {
-                assertEquals(expectedWeight, 0);
+                assertThat(expectedWeight).isEqualTo(0);
             } else if (expectedWeight instanceof Long) {
-                assertEquals(expectedWeight, 0L);
+                assertThat(expectedWeight).isEqualTo(0L);
             } else if (expectedWeight instanceof Float) {
-                assertEquals(expectedWeight, 0F);
+                assertThat(expectedWeight).isEqualTo(0F);
             } else if (expectedWeight instanceof Double) {
-                assertEquals(expectedWeight, 0D);
+                assertThat(expectedWeight).isEqualTo(0D);
             } else if (expectedWeight instanceof BigInteger) {
-                assertEquals(expectedWeight, BigInteger.ZERO);
+                assertThat(expectedWeight).isEqualTo(BigInteger.ZERO);
             } else if (expectedWeight instanceof BigDecimal) {
-                assertEquals(expectedWeight, BigDecimal.ZERO);
+                assertThat(expectedWeight).isEqualTo(BigDecimal.ZERO);
             } else {
                 throw new IllegalStateException("Unsupported " + Number.class.getSimpleName()
                         + " type (" + expectedWeight.getClass() + ") for expectedWeight (" + expectedWeight + ").");
             }
         } else {
-            assertEquals(expectedWeight, matchTotal.getScore().toLevelNumbers()[scoreLevel]);
+            assertThat(matchTotal.getScore().toLevelNumbers()[scoreLevel]).isEqualTo(expectedWeight);
         }
     }
 

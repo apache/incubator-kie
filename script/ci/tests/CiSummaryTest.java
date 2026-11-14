@@ -20,8 +20,12 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //JAVA 17+
 //DEPS org.junit.platform:junit-platform-console-standalone:1.11.4
+//DEPS org.assertj:assertj-core:3.26.3
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.MethodSource;
+import org.junit.jupiter.api.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.*;
 import org.junit.platform.console.ConsoleLauncher;
@@ -31,6 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Snapshot tests for {@code script/ci/CiSummary.java}.
@@ -89,10 +95,9 @@ public class CiSummaryTest {
                 "missing expected-summary.md (run with CI_UPDATE_GOLDEN=1 to generate it)");
 
         String actual = runAndCapture(scenario);
-        Assertions.assertEquals(
-                Files.readString(expected, StandardCharsets.UTF_8),
-                actual,
-                "summary mismatch for scenario " + name);
+        assertThat(actual)
+                .as("summary mismatch for scenario " + name)
+                .isEqualTo(Files.readString(expected, StandardCharsets.UTF_8));
     }
 
     private static void updateGoldens() throws Exception {

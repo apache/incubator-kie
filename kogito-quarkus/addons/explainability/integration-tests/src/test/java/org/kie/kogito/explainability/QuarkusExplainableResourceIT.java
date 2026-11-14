@@ -37,10 +37,7 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.Response;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.explainability.Constants.MODEL_NAME;
 import static org.kie.kogito.explainability.Constants.MODEL_NAMESPACE;
 
@@ -68,22 +65,22 @@ public class QuarkusExplainableResourceIT {
                 .as(new TypeRef<List<PredictOutput>>() {
                 });
 
-        assertEquals(1, outputs.size());
+        assertThat(outputs.size()).isEqualTo(1);
 
         PredictOutput output = outputs.get(0);
 
-        assertNotNull(output);
-        assertNotNull(output.getResult());
-        assertNotNull(output.getModelIdentifier());
+        assertThat(output).isNotNull();
+        assertThat(output.getResult()).isNotNull();
+        assertThat(output.getModelIdentifier()).isNotNull();
         Map<String, Object> result = output.getResult();
 
-        assertTrue(result.containsKey("Should the driver be suspended?"));
-        assertEquals("Yes", result.get("Should the driver be suspended?"));
-        assertTrue(result.containsKey("Fine"));
+        assertThat(result.containsKey("Should the driver be suspended?")).isTrue();
+        assertThat(result.get("Should the driver be suspended?")).isEqualTo("Yes");
+        assertThat(result.containsKey("Fine")).isTrue();
         Map<String, Object> expectedFine = new HashMap<>();
         expectedFine.put("Points", 7);
         expectedFine.put("Amount", 1000);
-        assertEquals(expectedFine, result.get("Fine"));
+        assertThat(result.get("Fine")).isEqualTo(expectedFine);
     }
 
     @Test
@@ -104,18 +101,18 @@ public class QuarkusExplainableResourceIT {
                 .as(new TypeRef<List<PredictOutput>>() {
                 });
 
-        assertEquals(2, outputs.size());
+        assertThat(outputs.size()).isEqualTo(2);
 
         PredictOutput output = outputs.get(1);
 
-        assertNotNull(output);
-        assertNotNull(output.getResult());
-        assertNotNull(output.getModelIdentifier());
+        assertThat(output).isNotNull();
+        assertThat(output.getResult()).isNotNull();
+        assertThat(output.getModelIdentifier()).isNotNull();
         Map<String, Object> result = output.getResult();
 
-        assertTrue(result.containsKey("Should the driver be suspended?"));
-        assertEquals("No", result.get("Should the driver be suspended?"));
-        assertNull(result.get("Fine"));
+        assertThat(result.containsKey("Should the driver be suspended?")).isTrue();
+        assertThat(result.get("Should the driver be suspended?")).isEqualTo("No");
+        assertThat(result.get("Fine")).isNull();
     }
 
     @Test
@@ -130,7 +127,7 @@ public class QuarkusExplainableResourceIT {
                 .as(new TypeRef<List<PredictOutput>>() {
                 });
 
-        assertEquals(0, outputs.size());
+        assertThat(outputs.size()).isEqualTo(0);
     }
 
     @Test

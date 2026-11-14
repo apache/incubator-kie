@@ -51,10 +51,8 @@ import org.kie.kogito.tracing.typedvalue.UnitValue;
 
 import com.fasterxml.jackson.databind.node.IntNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -82,8 +80,8 @@ public class LimeExplainerServiceHandlerTest {
 
     @Test
     public void testSupports() {
-        assertTrue(handler.supports(LIMEExplainabilityRequest.class));
-        assertFalse(handler.supports(BaseExplainabilityRequest.class));
+        assertThat(handler.supports(LIMEExplainabilityRequest.class)).isTrue();
+        assertThat(handler.supports(BaseExplainabilityRequest.class)).isFalse();
     }
 
     @Test
@@ -95,11 +93,11 @@ public class LimeExplainerServiceHandlerTest {
                 Collections.emptyList());
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof SimplePrediction);
+        assertThat((prediction instanceof SimplePrediction)).isTrue();
         SimplePrediction simplePrediction = (SimplePrediction) prediction;
 
-        assertTrue(simplePrediction.getInput().getFeatures().isEmpty());
-        assertTrue(simplePrediction.getOutput().getOutputs().isEmpty());
+        assertThat(simplePrediction.getInput().getFeatures().isEmpty()).isTrue();
+        assertThat(simplePrediction.getOutput().getOutputs().isEmpty()).isTrue();
     }
 
     @Test
@@ -124,72 +122,72 @@ public class LimeExplainerServiceHandlerTest {
         Prediction prediction = handler.getPrediction(request);
 
         //Inputs
-        assertEquals(3, prediction.getInput().getFeatures().size());
+        assertThat(prediction.getInput().getFeatures().size()).isEqualTo(3);
         Optional<Feature> oInput1 = prediction.getInput().getFeatures().stream().filter(f -> f.getName().equals("input1")).findFirst();
-        assertTrue(oInput1.isPresent());
+        assertThat(oInput1.isPresent()).isTrue();
         Feature input1 = oInput1.get();
-        assertEquals(Type.NUMBER, input1.getType());
-        assertEquals(20, input1.getValue().asNumber());
+        assertThat(input1.getType()).isEqualTo(Type.NUMBER);
+        assertThat(input1.getValue().asNumber()).isEqualTo(20);
 
         Optional<Feature> oInput2 = prediction.getInput().getFeatures().stream().filter(f -> f.getName().equals("input2")).findFirst();
-        assertTrue(oInput2.isPresent());
+        assertThat(oInput2.isPresent()).isTrue();
         Feature input2 = oInput2.get();
-        assertEquals(Type.COMPOSITE, input2.getType());
-        assertTrue(input2.getValue().getUnderlyingObject() instanceof List);
+        assertThat(input2.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((input2.getValue().getUnderlyingObject() instanceof List)).isTrue();
         List<Feature> input2Object = (List<Feature>) input2.getValue().getUnderlyingObject();
-        assertEquals(1, input2Object.size());
+        assertThat(input2Object.size()).isEqualTo(1);
 
         Optional<Feature> oInput2Child = input2Object.stream().filter(f -> f.getName().equals("input2b")).findFirst();
-        assertTrue(oInput2Child.isPresent());
+        assertThat(oInput2Child.isPresent()).isTrue();
         Feature input2Child = oInput2Child.get();
-        assertEquals(Type.NUMBER, input2Child.getType());
-        assertEquals(55, input2Child.getValue().asNumber());
+        assertThat(input2Child.getType()).isEqualTo(Type.NUMBER);
+        assertThat(input2Child.getValue().asNumber()).isEqualTo(55);
 
         Optional<Feature> oInput3 = prediction.getInput().getFeatures().stream().filter(f -> f.getName().equals("input3")).findFirst();
-        assertTrue(oInput3.isPresent());
+        assertThat(oInput3.isPresent()).isTrue();
         Feature input3 = oInput3.get();
-        assertEquals(Type.COMPOSITE, input3.getType());
-        assertTrue(input3.getValue().getUnderlyingObject() instanceof List);
+        assertThat(input3.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((input3.getValue().getUnderlyingObject() instanceof List)).isTrue();
         List<Feature> input3Object = (List<Feature>) input3.getValue().getUnderlyingObject();
-        assertEquals(1, input3Object.size());
+        assertThat(input3Object.size()).isEqualTo(1);
 
         Feature input3Child = input3Object.get(0);
-        assertEquals(Type.NUMBER, input3Child.getType());
-        assertEquals(100, input3Child.getValue().asNumber());
+        assertThat(input3Child.getType()).isEqualTo(Type.NUMBER);
+        assertThat(input3Child.getValue().asNumber()).isEqualTo(100);
 
         //Outputs
-        assertEquals(3, prediction.getOutput().getOutputs().size());
+        assertThat(prediction.getOutput().getOutputs().size()).isEqualTo(3);
         Optional<Output> oOutput1 = prediction.getOutput().getOutputs().stream().filter(o -> o.getName().equals("output1")).findFirst();
-        assertTrue(oOutput1.isPresent());
+        assertThat(oOutput1.isPresent()).isTrue();
         Output output1 = oOutput1.get();
-        assertEquals(Type.NUMBER, output1.getType());
-        assertEquals(20, output1.getValue().asNumber());
+        assertThat(output1.getType()).isEqualTo(Type.NUMBER);
+        assertThat(output1.getValue().asNumber()).isEqualTo(20);
 
         Optional<Output> oOutput2 = prediction.getOutput().getOutputs().stream().filter(o -> o.getName().equals("output2")).findFirst();
-        assertTrue(oOutput2.isPresent());
+        assertThat(oOutput2.isPresent()).isTrue();
         Output output2 = oOutput2.get();
-        assertEquals(Type.COMPOSITE, input2.getType());
-        assertTrue(output2.getValue().getUnderlyingObject() instanceof List);
+        assertThat(input2.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((output2.getValue().getUnderlyingObject() instanceof List)).isTrue();
         List<Output> output2Object = (List<Output>) output2.getValue().getUnderlyingObject();
-        assertEquals(1, output2Object.size());
+        assertThat(output2Object.size()).isEqualTo(1);
 
         Optional<Output> oOutput2Child = output2Object.stream().filter(f -> f.getName().equals("output2b")).findFirst();
-        assertTrue(oOutput2Child.isPresent());
+        assertThat(oOutput2Child.isPresent()).isTrue();
         Output output2Child = oOutput2Child.get();
-        assertEquals(Type.NUMBER, output2Child.getType());
-        assertEquals(55, output2Child.getValue().asNumber());
+        assertThat(output2Child.getType()).isEqualTo(Type.NUMBER);
+        assertThat(output2Child.getValue().asNumber()).isEqualTo(55);
 
         Optional<Output> oOutput3 = prediction.getOutput().getOutputs().stream().filter(o -> o.getName().equals("output3")).findFirst();
-        assertTrue(oOutput3.isPresent());
+        assertThat(oOutput3.isPresent()).isTrue();
         Output output3 = oOutput3.get();
-        assertEquals(Type.COMPOSITE, output3.getType());
-        assertTrue(output3.getValue().getUnderlyingObject() instanceof List);
+        assertThat(output3.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((output3.getValue().getUnderlyingObject() instanceof List)).isTrue();
         List<Output> output3Object = (List<Output>) output3.getValue().getUnderlyingObject();
-        assertEquals(1, output3Object.size());
+        assertThat(output3Object.size()).isEqualTo(1);
 
         Output output3Child = output3Object.get(0);
-        assertEquals(Type.NUMBER, output3Child.getType());
-        assertEquals(100, output3Child.getValue().asNumber());
+        assertThat(output3Child.getType()).isEqualTo(Type.NUMBER);
+        assertThat(output3Child.getValue().asNumber()).isEqualTo(100);
     }
 
     @Test
@@ -206,19 +204,19 @@ public class LimeExplainerServiceHandlerTest {
                                 new FeatureImportance(new Feature("dependents", Type.NUMBER, new Value(2)), -11.0))));
 
         BaseExplainabilityResult base = handler.createSucceededResult(request, saliencies);
-        assertTrue(base instanceof LIMEExplainabilityResult);
+        assertThat((base instanceof LIMEExplainabilityResult)).isTrue();
         LIMEExplainabilityResult result = (LIMEExplainabilityResult) base;
 
-        assertEquals(ExplainabilityStatus.SUCCEEDED, result.getStatus());
-        assertEquals(EXECUTION_ID, result.getExecutionId());
-        assertEquals(1, result.getSaliencies().size());
+        assertThat(result.getStatus()).isEqualTo(ExplainabilityStatus.SUCCEEDED);
+        assertThat(result.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(result.getSaliencies().size()).isEqualTo(1);
 
         SaliencyModel saliencyModel = result.getSaliencies().iterator().next();
-        assertEquals(2, saliencyModel.getFeatureImportance().size());
-        assertEquals("age", saliencyModel.getFeatureImportance().get(0).getFeatureName());
-        assertEquals(5.0, saliencyModel.getFeatureImportance().get(0).getFeatureScore());
-        assertEquals("dependents", saliencyModel.getFeatureImportance().get(1).getFeatureName());
-        assertEquals(-11.0, saliencyModel.getFeatureImportance().get(1).getFeatureScore());
+        assertThat(saliencyModel.getFeatureImportance().size()).isEqualTo(2);
+        assertThat(saliencyModel.getFeatureImportance().get(0).getFeatureName()).isEqualTo("age");
+        assertThat(saliencyModel.getFeatureImportance().get(0).getFeatureScore()).isEqualTo(5.0);
+        assertThat(saliencyModel.getFeatureImportance().get(1).getFeatureName()).isEqualTo("dependents");
+        assertThat(saliencyModel.getFeatureImportance().get(1).getFeatureScore()).isEqualTo(-11.0);
     }
 
     @Test
@@ -229,7 +227,7 @@ public class LimeExplainerServiceHandlerTest {
                 Collections.emptyList(),
                 Collections.emptyList());
 
-        assertThrows(UnsupportedOperationException.class, () -> handler.createIntermediateResult(request, null));
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> handler.createIntermediateResult(request, null));
     }
 
     @Test
@@ -241,12 +239,12 @@ public class LimeExplainerServiceHandlerTest {
                 Collections.emptyList());
 
         BaseExplainabilityResult base = handler.createFailedResult(request, new NullPointerException("Something went wrong"));
-        assertTrue(base instanceof LIMEExplainabilityResult);
+        assertThat((base instanceof LIMEExplainabilityResult)).isTrue();
         LIMEExplainabilityResult result = (LIMEExplainabilityResult) base;
 
-        assertEquals(ExplainabilityStatus.FAILED, result.getStatus());
-        assertEquals("Something went wrong", result.getStatusDetails());
-        assertEquals(EXECUTION_ID, result.getExecutionId());
+        assertThat(result.getStatus()).isEqualTo(ExplainabilityStatus.FAILED);
+        assertThat(result.getStatusDetails()).isEqualTo("Something went wrong");
+        assertThat(result.getExecutionId()).isEqualTo(EXECUTION_ID);
     }
 
     @Test

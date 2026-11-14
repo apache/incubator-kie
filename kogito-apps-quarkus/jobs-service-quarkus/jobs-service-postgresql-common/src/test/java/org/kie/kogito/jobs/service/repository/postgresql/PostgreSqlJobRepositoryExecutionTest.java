@@ -56,8 +56,7 @@ import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -145,7 +144,7 @@ class PostgreSqlJobRepositoryExecutionTest {
                 .build();
 
         CompletionStage<JobDetails> result = repository.doSave(job);
-        assertEquals(completableFuture, result);
+        assertThat(result).isEqualTo(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -174,25 +173,25 @@ class PostgreSqlJobRepositoryExecutionTest {
                 job.getExecutionTimeoutUnit().name())
                 .collect(toList()));
 
-        assertEquals(query, queryCaptor.getValue());
-        assertEquals(parameter.getString(0), parameterCaptor.getValue().getString(0));
-        assertEquals(parameter.getString(1), parameterCaptor.getValue().getString(1));
-        assertEquals(parameter.getString(2), parameterCaptor.getValue().getString(2));
-        assertEquals(parameter.getInteger(3), parameterCaptor.getValue().getInteger(3));
-        assertEquals(parameter.getInteger(4), parameterCaptor.getValue().getInteger(4));
-        assertEquals(parameter.getString(5), parameterCaptor.getValue().getString(5));
-        assertEquals(parameter.getInteger(6), parameterCaptor.getValue().getInteger(6));
-        assertEquals(parameter.getJson(7), parameterCaptor.getValue().getJson(7));
-        assertEquals(parameter.getJson(8), parameterCaptor.getValue().getJson(8));
-        assertEquals(parameter.getOffsetDateTime(9), parameterCaptor.getValue().getOffsetDateTime(9));
-        assertEquals(parameter.getJson(10), parameterCaptor.getValue().getJson(10));
-        assertEquals(parameter.getJson(11), parameterCaptor.getValue().getJson(11));
+        assertThat(queryCaptor.getValue()).isEqualTo(query);
+        assertThat(parameterCaptor.getValue().getString(0)).isEqualTo(parameter.getString(0));
+        assertThat(parameterCaptor.getValue().getString(1)).isEqualTo(parameter.getString(1));
+        assertThat(parameterCaptor.getValue().getString(2)).isEqualTo(parameter.getString(2));
+        assertThat(parameterCaptor.getValue().getInteger(3)).isEqualTo(parameter.getInteger(3));
+        assertThat(parameterCaptor.getValue().getInteger(4)).isEqualTo(parameter.getInteger(4));
+        assertThat(parameterCaptor.getValue().getString(5)).isEqualTo(parameter.getString(5));
+        assertThat(parameterCaptor.getValue().getInteger(6)).isEqualTo(parameter.getInteger(6));
+        assertThat(parameterCaptor.getValue().getJson(7)).isEqualTo(parameter.getJson(7));
+        assertThat(parameterCaptor.getValue().getJson(8)).isEqualTo(parameter.getJson(8));
+        assertThat(parameterCaptor.getValue().getOffsetDateTime(9)).isEqualTo(parameter.getOffsetDateTime(9));
+        assertThat(parameterCaptor.getValue().getJson(10)).isEqualTo(parameter.getJson(10));
+        assertThat(parameterCaptor.getValue().getJson(11)).isEqualTo(parameter.getJson(11));
     }
 
     @Test
     void get() {
         CompletionStage<JobDetails> result = repository.get("test");
-        assertEquals(completableFuture, result);
+        assertThat(result).isEqualTo(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -203,14 +202,14 @@ class PostgreSqlJobRepositoryExecutionTest {
                 "priority, recipient, trigger, fire_time, execution_timeout, execution_timeout_unit, created FROM " + JOB_DETAILS + " WHERE id = $1";
         String parameter = "test";
 
-        assertEquals(query, queryCaptor.getValue());
-        assertEquals(parameter, parameterCaptor.getValue().getValue(0));
+        assertThat(queryCaptor.getValue()).isEqualTo(query);
+        assertThat(parameterCaptor.getValue().getValue(0)).isEqualTo(parameter);
     }
 
     @Test
     void exists() {
         CompletionStage<Boolean> result = repository.exists("test");
-        assertEquals(completableFuture, result);
+        assertThat(result).isEqualTo(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -220,14 +219,14 @@ class PostgreSqlJobRepositoryExecutionTest {
         String query = "SELECT id FROM " + JOB_DETAILS + " WHERE id = $1";
         String parameter = "test";
 
-        assertEquals(query, queryCaptor.getValue());
-        assertEquals(parameter, parameterCaptor.getValue().getValue(0));
+        assertThat(queryCaptor.getValue()).isEqualTo(query);
+        assertThat(parameterCaptor.getValue().getValue(0)).isEqualTo(parameter);
     }
 
     @Test
     void delete() {
         CompletionStage<JobDetails> result = repository.delete("test");
-        assertEquals(completableFuture, result);
+        assertThat(result).isEqualTo(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -239,8 +238,8 @@ class PostgreSqlJobRepositoryExecutionTest {
                 "execution_counter, scheduled_id, priority, recipient, trigger, fire_time, execution_timeout, execution_timeout_unit, created";
         String parameter = "test";
 
-        assertEquals(query, queryCaptor.getValue());
-        assertEquals(parameter, parameterCaptor.getValue().getValue(0));
+        assertThat(queryCaptor.getValue()).isEqualTo(query);
+        assertThat(parameterCaptor.getValue().getValue(0)).isEqualTo(parameter);
     }
 
     @Test
@@ -251,7 +250,7 @@ class PostgreSqlJobRepositoryExecutionTest {
         PublisherBuilder<JobDetails> result = repository.findByStatusBetweenDates(from, to,
                 new JobStatus[] { JobStatus.SCHEDULED, JobStatus.RETRY },
                 new ReactiveJobRepository.SortTerm[] { ReactiveJobRepository.SortTerm.byFireTime(true) });
-        assertNotNull(result);
+        assertThat(result).isNotNull();
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         verify(client, times(1)).preparedQuery(queryCaptor.capture());
@@ -260,7 +259,7 @@ class PostgreSqlJobRepositoryExecutionTest {
                 "priority, recipient, trigger, fire_time, execution_timeout, execution_timeout_unit, created FROM " + JOB_DETAILS + " " +
                 "WHERE status IN ('SCHEDULED', 'RETRY') AND fire_time BETWEEN $1 AND $2 ORDER BY fire_time ASC";
 
-        assertEquals(query, queryCaptor.getValue());
+        assertThat(queryCaptor.getValue()).isEqualTo(query);
     }
 
     @Test
@@ -271,7 +270,7 @@ class PostgreSqlJobRepositoryExecutionTest {
         PublisherBuilder<JobDetails> result = repository.findByStatusBetweenDates(from, to,
                 new JobStatus[] {},
                 new ReactiveJobRepository.SortTerm[] { ReactiveJobRepository.SortTerm.byFireTime(false) });
-        assertNotNull(result);
+        assertThat(result).isNotNull();
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         verify(client, times(1)).preparedQuery(queryCaptor.capture());
@@ -280,19 +279,19 @@ class PostgreSqlJobRepositoryExecutionTest {
                 "priority, recipient, trigger, fire_time, execution_timeout, execution_timeout_unit, created FROM " + JOB_DETAILS + " " +
                 "WHERE fire_time BETWEEN $1 AND $2 ORDER BY fire_time DESC";
 
-        assertEquals(query, queryCaptor.getValue());
+        assertThat(queryCaptor.getValue()).isEqualTo(query);
     }
 
     @Test
     void createStatusQuery() {
         String statusQuery = PostgreSqlJobRepository.createStatusFilter(JobStatus.SCHEDULED, JobStatus.RETRY);
-        assertEquals("status IN ('SCHEDULED', 'RETRY')", statusQuery);
+        assertThat(statusQuery).isEqualTo("status IN ('SCHEDULED', 'RETRY')");
     }
 
     @Test
     void createTimeQuery() {
         String timeQuery = PostgreSqlJobRepository.createFireTimeFilter("$1", "$2");
-        assertEquals("fire_time BETWEEN $1 AND $2", timeQuery);
+        assertThat(timeQuery).isEqualTo("fire_time BETWEEN $1 AND $2");
     }
 
     @Test
@@ -331,6 +330,6 @@ class PostgreSqlJobRepositoryExecutionTest {
                 .executionTimeoutUnit(ChronoUnit.SECONDS)
                 .build();
 
-        assertEquals(expected, jobDetails);
+        assertThat(jobDetails).isEqualTo(expected);
     }
 }

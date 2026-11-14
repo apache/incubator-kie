@@ -28,7 +28,7 @@ import org.kie.api.io.ResourceType;
 import org.kie.internal.builder.conf.ParallelRulesBuildThresholdOption;
 import org.kie.internal.utils.KieHelper;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @EnabledIfSystemProperty(named = "runTurtleTests", matches = "true")
@@ -57,8 +57,7 @@ class ParallelBuildAccumulateTest {
     private void assertBuildDoesNotThrow(String drl) {
         for (int i = 0; i < BUILD_ATTEMPTS; i++) {
             int buildAttempt = i;
-            assertDoesNotThrow(() -> buildExecutableModel(drl),
-                               "Build attempt " + buildAttempt + " should not throw an exception");
+            assertThatCode(() -> buildExecutableModel(drl)).as("Build attempt %d should not throw an exception", buildAttempt).doesNotThrowAnyException();
         }
     }
 

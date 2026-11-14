@@ -19,9 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 
@@ -64,20 +62,19 @@ class OptaPlannerProcessorSolverPropertiesTest {
 
     @Test
     void solverProperties() {
-        assertEquals(EnvironmentMode.FULL_ASSERT, solverConfig.getEnvironmentMode());
-        assertTrue(solverConfig.getDaemon());
-        assertEquals("2", solverConfig.getMoveThreadCount());
-        assertEquals(DomainAccessType.REFLECTION, solverConfig.getDomainAccessType());
-        assertEquals(null,
-                solverConfig.getScoreDirectorFactoryConfig().getConstraintStreamImplType());
+        assertThat(solverConfig.getEnvironmentMode()).isEqualTo(EnvironmentMode.FULL_ASSERT);
+        assertThat(solverConfig.getDaemon()).isTrue();
+        assertThat(solverConfig.getMoveThreadCount()).isEqualTo("2");
+        assertThat(solverConfig.getDomainAccessType()).isEqualTo(DomainAccessType.REFLECTION);
+        assertThat(solverConfig.getScoreDirectorFactoryConfig().getConstraintStreamImplType()).isNull();
 
-        assertNotNull(solverFactory);
+        assertThat(solverFactory).isNotNull();
     }
 
     @Test
     void terminationProperties() {
-        assertEquals(Duration.ofHours(4), solverConfig.getTerminationConfig().getSpentLimit());
-        assertEquals(Duration.ofHours(5), solverConfig.getTerminationConfig().getUnimprovedSpentLimit());
-        assertEquals(SimpleScore.of(0).toString(), solverConfig.getTerminationConfig().getBestScoreLimit());
+        assertThat(solverConfig.getTerminationConfig().getSpentLimit()).isEqualTo(Duration.ofHours(4));
+        assertThat(solverConfig.getTerminationConfig().getUnimprovedSpentLimit()).isEqualTo(Duration.ofHours(5));
+        assertThat(solverConfig.getTerminationConfig().getBestScoreLimit()).isEqualTo(SimpleScore.of(0).toString());
     }
 }

@@ -19,13 +19,15 @@
 
 package org.optaplanner.benchmark.quarkus;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.concurrent.ExecutionException;
 
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.optaplanner.benchmark.config.PlannerBenchmarkConfig;
@@ -57,20 +59,17 @@ class OptaPlannerBenchmarkProcessorMissingSpentLimitPerBenchmarkTest {
     void benchmark() throws ExecutionException, InterruptedException {
         PlannerBenchmarkConfig benchmarkConfig =
                 PlannerBenchmarkConfig.createFromXmlResource("solverBenchmarkConfigSpentLimitPerBenchmarkNoTermination.xml");
-        IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class, () -> {
-            new OptaPlannerBenchmarkRecorder(new RuntimeValue<>(optaPlannerBenchmarkRuntimeConfig))
-                    .benchmarkConfigSupplier(benchmarkConfig).get();
-        });
-        Assertions.assertEquals(
-                "The following " + SolverBenchmarkConfig.class.getSimpleName() + " do not " +
+        assertThatThrownBy(() -> new OptaPlannerBenchmarkRecorder(new RuntimeValue<>(optaPlannerBenchmarkRuntimeConfig))
+                .benchmarkConfigSupplier(benchmarkConfig).get())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("The following " + SolverBenchmarkConfig.class.getSimpleName() + " do not " +
                         "have termination configured: [First Fit and Local Search without Termination]. " +
                         "At least one of the properties " +
                         "quarkus.optaplanner.benchmark.solver.termination.spent-limit, " +
                         "quarkus.optaplanner.benchmark.solver.termination.best-score-limit, " +
                         "quarkus.optaplanner.benchmark.solver.termination.unimproved-spent-limit " +
                         "is required if termination is not configured in a solver benchmark and the " +
-                        "inherited solver benchmark config.",
-                exception.getMessage());
+                        "inherited solver benchmark config.");
     }
 
 }

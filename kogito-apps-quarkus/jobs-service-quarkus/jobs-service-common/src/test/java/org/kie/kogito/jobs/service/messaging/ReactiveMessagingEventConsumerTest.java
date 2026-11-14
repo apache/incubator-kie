@@ -24,7 +24,6 @@ import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.streams.operators.ReactiveStreams;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -241,7 +240,7 @@ public abstract class ReactiveMessagingEventConsumerTest<T extends ReactiveMessa
     private void executeSuccessfulExecution() {
         eventConsumer.onKogitoServiceRequest(message)
                 .subscribe().with(callback -> {
-                }, Assertions::assertNotNull);
+                }, throwable -> assertThat(throwable).isNotNull());
         verify(message).ack();
         verify(message, never()).nack(any());
     }
@@ -249,7 +248,7 @@ public abstract class ReactiveMessagingEventConsumerTest<T extends ReactiveMessa
     private void executeFailedExecution(String withErrorMessage) {
         eventConsumer.onKogitoServiceRequest(message)
                 .subscribe().with(callback -> {
-                }, Assertions::assertNull);
+                }, throwable -> assertThat(throwable).isNull());
         verify(message, never()).ack();
         verify(message).nack(errorCaptor.capture());
         assertThat(errorCaptor.getValue())

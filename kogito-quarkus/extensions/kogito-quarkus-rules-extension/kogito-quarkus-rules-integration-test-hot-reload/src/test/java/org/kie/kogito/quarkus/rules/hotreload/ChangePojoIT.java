@@ -34,8 +34,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ChangePojoIT {
 
@@ -84,8 +83,8 @@ public class ChangePojoIT {
                 .extract()
                 .as(List.class);
 
-        assertEquals(1, persons.size());
-        assertEquals("Mario", persons.get(0).get("name"));
+        assertThat(persons.size()).isEqualTo(1);
+        assertThat(persons.get(0).get("name")).isEqualTo("Mario");
 
         test.modifySourceFile(Person.class, s -> POJO2);
 
@@ -102,8 +101,8 @@ public class ChangePojoIT {
                     .extract()
                     .as(List.class);
 
-            assertEquals(1, persons.size());
-            assertEquals("Mario", persons.get(0).get("name"));
+            assertThat(persons.size()).isEqualTo(1);
+            assertThat(persons.get(0).get("name")).isEqualTo("Mario");
         }
 
         test.modifyResourceFile(RESOURCE_FILE, s -> DRL2);
@@ -118,8 +117,8 @@ public class ChangePojoIT {
                 .statusCode(200)
                 .extract().as(List.class);
 
-        assertEquals(2, persons.size());
-        assertTrue(persons.stream().map(p -> p.get("name")).allMatch(n -> n.equals("Mario") || n.equals("Sofia")));
+        assertThat(persons.size()).isEqualTo(2);
+        assertThat(persons.stream().map(p -> p.get("name")).allMatch(n -> n.equals("Mario") || n.equals("Sofia"))).isTrue();
     }
 
     private static String POJO2 =

@@ -28,8 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RuleTest {
 
@@ -49,10 +48,10 @@ public class RuleTest {
             LOG.info("Run query. Rules are also fired");
             List<Measurement> queryResult = instance.executeQuery("FindColor").toList("$m");
 
-            assertEquals(3, queryResult.size());
-            assertTrue(measurementUnit.getControlSet().contains("red"), "contains red");
-            assertTrue(measurementUnit.getControlSet().contains("green"), "contains green");
-            assertTrue(measurementUnit.getControlSet().contains("blue"), "contains blue");
+            assertThat(queryResult).hasSize(3);
+            assertThat(measurementUnit.getControlSet()).as("contains red").contains("red");
+            assertThat(measurementUnit.getControlSet()).as("contains green").contains("green");
+            assertThat(measurementUnit.getControlSet()).as("contains blue").contains("blue");
         }
     }
 }

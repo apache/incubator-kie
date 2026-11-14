@@ -64,10 +64,8 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -105,8 +103,8 @@ public class CounterfactualExplainerServiceHandlerTest {
 
     @Test
     public void testSupports() {
-        assertTrue(handler.supports(CounterfactualExplainabilityRequest.class));
-        assertFalse(handler.supports(BaseExplainabilityRequest.class));
+        assertThat(handler.supports(CounterfactualExplainabilityRequest.class)).isTrue();
+        assertThat(handler.supports(BaseExplainabilityRequest.class)).isFalse();
     }
 
     @Test
@@ -121,12 +119,12 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof CounterfactualPrediction);
+        assertThat((prediction instanceof CounterfactualPrediction)).isTrue();
         CounterfactualPrediction counterfactualPrediction = (CounterfactualPrediction) prediction;
 
-        assertTrue(counterfactualPrediction.getInput().getFeatures().isEmpty());
+        assertThat(counterfactualPrediction.getInput().getFeatures().isEmpty()).isTrue();
 
-        assertEquals(counterfactualPrediction.getMaxRunningTimeSeconds(), request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(counterfactualPrediction.getMaxRunningTimeSeconds());
     }
 
     @Test
@@ -142,21 +140,21 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof CounterfactualPrediction);
+        assertThat((prediction instanceof CounterfactualPrediction)).isTrue();
         CounterfactualPrediction counterfactualPrediction = (CounterfactualPrediction) prediction;
 
-        assertEquals(1, counterfactualPrediction.getInput().getFeatures().size());
+        assertThat(counterfactualPrediction.getInput().getFeatures().size()).isEqualTo(1);
         Optional<Feature> oInput1 = counterfactualPrediction.getInput().getFeatures().stream().filter(f -> f.getName().equals("input1")).findFirst();
-        assertTrue(oInput1.isPresent());
+        assertThat(oInput1.isPresent()).isTrue();
         Feature input1 = oInput1.get();
-        assertEquals(Type.NUMBER, input1.getType());
-        assertEquals(20, input1.getValue().asNumber());
-        assertTrue(counterfactualPrediction.getInput().getFeatures().stream().allMatch(f -> f.getDomain().isEmpty()));
-        assertTrue(counterfactualPrediction.getInput().getFeatures().stream().allMatch(Feature::isConstrained));
+        assertThat(input1.getType()).isEqualTo(Type.NUMBER);
+        assertThat(input1.getValue().asNumber()).isEqualTo(20);
+        assertThat(counterfactualPrediction.getInput().getFeatures().stream().allMatch(f -> f.getDomain().isEmpty())).isTrue();
+        assertThat(counterfactualPrediction.getInput().getFeatures().stream().allMatch(Feature::isConstrained)).isTrue();
 
-        assertTrue(counterfactualPrediction.getOutput().getOutputs().isEmpty());
+        assertThat(counterfactualPrediction.getOutput().getOutputs().isEmpty()).isTrue();
 
-        assertEquals(counterfactualPrediction.getMaxRunningTimeSeconds(), request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(counterfactualPrediction.getMaxRunningTimeSeconds());
     }
 
     @Test
@@ -171,7 +169,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 Collections.emptyList(),
                 MAX_RUNNING_TIME_SECONDS);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getPrediction(request));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getPrediction(request));
     }
 
     @Test
@@ -186,7 +184,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 Collections.emptyList(),
                 MAX_RUNNING_TIME_SECONDS);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getPrediction(request));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getPrediction(request));
     }
 
     @Test
@@ -202,19 +200,19 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof CounterfactualPrediction);
+        assertThat((prediction instanceof CounterfactualPrediction)).isTrue();
         CounterfactualPrediction counterfactualPrediction = (CounterfactualPrediction) prediction;
 
-        assertEquals(1, counterfactualPrediction.getOutput().getOutputs().size());
+        assertThat(counterfactualPrediction.getOutput().getOutputs().size()).isEqualTo(1);
         Optional<Output> oOutput1 = counterfactualPrediction.getOutput().getOutputs().stream().filter(f -> f.getName().equals("output1")).findFirst();
-        assertTrue(oOutput1.isPresent());
+        assertThat(oOutput1.isPresent()).isTrue();
         Output output1 = oOutput1.get();
-        assertEquals(Type.NUMBER, output1.getType());
-        assertEquals(20, output1.getValue().asNumber());
+        assertThat(output1.getType()).isEqualTo(Type.NUMBER);
+        assertThat(output1.getValue().asNumber()).isEqualTo(20);
 
-        assertTrue(counterfactualPrediction.getInput().getFeatures().isEmpty());
+        assertThat(counterfactualPrediction.getInput().getFeatures().isEmpty()).isTrue();
 
-        assertEquals(counterfactualPrediction.getMaxRunningTimeSeconds(), request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(counterfactualPrediction.getMaxRunningTimeSeconds());
     }
 
     @Test
@@ -234,29 +232,29 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof CounterfactualPrediction);
+        assertThat((prediction instanceof CounterfactualPrediction)).isTrue();
         CounterfactualPrediction counterfactualPrediction = (CounterfactualPrediction) prediction;
 
         List<Output> outputs = counterfactualPrediction.getOutput().getOutputs();
-        assertEquals(3, outputs.size());
+        assertThat(outputs.size()).isEqualTo(3);
         Output output1 = outputs.get(0);
-        assertEquals("my-scoring-function", output1.getName());
-        assertEquals(Type.NUMBER, output1.getType());
-        assertEquals(0.85, output1.getValue().asNumber());
+        assertThat(output1.getName()).isEqualTo("my-scoring-function");
+        assertThat(output1.getType()).isEqualTo(Type.NUMBER);
+        assertThat(output1.getValue().asNumber()).isEqualTo(0.85);
 
         Output output2 = outputs.get(1);
-        assertEquals("inputsAreValid", output2.getName());
-        assertEquals(Type.BOOLEAN, output2.getType());
-        assertEquals(Boolean.FALSE, output2.getValue().getUnderlyingObject());
+        assertThat(output2.getName()).isEqualTo("inputsAreValid");
+        assertThat(output2.getType()).isEqualTo(Type.BOOLEAN);
+        assertThat(output2.getValue().getUnderlyingObject()).isEqualTo(Boolean.FALSE);
 
         Output output3 = outputs.get(2);
-        assertEquals("canRequestLoan", output3.getName());
-        assertEquals(Type.BOOLEAN, output3.getType());
-        assertEquals(Boolean.TRUE, output3.getValue().getUnderlyingObject());
+        assertThat(output3.getName()).isEqualTo("canRequestLoan");
+        assertThat(output3.getType()).isEqualTo(Type.BOOLEAN);
+        assertThat(output3.getValue().getUnderlyingObject()).isEqualTo(Boolean.TRUE);
 
-        assertTrue(counterfactualPrediction.getInput().getFeatures().isEmpty());
+        assertThat(counterfactualPrediction.getInput().getFeatures().isEmpty()).isTrue();
 
-        assertEquals(counterfactualPrediction.getMaxRunningTimeSeconds(), request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(counterfactualPrediction.getMaxRunningTimeSeconds());
     }
 
     @Test
@@ -271,7 +269,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 Collections.emptyList(),
                 MAX_RUNNING_TIME_SECONDS);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getPrediction(request));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getPrediction(request));
     }
 
     @Test
@@ -286,7 +284,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 Collections.emptyList(),
                 MAX_RUNNING_TIME_SECONDS);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getPrediction(request));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getPrediction(request));
     }
 
     @Test
@@ -305,14 +303,14 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof CounterfactualPrediction);
+        assertThat((prediction instanceof CounterfactualPrediction)).isTrue();
         CounterfactualPrediction counterfactualPrediction = (CounterfactualPrediction) prediction;
 
-        assertEquals(1, counterfactualPrediction.getInput().getFeatures().size());
+        assertThat(counterfactualPrediction.getInput().getFeatures().size()).isEqualTo(1);
         Feature feature1 = counterfactualPrediction.getInput().getFeatures().get(0);
-        assertTrue(feature1.getDomain() instanceof EmptyFeatureDomain);
+        assertThat((feature1.getDomain() instanceof EmptyFeatureDomain)).isTrue();
 
-        assertEquals(counterfactualPrediction.getMaxRunningTimeSeconds(), request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(counterfactualPrediction.getMaxRunningTimeSeconds());
     }
 
     @Test
@@ -331,18 +329,18 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         Prediction prediction = handler.getPrediction(request);
-        assertTrue(prediction instanceof CounterfactualPrediction);
+        assertThat((prediction instanceof CounterfactualPrediction)).isTrue();
         CounterfactualPrediction counterfactualPrediction = (CounterfactualPrediction) prediction;
 
-        assertEquals(1, counterfactualPrediction.getInput().getFeatures().size());
+        assertThat(counterfactualPrediction.getInput().getFeatures().size()).isEqualTo(1);
         Feature feature1 = counterfactualPrediction.getInput().getFeatures().get(0);
-        assertTrue(feature1.getDomain() instanceof NumericalFeatureDomain);
+        assertThat((feature1.getDomain() instanceof NumericalFeatureDomain)).isTrue();
 
         final NumericalFeatureDomain domain = (NumericalFeatureDomain) feature1.getDomain();
-        assertEquals(10, domain.getLowerBound());
-        assertEquals(20, domain.getUpperBound());
+        assertThat(domain.getLowerBound()).isEqualTo(10);
+        assertThat(domain.getUpperBound()).isEqualTo(20);
 
-        assertEquals(counterfactualPrediction.getMaxRunningTimeSeconds(), request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(counterfactualPrediction.getMaxRunningTimeSeconds());
     }
 
     @Test
@@ -362,7 +360,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                                                 new CounterfactualDomainRange(new IntNode(10), new IntNode(20))))))),
                 MAX_RUNNING_TIME_SECONDS);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getPrediction(request));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getPrediction(request));
     }
 
     @Test
@@ -381,7 +379,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                                         new CounterfactualDomainRange(new IntNode(10), new IntNode(20))))))),
                 MAX_RUNNING_TIME_SECONDS);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getPrediction(request));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getPrediction(request));
     }
 
     @Test
@@ -405,26 +403,26 @@ public class CounterfactualExplainerServiceHandlerTest {
                 0);
 
         BaseExplainabilityResult base = handler.createSucceededResult(request, counterfactuals);
-        assertTrue(base instanceof CounterfactualExplainabilityResult);
+        assertThat((base instanceof CounterfactualExplainabilityResult)).isTrue();
         CounterfactualExplainabilityResult result = (CounterfactualExplainabilityResult) base;
 
-        assertEquals(ExplainabilityStatus.SUCCEEDED, result.getStatus());
-        assertEquals(CounterfactualExplainabilityResult.Stage.FINAL, result.getStage());
-        assertEquals(EXECUTION_ID, result.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, result.getCounterfactualId());
-        assertEquals(1, result.getInputs().size());
-        assertTrue(result.getInputs().stream().anyMatch(i -> i.getName().equals("input1")));
+        assertThat(result.getStatus()).isEqualTo(ExplainabilityStatus.SUCCEEDED);
+        assertThat(result.getStage()).isEqualTo(CounterfactualExplainabilityResult.Stage.FINAL);
+        assertThat(result.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(result.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
+        assertThat(result.getInputs().size()).isEqualTo(1);
+        assertThat(result.getInputs().stream().anyMatch(i -> i.getName().equals("input1"))).isTrue();
         NamedTypedValue input1 = result.getInputs().iterator().next();
-        assertEquals(Double.class.getSimpleName(), input1.getValue().getType());
-        assertEquals(TypedValue.Kind.UNIT, input1.getValue().getKind());
-        assertEquals(123.0, input1.getValue().toUnit().getValue().asDouble());
+        assertThat(input1.getValue().getType()).isEqualTo(Double.class.getSimpleName());
+        assertThat(input1.getValue().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(input1.getValue().toUnit().getValue().asDouble()).isEqualTo(123.0);
 
-        assertEquals(1, result.getOutputs().size());
-        assertTrue(result.getOutputs().stream().anyMatch(o -> o.getName().equals("output1")));
+        assertThat(result.getOutputs().size()).isEqualTo(1);
+        assertThat(result.getOutputs().stream().anyMatch(o -> o.getName().equals("output1"))).isTrue();
         NamedTypedValue output1 = result.getOutputs().iterator().next();
-        assertEquals(Double.class.getSimpleName(), output1.getValue().getType());
-        assertEquals(TypedValue.Kind.UNIT, output1.getValue().getKind());
-        assertEquals(555.0, output1.getValue().toUnit().getValue().asDouble());
+        assertThat(output1.getValue().getType()).isEqualTo(Double.class.getSimpleName());
+        assertThat(output1.getValue().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(output1.getValue().toUnit().getValue().asDouble()).isEqualTo(555.0);
     }
 
     @Test
@@ -446,7 +444,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 UUID.fromString(EXECUTION_ID),
                 0);
 
-        assertThrows(NullPointerException.class, () -> handler.createSucceededResult(request, counterfactuals));
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> handler.createSucceededResult(request, counterfactuals));
     }
 
     @Test
@@ -468,7 +466,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 UUID.fromString(EXECUTION_ID),
                 0);
 
-        assertThrows(IllegalStateException.class, () -> handler.createSucceededResult(request, counterfactuals));
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> handler.createSucceededResult(request, counterfactuals));
     }
 
     @Test
@@ -490,7 +488,7 @@ public class CounterfactualExplainerServiceHandlerTest {
                 UUID.fromString(EXECUTION_ID),
                 0);
 
-        assertThrows(IllegalStateException.class, () -> handler.createSucceededResult(request, counterfactuals));
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> handler.createSucceededResult(request, counterfactuals));
     }
 
     @Test
@@ -515,26 +513,26 @@ public class CounterfactualExplainerServiceHandlerTest {
                 0);
 
         BaseExplainabilityResult base = handler.createIntermediateResult(request, counterfactuals);
-        assertTrue(base instanceof CounterfactualExplainabilityResult);
+        assertThat((base instanceof CounterfactualExplainabilityResult)).isTrue();
         CounterfactualExplainabilityResult result = (CounterfactualExplainabilityResult) base;
 
-        assertEquals(ExplainabilityStatus.SUCCEEDED, result.getStatus());
-        assertEquals(CounterfactualExplainabilityResult.Stage.INTERMEDIATE, result.getStage());
-        assertEquals(EXECUTION_ID, result.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, result.getCounterfactualId());
-        assertEquals(1, result.getInputs().size());
-        assertTrue(result.getInputs().stream().anyMatch(i -> i.getName().equals("input1")));
+        assertThat(result.getStatus()).isEqualTo(ExplainabilityStatus.SUCCEEDED);
+        assertThat(result.getStage()).isEqualTo(CounterfactualExplainabilityResult.Stage.INTERMEDIATE);
+        assertThat(result.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(result.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
+        assertThat(result.getInputs().size()).isEqualTo(1);
+        assertThat(result.getInputs().stream().anyMatch(i -> i.getName().equals("input1"))).isTrue();
         NamedTypedValue input1 = result.getInputs().iterator().next();
-        assertEquals(Double.class.getSimpleName(), input1.getValue().getType());
-        assertEquals(TypedValue.Kind.UNIT, input1.getValue().getKind());
-        assertEquals(123.0, input1.getValue().toUnit().getValue().asDouble());
+        assertThat(input1.getValue().getType()).isEqualTo(Double.class.getSimpleName());
+        assertThat(input1.getValue().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(input1.getValue().toUnit().getValue().asDouble()).isEqualTo(123.0);
 
-        assertEquals(1, result.getOutputs().size());
-        assertTrue(result.getOutputs().stream().anyMatch(o -> o.getName().equals("output1")));
+        assertThat(result.getOutputs().size()).isEqualTo(1);
+        assertThat(result.getOutputs().stream().anyMatch(o -> o.getName().equals("output1"))).isTrue();
         NamedTypedValue output1 = result.getOutputs().iterator().next();
-        assertEquals(Double.class.getSimpleName(), output1.getValue().getType());
-        assertEquals(TypedValue.Kind.UNIT, output1.getValue().getKind());
-        assertEquals(555.0, output1.getValue().toUnit().getValue().asDouble());
+        assertThat(output1.getValue().getType()).isEqualTo(Double.class.getSimpleName());
+        assertThat(output1.getValue().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(output1.getValue().toUnit().getValue().asDouble()).isEqualTo(555.0);
     }
 
     @Test
@@ -549,13 +547,13 @@ public class CounterfactualExplainerServiceHandlerTest {
                 MAX_RUNNING_TIME_SECONDS);
 
         BaseExplainabilityResult base = handler.createFailedResult(request, new NullPointerException("Something went wrong"));
-        assertTrue(base instanceof CounterfactualExplainabilityResult);
+        assertThat((base instanceof CounterfactualExplainabilityResult)).isTrue();
         CounterfactualExplainabilityResult result = (CounterfactualExplainabilityResult) base;
 
-        assertEquals(ExplainabilityStatus.FAILED, result.getStatus());
-        assertEquals("Something went wrong", result.getStatusDetails());
-        assertEquals(EXECUTION_ID, result.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, result.getCounterfactualId());
+        assertThat(result.getStatus()).isEqualTo(ExplainabilityStatus.FAILED);
+        assertThat(result.getStatusDetails()).isEqualTo("Something went wrong");
+        assertThat(result.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(result.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
     }
 
     @Test

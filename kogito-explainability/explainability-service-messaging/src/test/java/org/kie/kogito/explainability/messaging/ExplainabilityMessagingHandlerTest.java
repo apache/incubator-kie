@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.explainability.ExplanationService;
@@ -41,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.jackson.JsonFormat;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -85,7 +85,7 @@ public class ExplainabilityMessagingHandlerTest {
 
         doThrow(new RuntimeException("Something really bad")).when(explanationService)
                 .explainAsync(any(BaseExplainabilityRequest.class), any());
-        Assertions.assertDoesNotThrow(() -> handler.handleMessage(message));
+        assertThatCode(() -> handler.handleMessage(message)).doesNotThrowAnyException();
     }
 
     private Message<String> mockMessage(String payload) {

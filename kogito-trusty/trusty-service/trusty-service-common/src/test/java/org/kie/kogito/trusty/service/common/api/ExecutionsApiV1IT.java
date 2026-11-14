@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.trusty.service.common.TrustyService;
 import org.kie.kogito.trusty.service.common.models.MatchedExecutionHeaders;
@@ -41,7 +40,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -60,9 +59,9 @@ class ExecutionsApiV1IT {
                 .thenReturn(new MatchedExecutionHeaders(new ArrayList<>(), 0));
         ExecutionsResponse response = given().contentType(ContentType.JSON).when().get("/executions?from=2000-01-01T00:00:00Z&to=2021-01-01T00:00:00Z").as(ExecutionsResponse.class);
 
-        Assertions.assertEquals(100, response.getLimit());
-        Assertions.assertEquals(0, response.getOffset());
-        Assertions.assertEquals(0, response.getHeaders().size());
+        assertThat(response.getLimit()).isEqualTo(100);
+        assertThat(response.getOffset()).isEqualTo(0);
+        assertThat(response.getHeaders().size()).isEqualTo(0);
     }
 
     @Test
@@ -116,7 +115,7 @@ class ExecutionsApiV1IT {
                 "-01T00:00:00Z&to=2021" +
                 "-01-01T00:00:00Z").as(ExecutionsResponse.class);
 
-        Assertions.assertEquals(1, response.getHeaders().size());
+        assertThat(response.getHeaders().size()).isEqualTo(1);
     }
 
     @Test
@@ -132,30 +131,30 @@ class ExecutionsApiV1IT {
                 .get("/executions?from=2000-01-01T00:00:00Z&to=2021-01-01T00:00:00Z&limit=10")
                 .as(ExecutionsResponse.class);
 
-        Assertions.assertEquals(10, response.getHeaders().size());
-        Assertions.assertEquals(15, response.getTotal());
-        Assertions.assertEquals(0, response.getOffset());
-        Assertions.assertEquals(10, response.getLimit());
+        assertThat(response.getHeaders().size()).isEqualTo(10);
+        assertThat(response.getTotal()).isEqualTo(15);
+        assertThat(response.getOffset()).isEqualTo(0);
+        assertThat(response.getLimit()).isEqualTo(10);
 
         response = given().contentType(ContentType.JSON)
                 .when()
                 .get("/executions?from=2000-01-01T00:00:00Z&to=2021-01-01T00:00:00Z&limit=10&offset=5")
                 .as(ExecutionsResponse.class);
 
-        Assertions.assertEquals(10, response.getHeaders().size());
-        Assertions.assertEquals(15, response.getTotal());
-        Assertions.assertEquals(5, response.getOffset());
-        Assertions.assertEquals(10, response.getLimit());
+        assertThat(response.getHeaders().size()).isEqualTo(10);
+        assertThat(response.getTotal()).isEqualTo(15);
+        assertThat(response.getOffset()).isEqualTo(5);
+        assertThat(response.getLimit()).isEqualTo(10);
 
         response = given().contentType(ContentType.JSON)
                 .when()
                 .get("/executions?from=2000-01-01T00:00:00Z&to=2021-01-01T00:00:00Z&limit=10&offset=10")
                 .as(ExecutionsResponse.class);
 
-        Assertions.assertEquals(5, response.getHeaders().size());
-        Assertions.assertEquals(15, response.getTotal());
-        Assertions.assertEquals(10, response.getOffset());
-        Assertions.assertEquals(10, response.getLimit());
+        assertThat(response.getHeaders().size()).isEqualTo(5);
+        assertThat(response.getTotal()).isEqualTo(15);
+        assertThat(response.getOffset()).isEqualTo(10);
+        assertThat(response.getLimit()).isEqualTo(10);
     }
 
     @Test
@@ -169,11 +168,11 @@ class ExecutionsApiV1IT {
         when(executionService.getModelById(any(DMNModelMetadata.class), eq(DMNModelWithMetadata.class))).thenReturn(dmnModelWithMetadata);
 
         DMNModelWithMetadata response = given().contentType(ContentType.TEXT).when().get("/executions/123/model").as(DMNModelWithMetadata.class);
-        assertEquals(dmnModelWithMetadata.getModel(), response.getModel());
-        assertEquals(dmnModelWithMetadata.getGroupId(), response.getGroupId());
-        assertEquals(dmnModelWithMetadata.getNamespace(), response.getNamespace());
-        assertEquals(dmnModelWithMetadata.getName(), response.getName());
-        assertEquals(dmnModelWithMetadata.getArtifactId(), response.getArtifactId());
+        assertThat(response.getModel()).isEqualTo(dmnModelWithMetadata.getModel());
+        assertThat(response.getGroupId()).isEqualTo(dmnModelWithMetadata.getGroupId());
+        assertThat(response.getNamespace()).isEqualTo(dmnModelWithMetadata.getNamespace());
+        assertThat(response.getName()).isEqualTo(dmnModelWithMetadata.getName());
+        assertThat(response.getArtifactId()).isEqualTo(dmnModelWithMetadata.getArtifactId());
     }
 
     @Test

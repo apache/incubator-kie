@@ -20,7 +20,7 @@ package org.kie.kogito.persistence.postgresql.reporting.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresFieldTest {
 
@@ -29,13 +29,11 @@ class PostgresFieldTest {
 
     @Test
     void testEquality() {
-        assertEquals(FIELD,
-                FIELD);
+        assertThat(FIELD).isEqualTo(FIELD);
     }
 
     @Test
     void testHashCode() {
-        assertEquals(FIELD_HASHCODE,
-                FIELD.hashCode());
+        assertThat(FIELD.hashCode()).isEqualTo(FIELD_HASHCODE);
     }
 }

@@ -37,7 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 abstract class BaseSqlBuilderImplTest {
@@ -157,7 +157,7 @@ abstract class BaseSqlBuilderImplTest {
         int idx = 0;
         for (String line : expected) {
             idx = actual.indexOf(line, idx);
-            assertTrue(idx > -1, String.format("Line '%s' not found in '%s'", line, actual));
+            assertThat(idx > -1).as(String.format("Line '%s' not found in '%s'", line, actual)).isTrue();
         }
     }
 }

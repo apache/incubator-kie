@@ -25,8 +25,8 @@ import org.hamcrest.core.IsNull;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class CommonTestUtils {
 
@@ -64,12 +64,12 @@ public class CommonTestUtils {
                 .body("resultObjectName", is(targetField))
                 .extract()
                 .path("resultVariables");
-        assertNotNull(resultVariables);
-        assertTrue(resultVariables instanceof Map);
+        assertThat(resultVariables).isNotNull();
+        assertThat(resultVariables).isInstanceOf(Map.class);
         Map<String, Object> mappedResultVariables = (Map) resultVariables;
         expectedResultMap.forEach((key, value) -> {
-            assertTrue(mappedResultVariables.containsKey(key));
-            assertEquals(value, mappedResultVariables.get(key));
+            assertThat(mappedResultVariables).containsKey(key);
+            assertThat(mappedResultVariables.get(key)).isEqualTo(value);
         });
 
     }

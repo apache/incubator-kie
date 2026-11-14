@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestingUtils {
 
@@ -59,7 +59,7 @@ public class TestingUtils {
 
     public static String getModel(String modelFileName) throws IOException {
         URL resource = Thread.currentThread().getContextClassLoader().getResource(modelFileName);
-        assertNotNull(resource);
+        assertThat(resource).isNotNull();
         try (InputStream is = resource.openStream()) {
             return MAPPER.writeValueAsString(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }

@@ -19,8 +19,7 @@
 
 package org.optaplanner.quarkus.constraints;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
 
@@ -51,9 +50,9 @@ class OptaPlannerProcessorConstraintProviderTest {
 
     @Test
     void solverConfigXml_default() {
-        assertEquals(TestdataQuarkusConstraintProvider.class,
-                solverConfig.getScoreDirectorFactoryConfig().getConstraintProviderClass());
-        assertNotNull(solverFactory.buildSolver());
+        assertThat(solverConfig.getScoreDirectorFactoryConfig().getConstraintProviderClass())
+                .isEqualTo(TestdataQuarkusConstraintProvider.class);
+        assertThat(solverFactory.buildSolver()).isNotNull();
     }
 
 }

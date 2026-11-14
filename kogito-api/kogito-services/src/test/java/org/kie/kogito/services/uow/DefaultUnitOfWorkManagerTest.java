@@ -28,7 +28,7 @@ import org.kie.kogito.uow.WorkUnit;
 import org.kie.kogito.uow.events.UnitOfWorkEventListener;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -101,10 +101,10 @@ public class DefaultUnitOfWorkManagerTest {
 
         unit.start();
         unit.abort();
-        assertThrows(IllegalStateException.class, () -> unit.start(), "Cannot start already completed unit");
-        assertThrows(IllegalStateException.class, () -> unit.end(), "Cannot end already completed unit");
-        assertThrows(IllegalStateException.class, () -> unit.abort(), "Cannot abort already completed unit");
-        assertThrows(IllegalStateException.class, () -> unit.intercept(null), "Cannot intercept on already completed unit");
+        assertThatThrownBy(unit::start).isInstanceOf(IllegalStateException.class).hasMessage("Cannot start already completed unit");
+        assertThatThrownBy(unit::end).isInstanceOf(IllegalStateException.class).hasMessage("Cannot end already completed unit");
+        assertThatThrownBy(unit::abort).isInstanceOf(IllegalStateException.class).hasMessage("Cannot abort already completed unit");
+        assertThatThrownBy(() -> unit.intercept(null)).isInstanceOf(IllegalStateException.class).hasMessage("Cannot intercept on already completed unit");
     }
 
     @Test
@@ -118,7 +118,7 @@ public class DefaultUnitOfWorkManagerTest {
 
         WorkUnit<AtomicInteger> dummyWork = WorkUnit.create(counter, (d) -> d.incrementAndGet());
 
-        assertThrows(IllegalStateException.class, () -> unit.intercept(dummyWork), "Cannot intercept on not started unit");
+        assertThatThrownBy(() -> unit.intercept(dummyWork)).isInstanceOf(IllegalStateException.class).hasMessage("Cannot intercept on not started unit");
         verify(listener, never()).onBeforeStartEvent(any());
         verify(listener, never()).onAfterEndEvent(any());
         verify(listener, never()).onAfterAbortEvent(any());

@@ -20,7 +20,6 @@ package org.kie.kogito.persistence.redis;
 
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.persistence.redis.index.RedisCreateIndexEvent;
@@ -29,7 +28,8 @@ import org.mockito.Mockito;
 
 import io.redisearch.Schema;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.persistence.redis.Constants.INDEX_NAME_FIELD;
 import static org.kie.kogito.persistence.redis.Constants.RAW_OBJECT_FIELD;
 import static org.kie.kogito.persistence.redis.Person.AGE_PROPERTY;
@@ -59,25 +59,25 @@ public class RedisStorageTest {
 
     @Test
     public void addObjectCreatedListenerOperationShouldThrowException() {
-        assertThrows(UnsupportedOperationException.class, () -> redisStorage.objectCreatedListener().subscribe().with(x -> {
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> redisStorage.objectCreatedListener().subscribe().with(x -> {
         }));
     }
 
     @Test
     public void addObjectUpdatedListenerOperationShouldThrowException() {
-        assertThrows(UnsupportedOperationException.class, () -> redisStorage.objectUpdatedListener().subscribe().with(x -> {
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> redisStorage.objectUpdatedListener().subscribe().with(x -> {
         }));
     }
 
     @Test
     public void addObjectRemovedListenerOperationShouldThrowException() {
-        assertThrows(UnsupportedOperationException.class, () -> redisStorage.objectRemovedListener().subscribe().with(x -> {
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> redisStorage.objectRemovedListener().subscribe().with(x -> {
         }));
     }
 
     @Test
     public void entrySetOperationShouldThrowException() {
-        assertThrows(UnsupportedOperationException.class, redisStorage::entries);
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(redisStorage::entries);
     }
 
     @Test
@@ -86,15 +86,15 @@ public class RedisStorageTest {
 
         Map<String, Map<String, Object>> storage = redisClientMock.getStorage();
 
-        Assertions.assertEquals(1, storage.size());
+        assertThat(storage.size()).isEqualTo(1);
 
         Map<String, Object> value = storage.get("myKey");
 
-        Assertions.assertEquals(4, value.size());
-        Assertions.assertTrue(value.containsKey(INDEX_NAME_FIELD));
-        Assertions.assertTrue(value.containsKey(RAW_OBJECT_FIELD));
-        Assertions.assertTrue(value.containsKey(NAME_PROPERTY));
-        Assertions.assertTrue(value.containsKey(AGE_PROPERTY));
+        assertThat(value.size()).isEqualTo(4);
+        assertThat(value.containsKey(INDEX_NAME_FIELD)).isTrue();
+        assertThat(value.containsKey(RAW_OBJECT_FIELD)).isTrue();
+        assertThat(value.containsKey(NAME_PROPERTY)).isTrue();
+        assertThat(value.containsKey(AGE_PROPERTY)).isTrue();
     }
 
     @Test
@@ -102,8 +102,8 @@ public class RedisStorageTest {
         String key = "myKey";
         redisStorage.put(key, new Person("pippo", 22));
 
-        Assertions.assertTrue(redisStorage.containsKey(key));
-        Assertions.assertFalse(redisStorage.containsKey("a_key_that_does_not_exist"));
+        assertThat(redisStorage.containsKey(key)).isTrue();
+        assertThat(redisStorage.containsKey("a_key_that_does_not_exist")).isFalse();
     }
 
     @Test
@@ -113,13 +113,13 @@ public class RedisStorageTest {
         redisStorage.put(key, value);
 
         Person retrieved = redisStorage.get(key);
-        Assertions.assertEquals("pippo", retrieved.getName());
-        Assertions.assertEquals(22, retrieved.getAge());
+        assertThat(retrieved.getName()).isEqualTo("pippo");
+        assertThat(retrieved.getAge()).isEqualTo(22);
     }
 
     @Test
     public void getUnexistingDocumentOperationTest() {
-        Assertions.assertNull(redisStorage.get("a_key_that_does_not_exist"));
+        assertThat(redisStorage.get("a_key_that_does_not_exist")).isNull();
     }
 
     @Test
@@ -128,11 +128,11 @@ public class RedisStorageTest {
         Person value = new Person("pippo", 22);
         redisStorage.put(key, value);
 
-        Assertions.assertNotNull(redisStorage.get(key));
+        assertThat(redisStorage.get(key)).isNotNull();
 
         redisStorage.remove(key);
 
-        Assertions.assertNull(redisStorage.get(key));
+        assertThat(redisStorage.get(key)).isNull();
     }
 
     @Test
@@ -141,7 +141,7 @@ public class RedisStorageTest {
         Person value = new Person(null, 22);
         redisStorage.put(key, value);
 
-        Assertions.assertNotNull(redisStorage.get(key));
+        assertThat(redisStorage.get(key)).isNotNull();
     }
 
     private void setPersonIndex(RedisIndexManager redisIndexManager) {

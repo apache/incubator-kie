@@ -22,8 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.testcontainers.Constants.CONTAINER_NAME_PREFIX;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -46,18 +45,18 @@ public class KogitoPostgreSqlContainerTest {
 
     @Test
     public void shouldAddDefaultSettings() {
-        assertTrue(container.getExposedPorts().contains(PostgreSQLContainer.POSTGRESQL_PORT));
+        assertThat(container.getExposedPorts().contains(PostgreSQLContainer.POSTGRESQL_PORT)).isTrue();
     }
 
     @Test
     public void shouldGetResourceName() {
-        assertEquals(PostgreSQLContainer.NAME, container.getResourceName());
+        assertThat(container.getResourceName()).isEqualTo(PostgreSQLContainer.NAME);
     }
 
     @Test
     public void shouldGetMapperPort() {
         doReturn(MAPPED_PORT).when(container).getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT);
-        assertEquals(MAPPED_PORT, container.getMappedPort());
+        assertThat(container.getMappedPort()).isEqualTo(MAPPED_PORT);
     }
 
 }

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Abstract integration test to validate all JPA entities have registered data isolation key descriptors.
@@ -67,17 +67,18 @@ public abstract class AbstractDataIsolationKeyDescriptorRegistryIT {
 
         // Verify each entity has a registered data isolation key descriptor with both paths
         for (Class<?> entityClass : jpaEntities) {
-            assertDoesNotThrow(
-                    () -> {
-                        DataIsolationKeyDescriptor descriptor =
-                                DataIsolationKeyDescriptorRegistry.getDescriptor((Class<? extends AbstractEntity>) entityClass);
-                        if (descriptor.processId() == null || descriptor.processId().isBlank()) {
-                            throw new AssertionError("processId path is null or blank for entity: " +
-                                    entityClass.getSimpleName());
-                        }
-                    },
-                    "Missing or invalid data isolation key descriptor for entity: " + entityClass.getSimpleName() +
-                            ". Add mapping to DataIsolationKeyDescriptorRegistry.DESCRIPTORS with both processId and processVersion paths");
+            assertThatCode(() -> {
+                DataIsolationKeyDescriptor descriptor =
+                        DataIsolationKeyDescriptorRegistry.getDescriptor((Class<? extends AbstractEntity>) entityClass);
+                if (descriptor.processId() == null || descriptor.processId().isBlank()) {
+                    throw new AssertionError("processId path is null or blank for entity: " +
+                            entityClass.getSimpleName());
+                }
+            }).as(
+                    "Missing or invalid data isolation key descriptor for entity: %s %s",
+                    entityClass.getSimpleName(),
+                    ". Add mapping to DataIsolationKeyDescriptorRegistry.DESCRIPTORS with both processId and processVersion paths")
+                    .doesNotThrowAnyException();
         }
     }
 }

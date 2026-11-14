@@ -29,8 +29,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import io.quarkus.bootstrap.model.PathsCollection;
 import io.quarkus.paths.PathCollection;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class KogitoAssetsProcessorTest {
 
@@ -49,8 +48,8 @@ class KogitoAssetsProcessorTest {
         Iterable<Path> paths = Arrays.asList(projectDir, outputTarget);
         PathCollection resolvedPaths = PathsCollection.from(paths);
         PathCollection retrieved = KogitoAssetsProcessor.getRootPaths(resolvedPaths, bt);
-        assertEquals(resolvedPaths.size(), retrieved.size());
-        paths.forEach(expected -> assertTrue(retrieved.contains(expected)));
+        assertThat(retrieved.size()).isEqualTo(resolvedPaths.size());
+        paths.forEach(expected -> assertThat(retrieved).contains(expected));
     }
 
     @ParameterizedTest
@@ -71,8 +70,8 @@ class KogitoAssetsProcessorTest {
         PathCollection resolvedPaths = PathsCollection.from(paths);
         PathCollection retrieved = KogitoAssetsProcessor.getRootPaths(resolvedPaths, bt);
         int expectedSize = withGradle ? 1 : resolvedPaths.size();
-        assertEquals(expectedSize, retrieved.size());
+        assertThat(retrieved.size()).isEqualTo(expectedSize);
         String expectedPath = String.format("%s/%s", projectDirPath, bt.CLASSES_PATH).replace("/", File.separator);
-        assertTrue(retrieved.contains(Path.of(expectedPath)));
+        assertThat(retrieved.contains(Path.of(expectedPath))).isTrue();
     }
 }

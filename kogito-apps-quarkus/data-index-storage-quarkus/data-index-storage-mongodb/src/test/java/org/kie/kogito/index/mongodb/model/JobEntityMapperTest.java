@@ -24,7 +24,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.index.model.Job;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.zonedDateTimeToInstant;
 
 class JobEntityMapperTest {
@@ -89,18 +89,18 @@ class JobEntityMapperTest {
 
     @Test
     void testGetEntityClass() {
-        assertEquals(JobEntity.class, jobEntityMapper.getEntityClass());
+        assertThat(jobEntityMapper.getEntityClass()).isEqualTo(JobEntity.class);
     }
 
     @Test
     void testMapToEntity() {
         JobEntity result = jobEntityMapper.mapToEntity(job.getId(), job);
-        assertEquals(jobEntity, result);
+        assertThat(result).isEqualTo(jobEntity);
     }
 
     @Test
     void testMapToModel() {
         Job result = jobEntityMapper.mapToModel(jobEntity);
-        assertEquals(job, result);
+        assertThat(result).isEqualTo(job);
     }
 }

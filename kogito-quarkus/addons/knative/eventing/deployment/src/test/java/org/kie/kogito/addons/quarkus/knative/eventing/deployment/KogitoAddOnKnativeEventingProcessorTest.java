@@ -39,10 +39,6 @@ import io.quarkus.deployment.builditem.SystemPropertyBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.kie.kogito.addons.quarkus.knative.eventing.KnativeEventingConfigSourceFactory.INCLUDE_PROCESS_EVENTS;
 import static org.mockito.Mockito.*;
 
@@ -61,12 +57,12 @@ class KogitoAddOnKnativeEventingProcessorTest {
 
         eventingProcessor.generate(Optional.of(resourcesMetadataBuildItem), producer);
 
-        assertNotNull(producer.getItem().getData());
-        assertTrue(producer.getItem().getData().length > 0);
-        assertTrue(new String(producer.getItem().getData()).contains("SinkBinding"));
-        assertFalse(new String(producer.getItem().getData()).contains("KogitoSource"));
-        assertTrue(new String(producer.getItem().getData()).contains("Trigger"));
-        assertTrue(new String(producer.getItem().getData()).contains("Broker"));
+        assertThat(producer.getItem().getData()).isNotNull();
+        assertThat(producer.getItem().getData().length > 0).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("SinkBinding")).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("KogitoSource")).isFalse();
+        assertThat(new String(producer.getItem().getData()).contains("Trigger")).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("Broker")).isTrue();
     }
 
     @Test
@@ -81,12 +77,12 @@ class KogitoAddOnKnativeEventingProcessorTest {
 
         eventingProcessor.generate(Optional.of(resourcesMetadataBuildItem), producer);
 
-        assertNotNull(producer.getItem().getData());
-        assertTrue(producer.getItem().getData().length > 0);
-        assertTrue(new String(producer.getItem().getData()).contains("SinkBinding"));
-        assertFalse(new String(producer.getItem().getData()).contains("KogitoSource"));
-        assertFalse(new String(producer.getItem().getData()).contains("Trigger"));
-        assertTrue(new String(producer.getItem().getData()).contains("Broker"));
+        assertThat(producer.getItem().getData()).isNotNull();
+        assertThat(producer.getItem().getData().length > 0).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("SinkBinding")).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("KogitoSource")).isFalse();
+        assertThat(new String(producer.getItem().getData()).contains("Trigger")).isFalse();
+        assertThat(new String(producer.getItem().getData()).contains("Broker")).isTrue();
     }
 
     @Test
@@ -101,12 +97,12 @@ class KogitoAddOnKnativeEventingProcessorTest {
 
         eventingProcessor.generate(Optional.of(resourcesMetadataBuildItem), producer);
 
-        assertNotNull(producer.getItem().getData());
-        assertTrue(producer.getItem().getData().length > 0);
-        assertFalse(new String(producer.getItem().getData()).contains("SinkBinding"));
-        assertFalse(new String(producer.getItem().getData()).contains("KogitoSource"));
-        assertTrue(new String(producer.getItem().getData()).contains("Trigger"));
-        assertTrue(new String(producer.getItem().getData()).contains("Broker"));
+        assertThat(producer.getItem().getData()).isNotNull();
+        assertThat(producer.getItem().getData().length > 0).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("SinkBinding")).isFalse();
+        assertThat(new String(producer.getItem().getData()).contains("KogitoSource")).isFalse();
+        assertThat(new String(producer.getItem().getData()).contains("Trigger")).isTrue();
+        assertThat(new String(producer.getItem().getData()).contains("Broker")).isTrue();
     }
 
     @Test
@@ -120,7 +116,7 @@ class KogitoAddOnKnativeEventingProcessorTest {
 
         eventingProcessor.generate(Optional.of(resourcesMetadataBuildItem), producer);
 
-        assertNull(producer.getItem());
+        assertThat(producer.getItem()).isNull();
     }
 
     @Test

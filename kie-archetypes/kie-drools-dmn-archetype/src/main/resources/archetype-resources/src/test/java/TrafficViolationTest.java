@@ -39,8 +39,7 @@
 #set( $symbol_escape = '\' )
 package ${package};
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static utils.shim.Map.of;
 
 import java.util.Map;
@@ -88,9 +87,9 @@ public class TrafficViolationTest {
         DMNResult dmnResult = dmnRuntime.evaluateAll(dmnModelUT, dmnContext);
 
         LOG.info("Checking results: {}", dmnResult);
-        assertFalse(dmnResult.hasErrors());
+        assertThat(dmnResult.hasErrors()).isFalse();
 
-        assertEquals(DecisionEvaluationStatus.SUCCEEDED, dmnResult.getDecisionResultByName("Should the driver be suspended?").getEvaluationStatus());
-        assertEquals("No", dmnResult.getDecisionResultByName("Should the driver be suspended?").getResult());
+        assertThat(dmnResult.getDecisionResultByName("Should the driver be suspended?").getEvaluationStatus()).isEqualTo(DecisionEvaluationStatus.SUCCEEDED);
+        assertThat(dmnResult.getDecisionResultByName("Should the driver be suspended?").getResult()).isEqualTo("No");
     }
 }

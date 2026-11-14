@@ -19,7 +19,8 @@
 package org.kie.nodependencymanagementrule;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -64,7 +65,7 @@ class NoDependencyManagementRuleTest {
         when(project.getArtifactId()).thenReturn("allowed-pom");
         Set<String> allowedPoms = Set.of("org.kie:allowed-pom");
         rule.setAllowedPoms(allowedPoms);
-        assertDoesNotThrow(() -> rule.execute());
+        assertThatCode(() -> rule.execute()).doesNotThrowAnyException();
     }
 
     @Test
@@ -75,7 +76,7 @@ class NoDependencyManagementRuleTest {
         when(project.getArtifactId()).thenReturn("not-allowed-pom");
         Set<String> allowedPoms = Set.of("org.kie:allowed-pom");
         rule.setAllowedPoms(allowedPoms);
-        assertDoesNotThrow(() -> rule.execute());
+        assertThatCode(() -> rule.execute()).doesNotThrowAnyException();
     }
 
     @Test
@@ -87,7 +88,7 @@ class NoDependencyManagementRuleTest {
         when(project.getArtifactId()).thenReturn("not-allowed-pom");
         Set<String> allowedPoms = Set.of("org.kie:allowed-pom");
         rule.setAllowedPoms(allowedPoms);
-        assertThrows(EnforcerRuleException.class, () -> rule.execute());
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.execute());
     }
 
     @MockitoSettings(strictness = Strictness.LENIENT)
@@ -99,24 +100,24 @@ class NoDependencyManagementRuleTest {
         when(project.getModel()).thenReturn(model);
         when(project.getGroupId()).thenReturn("org.kie");
         when(project.getArtifactId()).thenReturn("not-allowed-pom");
-        assertThrows(EnforcerRuleException.class, () -> rule.execute());
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.execute());
     }
 
     @Test
     void checkDependencyManagementValid() {
         when(project.getModel()).thenReturn(model);
-        assertDoesNotThrow(() -> rule.checkForDependencyManagement());
+        assertThatCode(() -> rule.checkForDependencyManagement()).doesNotThrowAnyException();
         //---
         DependencyManagement dependencyManagement = new DependencyManagement();
         dependencyManagement.setLocation("some key", new InputLocation(2,2));
         when(project.getDependencyManagement()).thenReturn(dependencyManagement);
-        assertDoesNotThrow(() -> rule.checkForDependencyManagement());
+        assertThatCode(() -> rule.checkForDependencyManagement()).doesNotThrowAnyException();
 
         //--- /
         List<Profile> profiles = List.of(new Profile(), new Profile());
         when(model.getProfiles()).thenReturn(profiles);
         when(project.getDependencyManagement()).thenReturn(null);
-        assertDoesNotThrow(() -> rule.checkForDependencyManagement());
+        assertThatCode(() -> rule.checkForDependencyManagement()).doesNotThrowAnyException();
     }
 
     @Test
@@ -124,7 +125,7 @@ class NoDependencyManagementRuleTest {
         DependencyManagement dependencyManagement = new DependencyManagement();
         dependencyManagement.setLocation("", new InputLocation(2,2));
         when(project.getDependencyManagement()).thenReturn(dependencyManagement);
-        assertThrows(EnforcerRuleException.class, () -> rule.checkForDependencyManagement());
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.checkForDependencyManagement());
 
         //--- /
         Profile profile = new Profile();
@@ -133,12 +134,12 @@ class NoDependencyManagementRuleTest {
         when(model.getProfiles()).thenReturn(profiles);
         when(project.getModel()).thenReturn(model);
         when(project.getDependencyManagement()).thenReturn(null);
-        assertThrows(EnforcerRuleException.class, () -> rule.checkForDependencyManagement());
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.checkForDependencyManagement());
     }
 
     @Test
     void checkDependencyManagementInProjectValid() {
-        assertDoesNotThrow(() -> rule.checkDependencyManagementInProject());
+        assertThatCode(() -> rule.checkDependencyManagementInProject()).doesNotThrowAnyException();
     }
 
     @Test
@@ -146,7 +147,7 @@ class NoDependencyManagementRuleTest {
         DependencyManagement dependencyManagement = new DependencyManagement();
         dependencyManagement.setLocation("", new InputLocation(2,2));
         when(project.getDependencyManagement()).thenReturn(dependencyManagement);
-        assertThrows(EnforcerRuleException.class, () -> rule.checkDependencyManagementInProject());
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.checkDependencyManagementInProject());
     }
 
     @Test
@@ -154,7 +155,7 @@ class NoDependencyManagementRuleTest {
         List<Profile> profiles = List.of(new Profile(), new Profile());
         when(model.getProfiles()).thenReturn(profiles);
         when(project.getModel()).thenReturn(model);
-        assertDoesNotThrow(() -> rule.checkDependencyManagementInProfiles());
+        assertThatCode(() -> rule.checkDependencyManagementInProfiles()).doesNotThrowAnyException();
     }
 
     @Test
@@ -166,13 +167,13 @@ class NoDependencyManagementRuleTest {
         List<Profile> profiles = List.of(new Profile(), profile);
         when(model.getProfiles()).thenReturn(profiles);
         when(project.getModel()).thenReturn(model);
-        assertThrows(EnforcerRuleException.class, () -> rule.checkDependencyManagementInProfiles());
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.checkDependencyManagementInProfiles());
     }
 
     @Test
     void checkDependencyManagementInProfileValid() {
         Profile profile = new Profile();
-        assertDoesNotThrow(() -> rule.checkDependencyManagementInProfile(profile));
+        assertThatCode(() -> rule.checkDependencyManagementInProfile(profile)).doesNotThrowAnyException();
     }
 
     @Test
@@ -181,7 +182,7 @@ class NoDependencyManagementRuleTest {
         dependencyManagement.setLocation("", new InputLocation(2,2));
         Profile profile = new Profile();
         profile.setDependencyManagement(dependencyManagement);
-        assertThrows(EnforcerRuleException.class, () -> rule.checkDependencyManagementInProfile(profile));
+        assertThatExceptionOfType(EnforcerRuleException.class).isThrownBy(() -> rule.checkDependencyManagementInProfile(profile));
     }
 
     @Test

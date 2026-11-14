@@ -42,7 +42,6 @@ import org.kie.efesto.compilationmanager.core.mocks.MockKieCompilerServiceF;
 import org.kie.efesto.compilationmanager.core.model.EfestoCompilationContextUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.kie.efesto.common.core.utils.JSONUtils.getGeneratedResourcesObject;
 import static org.kie.efesto.common.core.utils.JSONUtils.writeGeneratedResourcesObject;
 import static org.mockito.Mockito.mock;
@@ -163,7 +162,7 @@ class CompilationManagerUtilsTest {
 
     private void commonEvaluateGeneratedIntermediateResources(List<GeneratedResource> retrieved) {
         assertThat(retrieved).isNotNull();
-        compiledClassMap.keySet().forEach(fullClassName -> assertTrue(retrieved.stream().filter(GeneratedClassResource.class::isInstance).map(GeneratedClassResource.class::cast).anyMatch(generatedResource -> generatedResource.getFullClassName().equals(fullClassName))));
+        compiledClassMap.keySet().forEach(fullClassName -> assertThat(retrieved.stream().filter(GeneratedClassResource.class::isInstance).map(GeneratedClassResource.class::cast).anyMatch(generatedResource -> generatedResource.getFullClassName().equals(fullClassName))).isTrue());
     }
 
     private static EfestoCallableOutputClassesContainer getEfestoFinalOutputClassesContainer(ModelLocalUriId modelLocalUriId) {

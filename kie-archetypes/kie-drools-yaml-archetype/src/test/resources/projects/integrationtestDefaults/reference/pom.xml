@@ -35,6 +35,7 @@
     <drools-version>${project.version}</drools-version>
     <slf4j-version>${version.org.slf4j}</slf4j-version>
     <junit-version>${version.org.junit}</junit-version>
+    <assertj-version>${version.org.assertj}</assertj-version>
     <logback-version>${version.ch.qos.logback}</logback-version>
   </properties>
 
@@ -69,6 +70,12 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

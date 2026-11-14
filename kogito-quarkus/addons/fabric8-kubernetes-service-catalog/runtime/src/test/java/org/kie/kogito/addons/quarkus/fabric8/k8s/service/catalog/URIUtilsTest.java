@@ -23,17 +23,17 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class URIUtilsTest {
 
     @Test
     public void testURI() {
-        assertEquals(URI.create("http://test:8009"), URIUtils.builder("http", 8009, "test").get());
+        assertThat(URIUtils.builder("http", 8009, "test").get()).isEqualTo(URI.create("http://test:8009"));
     }
 
     @Test
     public void testInvalidURI() {
-        assertEquals(Optional.empty(), URIUtils.builder("http", -1, ""));
+        assertThat(URIUtils.builder("http", -1, "")).isEqualTo(Optional.empty());
     }
 }

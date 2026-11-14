@@ -47,8 +47,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.index.storage.Constants.JOBS_STORAGE;
 import static org.kie.kogito.index.storage.Constants.PROCESS_DEFINITIONS_STORAGE;
 import static org.kie.kogito.index.storage.Constants.PROCESS_ID_MODEL_STORAGE;
@@ -68,7 +67,7 @@ class MongoModelServiceImplIT {
     @BeforeEach
     void setup() {
         // Make sure MongoModelServiceImpl is initialized
-        assertNotNull(mongoModelServiceImpl.getEntityMapper(PROCESS_INSTANCES_STORAGE));
+        assertThat(mongoModelServiceImpl.getEntityMapper(PROCESS_INSTANCES_STORAGE)).isNotNull();
         mockIndexCreateOrUpdateEventListener.reset();
     }
 
@@ -89,11 +88,11 @@ class MongoModelServiceImplIT {
 
     @Test
     void testGetEntityMapper() {
-        assertTrue(mongoModelServiceImpl.<Job, JobEntity> getEntityMapper(JOBS_STORAGE) instanceof JobEntityMapper);
-        assertTrue(mongoModelServiceImpl.<ProcessDefinition, ProcessDefinitionEntity> getEntityMapper(PROCESS_DEFINITIONS_STORAGE) instanceof ProcessDefinitionEntityMapper);
-        assertTrue(mongoModelServiceImpl.<ProcessInstance, ProcessInstanceEntity> getEntityMapper(PROCESS_INSTANCES_STORAGE) instanceof ProcessInstanceEntityMapper);
-        assertTrue(mongoModelServiceImpl.<UserTaskInstance, UserTaskInstanceEntity> getEntityMapper(USER_TASK_INSTANCES_STORAGE) instanceof UserTaskInstanceEntityMapper);
-        assertTrue(mongoModelServiceImpl.<String, ProcessIdEntity> getEntityMapper(PROCESS_ID_MODEL_STORAGE) instanceof ProcessIdEntityMapper);
-        assertTrue(mongoModelServiceImpl.<ObjectNode, Document> getEntityMapper("test_domain") instanceof DomainEntityMapper);
+        assertThat((mongoModelServiceImpl.<Job, JobEntity> getEntityMapper(JOBS_STORAGE) instanceof JobEntityMapper)).isTrue();
+        assertThat((mongoModelServiceImpl.<ProcessDefinition, ProcessDefinitionEntity> getEntityMapper(PROCESS_DEFINITIONS_STORAGE) instanceof ProcessDefinitionEntityMapper)).isTrue();
+        assertThat((mongoModelServiceImpl.<ProcessInstance, ProcessInstanceEntity> getEntityMapper(PROCESS_INSTANCES_STORAGE) instanceof ProcessInstanceEntityMapper)).isTrue();
+        assertThat((mongoModelServiceImpl.<UserTaskInstance, UserTaskInstanceEntity> getEntityMapper(USER_TASK_INSTANCES_STORAGE) instanceof UserTaskInstanceEntityMapper)).isTrue();
+        assertThat((mongoModelServiceImpl.<String, ProcessIdEntity> getEntityMapper(PROCESS_ID_MODEL_STORAGE) instanceof ProcessIdEntityMapper)).isTrue();
+        assertThat((mongoModelServiceImpl.<ObjectNode, Document> getEntityMapper("test_domain") instanceof DomainEntityMapper)).isTrue();
     }
 }
