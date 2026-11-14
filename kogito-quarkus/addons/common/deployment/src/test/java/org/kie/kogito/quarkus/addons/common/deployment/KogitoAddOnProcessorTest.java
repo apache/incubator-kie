@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.deployment.Capabilities;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class KogitoAddOnProcessorTest {
 
@@ -36,21 +36,21 @@ public class KogitoAddOnProcessorTest {
     void verifyRequiredCapabilitiesWhenNotPresent() {
         final RequireEngineAddonProcessor requireEngineAddonProcessor = new RequireEngineAddonProcessor();
         final Capabilities capabilities = new Capabilities(Collections.emptySet());
-        final IllegalStateException exception = assertThrows(IllegalStateException.class, () -> requireEngineAddonProcessor.verifyCapabilities(capabilities));
-        assertTrue(exception.getMessage().contains(KogitoCapability.DECISIONS.getCapability()));
-        assertTrue(exception.getMessage().contains(KogitoCapability.PREDICTIONS.getCapability()));
+        assertThatThrownBy(() -> requireEngineAddonProcessor.verifyCapabilities(capabilities))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(KogitoCapability.DECISIONS.getCapability())
+                .hasMessageContaining(KogitoCapability.PREDICTIONS.getCapability());
     }
 
     @Test
     void verifyAnyEngineRequiredButNotPresent() {
         final AnyEngineAddonProcessorImpl anyEngineAddonProcessorImpl = new AnyEngineAddonProcessorImpl();
-        final IllegalStateException exception =
-                assertThrows(IllegalStateException.class,
-                        () -> anyEngineAddonProcessorImpl.verifyCapabilities(new Capabilities(Collections.emptySet())));
-        assertTrue(exception.getMessage().contains(KogitoCapability.DECISIONS.getCapability()));
-        assertTrue(exception.getMessage().contains(KogitoCapability.PREDICTIONS.getCapability()));
-        assertTrue(exception.getMessage().contains(KogitoCapability.PROCESSES.getCapability()));
-        assertTrue(exception.getMessage().contains(KogitoCapability.RULES.getCapability()));
+        assertThatThrownBy(() -> anyEngineAddonProcessorImpl.verifyCapabilities(new Capabilities(Collections.emptySet())))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(KogitoCapability.DECISIONS.getCapability())
+                .hasMessageContaining(KogitoCapability.PREDICTIONS.getCapability())
+                .hasMessageContaining(KogitoCapability.PROCESSES.getCapability())
+                .hasMessageContaining(KogitoCapability.RULES.getCapability());
     }
 
     @Test
@@ -59,7 +59,7 @@ public class KogitoAddOnProcessorTest {
         final Set<String> capabilities = new HashSet<>();
         capabilities.add(KogitoCapability.DECISIONS.getCapability());
         capabilities.add(KogitoCapability.PREDICTIONS.getCapability());
-        assertDoesNotThrow(() -> requireEngineAddonProcessor.verifyCapabilities(new Capabilities(capabilities)));
+        assertThatCode(() -> requireEngineAddonProcessor.verifyCapabilities(new Capabilities(capabilities))).doesNotThrowAnyException();
     }
 
     @Test
@@ -67,7 +67,7 @@ public class KogitoAddOnProcessorTest {
         final RequireOneEngineAddonProcessor requireEngineAddonProcessor = new RequireOneEngineAddonProcessor();
         final Set<String> capabilities = new HashSet<>();
         capabilities.add(KogitoCapability.PROCESSES.getCapability());
-        assertDoesNotThrow(() -> requireEngineAddonProcessor.verifyCapabilities(new Capabilities(capabilities)));
+        assertThatCode(() -> requireEngineAddonProcessor.verifyCapabilities(new Capabilities(capabilities))).doesNotThrowAnyException();
     }
 
 }

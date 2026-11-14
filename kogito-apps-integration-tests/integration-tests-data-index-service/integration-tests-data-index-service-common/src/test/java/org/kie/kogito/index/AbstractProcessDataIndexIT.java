@@ -44,6 +44,7 @@ import io.restassured.specification.RequestSpecification;
 
 import static io.restassured.RestAssured.given;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -52,8 +53,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractProcessDataIndexIT {
 
@@ -728,56 +727,47 @@ public abstract class AbstractProcessDataIndexIT {
 
     private void checkExpectedCreatedItemData(String creationData, Map<String, String> resultMap) throws IOException {
         JsonNode creationJsonNode = mapper.readTree(creationData);
-        assertEquals(resultMap.get("updatedBy"), creationJsonNode.at("/updatedBy").asText());
-        assertEquals(ZonedDateTime.parse(resultMap.get("updatedAt")).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS),
-                ZonedDateTime.parse(creationJsonNode.at("/updatedAt").asText()).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS));
-        assertEquals(resultMap.get("content"), creationJsonNode.at("/content").asText());
+        assertThat(creationJsonNode.at("/updatedBy").asText()).isEqualTo(resultMap.get("updatedBy"));
+        assertThat(ZonedDateTime.parse(creationJsonNode.at("/updatedAt").asText()).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS))
+                .isEqualTo(ZonedDateTime.parse(resultMap.get("updatedAt")).withZoneSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS));
+        assertThat(creationJsonNode.at("/content").asText()).isEqualTo(resultMap.get("content"));
     }
 
     private void checkExpectedTaskSchema(String taskSchema) throws IOException {
         JsonNode schemaJsonNode = mapper.readTree(taskSchema);
-        assertEquals("object", schemaJsonNode.at("/type").asText());
+        assertThat(schemaJsonNode.at("/type").asText()).isEqualTo("object");
 
         // Check Schema phases
-        assertEquals(3, schemaJsonNode.at("/phases").size());
-        assertTrue(schemaJsonNode.get("phases").toString().contains("abort"));
-        assertTrue(schemaJsonNode.get("phases").toString().contains("skip"));
-        assertTrue(schemaJsonNode.get("phases").toString().contains("complete"));
+        assertThat(schemaJsonNode.at("/phases").size()).isEqualTo(3);
+        assertThat(schemaJsonNode.get("phases").toString().contains("abort")).isTrue();
+        assertThat(schemaJsonNode.get("phases").toString().contains("skip")).isTrue();
+        assertThat(schemaJsonNode.get("phases").toString().contains("complete")).isTrue();
 
         // Check Schema properties
-        assertEquals(2, schemaJsonNode.at("/properties").size());
+        assertThat(schemaJsonNode.at("/properties").size()).isEqualTo(2);
 
-        assertEquals("true", schemaJsonNode.at("/properties/approved/output").asText());
-        assertEquals("boolean", schemaJsonNode.at("/properties/approved/type").asText());
-        assertEquals("#/$defs/Traveller", schemaJsonNode.at("/properties/traveller/$ref").asText());
-        assertEquals("true", schemaJsonNode.at("/properties/traveller/input").asText());
+        assertThat(schemaJsonNode.at("/properties/approved/output").asText()).isEqualTo("true");
+        assertThat(schemaJsonNode.at("/properties/approved/type").asText()).isEqualTo("boolean");
+        assertThat(schemaJsonNode.at("/properties/traveller/$ref").asText()).isEqualTo("#/$defs/Traveller");
+        assertThat(schemaJsonNode.at("/properties/traveller/input").asText()).isEqualTo("true");
 
         // Check Schema definitions
-        assertEquals(2, schemaJsonNode.at("/$defs").size());
+        assertThat(schemaJsonNode.at("/$defs").size()).isEqualTo(2);
 
-        assertEquals("object", schemaJsonNode.at("/$defs/Traveller/type").asText());
-        assertEquals(12, schemaJsonNode.at("/$defs/Traveller/properties").size());
-        assertEquals("#/$defs/Address", schemaJsonNode.at("/$defs/Traveller/properties/address/$ref").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Traveller/properties/email/type").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Traveller/properties/firstName/type").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Traveller/properties/lastName/type").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Traveller/properties/nationality/type").asText());
-        assertEquals("boolean",
-                schemaJsonNode.at("/$defs/Traveller/properties/processed/type").asText());
+        assertThat(schemaJsonNode.at("/$defs/Traveller/type").asText()).isEqualTo("object");
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties").size()).isEqualTo(12);
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties/address/$ref").asText()).isEqualTo("#/$defs/Address");
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties/email/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties/firstName/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties/lastName/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties/nationality/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Traveller/properties/processed/type").asText()).isEqualTo("boolean");
 
-        assertEquals(4, schemaJsonNode.at("/$defs/Address/properties").size());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Address/properties/city/type").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Address/properties/country/type").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Address/properties/street/type").asText());
-        assertEquals("string",
-                schemaJsonNode.at("/$defs/Address/properties/zipCode/type").asText());
+        assertThat(schemaJsonNode.at("/$defs/Address/properties").size()).isEqualTo(4);
+        assertThat(schemaJsonNode.at("/$defs/Address/properties/city/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Address/properties/country/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Address/properties/street/type").asText()).isEqualTo("string");
+        assertThat(schemaJsonNode.at("/$defs/Address/properties/zipCode/type").asText()).isEqualTo("string");
 
     }
 

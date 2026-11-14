@@ -26,8 +26,7 @@ import org.kie.kogito.explainability.api.CounterfactualDomainRange;
 
 import com.fasterxml.jackson.databind.node.IntNode;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.trusty.service.common.CounterfactualParameterValidation.isStructureIdentical;
 import static org.kie.kogito.trusty.service.common.TypedValueTestUtils.buildInputStructure;
 import static org.kie.kogito.trusty.service.common.TypedValueTestUtils.buildInputUnit;
@@ -38,144 +37,144 @@ public class CounterfactualParameterValidationIdenticalTest {
 
     @Test
     public void testSearchDomains_NullNull() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 null,
-                null));
+                null)).isTrue();
     }
 
     @Test
     public void testSearchDomains_EmptyEmpty() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 Collections.emptyList(),
-                Collections.emptyList()));
+                Collections.emptyList())).isTrue();
     }
 
     @Test
     public void testSearchDomains_NullEmpty() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 null,
-                Collections.emptyList()));
+                Collections.emptyList())).isFalse();
     }
 
     @Test
     public void testSearchDomains_EmptyNull() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 Collections.emptyList(),
-                null));
+                null)).isFalse();
     }
 
     @Test
     public void testSearchDomains_UnitNull() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18))),
-                null));
+                null)).isFalse();
     }
 
     @Test
     public void testSearchDomains_UnitEmpty() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18))),
-                Collections.emptyList()));
+                Collections.emptyList())).isFalse();
     }
 
     @Test
     public void testSearchDomains_NullUnit() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 null,
-                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))))));
+                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65)))))).isFalse();
     }
 
     @Test
     public void testSearchDomains_EmptyUnit() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 Collections.emptyList(),
-                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))))));
+                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65)))))).isFalse();
     }
 
     @Test
     public void testSearchDomains_UnitUnit() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18))),
-                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))))));
+                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65)))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_UnitUnits() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18))),
                 List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
-                        buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))))));
+                        buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000)))))).isFalse();
     }
 
     @Test
     public void testSearchDomains_UnitsUnit() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18)),
                         buildInputUnit("salary", "integer", new IntNode(10000))),
-                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))))));
+                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65)))))).isFalse();
     }
 
     @Test
     public void testSearchDomains_UnitsUnits() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18)),
                         buildInputUnit("salary", "integer", new IntNode(10000))),
                 List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
-                        buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))))));
+                        buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000)))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_UnitsUnits__WithDifferentOrder() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("salary", "integer", new IntNode(10000)),
                         buildInputUnit("age", "integer", new IntNode(18))),
                 List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
-                        buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))))));
+                        buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000)))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_StructureUnit() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputStructure("person", "tPerson",
                         List.of(buildInputUnit("age", "integer", new IntNode(18)),
                                 buildInputUnit("salary", "integer", new IntNode(10000))))),
-                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))))));
+                List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65)))))).isFalse();
     }
 
     @Test
     public void testSearchDomains_UnitStructure() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("age", "integer", new IntNode(18))),
                 List.of(buildSearchDomainStructure("person", "tPerson",
                         List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
-                                buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))))))));
+                                buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000)))))))).isFalse();
     }
 
     @Test
     public void testSearchDomains_StructureStructure() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputStructure("person", "tPerson",
                         List.of(buildInputUnit("age", "integer", new IntNode(18)),
                                 buildInputUnit("salary", "integer", new IntNode(10000))))),
                 List.of(buildSearchDomainStructure("person", "tPerson",
                         List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
-                                buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))))))));
+                                buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000)))))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_StructureStructure__WithDifferentOrder() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputStructure("person", "tPerson",
                         List.of(buildInputUnit("salary", "integer", new IntNode(10000)),
                                 buildInputUnit("age", "integer", new IntNode(18))))),
                 List.of(buildSearchDomainStructure("person", "tPerson",
                         List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
-                                buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))))))));
+                                buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000)))))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_StructureWithStructureStructureWithStructure() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputStructure("person", "tPerson",
                         List.of(buildInputUnit("age", "integer", new IntNode(18)),
                                 buildInputStructure("income", "tIncome",
@@ -185,12 +184,12 @@ public class CounterfactualParameterValidationIdenticalTest {
                         List.of(buildSearchDomainUnit("age", "integer", new CounterfactualDomainRange(new IntNode(18), new IntNode(65))),
                                 buildSearchDomainStructure("income", "tIncome",
                                         List.of(buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))),
-                                                buildSearchDomainUnit("bonuses", "integer", new CounterfactualDomainRange(new IntNode(0), new IntNode(500000))))))))));
+                                                buildSearchDomainUnit("bonuses", "integer", new CounterfactualDomainRange(new IntNode(0), new IntNode(500000)))))))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_ComplexComplex() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputUnit("hatSize", "integer", new IntNode(16)),
                         buildInputStructure("person", "tPerson",
                                 List.of(buildInputUnit("age", "integer", new IntNode(18)),
@@ -203,12 +202,12 @@ public class CounterfactualParameterValidationIdenticalTest {
                                         buildSearchDomainStructure("income", "tIncome",
                                                 List.of(buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))),
                                                         buildSearchDomainUnit("bonuses", "integer",
-                                                                new CounterfactualDomainRange(new IntNode(0), new IntNode(500000))))))))));
+                                                                new CounterfactualDomainRange(new IntNode(0), new IntNode(500000)))))))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_ComplexComplex__WithDifferentOrder() {
-        assertTrue(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputStructure("person", "tPerson",
                         List.of(buildInputStructure("income", "tIncome",
                                 List.of(buildInputUnit("salary", "integer", new IntNode(10000)),
@@ -221,12 +220,12 @@ public class CounterfactualParameterValidationIdenticalTest {
                                         buildSearchDomainStructure("income", "tIncome",
                                                 List.of(buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))),
                                                         buildSearchDomainUnit("bonuses", "integer",
-                                                                new CounterfactualDomainRange(new IntNode(0), new IntNode(500000))))))))));
+                                                                new CounterfactualDomainRange(new IntNode(0), new IntNode(500000)))))))))).isTrue();
     }
 
     @Test
     public void testSearchDomains_ComplexComplex__WithDifferentOrder_WithDifference() {
-        assertFalse(isStructureIdentical(
+        assertThat(isStructureIdentical(
                 List.of(buildInputStructure("person", "tPerson",
                         List.of(buildInputStructure("income", "tIncome",
                                 List.of(buildInputUnit("salary", "integer", new IntNode(10000)))),
@@ -238,6 +237,6 @@ public class CounterfactualParameterValidationIdenticalTest {
                                         buildSearchDomainStructure("income", "tIncome",
                                                 List.of(buildSearchDomainUnit("salary", "integer", new CounterfactualDomainRange(new IntNode(5000), new IntNode(100000))),
                                                         buildSearchDomainUnit("bonuses", "integer",
-                                                                new CounterfactualDomainRange(new IntNode(0), new IntNode(500000))))))))));
+                                                                new CounterfactualDomainRange(new IntNode(0), new IntNode(500000)))))))))).isFalse();
     }
 }

@@ -32,10 +32,9 @@ import org.kie.kogito.trusty.storage.common.TrustyStorageService;
 import jakarta.inject.Inject;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class AbstractModelEventConsumerIT {
 
@@ -69,13 +68,13 @@ public abstract class AbstractModelEventConsumerIT {
                 KafkaConstants.KOGITO_TRACING_MODEL_TOPIC);
         await()
                 .atMost(5, SECONDS)
-                .untilAsserted(() -> assertDoesNotThrow(() -> trustyService.getModelById(TrustyServiceTestUtils.getModelIdentifier(), DMNModelWithMetadata.class)));
+                .untilAsserted(() -> assertThatCode(() -> trustyService.getModelById(TrustyServiceTestUtils.getModelIdentifier(), DMNModelWithMetadata.class)).doesNotThrowAnyException());
 
         DMNModelWithMetadata storedDefinition =
                 trustyService.getModelById(TrustyServiceTestUtils.getModelIdentifier(), DMNModelWithMetadata.class);
-        assertNotNull(storedDefinition);
-        assertEquals("definition", storedDefinition.getModel());
-        assertEquals("name", storedDefinition.getName());
-        assertEquals("namespace", storedDefinition.getNamespace());
+        assertThat(storedDefinition).isNotNull();
+        assertThat(storedDefinition.getModel()).isEqualTo("definition");
+        assertThat(storedDefinition.getName()).isEqualTo("name");
+        assertThat(storedDefinition.getNamespace()).isEqualTo("namespace");
     }
 }

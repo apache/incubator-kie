@@ -32,7 +32,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 public class ProcessIT {
@@ -50,6 +50,6 @@ public class ProcessIT {
 
         ProcessInstance<?> processInstance = process.createInstance(m);
         processInstance.start();
-        assertEquals(KogitoProcessInstance.STATE_COMPLETED, processInstance.status());
+        assertThat(processInstance.status()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
     }
 }

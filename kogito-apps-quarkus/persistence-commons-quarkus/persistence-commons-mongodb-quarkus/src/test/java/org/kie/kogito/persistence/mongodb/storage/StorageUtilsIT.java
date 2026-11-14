@@ -40,8 +40,7 @@ import jakarta.inject.Inject;
 
 import static com.mongodb.client.model.Filters.eq;
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 import static org.kie.kogito.persistence.mongodb.storage.MongoStorage.OPERATION_TYPE;
 import static org.kie.kogito.persistence.mongodb.storage.StorageUtils.watchCollectionEntries;
@@ -75,10 +74,10 @@ class StorageUtilsIT {
 
         testListenerInsert1.await();
         testListenerInsert2.await();
-        assertEquals(2, testListenerInsert1.items.size());
-        assertTrue(testListenerInsert1.items.keySet().containsAll(asList("testValue1", "testValue2")));
-        assertEquals(2, testListenerInsert2.items.size());
-        assertTrue(testListenerInsert2.items.keySet().containsAll(asList("testValue1", "testValue2")));
+        assertThat(testListenerInsert1.items.size()).isEqualTo(2);
+        assertThat(testListenerInsert1.items.keySet().containsAll(asList("testValue1", "testValue2"))).isTrue();
+        assertThat(testListenerInsert2.items.size()).isEqualTo(2);
+        assertThat(testListenerInsert2.items.keySet().containsAll(asList("testValue1", "testValue2"))).isTrue();
     }
 
     @Test
@@ -100,10 +99,10 @@ class StorageUtilsIT {
 
         testListenerUpdate1.await();
         testListenerUpdate2.await();
-        assertEquals(2, testListenerUpdate1.items.size());
-        assertTrue(testListenerUpdate1.items.keySet().containsAll(asList("testValue3", "testValue4")));
-        assertEquals(2, testListenerUpdate2.items.size());
-        assertTrue(testListenerUpdate2.items.keySet().containsAll(asList("testValue3", "testValue4")));
+        assertThat(testListenerUpdate1.items.size()).isEqualTo(2);
+        assertThat(testListenerUpdate1.items.keySet().containsAll(asList("testValue3", "testValue4"))).isTrue();
+        assertThat(testListenerUpdate2.items.size()).isEqualTo(2);
+        assertThat(testListenerUpdate2.items.keySet().containsAll(asList("testValue3", "testValue4"))).isTrue();
     }
 
     @Test
@@ -125,10 +124,10 @@ class StorageUtilsIT {
 
         testListenerRemove1.await();
         testListenerRemove2.await();
-        assertEquals(2, testListenerRemove1.items.size());
-        assertTrue(testListenerRemove1.items.keySet().containsAll(asList("testKey1", "testKey2")));
-        assertEquals(2, testListenerRemove2.items.size());
-        assertTrue(testListenerRemove2.items.keySet().containsAll(asList("testKey1", "testKey2")));
+        assertThat(testListenerRemove1.items.size()).isEqualTo(2);
+        assertThat(testListenerRemove1.items.keySet().containsAll(asList("testKey1", "testKey2"))).isTrue();
+        assertThat(testListenerRemove2.items.size()).isEqualTo(2);
+        assertThat(testListenerRemove2.items.keySet().containsAll(asList("testKey1", "testKey2"))).isTrue();
     }
 
     static class TestListener {

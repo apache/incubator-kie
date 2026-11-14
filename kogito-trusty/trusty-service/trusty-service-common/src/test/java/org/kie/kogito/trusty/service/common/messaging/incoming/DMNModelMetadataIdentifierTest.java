@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.kogito.trusty.storage.api.model.decision.DMNModelMetadata;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DMNModelMetadataIdentifierTest {
 
@@ -53,6 +53,6 @@ public class DMNModelMetadataIdentifierTest {
                 "dmnVersion",
                 name,
                 namespace);
-        assertEquals(expected, modelIdentifier.getIdentifier());
+        assertThat(modelIdentifier.getIdentifier()).isEqualTo(expected);
     }
 }

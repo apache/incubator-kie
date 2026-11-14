@@ -43,7 +43,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.drools.model.codegen.ExecutableModelProject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieFileSystem;
@@ -55,8 +55,7 @@ import org.kie.api.runtime.KieSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RuleTest {
     static final Logger LOG = LoggerFactory.getLogger(RuleTest.class);
@@ -99,10 +98,10 @@ public class RuleTest {
 
             LOG.info("Final checks");
 
-            assertEquals("Size of object in Working Memory is 3", 3, session.getObjects().size());
-            assertTrue("contains red", check.contains("red"));
-            assertTrue("contains green", check.contains("green"));
-            assertTrue("contains blue", check.contains("blue"));
+            assertThat(session.getObjects()).as("Size of object in Working Memory is 3").hasSize(3);
+            assertThat(check).as("contains red").contains("red");
+            assertThat(check).as("contains green").contains("green");
+            assertThat(check).as("contains blue").contains("blue");
         } finally {
             session.dispose();
         }

@@ -57,7 +57,6 @@ import io.vertx.sqlclient.Tuple;
 
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.internal.process.runtime.KogitoProcessInstance.STATE_ACTIVE;
 import static org.kie.kogito.internal.process.runtime.KogitoProcessInstance.STATE_COMPLETED;
 import static org.kie.kogito.test.utils.ProcessInstancesTestUtils.abort;
@@ -231,8 +230,8 @@ class PostgresqlProcessInstancesIT {
         process.instances().migrateAll("migrated", "2");
         RowSet<Row> rows = client.preparedQuery("SELECT process_id, process_version FROM process_instances").execute().toCompletionStage().toCompletableFuture().get();
         for (Row row : rows) {
-            assertEquals(row.get(String.class, 0), "migrated");
-            assertEquals(row.get(String.class, 1), "2");
+            assertThat(row.get(String.class, 0)).isEqualTo("migrated");
+            assertThat(row.get(String.class, 1)).isEqualTo("2");
         }
     }
 
@@ -249,13 +248,13 @@ class PostgresqlProcessInstancesIT {
         RowSet<Row> rows = null;
         rows = client.preparedQuery("SELECT process_id, process_version FROM process_instances WHERE id = $1").execute(Tuple.of(processInstance1.id())).toCompletionStage().toCompletableFuture().get();
         for (Row row : rows) {
-            assertEquals(row.get(String.class, 0), "migrated");
-            assertEquals(row.get(String.class, 1), "2");
+            assertThat(row.get(String.class, 0)).isEqualTo("migrated");
+            assertThat(row.get(String.class, 1)).isEqualTo("2");
         }
         rows = client.preparedQuery("SELECT process_id, process_version FROM process_instances WHERE id = $1").execute(Tuple.of(processInstance2.id())).toCompletionStage().toCompletableFuture().get();
         for (Row row : rows) {
-            assertEquals(row.get(String.class, 0), "BPMN2_UserTask");
-            assertEquals(row.get(String.class, 1), "1.0");
+            assertThat(row.get(String.class, 0)).isEqualTo("BPMN2_UserTask");
+            assertThat(row.get(String.class, 1)).isEqualTo("1.0");
         }
     }
 

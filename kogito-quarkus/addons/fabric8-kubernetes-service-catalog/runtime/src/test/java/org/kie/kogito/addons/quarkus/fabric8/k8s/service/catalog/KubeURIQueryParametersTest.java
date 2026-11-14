@@ -21,8 +21,9 @@ package org.kie.kogito.addons.quarkus.fabric8.k8s.service.catalog;
 import java.util.Collections;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class KubeURIQueryParametersTest {
 
@@ -38,14 +39,14 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("my-special-port-kubernetes");
         var k8sUrl = KubernetesResourceUri.parse(kubernetesKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-kubernetes", k8sUrl.getCustomPortName());
+        assertThat(k8sUrl.getCustomPortName()).isEqualTo("my-special-port-kubernetes");
 
         knativeKubeURIBuilder
                 .append("?")
                 .append(KubeConstants.CUSTOM_PORT_NAME_PROPERTY)
                 .append("=").append("my-special-port-knative");
         var knativeUrl = KubernetesResourceUri.parse(knativeKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-knative", knativeUrl.getCustomPortName());
+        assertThat(knativeUrl.getCustomPortName()).isEqualTo("my-special-port-knative");
 
         ocpKubeURIBuilder
                 .append("?")
@@ -53,7 +54,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("my-special-port-ocp");
         var ocpUrl = KubernetesResourceUri.parse(ocpKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-ocp", ocpUrl.getCustomPortName());
+        assertThat(ocpUrl.getCustomPortName()).isEqualTo("my-special-port-ocp");
     }
 
     @Test
@@ -71,7 +72,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("9000");
         var k8sUrl = KubernetesResourceUri.parse(kubernetesKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-kubernetes", k8sUrl.getCustomPortName());
+        assertThat(k8sUrl.getCustomPortName()).isEqualTo("my-special-port-kubernetes");
 
         knativeKubeURIBuilder
                 .append("?")
@@ -81,7 +82,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("9001");
         var knativeUrl = KubernetesResourceUri.parse(knativeKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-knative", knativeUrl.getCustomPortName());
+        assertThat(knativeUrl.getCustomPortName()).isEqualTo("my-special-port-knative");
 
         ocpKubeURIBuilder
                 .append("?")
@@ -92,7 +93,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("9002");
         var ocpUrl = KubernetesResourceUri.parse(ocpKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-ocp", ocpUrl.getCustomPortName());
+        assertThat(ocpUrl.getCustomPortName()).isEqualTo("my-special-port-ocp");
     }
 
     @Test
@@ -109,7 +110,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("my-special-label-kubernetes");
         var k8sUrl = KubernetesResourceUri.parse(kubernetesKubeURIBuilder.toString());
-        Assertions.assertEquals(Collections.singletonMap("kubernetes-label", "my-special-label-kubernetes"), k8sUrl.getCustomLabel());
+        assertThat(k8sUrl.getCustomLabel()).isEqualTo(Collections.singletonMap("kubernetes-label", "my-special-label-kubernetes"));
 
         knativeKubeURIBuilder
                 .append("?")
@@ -119,7 +120,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("my-special-label-knative");
         var knativeUrl = KubernetesResourceUri.parse(knativeKubeURIBuilder.toString());
-        Assertions.assertEquals(Collections.singletonMap("knative-label", "my-special-label-knative"), knativeUrl.getCustomLabel());
+        assertThat(knativeUrl.getCustomLabel()).isEqualTo(Collections.singletonMap("knative-label", "my-special-label-knative"));
 
         ocpKubeURIBuilder
                 .append("?")
@@ -129,7 +130,7 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("my-special-label-ocp");
         var ocpUrl = KubernetesResourceUri.parse(ocpKubeURIBuilder.toString());
-        Assertions.assertEquals(Collections.singletonMap("ocp-label", "my-special-label-ocp"), ocpUrl.getCustomLabel());
+        assertThat(ocpUrl.getCustomLabel()).isEqualTo(Collections.singletonMap("ocp-label", "my-special-label-ocp"));
     }
 
     @Test
@@ -155,11 +156,10 @@ public class KubeURIQueryParametersTest {
                 .append("my-other- special-label-kubernetes");
 
         var k8sUrl = KubernetesResourceUri.parse(kubernetesKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-kubernetes", k8sUrl.getCustomPortName());
-        Assertions.assertEquals(Map.of(
+        assertThat(k8sUrl.getCustomPortName()).isEqualTo("my-special-port-kubernetes");
+        assertThat(k8sUrl.getCustomLabel()).isEqualTo(Map.of(
                 "my-custom-label", "my-special-label-kubernetes",
-                "my-other-custom-label", "my-other- special-label-kubernetes"),
-                k8sUrl.getCustomLabel());
+                "my-other-custom-label", "my-other- special-label-kubernetes"));
 
         knativeKubeURIBuilder
                 .append("?")
@@ -173,8 +173,8 @@ public class KubeURIQueryParametersTest {
                 .append("my-special-label-knative");
         ;
         var knativeUrl = KubernetesResourceUri.parse(knativeKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-knative", knativeUrl.getCustomPortName());
-        Assertions.assertEquals(Collections.singletonMap("knative-label", "my-special-label-knative"), knativeUrl.getCustomLabel());
+        assertThat(knativeUrl.getCustomPortName()).isEqualTo("my-special-port-knative");
+        assertThat(knativeUrl.getCustomLabel()).isEqualTo(Collections.singletonMap("knative-label", "my-special-label-knative"));
 
         ocpKubeURIBuilder
                 .append("?")
@@ -188,8 +188,8 @@ public class KubeURIQueryParametersTest {
                 .append("=")
                 .append("my-special-label-ocp");
         var ocpUrl = KubernetesResourceUri.parse(ocpKubeURIBuilder.toString());
-        Assertions.assertEquals("my-special-port-ocp", ocpUrl.getCustomPortName());
-        Assertions.assertEquals(Collections.singletonMap("ocp-label", "my-special-label-ocp"), ocpUrl.getCustomLabel());
+        assertThat(ocpUrl.getCustomPortName()).isEqualTo("my-special-port-ocp");
+        assertThat(ocpUrl.getCustomLabel()).isEqualTo(Collections.singletonMap("ocp-label", "my-special-label-ocp"));
     }
 
 }

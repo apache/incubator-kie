@@ -19,9 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -68,13 +66,14 @@ class OptaPlannerProcessorSolveTest {
 
     @Test
     void singletonSolverFactory() {
-        assertNotNull(solverFactory);
-        assertSame(((DefaultSolverFactory<TestdataQuarkusSolution>) solverFactory).getScoreDirectorFactory(),
-                ((DefaultSolutionManager<TestdataQuarkusSolution, SimpleScore>) solutionManager).getScoreDirectorFactory());
-        assertNotNull(solverManager);
+        assertThat(solverFactory).isNotNull();
+        assertThat(((DefaultSolutionManager<TestdataQuarkusSolution, SimpleScore>) solutionManager).getScoreDirectorFactory())
+                .isSameAs(((DefaultSolverFactory<TestdataQuarkusSolution>) solverFactory).getScoreDirectorFactory());
+        assertThat(solverManager).isNotNull();
         // There is only one SolverFactory instance
-        assertSame(solverFactory, ((DefaultSolverManager<TestdataQuarkusSolution, Long>) solverManager).getSolverFactory());
-        assertNotNull(solutionManager);
+        assertThat(((DefaultSolverManager<TestdataQuarkusSolution, Long>) solverManager).getSolverFactory())
+                .isSameAs(solverFactory);
+        assertThat(solutionManager).isNotNull();
     }
 
     @Test
@@ -88,8 +87,8 @@ class OptaPlannerProcessorSolveTest {
                 .collect(Collectors.toList()));
         SolverJob<TestdataQuarkusSolution, Long> solverJob = solverManager.solve(1L, problem);
         TestdataQuarkusSolution solution = solverJob.getFinalBestSolution();
-        assertNotNull(solution);
-        assertTrue(solution.getScore().score() >= 0);
+        assertThat(solution).isNotNull();
+        assertThat(solution.getScore().score() >= 0).isTrue();
     }
 
 }

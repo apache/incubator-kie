@@ -32,8 +32,8 @@ import org.kie.kogito.trusty.storage.common.TrustyStorageService;
 
 import jakarta.enterprise.inject.Instance;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -110,7 +110,7 @@ public class ExplainerServiceHandlerRegistryTest {
         CounterfactualExplainabilityResult actual = registry.getExplainabilityResultById(EXECUTION_ID, CounterfactualExplainabilityResult.class);
 
         verify(counterfactualExplainerServiceHandler).getExplainabilityResultById(eq(EXECUTION_ID));
-        assertEquals(result, actual);
+        assertThat(actual).isEqualTo(result);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class ExplainerServiceHandlerRegistryTest {
         when(query.filter(any())).thenReturn(query);
         when(query.execute()).thenReturn(List.of(result));
 
-        assertThrows(IllegalArgumentException.class, () -> registry.getExplainabilityResultById(EXECUTION_ID, CounterfactualExplainabilityResult.class));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> registry.getExplainabilityResultById(EXECUTION_ID, CounterfactualExplainabilityResult.class));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class ExplainerServiceHandlerRegistryTest {
         CounterfactualExplainabilityResult actual = registry.getExplainabilityResultById(EXECUTION_ID, CounterfactualExplainabilityResult.class);
 
         verify(counterfactualExplainerServiceHandler).getExplainabilityResultById(eq(EXECUTION_ID));
-        assertEquals(result2, actual);
+        assertThat(actual).isEqualTo(result2);
     }
 
     @Test

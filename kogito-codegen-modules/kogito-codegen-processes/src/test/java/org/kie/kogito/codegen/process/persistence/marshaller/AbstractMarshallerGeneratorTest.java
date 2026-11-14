@@ -51,9 +51,8 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.kie.kogito.codegen.api.context.ContextAttributesConstants.KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR;
 
 public abstract class AbstractMarshallerGeneratorTest<T> {
@@ -142,10 +141,9 @@ public abstract class AbstractMarshallerGeneratorTest<T> {
         assertThat(proto.getMessages()).hasSize(1);
 
         MarshallerGenerator marshallerGenerator = withGenerator(PersonWithBooleanGetAccessor.class);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            marshallerGenerator.generate(proto.serialize());
-        });
-        assertEquals("Property " + KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR + " defined but does not contain proper value: expected 'isPrefix' or 'javaBeans'", exception.getMessage());
+        assertThatThrownBy(() -> marshallerGenerator.generate(proto.serialize()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Property " + KOGITO_CODEGEN_BOOLEAN_OBJECT_ACCESSOR_BEHAVIOUR + " defined but does not contain proper value: expected 'isPrefix' or 'javaBeans'");
 
     }
 

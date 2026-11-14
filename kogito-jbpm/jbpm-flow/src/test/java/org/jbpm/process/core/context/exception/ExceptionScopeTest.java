@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ExceptionScopeTest {
     @Test
@@ -35,8 +35,8 @@ public class ExceptionScopeTest {
         exceptionScope.setExceptionHandler(IOException.class.getCanonicalName(), handler1);
         exceptionScope.setExceptionHandler(RuntimeException.class.getCanonicalName(), handler2);
         exceptionScope.setExceptionHandler(Exception.class.getCanonicalName(), handler3);
-        assertEquals(handler1, exceptionScope.getHandlerFromPolicies(new IOException()));
-        assertEquals(handler2, exceptionScope.getHandlerFromPolicies(new RuntimeException(new IOException())));
-        assertEquals(handler3, exceptionScope.getHandlerFromPolicies(new Exception(new RuntimeException())));
+        assertThat(exceptionScope.getHandlerFromPolicies(new IOException())).isEqualTo(handler1);
+        assertThat(exceptionScope.getHandlerFromPolicies(new RuntimeException(new IOException()))).isEqualTo(handler2);
+        assertThat(exceptionScope.getHandlerFromPolicies(new Exception(new RuntimeException()))).isEqualTo(handler3);
     }
 }

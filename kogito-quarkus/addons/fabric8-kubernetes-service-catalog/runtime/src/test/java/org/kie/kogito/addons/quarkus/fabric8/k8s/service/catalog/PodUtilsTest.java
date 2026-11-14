@@ -34,7 +34,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(KubernetesMockServerTestResource.class)
@@ -56,8 +56,7 @@ public class PodUtilsTest {
 
         KubeTestUtils.createWithStatusPreserved(client, pod, namespace, Pod.class);
 
-        assertEquals(Optional.empty(),
-                discovery.query(KubernetesResourceUri.parse("pods.v1/" + namespace + "/hello")));
+        assertThat(discovery.query(KubernetesResourceUri.parse("pods.v1/" + namespace + "/hello"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -72,7 +71,7 @@ public class PodUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, pod, tempNamespace, Pod.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://172.17.0.21:8080", url.get());
+        assertThat(url.get()).isEqualTo("http://172.17.0.21:8080");
     }
 
     @Test
@@ -85,7 +84,7 @@ public class PodUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, pod, namespace, Pod.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://172.17.0.22:52485", url.get());
+        assertThat(url.get()).isEqualTo("http://172.17.0.22:52485");
     }
 
     @Test
@@ -104,7 +103,7 @@ public class PodUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.10:80", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.10:80");
     }
 
     @Test
@@ -134,6 +133,6 @@ public class PodUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, service1, namespace, Service.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://20.20.20.20:80", url.get());
+        assertThat(url.get()).isEqualTo("http://20.20.20.20:80");
     }
 }

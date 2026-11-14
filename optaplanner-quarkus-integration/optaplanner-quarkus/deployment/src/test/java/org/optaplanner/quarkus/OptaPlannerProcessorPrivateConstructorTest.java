@@ -19,6 +19,8 @@
 
 package org.optaplanner.quarkus;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
@@ -26,7 +28,6 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.optaplanner.core.api.solver.SolverManager;
@@ -57,8 +58,8 @@ class OptaPlannerProcessorPrivateConstructorTest {
                         new PrivateNoArgsConstructorEntity("2"),
                         new PrivateNoArgsConstructorEntity("3")));
         PrivateNoArgsConstructorSolution solution = solverManager.solve(1L, problem).getFinalBestSolution();
-        Assertions.assertEquals(solution.score.score(), 0);
-        Assertions.assertEquals(solution.someField, 2);
+        assertThat(solution.score.score()).isEqualTo(0);
+        assertThat(solution.someField).isEqualTo(2);
     }
 
 }

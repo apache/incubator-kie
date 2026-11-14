@@ -20,8 +20,7 @@ package org.drools.wiring.dynamic;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Parallel capability is per-class, not inherited: the JVM only enables per-name class loading
@@ -38,13 +37,12 @@ class ParallelCapableClassLoaderTest {
 
     @Test
     void dynamicProjectClassLoaderChainIsParallelCapable() {
-        assertTrue(DynamicProbe.PARALLEL_CAPABLE,
-                "registerAsParallelCapable() in a subclass only succeeds when the whole "
-                        + "DynamicProjectClassLoader ancestry is registered");
+        assertThat(DynamicProbe.PARALLEL_CAPABLE).as("registerAsParallelCapable() in a subclass only succeeds when the whole "
+                + "DynamicProjectClassLoader ancestry is registered").isTrue();
         DynamicProbe probe = new DynamicProbe(getClass().getClassLoader());
         Object lockA = probe.lockFor("com.example.A");
-        assertNotSame(probe, lockA, "a parallel-capable loader must not lock on itself");
-        assertNotSame(lockA, probe.lockFor("com.example.B"));
+        assertThat(lockA).as("a parallel-capable loader must not lock on itself").isNotSameAs(probe);
+        assertThat(probe.lockFor("com.example.B")).isNotSameAs(lockA);
     }
 
     private static class DynamicProbe extends DynamicProjectClassLoader {

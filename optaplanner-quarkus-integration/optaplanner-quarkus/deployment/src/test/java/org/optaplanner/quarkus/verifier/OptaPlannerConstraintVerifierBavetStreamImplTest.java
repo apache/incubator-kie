@@ -19,13 +19,14 @@
 
 package org.optaplanner.quarkus.verifier;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.optaplanner.core.api.score.buildin.simple.SimpleScore;
@@ -54,9 +55,8 @@ class OptaPlannerConstraintVerifierBavetStreamImplTest {
 
     @Test
     void constraintVerifierBavetStreamImpl() {
-        Assertions.assertEquals(ConstraintStreamImplType.BAVET,
-                ((DefaultConstraintVerifier<?, ?, ?>) constraintVerifier)
-                        .getConstraintStreamImplType());
+        assertThat(((DefaultConstraintVerifier<?, ?, ?>) constraintVerifier)
+                .getConstraintStreamImplType()).isEqualTo(ConstraintStreamImplType.BAVET);
         TestdataQuarkusSolution solution = new TestdataQuarkusSolution();
         TestdataQuarkusEntity entityA = new TestdataQuarkusEntity();
         TestdataQuarkusEntity entityB = new TestdataQuarkusEntity();

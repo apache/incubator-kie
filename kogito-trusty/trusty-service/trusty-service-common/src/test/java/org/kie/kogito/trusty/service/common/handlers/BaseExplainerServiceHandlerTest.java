@@ -25,8 +25,7 @@ import org.kie.kogito.persistence.api.Storage;
 import org.kie.kogito.trusty.storage.api.model.decision.Decision;
 import org.kie.kogito.trusty.storage.common.TrustyStorageService;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 public abstract class BaseExplainerServiceHandlerTest<H extends ExplainerServiceHandler<R>, R extends BaseExplainabilityResult> {
@@ -63,8 +62,8 @@ public abstract class BaseExplainerServiceHandlerTest<H extends ExplainerService
 
     @Test
     public void testExplainabilityResult() {
-        assertTrue(handler.supports(getResult()));
-        assertFalse(handler.supports(BaseExplainabilityResult.class));
+        assertThat(handler.supports(getResult())).isTrue();
+        assertThat(handler.supports(BaseExplainabilityResult.class)).isFalse();
     }
 
     @Test

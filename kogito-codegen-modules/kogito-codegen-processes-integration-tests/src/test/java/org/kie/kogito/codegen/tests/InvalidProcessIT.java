@@ -27,10 +27,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.kogito.codegen.AbstractCodegenIT;
 import org.kie.kogito.codegen.process.ProcessCodegenException;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InvalidProcessIT extends AbstractCodegenIT {
 
@@ -58,7 +58,7 @@ public class InvalidProcessIT extends AbstractCodegenIT {
 
     @Test
     public void testBasicUserTaskProcess() {
-        assertDoesNotThrow(() -> generateCodeProcessesOnly("invalid/invalid-process-id.bpmn2"));
+        assertThatCode(() -> generateCodeProcessesOnly("invalid/invalid-process-id.bpmn2")).doesNotThrowAnyException();
     }
 
     @Test
@@ -66,8 +66,7 @@ public class InvalidProcessIT extends AbstractCodegenIT {
         final ProcessCodegenException exceptionBpmn =
                 (ProcessCodegenException) catchThrowable(() -> generateCodeProcessesOnly("invalid/duplicated-process-id-1.bpmn2",
                         "invalid/duplicated-process-id-2.bpmn2"));
-        assertEquals("Duplicated item found with id duplicated. Please review the .bpmn files",
-                exceptionBpmn.getMessage());
+        assertThat(exceptionBpmn.getMessage()).isEqualTo("Duplicated item found with id duplicated. Please review the .bpmn files");
     }
 
     @ParameterizedTest

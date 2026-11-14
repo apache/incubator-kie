@@ -45,8 +45,7 @@ import io.quarkus.test.InjectMock;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.timeout;
@@ -106,7 +105,7 @@ abstract class BaseExplainabilityMessagingHandlerIT {
             CloudEventUtils.decode(s).ifPresent((CloudEvent cloudEvent) -> {
                 try {
                     BaseExplainabilityResult event = objectMapper.readValue(cloudEvent.getData().toBytes(), BaseExplainabilityResult.class);
-                    assertNotNull(event);
+                    assertThat(event).isNotNull();
                     assertResult(event);
                     countDownLatch.countDown();
                 } catch (IOException e) {
@@ -116,7 +115,7 @@ abstract class BaseExplainabilityMessagingHandlerIT {
             });
         });
 
-        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertThat(countDownLatch.await(5, TimeUnit.SECONDS)).isTrue();
 
         kafkaClient.shutdown();
     }
@@ -146,7 +145,7 @@ abstract class BaseExplainabilityMessagingHandlerIT {
             CloudEventUtils.decode(s).ifPresent((CloudEvent cloudEvent) -> {
                 try {
                     BaseExplainabilityResult event = objectMapper.readValue(cloudEvent.getData().toBytes(), BaseExplainabilityResult.class);
-                    assertNotNull(event);
+                    assertThat(event).isNotNull();
                     assertResult(event);
                     countDownLatch.countDown();
                 } catch (IOException e) {
@@ -156,7 +155,7 @@ abstract class BaseExplainabilityMessagingHandlerIT {
             });
         });
 
-        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertThat(countDownLatch.await(5, TimeUnit.SECONDS)).isTrue();
 
         kafkaClient.shutdown();
     }

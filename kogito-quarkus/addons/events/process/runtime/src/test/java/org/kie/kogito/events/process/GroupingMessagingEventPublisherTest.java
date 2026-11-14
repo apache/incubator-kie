@@ -47,7 +47,7 @@ import io.smallrye.reactive.messaging.MutinyEmitter;
 
 import jakarta.enterprise.inject.Instance;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -213,13 +213,13 @@ public class GroupingMessagingEventPublisherTest {
 
         verify(groupingMessagingEventPublisher, times(1)).publishToTopic(eq(processInstanceConsumer), captorPI.capture());
         MultipleProcessInstanceDataEvent groupedProcessInstanceEvents = captorPI.getValue();
-        assertEquals(2, groupedProcessInstanceEvents.getData().size()); // both processInstanceEvents are grouped
+        assertThat(groupedProcessInstanceEvents.getData().size()).isEqualTo(2); // both processInstanceEvents are grouped
 
         ArgumentCaptor<MultipleUserTaskInstanceDataEvent> captorUT = ArgumentCaptor.forClass(MultipleUserTaskInstanceDataEvent.class);
 
         verify(groupingMessagingEventPublisher, times(1)).publishToTopic(eq(userTaskConsumer), captorUT.capture());
         MultipleUserTaskInstanceDataEvent groupedUserTaskEvents = captorUT.getValue();
-        assertEquals(2, groupedUserTaskEvents.getData().size()); // both userTaskEvents are grouped
+        assertThat(groupedUserTaskEvents.getData().size()).isEqualTo(2); // both userTaskEvents are grouped
     }
 
     @Test
@@ -338,7 +338,7 @@ public class GroupingMessagingEventPublisherTest {
         reactiveMessagingEventPublisher.init();
 
         Message<String> result = reactiveMessagingEventPublisher.decorateMessage(rawMessage);
-        assertEquals(decoratedMessage, result);
+        assertThat(result).isEqualTo(decoratedMessage);
 
         verify(decoratorProvider).decorate(rawMessage);
     }

@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.kie.kogito.explainability.api.CounterfactualExplainabilityResult;
 import org.kie.kogito.persistence.api.query.Query;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -84,7 +84,7 @@ public class CounterfactualExplainerServiceHandlerTest
     public void testGetExplainabilityResultById_WhenStored() {
         when(query.execute()).thenReturn(List.of(result));
 
-        assertEquals(result, handler.getExplainabilityResultById(EXECUTION_ID));
+        assertThat(handler.getExplainabilityResultById(EXECUTION_ID)).isEqualTo(result);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class CounterfactualExplainerServiceHandlerTest
 
         when(query.execute()).thenReturn(List.of(intermediate, result));
 
-        assertEquals(result, handler.getExplainabilityResultById(EXECUTION_ID));
+        assertThat(handler.getExplainabilityResultById(EXECUTION_ID)).isEqualTo(result);
     }
 
     @Test
@@ -108,7 +108,7 @@ public class CounterfactualExplainerServiceHandlerTest
 
         when(query.execute()).thenReturn(List.of(intermediate));
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getExplainabilityResultById(EXECUTION_ID));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getExplainabilityResultById(EXECUTION_ID));
     }
 
     @Test
@@ -116,7 +116,7 @@ public class CounterfactualExplainerServiceHandlerTest
     public void testGetExplainabilityResultById_WhenNotStored() {
         when(query.execute()).thenReturn(Collections.emptyList());
 
-        assertThrows(IllegalArgumentException.class, () -> handler.getExplainabilityResultById(EXECUTION_ID));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.getExplainabilityResultById(EXECUTION_ID));
     }
 
     @Test
@@ -124,7 +124,7 @@ public class CounterfactualExplainerServiceHandlerTest
     public void testStoreExplainabilityResult_WhenAlreadyStored() {
         when(storage.containsKey(anyString())).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.storeExplainabilityResult(EXECUTION_ID, result));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> handler.storeExplainabilityResult(EXECUTION_ID, result));
     }
 
     @Test

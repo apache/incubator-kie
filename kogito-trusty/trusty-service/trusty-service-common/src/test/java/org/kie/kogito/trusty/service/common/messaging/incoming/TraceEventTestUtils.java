@@ -33,36 +33,33 @@ import org.kie.kogito.trusty.storage.api.model.decision.Decision;
 import org.kie.kogito.trusty.storage.api.model.decision.DecisionInput;
 import org.kie.kogito.trusty.storage.api.model.decision.DecisionOutcome;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TraceEventTestUtils {
 
     public static void assertDecision(Decision expected, Decision actual) {
-        assertSame(expected.getExecutionType(), actual.getExecutionType());
-        assertEquals(expected.getExecutionId(), actual.getExecutionId());
-        assertEquals(expected.getSourceUrl(), actual.getSourceUrl());
-        assertEquals(expected.getExecutionTimestamp(), actual.getExecutionTimestamp());
-        assertEquals(expected.hasSucceeded(), actual.hasSucceeded());
-        assertEquals(expected.getExecutedModelName(), actual.getExecutedModelName());
-        assertEquals(expected.getExecutorName(), actual.getExecutorName());
+        assertThat(actual.getExecutionType()).isSameAs(expected.getExecutionType());
+        assertThat(actual.getExecutionId()).isEqualTo(expected.getExecutionId());
+        assertThat(actual.getSourceUrl()).isEqualTo(expected.getSourceUrl());
+        assertThat(actual.getExecutionTimestamp()).isEqualTo(expected.getExecutionTimestamp());
+        assertThat(actual.hasSucceeded()).isEqualTo(expected.hasSucceeded());
+        assertThat(actual.getExecutedModelName()).isEqualTo(expected.getExecutedModelName());
+        assertThat(actual.getExecutorName()).isEqualTo(expected.getExecutorName());
         assertList(expected.getInputs(), actual.getInputs(), TraceEventTestUtils::assertDecisionInput, TraceEventTestUtils::compareDecisionInput);
         assertList(expected.getOutcomes(), actual.getOutcomes(), TraceEventTestUtils::assertDecisionOutcome, TraceEventTestUtils::compareDecisionOutcome);
     }
 
     public static void assertDecisionInput(DecisionInput expected, DecisionInput actual) {
-        assertEquals(expected.getId(), actual.getId());
-        assertEquals(expected.getName(), actual.getName());
+        assertThat(actual.getId()).isEqualTo(expected.getId());
+        assertThat(actual.getName()).isEqualTo(expected.getName());
         assertTypedValue(expected.getValue(), actual.getValue());
     }
 
     public static void assertDecisionOutcome(DecisionOutcome expected, DecisionOutcome actual) {
-        assertEquals(expected.getOutcomeId(), actual.getOutcomeId());
-        assertEquals(expected.getOutcomeName(), actual.getOutcomeName());
+        assertThat(actual.getOutcomeId()).isEqualTo(expected.getOutcomeId());
+        assertThat(actual.getOutcomeName()).isEqualTo(expected.getOutcomeName());
         assertTypedValue(expected.getOutcomeResult(), actual.getOutcomeResult());
-        assertEquals(expected.getEvaluationStatus(), actual.getEvaluationStatus());
+        assertThat(actual.getEvaluationStatus()).isEqualTo(expected.getEvaluationStatus());
         assertList(expected.getOutcomeInputs(),
                 actual.getOutcomeInputs(),
                 TraceEventTestUtils::assertTypedValue,
@@ -83,9 +80,9 @@ public class TraceEventTestUtils {
             return;
         }
 
-        assertNotNull(expected);
-        assertNotNull(actual);
-        assertSame(expected.size(), actual.size());
+        assertThat(expected).isNotNull();
+        assertThat(actual).isNotNull();
+        assertThat(actual.size()).isSameAs(expected.size());
 
         List<T> sortedExpected = expected.stream().sorted(comparator).collect(Collectors.toList());
         List<T> sortedActual = actual.stream().sorted(comparator).collect(Collectors.toList());
@@ -96,11 +93,11 @@ public class TraceEventTestUtils {
     }
 
     public static void assertMessage(Message expected, Message actual) {
-        assertSame(expected.getLevel(), actual.getLevel());
-        assertEquals(expected.getCategory(), actual.getCategory());
-        assertEquals(expected.getType(), actual.getType());
-        assertEquals(expected.getSourceId(), actual.getSourceId());
-        assertEquals(expected.getText(), actual.getText());
+        assertThat(actual.getLevel()).isSameAs(expected.getLevel());
+        assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
+        assertThat(actual.getType()).isEqualTo(expected.getType());
+        assertThat(actual.getSourceId()).isEqualTo(expected.getSourceId());
+        assertThat(actual.getText()).isEqualTo(expected.getText());
         assertMessageExceptionField(expected.getException(), actual.getException());
     }
 
@@ -109,24 +106,24 @@ public class TraceEventTestUtils {
             return;
         }
         if (expected == null || actual == null) {
-            fail();
+            org.assertj.core.api.Assertions.fail("");
         }
-        assertEquals(expected.getMessage(), actual.getMessage());
-        assertEquals(expected.getClassName(), actual.getClassName());
+        assertThat(actual.getMessage()).isEqualTo(expected.getMessage());
+        assertThat(actual.getClassName()).isEqualTo(expected.getClassName());
         assertMessageExceptionField(expected.getCause(), actual.getCause());
     }
 
     public static void assertTypedValue(NamedTypedValue expected,
             NamedTypedValue actual) {
-        assertEquals(expected.getName(), actual.getName());
+        assertThat(actual.getName()).isEqualTo(expected.getName());
         assertTypedValue(expected.getValue(), actual.getValue());
     }
 
     public static void assertTypedValue(TypedValue expected,
             TypedValue actual) {
-        assertEquals(expected.getType(), actual.getType());
-        assertEquals(expected.toUnit().getBaseType(), actual.toUnit().getBaseType());
-        assertEquals(expected.toUnit().getValue(), actual.toUnit().getValue());
+        assertThat(actual.getType()).isEqualTo(expected.getType());
+        assertThat(actual.toUnit().getBaseType()).isEqualTo(expected.toUnit().getBaseType());
+        assertThat(actual.toUnit().getValue()).isEqualTo(expected.toUnit().getValue());
     }
 
     public static int compareDecisionInput(DecisionInput expected, DecisionInput actual) {

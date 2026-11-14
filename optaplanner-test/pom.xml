@@ -82,7 +82,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
+      <scope>compile</scope><!-- Intentional, used from main sources like junit-jupiter-api. -->
     </dependency>
   </dependencies>
 
@@ -99,6 +99,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
+          <ignoredNonTestScopedDependencies>
+            <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
+            <dependency>org.assertj:assertj-core</dependency>
+          </ignoredNonTestScopedDependencies>
           <ignoredUsedUndeclaredDependencies>
             <dependency>org.optaplanner:optaplanner-core-impl:jar</dependency>
           </ignoredUsedUndeclaredDependencies>

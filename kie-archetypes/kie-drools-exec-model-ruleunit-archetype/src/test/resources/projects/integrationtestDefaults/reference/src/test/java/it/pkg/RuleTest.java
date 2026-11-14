@@ -23,13 +23,12 @@ import java.util.List;
 
 import org.drools.ruleunits.api.RuleUnitProvider;
 import org.drools.ruleunits.api.RuleUnitInstance;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RuleTest {
 
@@ -49,10 +48,10 @@ public class RuleTest {
             LOG.info("Run query. Rules are also fired");
             List<Measurement> queryResult = instance.executeQuery("FindColor").toList("$m");
 
-            assertEquals(3, queryResult.size());
-            assertTrue("contains red", measurementUnit.getControlSet().contains("red"));
-            assertTrue("contains green", measurementUnit.getControlSet().contains("green"));
-            assertTrue("contains blue", measurementUnit.getControlSet().contains("blue"));
+            assertThat(queryResult).hasSize(3);
+            assertThat(measurementUnit.getControlSet()).as("contains red").contains("red");
+            assertThat(measurementUnit.getControlSet()).as("contains green").contains("green");
+            assertThat(measurementUnit.getControlSet()).as("contains blue").contains("blue");
         }
     }
 }

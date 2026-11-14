@@ -32,7 +32,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Unit tests for ProcessInstanceContext utility class.
@@ -60,16 +62,16 @@ class ProcessInstanceContextTest {
     @Test
     void testSetAndGetProcessInstanceId() {
         // Initially no context (returns empty string)
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, ProcessInstanceContext.getProcessInstanceId());
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
 
         // Set process instance ID
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
 
         // Verify MDC is set
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-        assertEquals(TEST_PROCESS_ID, MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(TEST_PROCESS_ID);
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
     }
 
     @Test
@@ -77,58 +79,58 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.setProcessInstanceId(null);
 
         // Should use general context (empty string)
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, ProcessInstanceContext.getProcessInstanceId());
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
     void testClearContext() {
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
 
         ProcessInstanceContext.clear();
 
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, ProcessInstanceContext.getProcessInstanceId());
-        assertNull(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isNull();
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
     void testContextReplacement() {
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
 
         // Set different ID - should replace
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID_2);
-        assertEquals(TEST_PROCESS_ID_2, ProcessInstanceContext.getProcessInstanceId());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID_2);
 
         // Clear should remove all context
         ProcessInstanceContext.clear();
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
     void testWithProcessInstanceContextSupplier() {
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
 
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
         String result;
         try {
-            assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-            assertTrue(ProcessInstanceContext.hasContext());
+            assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+            assertThat(ProcessInstanceContext.hasContext()).isTrue();
             result = "test-result";
         } finally {
             ProcessInstanceContext.clear();
         }
 
-        assertEquals("test-result", result);
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(result).isEqualTo("test-result");
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
     void testWithProcessInstanceContextRunnable() {
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
         AtomicReference<String> capturedId = new AtomicReference<>();
 
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
@@ -138,18 +140,18 @@ class ProcessInstanceContextTest {
             ProcessInstanceContext.clear();
         }
 
-        assertEquals(TEST_PROCESS_ID, capturedId.get());
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(capturedId.get()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
     void testWithProcessInstanceContextExceptionHandling() {
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> {
             ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
             try {
-                assertTrue(ProcessInstanceContext.hasContext());
+                assertThat(ProcessInstanceContext.hasContext()).isTrue();
                 throw new RuntimeException("Test exception");
             } finally {
                 ProcessInstanceContext.clear();
@@ -157,7 +159,7 @@ class ProcessInstanceContextTest {
         });
 
         // Context should be cleared even after exception
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
@@ -166,28 +168,28 @@ class ProcessInstanceContextTest {
 
         // Copy context for async operation
         Map<String, String> contextMap = ProcessInstanceContext.copyContextForAsync();
-        assertNotNull(contextMap);
-        assertEquals(TEST_PROCESS_ID, contextMap.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(contextMap).isNotNull();
+        assertThat(contextMap.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(TEST_PROCESS_ID);
 
         // Clear original context
         ProcessInstanceContext.clear();
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
 
         // Restore context from async
         ProcessInstanceContext.setContextFromAsync(contextMap);
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
     }
 
     @Test
     void testAsyncContextWithNullMap() {
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
 
         // Setting null context map should not change existing context
         ProcessInstanceContext.setContextFromAsync(null);
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
     }
 
     @Test
@@ -202,7 +204,7 @@ class ProcessInstanceContextTest {
                 try {
                     ProcessInstanceContext.setProcessInstanceId("process-1");
                     Thread.sleep(100); // Allow other threads to run
-                    assertEquals("process-1", ProcessInstanceContext.getProcessInstanceId());
+                    assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo("process-1");
                 } catch (Exception e) {
                     exception.set(e);
                 } finally {
@@ -216,7 +218,7 @@ class ProcessInstanceContextTest {
                 try {
                     ProcessInstanceContext.setProcessInstanceId("process-2");
                     Thread.sleep(100); // Allow other threads to run
-                    assertEquals("process-2", ProcessInstanceContext.getProcessInstanceId());
+                    assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo("process-2");
                 } catch (Exception e) {
                     exception.set(e);
                 } finally {
@@ -230,7 +232,7 @@ class ProcessInstanceContextTest {
                 try {
                     Thread.sleep(100); // Allow other threads to run
                     // In a new thread without context, should return empty string
-                    assertFalse(ProcessInstanceContext.hasContext());
+                    assertThat(ProcessInstanceContext.hasContext()).isFalse();
                 } catch (Exception e) {
                     exception.set(e);
                 } finally {
@@ -238,8 +240,8 @@ class ProcessInstanceContextTest {
                 }
             });
 
-            assertTrue(latch.await(5, TimeUnit.SECONDS));
-            assertNull(exception.get());
+            assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(exception.get()).isNull();
 
         } finally {
             executor.shutdown();
@@ -262,10 +264,10 @@ class ProcessInstanceContextTest {
         });
 
         String result = future.get(5, TimeUnit.SECONDS);
-        assertEquals(TEST_PROCESS_ID, result);
+        assertThat(result).isEqualTo(TEST_PROCESS_ID);
 
         // Original thread context should still be intact
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
     }
 
     @Test
@@ -273,38 +275,38 @@ class ProcessInstanceContextTest {
         // Verify MDC is properly managed
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
 
-        assertEquals(TEST_PROCESS_ID, MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(TEST_PROCESS_ID);
 
         ProcessInstanceContext.clear();
 
-        assertNull(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isNull();
     }
 
     @Test
     void testGeneralContextBehavior() {
         ProcessInstanceContext.setProcessInstanceId(ProcessInstanceContext.GENERAL_CONTEXT);
 
-        assertFalse(ProcessInstanceContext.hasContext());
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, ProcessInstanceContext.getProcessInstanceId());
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
     }
 
     @Test
     void testHasContextAccuracy() {
         // Initially no context
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
 
         // Set general context explicitly - should not count as having context
         ProcessInstanceContext.setProcessInstanceId(ProcessInstanceContext.GENERAL_CONTEXT);
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
 
         // Set specific context
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
 
         // Clear should remove context
         ProcessInstanceContext.clear();
-        assertFalse(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.hasContext()).isFalse();
     }
 
     @Test
@@ -313,15 +315,15 @@ class ProcessInstanceContextTest {
 
         // Set process ID
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
-        assertEquals(TEST_PROCESS_ID, MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(TEST_PROCESS_ID);
 
         // Clear should reset to general context
         ProcessInstanceContext.clear();
-        assertNull(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isNull();
 
         // Setting null should also result in general context
         ProcessInstanceContext.setProcessInstanceId(null);
-        assertEquals(ProcessInstanceContext.GENERAL_CONTEXT, MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(ProcessInstanceContext.GENERAL_CONTEXT);
     }
 
     @Test
@@ -334,8 +336,8 @@ class ProcessInstanceContextTest {
         MDC.put(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY, "old-process-id");
 
         // Verify setup
-        assertEquals("old-process-id", MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
-        assertEquals("value1", MDC.get("existing.key1"));
+        assertThat(MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo("old-process-id");
+        assertThat(MDC.get("existing.key1")).isEqualTo("value1");
 
         // Create new context map
         Map<String, String> newContextMap = new HashMap<>();
@@ -345,21 +347,21 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.setContextFromAsync(newContextMap);
 
         // Verification: New process instance ID should be set
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-        assertTrue(ProcessInstanceContext.hasContext());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(ProcessInstanceContext.hasContext()).isTrue();
 
         // Critical verification: Existing unrelated keys should be preserved
-        assertEquals("value1", MDC.get("existing.key1"));
-        assertEquals("value2", MDC.get("existing.key2"));
-        assertEquals("should-be-preserved", MDC.get("unrelated.data"));
+        assertThat(MDC.get("existing.key1")).isEqualTo("value1");
+        assertThat(MDC.get("existing.key2")).isEqualTo("value2");
+        assertThat(MDC.get("unrelated.data")).isEqualTo("should-be-preserved");
 
         // The context should contain both old and new keys
         Map<String, String> remainingContext = MDC.getCopyOfContextMap();
-        assertEquals(4, remainingContext.size());
-        assertEquals(TEST_PROCESS_ID, remainingContext.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
-        assertEquals("value1", remainingContext.get("existing.key1"));
-        assertEquals("value2", remainingContext.get("existing.key2"));
-        assertEquals("should-be-preserved", remainingContext.get("unrelated.data"));
+        assertThat(remainingContext.size()).isEqualTo(4);
+        assertThat(remainingContext.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(TEST_PROCESS_ID);
+        assertThat(remainingContext.get("existing.key1")).isEqualTo("value1");
+        assertThat(remainingContext.get("existing.key2")).isEqualTo("value2");
+        assertThat(remainingContext.get("unrelated.data")).isEqualTo("should-be-preserved");
     }
 
     @Test
@@ -372,9 +374,9 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.setProcessInstanceId(TEST_PROCESS_ID);
         String mdcValue2 = MDC.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY);
 
-        assertEquals(TEST_PROCESS_ID, mdcValue1);
-        assertEquals(TEST_PROCESS_ID, mdcValue2);
-        assertEquals(mdcValue1, mdcValue2);
+        assertThat(mdcValue1).isEqualTo(TEST_PROCESS_ID);
+        assertThat(mdcValue2).isEqualTo(TEST_PROCESS_ID);
+        assertThat(mdcValue2).isEqualTo(mdcValue1);
     }
 
     @Test
@@ -392,8 +394,8 @@ class ProcessInstanceContextTest {
                     for (int i = 0; i < iterationsPerThread; i++) {
                         String processId = "thread-" + threadId + "-process-" + i;
                         ProcessInstanceContext.setProcessInstanceId(processId);
-                        assertEquals(processId, ProcessInstanceContext.getProcessInstanceId());
-                        assertTrue(ProcessInstanceContext.hasContext());
+                        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(processId);
+                        assertThat(ProcessInstanceContext.hasContext()).isTrue();
                         ProcessInstanceContext.clear();
                     }
                 } catch (Exception e) {
@@ -404,8 +406,8 @@ class ProcessInstanceContextTest {
             });
         }
 
-        assertTrue(latch.await(30, TimeUnit.SECONDS));
-        assertNull(exception.get());
+        assertThat(latch.await(30, TimeUnit.SECONDS)).isTrue();
+        assertThat(exception.get()).isNull();
 
         executor.shutdown();
     }
@@ -435,14 +437,14 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.setContextFromAsync(contextMap);
 
         // Verify core context is restored
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
 
         // Verify extension was called to restore its keys
-        assertTrue(extension.restoreCalled);
-        assertEquals(2, extension.restoredKeys.size());
-        assertEquals("value1", extension.restoredKeys.get("test.key1"));
-        assertEquals("value2", extension.restoredKeys.get("test.key2"));
-        assertNull(extension.restoredKeys.get("other.key"));
+        assertThat(extension.restoreCalled).isTrue();
+        assertThat(extension.restoredKeys.size()).isEqualTo(2);
+        assertThat(extension.restoredKeys.get("test.key1")).isEqualTo("value1");
+        assertThat(extension.restoredKeys.get("test.key2")).isEqualTo("value2");
+        assertThat(extension.restoredKeys.get("other.key")).isNull();
     }
 
     @Test
@@ -450,19 +452,13 @@ class ProcessInstanceContextTest {
         MockContextExtension extension = new MockContextExtension("test.");
 
         // Test null prefix
-        assertThrows(IllegalArgumentException.class, () -> {
-            ProcessInstanceContext.registerExtension(null, extension);
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> ProcessInstanceContext.registerExtension(null, extension));
 
         // Test empty prefix
-        assertThrows(IllegalArgumentException.class, () -> {
-            ProcessInstanceContext.registerExtension("", extension);
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> ProcessInstanceContext.registerExtension("", extension));
 
         // Test null extension
-        assertThrows(IllegalArgumentException.class, () -> {
-            ProcessInstanceContext.registerExtension("test.", null);
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> ProcessInstanceContext.registerExtension("test.", null));
     }
 
     @Test
@@ -490,12 +486,10 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.clear();
 
         // This should not throw, even though the extension fails
-        assertDoesNotThrow(() -> {
-            ProcessInstanceContext.setContextFromAsync(contextMap);
-        });
+        assertThatCode(() -> ProcessInstanceContext.setContextFromAsync(contextMap)).doesNotThrowAnyException();
 
         // Core functionality should still work
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
     }
 
     @Test
@@ -516,14 +510,14 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.setContextFromAsync(asyncContextMap);
 
         // Verification: Async values should take precedence for conflicting keys
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-        assertEquals("async-value", MDC.get("common.key")); // async wins
-        assertEquals("should-remain", MDC.get("existing.only")); // preserved
-        assertEquals("new-value", MDC.get("async.only")); // added from async
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(MDC.get("common.key")).isEqualTo("async-value"); // async wins
+        assertThat(MDC.get("existing.only")).isEqualTo("should-remain"); // preserved
+        assertThat(MDC.get("async.only")).isEqualTo("new-value"); // added from async
 
         // All keys should be present
         Map<String, String> finalContext = MDC.getCopyOfContextMap();
-        assertEquals(4, finalContext.size());
+        assertThat(finalContext.size()).isEqualTo(4);
     }
 
     @Test
@@ -541,14 +535,14 @@ class ProcessInstanceContextTest {
         ProcessInstanceContext.setContextFromAsync(asyncContextMap);
 
         // Verification: Only async values should be present
-        assertEquals(TEST_PROCESS_ID, ProcessInstanceContext.getProcessInstanceId());
-        assertEquals("async-value", MDC.get("async.key"));
+        assertThat(ProcessInstanceContext.getProcessInstanceId()).isEqualTo(TEST_PROCESS_ID);
+        assertThat(MDC.get("async.key")).isEqualTo("async-value");
 
         // Context should match exactly what was provided
         Map<String, String> finalContext = MDC.getCopyOfContextMap();
-        assertEquals(2, finalContext.size());
-        assertEquals(TEST_PROCESS_ID, finalContext.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY));
-        assertEquals("async-value", finalContext.get("async.key"));
+        assertThat(finalContext.size()).isEqualTo(2);
+        assertThat(finalContext.get(ProcessInstanceContext.MDC_PROCESS_INSTANCE_KEY)).isEqualTo(TEST_PROCESS_ID);
+        assertThat(finalContext.get("async.key")).isEqualTo("async-value");
     }
 
     /**

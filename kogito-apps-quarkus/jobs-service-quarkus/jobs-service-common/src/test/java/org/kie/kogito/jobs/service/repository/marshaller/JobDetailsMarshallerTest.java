@@ -35,8 +35,7 @@ import org.kie.kogito.timer.impl.PointInTimeTrigger;
 
 import io.vertx.core.json.JsonObject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.jobs.service.utils.DateUtil.DEFAULT_ZONE;
 
 class JobDetailsMarshallerTest {
@@ -106,21 +105,21 @@ class JobDetailsMarshallerTest {
 
     @Test
     void marshall() {
-        assertEquals(jsonObject, jobDetailsMarshaller.marshall(jobDetails));
+        assertThat(jobDetailsMarshaller.marshall(jobDetails)).isEqualTo(jsonObject);
     }
 
     @Test
     void marshallNull() {
-        assertNull(jobDetailsMarshaller.marshall(null));
+        assertThat(jobDetailsMarshaller.marshall(null)).isNull();
     }
 
     @Test
     void unmarshall() {
-        assertEquals(jobDetails, jobDetailsMarshaller.unmarshall(jsonObject));
+        assertThat(jobDetailsMarshaller.unmarshall(jsonObject)).isEqualTo(jobDetails);
     }
 
     @Test
     void unmarshallNull() {
-        assertNull(jobDetailsMarshaller.unmarshall(null));
+        assertThat(jobDetailsMarshaller.unmarshall(null)).isNull();
     }
 }

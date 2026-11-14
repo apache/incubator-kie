@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.explainability.api.CounterfactualDomain;
@@ -56,10 +55,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.trusty.service.common.TypedValueTestUtils.buildGoalUnit;
 import static org.kie.kogito.trusty.service.common.TypedValueTestUtils.buildSearchDomainUnit;
 
@@ -87,8 +84,8 @@ public abstract class AbstractTrustyServiceIT {
         OffsetDateTime from = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1591692957000L), ZoneOffset.UTC);
         OffsetDateTime to = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1591692959000L), ZoneOffset.UTC);
         MatchedExecutionHeaders result = trustyService.getExecutionHeaders(from, to, 100, 0, "");
-        Assertions.assertEquals(1, result.getExecutions().size());
-        Assertions.assertEquals("myExecution", result.getExecutions().get(0).getExecutionId());
+        assertThat(result.getExecutions().size()).isEqualTo(1);
+        assertThat(result.getExecutions().get(0).getExecutionId()).isEqualTo("myExecution");
     }
 
     @Test
@@ -99,8 +96,8 @@ public abstract class AbstractTrustyServiceIT {
         OffsetDateTime from = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1591692940000L), ZoneOffset.UTC);
         OffsetDateTime to = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1591692955000L), ZoneOffset.UTC);
         MatchedExecutionHeaders result = trustyService.getExecutionHeaders(from, to, 100, 0, "");
-        Assertions.assertEquals(1, result.getExecutions().size());
-        Assertions.assertEquals("myExecution", result.getExecutions().get(0).getExecutionId());
+        assertThat(result.getExecutions().size()).isEqualTo(1);
+        assertThat(result.getExecutions().get(0).getExecutionId()).isEqualTo("myExecution");
     }
 
     @Test
@@ -111,8 +108,8 @@ public abstract class AbstractTrustyServiceIT {
         OffsetDateTime from = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1591692940000L), ZoneOffset.UTC);
         OffsetDateTime to = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1591692959000L), ZoneOffset.UTC);
         MatchedExecutionHeaders result = trustyService.getExecutionHeaders(from, to, 100, 0, "my");
-        Assertions.assertEquals(1, result.getExecutions().size());
-        Assertions.assertEquals("myExecution", result.getExecutions().get(0).getExecutionId());
+        assertThat(result.getExecutions().size()).isEqualTo(1);
+        assertThat(result.getExecutions().get(0).getExecutionId()).isEqualTo("myExecution");
     }
 
     @Test
@@ -121,7 +118,7 @@ public abstract class AbstractTrustyServiceIT {
         storeExecution(executionId, 1591692950000L);
 
         Decision result = trustyService.getDecisionById(executionId);
-        Assertions.assertEquals(executionId, result.getExecutionId());
+        assertThat(result.getExecutionId()).isEqualTo(executionId);
     }
 
     @Test
@@ -130,20 +127,20 @@ public abstract class AbstractTrustyServiceIT {
         storeExecution(executionId, 1591692950000L);
 
         Decision result = trustyService.getDecisionById(executionId);
-        Assertions.assertTrue(result.getInputs().stream().findFirst().get().getValue().isUnit());
+        assertThat(result.getInputs().stream().findFirst().get().getValue().isUnit()).isTrue();
     }
 
     @Test
     public void givenADuplicatedDecisionWhenTheDecisionIsStoredThenAnExceptionIsRaised() {
         String executionId = "myExecution";
         storeExecution(executionId, 1591692950000L);
-        assertThrows(IllegalArgumentException.class, () -> storeExecution(executionId, 1591692950000L));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> storeExecution(executionId, 1591692950000L));
     }
 
     @Test
     public void givenNoExecutionsWhenADecisionIsRetrievedThenAnExceptionIsRaised() {
         String executionId = "myExecution";
-        assertThrows(IllegalArgumentException.class, () -> trustyService.getDecisionById(executionId));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.getDecisionById(executionId));
     }
 
     @Test
@@ -152,19 +149,19 @@ public abstract class AbstractTrustyServiceIT {
         storeModel(model);
 
         DMNModelWithMetadata result = getModel();
-        Assertions.assertEquals(model, result.getModel());
+        assertThat(result.getModel()).isEqualTo(model);
     }
 
     @Test
     public void givenADuplicatedModelWhenTheModelIsStoredThenAnExceptionIsRaised() {
         String model = "definition";
         storeModel(model);
-        assertThrows(IllegalArgumentException.class, () -> storeModel(model));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> storeModel(model));
     }
 
     @Test
     public void givenNoModelsWhenAModelIsRetrievedThenAnExceptionIsRaised() {
-        assertThrows(IllegalArgumentException.class, this::getModel);
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(this::getModel);
     }
 
     @Test
@@ -181,7 +178,7 @@ public abstract class AbstractTrustyServiceIT {
                 0,
                 "da8ad1e9-a679");
 
-        Assertions.assertEquals(1, executionHeaders.getExecutions().size());
+        assertThat(executionHeaders.getExecutions().size()).isEqualTo(1);
     }
 
     @Test
@@ -197,14 +194,14 @@ public abstract class AbstractTrustyServiceIT {
 
         CounterfactualExplainabilityRequest request = trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.singletonList(searchDomain));
 
-        assertNotNull(request);
-        assertEquals(request.getExecutionId(), executionId);
-        assertNotNull(request.getCounterfactualId());
+        assertThat(request).isNotNull();
+        assertThat(executionId).isEqualTo(request.getExecutionId());
+        assertThat(request.getCounterfactualId()).isNotNull();
 
         CounterfactualExplainabilityRequest result = trustyService.getCounterfactualRequest(executionId, request.getCounterfactualId());
-        assertNotNull(result);
-        assertEquals(request.getExecutionId(), result.getExecutionId());
-        assertEquals(request.getCounterfactualId(), result.getCounterfactualId());
+        assertThat(result).isNotNull();
+        assertThat(result.getExecutionId()).isEqualTo(request.getExecutionId());
+        assertThat(result.getCounterfactualId()).isEqualTo(request.getCounterfactualId());
     }
 
     @Test
@@ -222,10 +219,10 @@ public abstract class AbstractTrustyServiceIT {
         CounterfactualExplainabilityRequest request2 = trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.singletonList(searchDomain));
 
         List<CounterfactualExplainabilityRequest> result = trustyService.getCounterfactualRequests(executionId);
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.stream().anyMatch(c -> c.getCounterfactualId().equals(request1.getCounterfactualId())));
-        assertTrue(result.stream().anyMatch(c -> c.getCounterfactualId().equals(request2.getCounterfactualId())));
+        assertThat(result).isNotNull();
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.stream().anyMatch(c -> c.getCounterfactualId().equals(request1.getCounterfactualId()))).isTrue();
+        assertThat(result.stream().anyMatch(c -> c.getCounterfactualId().equals(request2.getCounterfactualId()))).isTrue();
     }
 
     @Test
@@ -243,12 +240,12 @@ public abstract class AbstractTrustyServiceIT {
         CounterfactualExplainabilityRequest request2 = trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.singletonList(searchDomain));
 
         CounterfactualExplainabilityRequest result1 = trustyService.getCounterfactualRequest(executionId, request1.getCounterfactualId());
-        assertNotNull(result1);
-        assertEquals(request1.getCounterfactualId(), result1.getCounterfactualId());
+        assertThat(result1).isNotNull();
+        assertThat(result1.getCounterfactualId()).isEqualTo(request1.getCounterfactualId());
 
         CounterfactualExplainabilityRequest result2 = trustyService.getCounterfactualRequest(executionId, request2.getCounterfactualId());
-        assertNotNull(result2);
-        assertEquals(request2.getCounterfactualId(), result2.getCounterfactualId());
+        assertThat(result2).isNotNull();
+        assertThat(result2.getCounterfactualId()).isEqualTo(request2.getCounterfactualId());
     }
 
     @Test
@@ -266,19 +263,19 @@ public abstract class AbstractTrustyServiceIT {
                 new CounterfactualDomainRange(new IntNode(1), new IntNode(2)));
 
         CounterfactualExplainabilityRequest request1 = trustyService.requestCounterfactuals(executionId1, Collections.emptyList(), Collections.singletonList(searchDomain));
-        assertNotNull(request1);
-        assertEquals(request1.getExecutionId(), executionId1);
-        assertNotNull(request1.getCounterfactualId());
+        assertThat(request1).isNotNull();
+        assertThat(executionId1).isEqualTo(request1.getExecutionId());
+        assertThat(request1.getCounterfactualId()).isNotNull();
 
         CounterfactualExplainabilityRequest request2 = trustyService.requestCounterfactuals(executionId2, Collections.emptyList(), Collections.singletonList(searchDomain));
-        assertNotNull(request2);
-        assertEquals(request2.getExecutionId(), executionId2);
-        assertNotNull(request2.getCounterfactualId());
+        assertThat(request2).isNotNull();
+        assertThat(executionId2).isEqualTo(request2.getExecutionId());
+        assertThat(request2.getCounterfactualId()).isNotNull();
 
         CounterfactualExplainabilityRequest result1 = trustyService.getCounterfactualRequest(executionId1, request1.getCounterfactualId());
-        assertNotNull(result1);
-        assertEquals(request1.getExecutionId(), result1.getExecutionId());
-        assertEquals(request1.getCounterfactualId(), result1.getCounterfactualId());
+        assertThat(result1).isNotNull();
+        assertThat(result1.getExecutionId()).isEqualTo(request1.getExecutionId());
+        assertThat(result1.getCounterfactualId()).isEqualTo(request1.getCounterfactualId());
     }
 
     @Test
@@ -297,28 +294,28 @@ public abstract class AbstractTrustyServiceIT {
 
         CounterfactualExplainabilityRequest request = trustyService.requestCounterfactuals(executionId, List.of(goal1, goal2), Collections.singletonList(searchDomain));
 
-        assertNotNull(request);
-        assertEquals(request.getExecutionId(), executionId);
-        assertNotNull(request.getCounterfactualId());
-        assertEquals(2, request.getGoals().size());
+        assertThat(request).isNotNull();
+        assertThat(executionId).isEqualTo(request.getExecutionId());
+        assertThat(request.getCounterfactualId()).isNotNull();
+        assertThat(request.getGoals().size()).isEqualTo(2);
         List<NamedTypedValue> requestGoals = new ArrayList<>(request.getGoals());
         assertCounterfactualGoal(goal1, requestGoals.get(0));
         assertCounterfactualGoal(goal2, requestGoals.get(1));
 
         CounterfactualExplainabilityRequest result = trustyService.getCounterfactualRequest(executionId, request.getCounterfactualId());
-        assertNotNull(result);
-        assertEquals(request.getExecutionId(), result.getExecutionId());
-        assertEquals(request.getCounterfactualId(), result.getCounterfactualId());
-        assertEquals(2, result.getGoals().size());
+        assertThat(result).isNotNull();
+        assertThat(result.getExecutionId()).isEqualTo(request.getExecutionId());
+        assertThat(result.getCounterfactualId()).isEqualTo(request.getCounterfactualId());
+        assertThat(result.getGoals().size()).isEqualTo(2);
         List<NamedTypedValue> resultGoals = new ArrayList<>(request.getGoals());
         assertCounterfactualGoal(goal1, resultGoals.get(0));
         assertCounterfactualGoal(goal2, resultGoals.get(1));
     }
 
     private void assertCounterfactualGoal(NamedTypedValue expectedGoal, NamedTypedValue actualGoal) {
-        assertEquals(expectedGoal.getName(), actualGoal.getName());
-        assertEquals(expectedGoal.getValue().getType(), actualGoal.getValue().getType());
-        assertEquals(expectedGoal.getValue().toUnit().getValue(), actualGoal.getValue().toUnit().getValue());
+        assertThat(actualGoal.getName()).isEqualTo(expectedGoal.getName());
+        assertThat(actualGoal.getValue().getType()).isEqualTo(expectedGoal.getValue().getType());
+        assertThat(actualGoal.getValue().toUnit().getValue()).isEqualTo(expectedGoal.getValue().toUnit().getValue());
     }
 
     @Test
@@ -334,38 +331,38 @@ public abstract class AbstractTrustyServiceIT {
 
         CounterfactualExplainabilityRequest request = trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.singletonList(searchDomain));
 
-        assertNotNull(request);
-        assertEquals(request.getExecutionId(), executionId);
-        assertNotNull(request.getCounterfactualId());
-        assertEquals(1, request.getSearchDomains().size());
+        assertThat(request).isNotNull();
+        assertThat(executionId).isEqualTo(request.getExecutionId());
+        assertThat(request.getCounterfactualId()).isNotNull();
+        assertThat(request.getSearchDomains().size()).isEqualTo(1);
         List<CounterfactualSearchDomain> requestSearchDomains = new ArrayList<>(request.getSearchDomains());
         assertCounterfactualSearchDomainRange(searchDomain, requestSearchDomains.get(0));
 
         CounterfactualExplainabilityRequest result = trustyService.getCounterfactualRequest(executionId, request.getCounterfactualId());
-        assertNotNull(result);
-        assertEquals(request.getExecutionId(), result.getExecutionId());
-        assertEquals(request.getCounterfactualId(), result.getCounterfactualId());
-        assertEquals(1, result.getSearchDomains().size());
+        assertThat(result).isNotNull();
+        assertThat(result.getExecutionId()).isEqualTo(request.getExecutionId());
+        assertThat(result.getCounterfactualId()).isEqualTo(request.getCounterfactualId());
+        assertThat(result.getSearchDomains().size()).isEqualTo(1);
         List<CounterfactualSearchDomain> resultSearchDomains = new ArrayList<>(result.getSearchDomains());
         assertCounterfactualSearchDomainRange(searchDomain, resultSearchDomains.get(0));
     }
 
     private void assertCounterfactualSearchDomainRange(CounterfactualSearchDomain expectedSearchDomain, CounterfactualSearchDomain actualSearchDomain) {
-        assertEquals(expectedSearchDomain.getName(), actualSearchDomain.getName());
-        assertEquals(expectedSearchDomain.getValue().getType(), actualSearchDomain.getValue().getType());
-        assertEquals(expectedSearchDomain.getValue().toUnit().isFixed(), actualSearchDomain.getValue().toUnit().isFixed());
+        assertThat(actualSearchDomain.getName()).isEqualTo(expectedSearchDomain.getName());
+        assertThat(actualSearchDomain.getValue().getType()).isEqualTo(expectedSearchDomain.getValue().getType());
+        assertThat(actualSearchDomain.getValue().toUnit().isFixed()).isEqualTo(expectedSearchDomain.getValue().toUnit().isFixed());
         assertCounterfactualDomainRange(expectedSearchDomain.getValue().toUnit().getDomain(), actualSearchDomain.getValue().toUnit().getDomain());
     }
 
     private void assertCounterfactualDomainRange(CounterfactualDomain expectedDomain, CounterfactualDomain actualDomain) {
-        assertTrue(expectedDomain instanceof CounterfactualDomainRange);
-        assertTrue(actualDomain instanceof CounterfactualDomainRange);
+        assertThat((expectedDomain instanceof CounterfactualDomainRange)).isTrue();
+        assertThat((actualDomain instanceof CounterfactualDomainRange)).isTrue();
 
         CounterfactualDomainRange expectedDomainRange = (CounterfactualDomainRange) expectedDomain;
         CounterfactualDomainRange actualDomainRange = (CounterfactualDomainRange) actualDomain;
 
-        assertEquals(expectedDomainRange.getLowerBound(), actualDomainRange.getLowerBound());
-        assertEquals(expectedDomainRange.getUpperBound(), actualDomainRange.getUpperBound());
+        assertThat(actualDomainRange.getLowerBound()).isEqualTo(expectedDomainRange.getLowerBound());
+        assertThat(actualDomainRange.getUpperBound()).isEqualTo(expectedDomainRange.getUpperBound());
     }
 
     @Test
@@ -382,38 +379,38 @@ public abstract class AbstractTrustyServiceIT {
 
         CounterfactualExplainabilityRequest request = trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.singletonList(searchDomain));
 
-        assertNotNull(request);
-        assertEquals(request.getExecutionId(), executionId);
-        assertNotNull(request.getCounterfactualId());
-        assertEquals(1, request.getSearchDomains().size());
+        assertThat(request).isNotNull();
+        assertThat(executionId).isEqualTo(request.getExecutionId());
+        assertThat(request.getCounterfactualId()).isNotNull();
+        assertThat(request.getSearchDomains().size()).isEqualTo(1);
         List<CounterfactualSearchDomain> requestSearchDomains = new ArrayList<>(request.getSearchDomains());
         assertCounterfactualSearchDomainCategorical(searchDomain, requestSearchDomains.get(0));
 
         CounterfactualExplainabilityRequest result = trustyService.getCounterfactualRequest(executionId, request.getCounterfactualId());
-        assertNotNull(result);
-        assertEquals(request.getExecutionId(), result.getExecutionId());
-        assertEquals(request.getCounterfactualId(), result.getCounterfactualId());
-        assertEquals(1, result.getSearchDomains().size());
+        assertThat(result).isNotNull();
+        assertThat(result.getExecutionId()).isEqualTo(request.getExecutionId());
+        assertThat(result.getCounterfactualId()).isEqualTo(request.getCounterfactualId());
+        assertThat(result.getSearchDomains().size()).isEqualTo(1);
         List<CounterfactualSearchDomain> resultSearchDomains = new ArrayList<>(result.getSearchDomains());
         assertCounterfactualSearchDomainCategorical(searchDomain, resultSearchDomains.get(0));
     }
 
     private void assertCounterfactualSearchDomainCategorical(CounterfactualSearchDomain expectedSearchDomain, CounterfactualSearchDomain actualSearchDomain) {
-        assertEquals(expectedSearchDomain.getName(), actualSearchDomain.getName());
-        assertEquals(expectedSearchDomain.getValue().getType(), actualSearchDomain.getValue().getType());
-        assertEquals(expectedSearchDomain.getValue().toUnit().isFixed(), actualSearchDomain.getValue().toUnit().isFixed());
+        assertThat(actualSearchDomain.getName()).isEqualTo(expectedSearchDomain.getName());
+        assertThat(actualSearchDomain.getValue().getType()).isEqualTo(expectedSearchDomain.getValue().getType());
+        assertThat(actualSearchDomain.getValue().toUnit().isFixed()).isEqualTo(expectedSearchDomain.getValue().toUnit().isFixed());
         assertCounterfactualDomainCategorical(expectedSearchDomain.getValue().toUnit().getDomain(), actualSearchDomain.getValue().toUnit().getDomain());
     }
 
     private void assertCounterfactualDomainCategorical(CounterfactualDomain expectedDomain, CounterfactualDomain actualDomain) {
-        assertTrue(expectedDomain instanceof CounterfactualDomainCategorical);
-        assertTrue(actualDomain instanceof CounterfactualDomainCategorical);
+        assertThat((expectedDomain instanceof CounterfactualDomainCategorical)).isTrue();
+        assertThat((actualDomain instanceof CounterfactualDomainCategorical)).isTrue();
 
         CounterfactualDomainCategorical expectedDomainCategorical = (CounterfactualDomainCategorical) expectedDomain;
         CounterfactualDomainCategorical actualDomainCategorical = (CounterfactualDomainCategorical) actualDomain;
 
-        assertEquals(expectedDomainCategorical.getCategories().size(), actualDomainCategorical.getCategories().size());
-        assertTrue(expectedDomainCategorical.getCategories().containsAll(actualDomainCategorical.getCategories()));
+        assertThat(actualDomainCategorical.getCategories().size()).isEqualTo(expectedDomainCategorical.getCategories().size());
+        assertThat(expectedDomainCategorical.getCategories().containsAll(actualDomainCategorical.getCategories())).isTrue();
     }
 
     @Test
@@ -424,8 +421,7 @@ public abstract class AbstractTrustyServiceIT {
         // The Goals structures must be comparable to the original decisions outcomes.
         // The Search Domain structures must be identical those of the original decision inputs.
         // For this test we're providing an incorrect structure for searchDomains but the correct structure for goals.
-        assertThrows(IllegalArgumentException.class,
-                () -> trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.emptyList()));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.emptyList()));
     }
 
     @Test
@@ -442,16 +438,16 @@ public abstract class AbstractTrustyServiceIT {
 
         CounterfactualExplainabilityRequest request = trustyService.requestCounterfactuals(executionId, Collections.emptyList(), Collections.singletonList(searchDomain));
 
-        assertNotNull(request);
-        assertEquals(request.getExecutionId(), executionId);
-        assertNotNull(request.getCounterfactualId());
-        assertTrue(request.getGoals().isEmpty());
+        assertThat(request).isNotNull();
+        assertThat(executionId).isEqualTo(request.getExecutionId());
+        assertThat(request.getCounterfactualId()).isNotNull();
+        assertThat(request.getGoals().isEmpty()).isTrue();
 
         CounterfactualExplainabilityRequest result = trustyService.getCounterfactualRequest(executionId, request.getCounterfactualId());
-        assertNotNull(result);
-        assertEquals(request.getExecutionId(), result.getExecutionId());
-        assertEquals(request.getCounterfactualId(), result.getCounterfactualId());
-        assertTrue(result.getGoals().isEmpty());
+        assertThat(result).isNotNull();
+        assertThat(result.getExecutionId()).isEqualTo(request.getExecutionId());
+        assertThat(result.getCounterfactualId()).isEqualTo(request.getCounterfactualId());
+        assertThat(result.getGoals().isEmpty()).isTrue();
     }
 
     @Test
@@ -466,7 +462,7 @@ public abstract class AbstractTrustyServiceIT {
                                 List.of(new FeatureImportanceModel("feature", 1.0))))));
 
         LIMEExplainabilityResult result = trustyService.getExplainabilityResultById(executionId, LIMEExplainabilityResult.class);
-        assertNotNull(result);
+        assertThat(result).isNotNull();
     }
 
     @Test
@@ -495,7 +491,7 @@ public abstract class AbstractTrustyServiceIT {
                         List.of(output1, output2)));
 
         CounterfactualExplainabilityResult result = trustyService.getExplainabilityResultById(executionId, CounterfactualExplainabilityResult.class);
-        assertNotNull(result);
+        assertThat(result).isNotNull();
     }
 
     @Test
@@ -526,10 +522,10 @@ public abstract class AbstractTrustyServiceIT {
                         List.of(output1, output2)));
 
         List<CounterfactualExplainabilityResult> result1 = trustyService.getCounterfactualResults(executionId, counterfactualId);
-        assertNotNull(result1);
-        assertEquals(1, result1.size());
-        assertEquals("solutionId1", result1.get(0).getSolutionId());
-        assertEquals(CounterfactualExplainabilityResult.Stage.FINAL, result1.get(0).getStage());
+        assertThat(result1).isNotNull();
+        assertThat(result1.size()).isEqualTo(1);
+        assertThat(result1.get(0).getSolutionId()).isEqualTo("solutionId1");
+        assertThat(result1.get(0).getStage()).isEqualTo(CounterfactualExplainabilityResult.Stage.FINAL);
 
         trustyService.storeExplainabilityResult(executionId,
                 new CounterfactualExplainabilityResult(executionId,
@@ -544,10 +540,10 @@ public abstract class AbstractTrustyServiceIT {
                         List.of(output1, output2)));
 
         List<CounterfactualExplainabilityResult> result2 = trustyService.getCounterfactualResults(executionId, counterfactualId);
-        assertNotNull(result2);
-        assertEquals(1, result1.size());
-        assertEquals("solutionId1", result1.get(0).getSolutionId());
-        assertEquals(CounterfactualExplainabilityResult.Stage.FINAL, result1.get(0).getStage());
+        assertThat(result2).isNotNull();
+        assertThat(result1.size()).isEqualTo(1);
+        assertThat(result1.get(0).getSolutionId()).isEqualTo("solutionId1");
+        assertThat(result1.get(0).getStage()).isEqualTo(CounterfactualExplainabilityResult.Stage.FINAL);
     }
 
     @Test
@@ -578,10 +574,10 @@ public abstract class AbstractTrustyServiceIT {
                         List.of(output1, output2)));
 
         List<CounterfactualExplainabilityResult> result1 = trustyService.getCounterfactualResults(executionId, counterfactualId);
-        assertNotNull(result1);
-        assertEquals(1, result1.size());
-        assertEquals("solutionId1", result1.get(0).getSolutionId());
-        assertEquals(CounterfactualExplainabilityResult.Stage.INTERMEDIATE, result1.get(0).getStage());
+        assertThat(result1).isNotNull();
+        assertThat(result1.size()).isEqualTo(1);
+        assertThat(result1.get(0).getSolutionId()).isEqualTo("solutionId1");
+        assertThat(result1.get(0).getStage()).isEqualTo(CounterfactualExplainabilityResult.Stage.INTERMEDIATE);
 
         trustyService.storeExplainabilityResult(executionId,
                 new CounterfactualExplainabilityResult(executionId,
@@ -596,10 +592,10 @@ public abstract class AbstractTrustyServiceIT {
                         List.of(output1, output2)));
 
         List<CounterfactualExplainabilityResult> result2 = trustyService.getCounterfactualResults(executionId, counterfactualId);
-        assertNotNull(result2);
-        assertEquals(1, result2.size());
-        assertEquals("solutionId2", result2.get(0).getSolutionId());
-        assertEquals(CounterfactualExplainabilityResult.Stage.FINAL, result2.get(0).getStage());
+        assertThat(result2).isNotNull();
+        assertThat(result2.size()).isEqualTo(1);
+        assertThat(result2.get(0).getSolutionId()).isEqualTo("solutionId2");
+        assertThat(result2.get(0).getStage()).isEqualTo(CounterfactualExplainabilityResult.Stage.FINAL);
     }
 
     private void storeExecution(String executionId, Long timestamp) {

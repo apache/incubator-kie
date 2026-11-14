@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.drools.core.time.impl.JDKTimerService;
 import org.drools.core.time.impl.PseudoClockScheduler;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.model.KieSessionModel;
@@ -32,9 +31,7 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.conf.ClockTypeOption;
 
 import static java.util.Arrays.asList;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MultipleKbasesExampleTest {
 
@@ -42,48 +39,48 @@ public class MultipleKbasesExampleTest {
     public void testSimpleKieBase() {
         List<Integer> list = useKieSession("ksession1");
         // no packages imported means import everything
-        assertEquals(4, list.size());
-        assertTrue( list.containsAll( asList(0, 1, 2, 3) ) );
+        assertThat(list.size()).isEqualTo(4);
+        assertThat(list.containsAll(asList(0, 1, 2, 3))).isTrue();
     }
 
     @Test
     public void testKieBaseWithPackage() {
         List<Integer> list = useKieSession("ksession2");
         // import package org.some.pkg
-        assertEquals(1, list.size());
-        assertTrue(list.containsAll(List.of(1)));
+        assertThat(list.size()).isEqualTo(1);
+        assertThat(list.containsAll(List.of(1))).isTrue();
     }
 
     @Test
     public void testKieBaseWithInclusion() {
         List<Integer> list = useKieSession("ksession3");
         // include ksession2 + import package org.some.pkg2
-        assertEquals(2, list.size());
-        assertTrue(list.containsAll(asList(1, 2)));
+        assertThat(list.size()).isEqualTo(2);
+        assertThat(list.containsAll(asList(1, 2))).isTrue();
     }
 
     @Test
     public void testKieBaseWith2Packages() {
         List<Integer> list = useKieSession("ksession4");
         // import package org.some.pkg, org.other.pkg
-        assertEquals(2, list.size());
-        assertTrue( list.containsAll( asList(1, 3) ) );
+        assertThat(list.size()).isEqualTo(2);
+        assertThat(list.containsAll(asList(1, 3))).isTrue();
     }
 
     @Test
     public void testKieBaseWithPackageAndTransitiveInclusion() {
         List<Integer> list = useKieSession("ksession5");
         // import package org.*
-        assertEquals(3, list.size());
-        assertTrue(list.containsAll(asList(1, 2, 3)));
+        assertThat(list.size()).isEqualTo(3);
+        assertThat(list.containsAll(asList(1, 2, 3))).isTrue();
     }
 
     @Test
     public void testKieBaseWithAllPackages() {
         List<Integer> list = useKieSession("ksession6");
         // import package org.some.*
-        assertEquals(2, list.size());
-        assertTrue(list.containsAll(asList(1, 2)));
+        assertThat(list.size()).isEqualTo(2);
+        assertThat(list.containsAll(asList(1, 2))).isTrue();
     }
 
     private List<Integer> useKieSession(String name) {
@@ -110,15 +107,15 @@ public class MultipleKbasesExampleTest {
         ClockTypeOption clockType = kieSessionModel.getClockType();
 
         // clockType realtime
-        Assertions.assertNotEquals(clockType, pseudoClock);
+        assertThat(pseudoClock).isNotEqualTo(clockType);
 
         // change model to pseudo
         kieSessionModel.setClockType(pseudoClock);
-        Assertions.assertEquals(kieSessionModel.getClockType(), pseudoClock);
+        assertThat(pseudoClock).isEqualTo(kieSessionModel.getClockType());
 
         // new pseudo session
         KieSession kSession = kContainer.newKieSession(name);
-        Assertions.assertEquals(kSession.getSessionClock().getClass(), PseudoClockScheduler.class);
+        assertThat(kSession.getSessionClock().getClass()).isEqualTo(PseudoClockScheduler.class);
     }
 
     @Test
@@ -132,18 +129,18 @@ public class MultipleKbasesExampleTest {
         ClockTypeOption clockType = kieSessionModel.getClockType();
 
         // clockType realtime
-        Assertions.assertEquals(clockType, ClockTypeOption.REALTIME);
-        Assertions.assertNotEquals(clockType, pseudoClock);
+        assertThat(clockType).isEqualTo(ClockTypeOption.REALTIME);
+        assertThat(pseudoClock).isNotEqualTo(clockType);
 
         // session is realtime
         KieSession kSession = kContainer.newKieSession(name);
-        Assertions.assertEquals(kSession.getSessionClock().getClass(), JDKTimerService.class);
+        assertThat(kSession.getSessionClock().getClass()).isEqualTo(JDKTimerService.class);
 
         // change model to pseudo
         kieSessionModel.setClockType(pseudoClock);
 
         // new session still realtime
         KieSession kSessionPseudo = kContainer.newKieSession(name);
-        Assertions.assertEquals(kSessionPseudo.getSessionClock().getClass(), PseudoClockScheduler.class);
+        assertThat(kSessionPseudo.getSessionClock().getClass()).isEqualTo(PseudoClockScheduler.class);
     }
 }

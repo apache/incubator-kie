@@ -31,8 +31,7 @@ import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class NewUnitIT {
 
@@ -87,7 +86,7 @@ public class NewUnitIT {
                 .statusCode(200)
                 .extract().as(List.class);
 
-        assertEquals(1, names.size());
-        assertTrue(names.contains("Mario"));
+        assertThat(names.size()).isEqualTo(1);
+        assertThat(names.contains("Mario")).isTrue();
     }
 }

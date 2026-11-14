@@ -20,8 +20,7 @@ package org.kie.kogito.persistence.postgresql.reporting.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresPartitionFieldTest {
 
@@ -30,21 +29,15 @@ class PostgresPartitionFieldTest {
 
     @Test
     void testEquality() {
-        assertEquals(PARTITION_FIELD,
-                PARTITION_FIELD);
-        assertNotEquals(PARTITION_FIELD,
-                new PostgresPartitionField("different", "value1"));
-        assertNotEquals(PARTITION_FIELD,
-                new PostgresPartitionField("field1", "different"));
+        assertThat(PARTITION_FIELD).isEqualTo(PARTITION_FIELD);
+        assertThat(new PostgresPartitionField("different", "value1")).isNotEqualTo(PARTITION_FIELD);
+        assertThat(new PostgresPartitionField("field1", "different")).isNotEqualTo(PARTITION_FIELD);
     }
 
     @Test
     void testHashCode() {
-        assertEquals(PARTITION_FIELD_HASHCODE,
-                PARTITION_FIELD.hashCode());
-        assertNotEquals(PARTITION_FIELD_HASHCODE,
-                new PostgresPartitionField("different", "value1").hashCode());
-        assertNotEquals(PARTITION_FIELD_HASHCODE,
-                new PostgresPartitionField("field1", "different").hashCode());
+        assertThat(PARTITION_FIELD.hashCode()).isEqualTo(PARTITION_FIELD_HASHCODE);
+        assertThat(new PostgresPartitionField("different", "value1").hashCode()).isNotEqualTo(PARTITION_FIELD_HASHCODE);
+        assertThat(new PostgresPartitionField("field1", "different").hashCode()).isNotEqualTo(PARTITION_FIELD_HASHCODE);
     }
 }

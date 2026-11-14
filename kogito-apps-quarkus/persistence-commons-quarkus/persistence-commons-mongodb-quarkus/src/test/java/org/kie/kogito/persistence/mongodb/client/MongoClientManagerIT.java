@@ -29,8 +29,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(MongoDBQuarkusTestResource.class)
@@ -42,14 +41,14 @@ class MongoClientManagerIT {
     @Test
     void testGetCollection() {
         MongoCollection<Document> mongoCollection = mongoClientManager.getCollection("test");
-        assertEquals("test", mongoCollection.getNamespace().getCollectionName());
+        assertThat(mongoCollection.getNamespace().getCollectionName()).isEqualTo("test");
     }
 
     @Test
     void testGetCollection_withDocumentClass() {
         MongoCollection<TestClass> mongoCollection = mongoClientManager.getCollection("test", TestClass.class);
-        assertEquals("test", mongoCollection.getNamespace().getCollectionName());
-        assertTrue(mongoCollection.getDocumentClass().isAssignableFrom(TestClass.class));
+        assertThat(mongoCollection.getNamespace().getCollectionName()).isEqualTo("test");
+        assertThat(mongoCollection.getDocumentClass().isAssignableFrom(TestClass.class)).isTrue();
     }
 
     private static class TestClass {

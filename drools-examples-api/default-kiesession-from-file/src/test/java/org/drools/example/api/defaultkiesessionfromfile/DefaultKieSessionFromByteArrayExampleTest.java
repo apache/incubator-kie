@@ -33,7 +33,7 @@ import org.kie.api.builder.KieRepository;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DefaultKieSessionFromByteArrayExampleTest {
 
@@ -50,7 +50,7 @@ public class DefaultKieSessionFromByteArrayExampleTest {
         String expected = "" +
                           "Dave: Hello, HAL. Do you read me, HAL?" + NL +
                           "HAL: Dave. I read you." + NL;
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
     
     public void go(PrintStream out) {

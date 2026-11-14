@@ -44,8 +44,7 @@ import io.cloudevents.jackson.JsonFormat;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.vertx.core.eventbus.EventBus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -75,7 +74,7 @@ public abstract class BaseQuarkusDecisionTracingTest {
         final DMNRuntime runtime = buildDMNRuntime();
         final DecisionModel model = buildDecisionModel(runtime);
         final List<EvaluateEvent> events = testListener(true, runtime, model);
-        assertEquals(getEvaluationEventCount(), events.size());
+        assertThat(events).hasSize(getEvaluationEventCount());
         testCollector(events, model);
     }
 
@@ -84,7 +83,7 @@ public abstract class BaseQuarkusDecisionTracingTest {
         final DMNRuntime runtime = buildDMNRuntime();
         final DecisionModel model = buildDecisionModel(runtime);
         final List<EvaluateEvent> events = testListener(false, runtime, model);
-        assertEquals(getEvaluationEventCount(), events.size());
+        assertThat(events).hasSize(getEvaluationEventCount());
         testCollector(events, model);
     }
 
@@ -138,18 +137,18 @@ public abstract class BaseQuarkusDecisionTracingTest {
         subscriber.assertNotTerminated();
 
         List<String> items = subscriber.getItems();
-        assertEquals(1, items.size());
+        assertThat(items).hasSize(1);
 
         CloudEvent cloudEvent = CloudEventUtils
                 .decode(items.get(0))
                 .orElseThrow(() -> new IllegalStateException("Can't decode CloudEvent"));
 
-        assertEquals(TEST_EXECUTION_ID, cloudEvent.getId());
-        assertNotNull(cloudEvent.getData());
+        assertThat(cloudEvent.getId()).isEqualTo(TEST_EXECUTION_ID);
+        assertThat(cloudEvent.getData()).isNotNull();
 
         TraceEvent traceEvent = MAPPER.readValue(cloudEvent.getData().toBytes(), TraceEvent.class);
 
-        assertNotNull(traceEvent);
-        assertEquals(TEST_SERVICE_URL, traceEvent.getHeader().getResourceId().getServiceUrl());
+        assertThat(traceEvent).isNotNull();
+        assertThat(traceEvent.getHeader().getResourceId().getServiceUrl()).isEqualTo(TEST_SERVICE_URL);
     }
 }

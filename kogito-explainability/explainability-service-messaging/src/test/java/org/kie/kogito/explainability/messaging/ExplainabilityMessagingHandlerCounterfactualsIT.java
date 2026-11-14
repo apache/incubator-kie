@@ -31,7 +31,7 @@ import org.kie.kogito.testcontainers.quarkus.KafkaQuarkusTestResource;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(KafkaQuarkusTestResource.class)
@@ -67,7 +67,7 @@ class ExplainabilityMessagingHandlerCounterfactualsIT extends BaseExplainability
 
     @Override
     protected void assertResult(BaseExplainabilityResult result) {
-        assertTrue(result instanceof CounterfactualExplainabilityResult);
+        assertThat((result instanceof CounterfactualExplainabilityResult)).isTrue();
     }
 
     @Override

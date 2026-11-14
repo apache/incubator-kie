@@ -22,7 +22,7 @@ import org.apache.maven.plugin.testing.junit5.InjectMojo;
 import org.apache.maven.plugin.testing.junit5.MojoTest;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @MojoTest
 public class ProcessCodegenMojoTest {
@@ -30,12 +30,12 @@ public class ProcessCodegenMojoTest {
     @Test
     @InjectMojo(goal = "jbpm-process-generation", pom = "src/test/resources/unit/project/pom.xml")
     void simpleMojo(ProcessCodegenMojo mojo) {
-        assertDoesNotThrow(mojo::execute);
+        assertThatCode(mojo::execute).doesNotThrowAnyException();
     }
 
     @Test
     @InjectMojo(goal = "jbpm-process-test-generation", pom = "src/test/resources/unit/project/pom.xml")
     void simpleMojo(ProcessCodegenTestMojo mojo) {
-        assertDoesNotThrow(mojo::execute);
+        assertThatCode(mojo::execute).doesNotThrowAnyException();
     }
 }

@@ -43,8 +43,7 @@ import jakarta.inject.Inject;
 
 import static io.restassured.RestAssured.given;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.jobs.service.health.HealthCheckUtils.awaitReadyHealthCheck;
 import static org.kie.kogito.jobs.service.resource.BaseJobResourceTest.NODE_INSTANCE_ID;
 import static org.kie.kogito.jobs.service.resource.BaseJobResourceTest.PRIORITY;
@@ -90,7 +89,7 @@ public abstract class BaseKeycloakJobServiceTest {
         // Resetting the date to set the right UTC ZoneId. This is required due to recent changes on jackson-datatype-jsr310
         response.setExpirationTime(DateUtil.instantToZonedDateTime(response.getExpirationTime().toInstant()));
 
-        assertEquals(job, response);
+        assertThat(response).isEqualTo(job);
     }
 
     private ValidatableResponse createJob(String body, String token, int statusCode) throws IOException {
@@ -160,7 +159,7 @@ public abstract class BaseKeycloakJobServiceTest {
         // Resetting the date to set the right UTC ZoneId. This is required due to recent changes on jackson-datatype-jsr310
         response.setExpirationTime(DateUtil.instantToZonedDateTime(response.getExpirationTime().toInstant()));
 
-        assertEquals(job, response);
+        assertThat(response).isEqualTo(job);
     }
 
     @Test
@@ -189,7 +188,7 @@ public abstract class BaseKeycloakJobServiceTest {
                 .assertThat()
                 .extract()
                 .as(ScheduledJob.class);
-        assertEquals(scheduledJob.getId(), job.getId());
+        assertThat(job.getId()).isEqualTo(scheduledJob.getId());
     }
 
     @Test
@@ -218,10 +217,10 @@ public abstract class BaseKeycloakJobServiceTest {
                 .assertThat()
                 .extract()
                 .as(ScheduledJob.class);
-        assertEquals(scheduledJob.getId(), job.getId());
-        assertEquals(0, scheduledJob.getRetries());
-        assertEquals(JobStatus.SCHEDULED, scheduledJob.getStatus());
-        assertNotNull(scheduledJob.getScheduledId());
+        assertThat(job.getId()).isEqualTo(scheduledJob.getId());
+        assertThat(scheduledJob.getRetries()).isEqualTo(0);
+        assertThat(scheduledJob.getStatus()).isEqualTo(JobStatus.SCHEDULED);
+        assertThat(scheduledJob.getScheduledId()).isNotNull();
     }
 
     private String getAccessToken(String userName) {

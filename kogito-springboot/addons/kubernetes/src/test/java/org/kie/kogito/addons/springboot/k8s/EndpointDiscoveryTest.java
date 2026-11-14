@@ -27,7 +27,7 @@ import org.kie.kogito.addons.k8s.EndpointDiscovery;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unlike Quarkus, Spring doesn't have support for an integrated Kubernetes client mock environment.
@@ -43,7 +43,7 @@ public class EndpointDiscoveryTest {
     void verifyKubernetesIntegration() {
         final EndpointDiscovery mockedEndpointDiscovery = new EndpointDiscoveryConfig().endpointDiscovery(kubernetesClient);
         final Optional<Endpoint> endpoint = mockedEndpointDiscovery.findEndpoint("test", "test");
-        assertTrue(endpoint.isEmpty()); // we haven't created anything
+        assertThat(endpoint.isEmpty()).isTrue(); // we haven't created anything
     }
 
 }

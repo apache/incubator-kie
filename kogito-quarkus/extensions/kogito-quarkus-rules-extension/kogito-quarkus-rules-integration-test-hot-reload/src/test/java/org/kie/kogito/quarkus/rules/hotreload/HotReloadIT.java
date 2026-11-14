@@ -31,8 +31,7 @@ import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class HotReloadIT {
 
@@ -67,8 +66,8 @@ public class HotReloadIT {
                 .extract()
                 .as(List.class);
 
-        assertEquals(1, names.size());
-        assertEquals("Mario", names.get(0));
+        assertThat(names.size()).isEqualTo(1);
+        assertThat(names.get(0)).isEqualTo("Mario");
 
         test.modifyResourceFile(RESOURCE_FILE, s -> s.replaceAll("18", "16"));
 
@@ -82,8 +81,8 @@ public class HotReloadIT {
                 .statusCode(200)
                 .extract().as(List.class);
 
-        assertEquals(2, names.size());
-        assertTrue(names.contains("Mario"));
-        assertTrue(names.contains("Sofia"));
+        assertThat(names.size()).isEqualTo(2);
+        assertThat(names.contains("Mario")).isTrue();
+        assertThat(names.contains("Sofia")).isTrue();
     }
 }

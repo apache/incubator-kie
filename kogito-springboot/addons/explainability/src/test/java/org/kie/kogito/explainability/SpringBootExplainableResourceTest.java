@@ -33,10 +33,7 @@ import org.springframework.http.ResponseEntity;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.explainability.Constants.MODEL_NAME;
 import static org.kie.kogito.explainability.Constants.MODEL_NAMESPACE;
 
@@ -51,23 +48,23 @@ class SpringBootExplainableResourceTest {
 
         List<PredictOutput> outputs = (List<PredictOutput>) resource.predict(inputs).getBody();
 
-        assertNotNull(outputs);
-        assertEquals(1, outputs.size());
+        assertThat(outputs).isNotNull();
+        assertThat(outputs.size()).isEqualTo(1);
 
         PredictOutput output = outputs.get(0);
 
-        assertNotNull(output.getResult());
-        assertNotNull(output.getModelIdentifier());
+        assertThat(output.getResult()).isNotNull();
+        assertThat(output.getModelIdentifier()).isNotNull();
         Map<String, Object> result = output.getResult();
 
-        assertTrue(result.containsKey("Should the driver be suspended?"));
-        assertEquals("Yes", result.get("Should the driver be suspended?"));
-        assertTrue(result.containsKey("Fine"));
+        assertThat(result.containsKey("Should the driver be suspended?")).isTrue();
+        assertThat(result.get("Should the driver be suspended?")).isEqualTo("Yes");
+        assertThat(result.containsKey("Fine")).isTrue();
         Map<String, Object> expectedFine = new HashMap<>();
         expectedFine.put("Points", BigDecimal.valueOf(7));
         expectedFine.put("Amount", BigDecimal.valueOf(1000));
-        assertEquals(expectedFine.get("Points"), ((Map<String, Object>) result.get("Fine")).get("Points"));
-        assertEquals(expectedFine.get("Amount"), ((Map<String, Object>) result.get("Fine")).get("Amount"));
+        assertThat(((Map<String, Object>) result.get("Fine")).get("Points")).isEqualTo(expectedFine.get("Points"));
+        assertThat(((Map<String, Object>) result.get("Fine")).get("Amount")).isEqualTo(expectedFine.get("Amount"));
     }
 
     @Test
@@ -76,27 +73,27 @@ class SpringBootExplainableResourceTest {
 
         List<PredictOutput> outputs = (List<PredictOutput>) resource.predict(inputs).getBody();
 
-        assertNotNull(outputs);
-        assertEquals(2, outputs.size());
+        assertThat(outputs).isNotNull();
+        assertThat(outputs.size()).isEqualTo(2);
 
         PredictOutput output = outputs.get(1);
 
-        assertNotNull(output);
-        assertNotNull(output.getResult());
-        assertNotNull(output.getModelIdentifier());
+        assertThat(output).isNotNull();
+        assertThat(output.getResult()).isNotNull();
+        assertThat(output.getModelIdentifier()).isNotNull();
         Map<String, Object> result = output.getResult();
 
-        assertTrue(result.containsKey("Should the driver be suspended?"));
-        assertEquals("No", result.get("Should the driver be suspended?"));
-        assertNull(result.get("Fine"));
+        assertThat(result.containsKey("Should the driver be suspended?")).isTrue();
+        assertThat(result.get("Should the driver be suspended?")).isEqualTo("No");
+        assertThat(result.get("Fine")).isNull();
     }
 
     @Test
     void explainServiceTestNoInputs() {
         List<PredictOutput> outputs = (List<PredictOutput>) resource.predict(emptyList()).getBody();
 
-        assertNotNull(outputs);
-        assertEquals(0, outputs.size());
+        assertThat(outputs).isNotNull();
+        assertThat(outputs.size()).isEqualTo(0);
     }
 
     @Test
@@ -106,8 +103,8 @@ class SpringBootExplainableResourceTest {
         input.getModelIdentifier().setResourceId(unknownwResourceId);
         ResponseEntity responseEntity = resource.predict(singletonList(input));
 
-        assertEquals(HttpStatus.BAD_REQUEST.value(), responseEntity.getStatusCode().value());
-        assertEquals("An Exception occurred processing the predict request. Please see the logs for more details.", responseEntity.getBody());
+        assertThat(responseEntity.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(responseEntity.getBody()).isEqualTo("An Exception occurred processing the predict request. Please see the logs for more details.");
     }
 
     private PredictInput createInput(int speedLimit) {

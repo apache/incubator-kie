@@ -27,7 +27,6 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.explainability.api.BaseExplainabilityRequest;
@@ -72,11 +71,9 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import jakarta.enterprise.inject.Instance;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -135,7 +132,7 @@ public class TrustyServiceTest {
         when(storageMock.put(any(Object.class), any(Object.class))).thenReturn(decision);
         when(trustyStorageServiceMock.getDecisionsStorage()).thenReturn(storageMock);
 
-        Assertions.assertDoesNotThrow(() -> trustyService.storeDecision("test", decision));
+        assertThatCode(() -> trustyService.storeDecision("test", decision)).doesNotThrowAnyException();
     }
 
     @Test
@@ -161,8 +158,8 @@ public class TrustyServiceTest {
 
         MatchedExecutionHeaders result = trustyService.getExecutionHeaders(OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 100, 0, "");
 
-        assertEquals(1, result.getExecutions().size());
-        assertEquals(decision.getExecutionId(), result.getExecutions().get(0).getExecutionId());
+        assertThat(result.getExecutions().size()).isEqualTo(1);
+        assertThat(result.getExecutions().get(0).getExecutionId()).isEqualTo(decision.getExecutionId());
     }
 
     @Test
@@ -193,13 +190,13 @@ public class TrustyServiceTest {
 
         MatchedExecutionHeaders result = trustyService.getExecutionHeaders(OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 3, 5, "");
 
-        assertEquals(3, result.getExecutions().size());
-        assertEquals(decisions.size(), result.getAvailableResults());
+        assertThat(result.getExecutions().size()).isEqualTo(3);
+        assertThat(result.getAvailableResults()).isEqualTo(decisions.size());
 
         result = trustyService.getExecutionHeaders(OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 100, 5, "");
 
-        assertEquals(5, result.getExecutions().size());
-        assertEquals(decisions.size(), result.getAvailableResults());
+        assertThat(result.getExecutions().size()).isEqualTo(5);
+        assertThat(result.getAvailableResults()).isEqualTo(decisions.size());
     }
 
     @Test
@@ -217,8 +214,8 @@ public class TrustyServiceTest {
 
         MatchedExecutionHeaders result = trustyService.getExecutionHeaders(OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), 100, 0, "");
 
-        assertEquals(0, result.getExecutions().size());
-        assertEquals(0, result.getAvailableResults());
+        assertThat(result.getExecutions().size()).isEqualTo(0);
+        assertThat(result.getAvailableResults()).isEqualTo(0);
     }
 
     @Test
@@ -236,7 +233,7 @@ public class TrustyServiceTest {
 
         Decision result = trustyService.getDecisionById(TEST_EXECUTION_ID);
 
-        assertEquals(TEST_EXECUTION_ID, result.getExecutionId());
+        assertThat(result.getExecutionId()).isEqualTo(TEST_EXECUTION_ID);
     }
 
     @Test
@@ -287,7 +284,7 @@ public class TrustyServiceTest {
 
         when(trustyStorageServiceMock.getDecisionsStorage()).thenReturn(decisionStorageMock);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.processDecision(TEST_EXECUTION_ID, decision));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.processDecision(TEST_EXECUTION_ID, decision));
 
         verify(explainabilityRequestProducerMock, never()).sendEvent(any());
     }
@@ -301,7 +298,7 @@ public class TrustyServiceTest {
         when(storageMock.put(any(Object.class), any(Object.class))).thenReturn(model);
         when(trustyStorageServiceMock.getModelStorage(DMNModelWithMetadata.class)).thenReturn(storageMock);
 
-        Assertions.assertDoesNotThrow(() -> trustyService.storeModel(buildDmnModel(model)));
+        assertThatCode(() -> trustyService.storeModel(buildDmnModel(model))).doesNotThrowAnyException();
     }
 
     @Test
@@ -317,7 +314,7 @@ public class TrustyServiceTest {
         when(storageMock.put(any(Object.class), any(Object.class))).thenReturn(model);
         when(trustyStorageServiceMock.getModelStorage(DMNModelWithMetadata.class)).thenReturn(storageMock);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.storeModel(dmnModelWithMetadata));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.storeModel(dmnModelWithMetadata));
     }
 
     @Test
@@ -335,7 +332,7 @@ public class TrustyServiceTest {
 
         DMNModelWithMetadata result = trustyService.getModelById(modelIdentifier, DMNModelWithMetadata.class);
 
-        assertEquals(model, result.getModel());
+        assertThat(result.getModel()).isEqualTo(model);
     }
 
     @Test
@@ -347,7 +344,7 @@ public class TrustyServiceTest {
         when(storageMock.containsKey(modelIdentifier.getIdentifier())).thenReturn(false);
         when(trustyStorageServiceMock.getModelStorage(DMNModelWithMetadata.class)).thenReturn(storageMock);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.getModelById(modelIdentifier,
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.getModelById(modelIdentifier,
                 DMNModelWithMetadata.class));
     }
 
@@ -360,7 +357,7 @@ public class TrustyServiceTest {
         when(storageMock.put(eq(TEST_EXECUTION_ID), any(LIMEExplainabilityResult.class))).thenReturn(result);
         when(trustyStorageServiceMock.getLIMEResultStorage()).thenReturn(storageMock);
 
-        Assertions.assertDoesNotThrow(() -> trustyService.storeExplainabilityResult(TEST_EXECUTION_ID, result));
+        assertThatCode(() -> trustyService.storeExplainabilityResult(TEST_EXECUTION_ID, result)).doesNotThrowAnyException();
     }
 
     @Test
@@ -373,7 +370,7 @@ public class TrustyServiceTest {
         when(storageMock.put(eq(TEST_EXECUTION_ID), any(LIMEExplainabilityResult.class))).thenReturn(result);
         when(trustyStorageServiceMock.getLIMEResultStorage()).thenReturn(storageMock);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.storeExplainabilityResult(TEST_EXECUTION_ID, result));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.storeExplainabilityResult(TEST_EXECUTION_ID, result));
     }
 
     @Test
@@ -387,7 +384,7 @@ public class TrustyServiceTest {
 
         //The mocked stream needs to be recreated for subsequent invocations
         when(explanationHandlers.stream()).thenReturn(Stream.of(limeExplainerServiceHandler, counterfactualExplainerServiceHandler));
-        assertEquals(result, trustyService.getExplainabilityResultById(TEST_EXECUTION_ID, LIMEExplainabilityResult.class));
+        assertThat(trustyService.getExplainabilityResultById(TEST_EXECUTION_ID, LIMEExplainabilityResult.class)).isEqualTo(result);
     }
 
     @Test
@@ -398,7 +395,7 @@ public class TrustyServiceTest {
         when(storageMock.containsKey(eq(TEST_EXECUTION_ID))).thenReturn(false);
         when(trustyStorageServiceMock.getLIMEResultStorage()).thenReturn(storageMock);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.getExplainabilityResultById(TEST_EXECUTION_ID, LIMEExplainabilityResult.class));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.getExplainabilityResultById(TEST_EXECUTION_ID, LIMEExplainabilityResult.class));
     }
 
     @Test
@@ -409,7 +406,7 @@ public class TrustyServiceTest {
         when(decisionStorage.containsKey(eq(TEST_EXECUTION_ID))).thenReturn(false);
         when(trustyStorageServiceMock.getDecisionsStorage()).thenReturn(decisionStorage);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.requestCounterfactuals(TEST_EXECUTION_ID, Collections.emptyList(), Collections.emptyList()));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.requestCounterfactuals(TEST_EXECUTION_ID, Collections.emptyList(), Collections.emptyList()));
     }
 
     @Test
@@ -454,8 +451,8 @@ public class TrustyServiceTest {
 
         verify(counterfactualStorage).put(anyString(), counterfactualArgumentCaptor.capture());
         CounterfactualExplainabilityRequest counterfactual = counterfactualArgumentCaptor.getValue();
-        assertNotNull(counterfactual);
-        assertEquals(TEST_EXECUTION_ID, counterfactual.getExecutionId());
+        assertThat(counterfactual).isNotNull();
+        assertThat(counterfactual.getExecutionId()).isEqualTo(TEST_EXECUTION_ID);
     }
 
     @Test
@@ -505,10 +502,10 @@ public class TrustyServiceTest {
 
         verify(explainabilityRequestProducerMock).sendEvent(explainabilityEventArgumentCaptor.capture());
         BaseExplainabilityRequest event = explainabilityEventArgumentCaptor.getValue();
-        assertNotNull(event);
-        assertTrue(event instanceof CounterfactualExplainabilityRequest);
+        assertThat(event).isNotNull();
+        assertThat((event instanceof CounterfactualExplainabilityRequest)).isTrue();
         CounterfactualExplainabilityRequest request = (CounterfactualExplainabilityRequest) event;
-        assertEquals(TEST_EXECUTION_ID, request.getExecutionId());
+        assertThat(request.getExecutionId()).isEqualTo(TEST_EXECUTION_ID);
     }
 
     @Test
@@ -544,40 +541,39 @@ public class TrustyServiceTest {
         verify(explainabilityRequestProducerMock).sendEvent(explainabilityEventArgumentCaptor.capture());
         BaseExplainabilityRequest event = explainabilityEventArgumentCaptor.getValue();
         CounterfactualExplainabilityRequest request = (CounterfactualExplainabilityRequest) event;
-        assertEquals(TEST_EXECUTION_ID, request.getExecutionId());
-        assertEquals(TEST_SERVICE_URL, request.getServiceUrl());
+        assertThat(request.getExecutionId()).isEqualTo(TEST_EXECUTION_ID);
+        assertThat(request.getServiceUrl()).isEqualTo(TEST_SERVICE_URL);
 
         //Check original input value has been copied into CF request
-        assertEquals(1, request.getOriginalInputs().size());
-        assertTrue(request.getOriginalInputs().stream().anyMatch(i -> i.getName().equals("yearsOfService")));
+        assertThat(request.getOriginalInputs().size()).isEqualTo(1);
+        assertThat(request.getOriginalInputs().stream().anyMatch(i -> i.getName().equals("yearsOfService"))).isTrue();
         //It is safe to use the iterator unchecked as the collection only contains one item
-        assertEquals(decision.getInputs().iterator().next().getValue().toUnit().getValue().asInt(),
-                request.getOriginalInputs().iterator().next().getValue().toUnit().getValue().asInt());
+        assertThat(request.getOriginalInputs().iterator().next().getValue().toUnit().getValue().asInt()).isEqualTo(decision.getInputs().iterator().next().getValue().toUnit().getValue().asInt());
 
         //Check CF goals have been copied into CF request
-        assertEquals(1, request.getGoals().size());
-        assertTrue(request.getGoals().stream().anyMatch(g -> g.getName().equals("salary")));
+        assertThat(request.getGoals().size()).isEqualTo(1);
+        assertThat(request.getGoals().stream().anyMatch(g -> g.getName().equals("salary"))).isTrue();
         //It is safe to use the iterator unchecked as the collection only contains one item
-        assertEquals(2000, request.getGoals().iterator().next().getValue().toUnit().getValue().asInt());
+        assertThat(request.getGoals().iterator().next().getValue().toUnit().getValue().asInt()).isEqualTo(2000);
 
         //Check CF search domains have been copied into CF request
-        assertEquals(1, request.getSearchDomains().size());
-        assertTrue(request.getSearchDomains().stream().anyMatch(sd -> sd.getName().equals("yearsOfService")));
+        assertThat(request.getSearchDomains().size()).isEqualTo(1);
+        assertThat(request.getSearchDomains().stream().anyMatch(sd -> sd.getName().equals("yearsOfService"))).isTrue();
         //It is safe to use the iterator unchecked as the collection only contains one item
         CounterfactualSearchDomainValue searchDomain = request.getSearchDomains().iterator().next().getValue();
-        assertTrue(searchDomain instanceof CounterfactualSearchDomainUnitValue);
+        assertThat((searchDomain instanceof CounterfactualSearchDomainUnitValue)).isTrue();
 
         CounterfactualSearchDomainUnitValue unit = (CounterfactualSearchDomainUnitValue) searchDomain;
-        assertFalse(unit.isFixed());
-        assertNotNull(unit.getDomain());
-        assertTrue(unit.getDomain() instanceof CounterfactualDomainRange);
+        assertThat(unit.isFixed()).isFalse();
+        assertThat(unit.getDomain()).isNotNull();
+        assertThat((unit.getDomain() instanceof CounterfactualDomainRange)).isTrue();
 
         CounterfactualDomainRange range = (CounterfactualDomainRange) unit.getDomain();
-        assertEquals(10, range.getLowerBound().asInt());
-        assertEquals(30, range.getUpperBound().asInt());
+        assertThat(range.getLowerBound().asInt()).isEqualTo(10);
+        assertThat(range.getUpperBound().asInt()).isEqualTo(30);
 
         //Check Max Running Time Seconds
-        assertEquals(MAX_RUNNING_TIME_SECONDS, request.getMaxRunningTimeSeconds());
+        assertThat(request.getMaxRunningTimeSeconds()).isEqualTo(MAX_RUNNING_TIME_SECONDS);
     }
 
     @Test
@@ -592,7 +588,7 @@ public class TrustyServiceTest {
         when(counterfactualStorage.query()).thenReturn(queryMock);
         when(trustyStorageServiceMock.getCounterfactualRequestStorage()).thenReturn(counterfactualStorage);
 
-        assertTrue(trustyService.getCounterfactualRequests(TEST_EXECUTION_ID).containsAll(List.of(request1, request2)));
+        assertThat(trustyService.getCounterfactualRequests(TEST_EXECUTION_ID).containsAll(List.of(request1, request2))).isTrue();
     }
 
     @Test
@@ -605,7 +601,7 @@ public class TrustyServiceTest {
         when(counterfactualStorage.query()).thenReturn(queryMock);
         when(trustyStorageServiceMock.getCounterfactualRequestStorage()).thenReturn(counterfactualStorage);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.getCounterfactualRequest(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.getCounterfactualRequest(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID));
     }
 
     @Test
@@ -620,7 +616,7 @@ public class TrustyServiceTest {
         when(counterfactualStorage.query()).thenReturn(queryMock);
         when(trustyStorageServiceMock.getCounterfactualRequestStorage()).thenReturn(counterfactualStorage);
 
-        assertThrows(IllegalArgumentException.class, () -> trustyService.getCounterfactualRequest(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> trustyService.getCounterfactualRequest(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID));
     }
 
     @Test
@@ -634,7 +630,7 @@ public class TrustyServiceTest {
         when(counterfactualStorage.query()).thenReturn(queryMock);
         when(trustyStorageServiceMock.getCounterfactualRequestStorage()).thenReturn(counterfactualStorage);
 
-        assertEquals(request, trustyService.getCounterfactualRequest(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID));
+        assertThat(trustyService.getCounterfactualRequest(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID)).isEqualTo(request);
     }
 
     @Test
@@ -649,7 +645,7 @@ public class TrustyServiceTest {
         when(counterfactualStorage.query()).thenReturn(queryMock);
         when(trustyStorageServiceMock.getCounterfactualResultStorage()).thenReturn(counterfactualStorage);
 
-        assertTrue(trustyService.getCounterfactualResults(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID).containsAll(List.of(result1, result2)));
+        assertThat(trustyService.getCounterfactualResults(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID).containsAll(List.of(result1, result2))).isTrue();
     }
 
     @Test
@@ -662,7 +658,7 @@ public class TrustyServiceTest {
         when(counterfactualStorage.query()).thenReturn(queryMock);
         when(trustyStorageServiceMock.getCounterfactualResultStorage()).thenReturn(counterfactualStorage);
 
-        assertTrue(trustyService.getCounterfactualResults(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID).isEmpty());
+        assertThat(trustyService.getCounterfactualResults(TEST_EXECUTION_ID, TEST_COUNTERFACTUAL_ID).isEmpty()).isTrue();
     }
 
     private DMNModelWithMetadata buildDmnModel(String model) {

@@ -20,7 +20,7 @@ package org.drools.example.api.kiebaseinclusion;
 
 import java.io.ByteArrayOutputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.PrintStream;
 
 import org.junit.jupiter.api.Test;
@@ -42,6 +42,6 @@ public class KieBaseInclusionExampleTest {
                           "HAL: Dave. I read you." + NL +
                           "Dave: Open the pod bay doors, HAL." + NL +
                           "HAL: I'm sorry, Dave. I'm afraid I can't do that." + NL;
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 }

@@ -33,7 +33,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 class ExplainabilityApiV1IT {
@@ -59,7 +59,7 @@ class ExplainabilityApiV1IT {
                 .post("/v1/explain")
                 .as(BaseExplainabilityResult.class);
 
-        assertEquals(executionId, result.getExecutionId());
+        assertThat(result.getExecutionId()).isEqualTo(executionId);
     }
 
     @Test

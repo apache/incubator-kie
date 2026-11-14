@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class PostgresTriggerDeleteSqlBuilderTest extends BaseSqlBuilderImplTest {
@@ -46,7 +46,7 @@ class PostgresTriggerDeleteSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertCreateSql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "CREATE TRIGGER trgDelete_mappingId_DELETES AFTER DELETE ON sourceTableName",
                 "FOR EACH ROW",
@@ -58,7 +58,7 @@ class PostgresTriggerDeleteSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertDestroySql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "DROP TRIGGER IF EXISTS trgDelete_mappingId_DELETES ON sourceTableName",
                 "DROP TRIGGER IF EXISTS trgDelete_mappingId_UPDATES ON sourceTableName");
@@ -70,7 +70,7 @@ class PostgresTriggerDeleteSqlBuilderTest extends BaseSqlBuilderImplTest {
 
         final String sql = getTriggerDeleteBuilder().createDeleteTriggerFunctionSql(context);
 
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "CREATE FUNCTION spDelete_mappingId_DELETES() RETURNS trigger AS",
                 "DELETE FROM targetTableName",
@@ -90,7 +90,7 @@ class PostgresTriggerDeleteSqlBuilderTest extends BaseSqlBuilderImplTest {
 
         final String sql = getTriggerDeleteBuilder().dropDeleteTriggerFunctionSql(context);
 
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "DROP FUNCTION IF EXISTS spDelete_mappingId_DELETES",
                 "DROP FUNCTION IF EXISTS spDelete_mappingId_UPDATES");

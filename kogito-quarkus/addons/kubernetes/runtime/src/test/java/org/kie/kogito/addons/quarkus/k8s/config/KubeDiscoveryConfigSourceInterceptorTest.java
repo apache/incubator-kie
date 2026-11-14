@@ -26,7 +26,7 @@ import org.kie.kogito.addons.k8s.resource.catalog.KubernetesServiceCatalog;
 import org.kie.kogito.addons.k8s.resource.catalog.KubernetesServiceCatalogProvider;
 
 import static java.util.stream.Collectors.joining;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.addons.quarkus.k8s.config.KubeDiscoveryConfigSourceInterceptor.MULTIPLE_PROVIDERS_FOUND_MSG;
 

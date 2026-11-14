@@ -42,13 +42,13 @@ import io.restassured.http.ContentType;
 import static io.restassured.RestAssured.given;
 import static java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.emptyOrNullString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class PersistenceTest {
 
@@ -141,7 +141,7 @@ public abstract class PersistenceTest {
                 .extract()
                 .path("id");
 
-        assertEquals(createdPid, pid);
+        assertThat(pid).isEqualTo(createdPid);
 
         given().contentType(ContentType.JSON)
                 .when()

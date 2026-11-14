@@ -19,7 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -60,6 +60,6 @@ class OptaPlannerProcessorPlanningIdTest {
                 .collect(Collectors.toList()));
 
         TestdataSolution solution = solverFactory.buildSolver().solve(problem);
-        assertNotNull(solution);
+        assertThat(solution).isNotNull();
     }
 }

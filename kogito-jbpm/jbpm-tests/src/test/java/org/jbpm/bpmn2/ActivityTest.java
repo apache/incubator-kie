@@ -185,7 +185,6 @@ import org.jbpm.workflow.instance.node.DynamicUtils;
 import org.jbpm.workflow.instance.node.EndNodeInstance;
 import org.jbpm.workflow.instance.node.StartNodeInstance;
 import org.jbpm.workflow.instance.node.WorkItemNodeInstance;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -767,11 +766,11 @@ public class ActivityTest extends JbpmBpmn2TestCase {
         Optional<ProcessInstance<UserTaskModel>> processInstance1 = process.instances().stream()
                 .filter(instance -> instance.id().equals(pId)).findFirst();
         assertThat(processInstance1).isNotNull();
-        Assertions.assertTrue(processInstance1.isPresent());
+        assertThat(processInstance1.isPresent()).isTrue();
         Optional<KogitoNodeInstance> nodeInstance = processInstance1.get().findNodes(node -> node.getStringId().equals(workItem.getNodeInstance().getStringId()))
                 .stream().findFirst();
         assertThat(nodeInstance).isNotNull();
-        Assertions.assertTrue(nodeInstance.isPresent());
+        assertThat(nodeInstance.isPresent()).isTrue();
         assertThat(nodeInstance.get()).isInstanceOf(WorkItemNodeInstance.class);
         String deploymentId = ((InternalKogitoWorkItem) workItem).getDeploymentId();
         String nodeInstanceId = ((InternalKogitoWorkItem) workItem).getNodeInstanceStringId();

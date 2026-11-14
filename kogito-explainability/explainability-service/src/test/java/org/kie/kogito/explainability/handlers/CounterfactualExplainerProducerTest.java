@@ -24,8 +24,7 @@ import org.kie.kogito.explainability.local.counterfactual.CounterfactualExplaine
 
 import io.smallrye.context.SmallRyeManagedExecutor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CounterfactualExplainerProducerTest {
 
@@ -35,9 +34,9 @@ class CounterfactualExplainerProducerTest {
         CounterfactualExplainerProducer producer = new CounterfactualExplainerProducer(0.01, executor);
         CounterfactualExplainer counterfactualExplainer = producer.produce();
 
-        assertNotNull(counterfactualExplainer);
-        assertEquals(0.01, counterfactualExplainer.getCounterfactualConfig().getGoalThreshold());
-        assertEquals(executor, counterfactualExplainer.getCounterfactualConfig().getExecutor());
+        assertThat(counterfactualExplainer).isNotNull();
+        assertThat(counterfactualExplainer.getCounterfactualConfig().getGoalThreshold()).isEqualTo(0.01);
+        assertThat(counterfactualExplainer.getCounterfactualConfig().getExecutor()).isEqualTo(executor);
     }
 
 }

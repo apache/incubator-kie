@@ -40,9 +40,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import jakarta.ws.rs.core.Response;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.trusty.service.common.TypedValueTestUtils.buildGoalUnit;
 import static org.kie.kogito.trusty.service.common.TypedValueTestUtils.buildSearchDomainUnit;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,8 +80,8 @@ public class ExplainabilityApiV1Test {
                 new org.kie.kogito.trusty.service.common.requests.CounterfactualRequest(Collections.emptyList(), Collections.emptyList());
 
         Response response = explainabilityEndpoint.requestCounterfactuals(EXECUTION_ID, request);
-        assertNotNull(response);
-        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
@@ -101,15 +99,15 @@ public class ExplainabilityApiV1Test {
                 new org.kie.kogito.trusty.service.common.requests.CounterfactualRequest(Collections.emptyList(), Collections.emptyList());
 
         Response response = explainabilityEndpoint.requestCounterfactuals(EXECUTION_ID, request);
-        assertNotNull(response);
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         Object entity = response.getEntity();
-        assertNotNull(entity);
-        assertTrue(entity instanceof CounterfactualRequestResponse);
+        assertThat(entity).isNotNull();
+        assertThat((entity instanceof CounterfactualRequestResponse)).isTrue();
         CounterfactualRequestResponse counterfactualRequestResponse = (CounterfactualRequestResponse) entity;
-        assertEquals(EXECUTION_ID, counterfactualRequestResponse.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, counterfactualRequestResponse.getCounterfactualId());
-        assertEquals(MAX_RUNNING_TIME_SECONDS, counterfactualRequestResponse.getMaxRunningTimeSeconds());
+        assertThat(counterfactualRequestResponse.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(counterfactualRequestResponse.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
+        assertThat(counterfactualRequestResponse.getMaxRunningTimeSeconds()).isEqualTo(MAX_RUNNING_TIME_SECONDS);
     }
 
     @Test
@@ -117,8 +115,8 @@ public class ExplainabilityApiV1Test {
         when(trustyService.getCounterfactualRequests(anyString())).thenThrow(new IllegalArgumentException());
 
         Response response = explainabilityEndpoint.getAllCounterfactualsSummary(EXECUTION_ID);
-        assertNotNull(response);
-        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
@@ -134,18 +132,18 @@ public class ExplainabilityApiV1Test {
                 MAX_RUNNING_TIME_SECONDS)));
 
         Response response = explainabilityEndpoint.getAllCounterfactualsSummary(EXECUTION_ID);
-        assertNotNull(response);
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         Object entity = response.getEntity();
-        assertNotNull(entity);
-        assertTrue(entity instanceof List);
+        assertThat(entity).isNotNull();
+        assertThat((entity instanceof List)).isTrue();
         List<CounterfactualRequestResponse> counterfactualRequestResponse = (List) entity;
-        assertEquals(1, counterfactualRequestResponse.size());
+        assertThat(counterfactualRequestResponse.size()).isEqualTo(1);
 
         CounterfactualRequestResponse counterfactual = counterfactualRequestResponse.get(0);
-        assertEquals(EXECUTION_ID, counterfactual.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, counterfactual.getCounterfactualId());
-        assertEquals(MAX_RUNNING_TIME_SECONDS, counterfactual.getMaxRunningTimeSeconds());
+        assertThat(counterfactual.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(counterfactual.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
+        assertThat(counterfactual.getMaxRunningTimeSeconds()).isEqualTo(MAX_RUNNING_TIME_SECONDS);
     }
 
     @Test
@@ -153,8 +151,8 @@ public class ExplainabilityApiV1Test {
         when(trustyService.getCounterfactualRequest(anyString(), anyString())).thenThrow(new IllegalArgumentException());
 
         Response response = explainabilityEndpoint.getCounterfactualDetails(EXECUTION_ID, COUNTERFACTUAL_ID);
-        assertNotNull(response);
-        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
@@ -177,20 +175,20 @@ public class ExplainabilityApiV1Test {
                         MAX_RUNNING_TIME_SECONDS));
 
         Response response = explainabilityEndpoint.getCounterfactualDetails(EXECUTION_ID, COUNTERFACTUAL_ID);
-        assertNotNull(response);
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         Object entity = response.getEntity();
-        assertNotNull(entity);
-        assertTrue(entity instanceof CounterfactualResultsResponse);
+        assertThat(entity).isNotNull();
+        assertThat((entity instanceof CounterfactualResultsResponse)).isTrue();
         CounterfactualResultsResponse resultsResponse = (CounterfactualResultsResponse) entity;
-        assertEquals(EXECUTION_ID, resultsResponse.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, resultsResponse.getCounterfactualId());
-        assertEquals(MAX_RUNNING_TIME_SECONDS, resultsResponse.getMaxRunningTimeSeconds());
-        assertEquals(1, resultsResponse.getGoals().size());
-        assertEquals(goal, resultsResponse.getGoals().iterator().next());
-        assertEquals(1, resultsResponse.getSearchDomains().size());
-        assertEquals(searchDomain, resultsResponse.getSearchDomains().iterator().next());
-        assertTrue(resultsResponse.getSolutions().isEmpty());
+        assertThat(resultsResponse.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(resultsResponse.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
+        assertThat(resultsResponse.getMaxRunningTimeSeconds()).isEqualTo(MAX_RUNNING_TIME_SECONDS);
+        assertThat(resultsResponse.getGoals().size()).isEqualTo(1);
+        assertThat(resultsResponse.getGoals().iterator().next()).isEqualTo(goal);
+        assertThat(resultsResponse.getSearchDomains().size()).isEqualTo(1);
+        assertThat(resultsResponse.getSearchDomains().iterator().next()).isEqualTo(searchDomain);
+        assertThat(resultsResponse.getSolutions().isEmpty()).isTrue();
     }
 
     @Test
@@ -235,21 +233,21 @@ public class ExplainabilityApiV1Test {
         when(trustyService.getCounterfactualResults(anyString(), anyString())).thenReturn(List.of(solution1, solution2));
 
         Response response = explainabilityEndpoint.getCounterfactualDetails(EXECUTION_ID, COUNTERFACTUAL_ID);
-        assertNotNull(response);
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         Object entity = response.getEntity();
-        assertNotNull(entity);
-        assertTrue(entity instanceof CounterfactualResultsResponse);
+        assertThat(entity).isNotNull();
+        assertThat((entity instanceof CounterfactualResultsResponse)).isTrue();
         CounterfactualResultsResponse resultsResponse = (CounterfactualResultsResponse) entity;
-        assertEquals(EXECUTION_ID, resultsResponse.getExecutionId());
-        assertEquals(COUNTERFACTUAL_ID, resultsResponse.getCounterfactualId());
-        assertEquals(MAX_RUNNING_TIME_SECONDS, resultsResponse.getMaxRunningTimeSeconds());
-        assertEquals(1, resultsResponse.getGoals().size());
-        assertEquals(goal, resultsResponse.getGoals().iterator().next());
-        assertEquals(1, resultsResponse.getSearchDomains().size());
-        assertEquals(searchDomain, resultsResponse.getSearchDomains().iterator().next());
-        assertEquals(2, resultsResponse.getSolutions().size());
-        assertEquals(solution1, resultsResponse.getSolutions().get(0));
-        assertEquals(solution2, resultsResponse.getSolutions().get(1));
+        assertThat(resultsResponse.getExecutionId()).isEqualTo(EXECUTION_ID);
+        assertThat(resultsResponse.getCounterfactualId()).isEqualTo(COUNTERFACTUAL_ID);
+        assertThat(resultsResponse.getMaxRunningTimeSeconds()).isEqualTo(MAX_RUNNING_TIME_SECONDS);
+        assertThat(resultsResponse.getGoals().size()).isEqualTo(1);
+        assertThat(resultsResponse.getGoals().iterator().next()).isEqualTo(goal);
+        assertThat(resultsResponse.getSearchDomains().size()).isEqualTo(1);
+        assertThat(resultsResponse.getSearchDomains().iterator().next()).isEqualTo(searchDomain);
+        assertThat(resultsResponse.getSolutions().size()).isEqualTo(2);
+        assertThat(resultsResponse.getSolutions().get(0)).isEqualTo(solution1);
+        assertThat(resultsResponse.getSolutions().get(1)).isEqualTo(solution2);
     }
 }

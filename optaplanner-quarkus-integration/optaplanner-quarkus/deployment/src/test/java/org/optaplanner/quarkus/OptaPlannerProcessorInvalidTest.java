@@ -19,8 +19,8 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import jakarta.inject.Inject;
 
@@ -51,13 +51,12 @@ class OptaPlannerProcessorInvalidTest {
                             TestdataInvalidInverseRelationValue.class,
                             TestdataInvalidQuarkusConstraintProvider.class))
             .assertException(exception -> {
-                assertEquals(IllegalStateException.class, exception.getClass());
-                assertEquals("The field (entityList) with a @InverseRelationShadowVariable annotation is" +
-                        " in a class (org.optaplanner.quarkus.testdata.invalid.inverserelation.domain.TestdataInvalidInverseRelationValue)"
-                        +
-                        " that does not have a @PlanningEntity annotation.\n" +
-                        "Maybe add a @PlanningEntity annotation on the class (org.optaplanner.quarkus.testdata.invalid.inverserelation.domain.TestdataInvalidInverseRelationValue).",
-                        exception.getMessage());
+                assertThat(exception).isInstanceOf(IllegalStateException.class);
+                assertThat(exception.getMessage()).isEqualTo(
+                        "The field (entityList) with a @InverseRelationShadowVariable annotation is" +
+                                " in a class (org.optaplanner.quarkus.testdata.invalid.inverserelation.domain.TestdataInvalidInverseRelationValue)" +
+                                " that does not have a @PlanningEntity annotation.\n" +
+                                "Maybe add a @PlanningEntity annotation on the class (org.optaplanner.quarkus.testdata.invalid.inverserelation.domain.TestdataInvalidInverseRelationValue).");
             });
 
     @Inject

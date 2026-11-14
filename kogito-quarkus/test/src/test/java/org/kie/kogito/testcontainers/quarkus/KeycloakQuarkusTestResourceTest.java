@@ -22,9 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.testcontainers.KogitoKeycloakContainer;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.testcontainers.Constants.CONTAINER_NAME_PREFIX;
 import static org.mockito.Mockito.spy;
 
@@ -42,7 +41,7 @@ public class KeycloakQuarkusTestResourceTest {
     @Test
     public void shouldGetProperty() {
         givenResource();
-        assertThrows(IllegalStateException.class, () -> resource.getProperties().get(KeycloakQuarkusTestResource.KOGITO_KEYCLOAK_PROPERTY));
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> resource.getProperties().get(KeycloakQuarkusTestResource.KOGITO_KEYCLOAK_PROPERTY));
     }
 
     @Test
@@ -66,10 +65,10 @@ public class KeycloakQuarkusTestResourceTest {
     }
 
     private void thenConditionalIsEnabled() {
-        assertTrue(resource.isConditionalEnabled());
+        assertThat(resource.isConditionalEnabled()).isTrue();
     }
 
     private void thenConditionalIsDisabled() {
-        assertFalse(resource.isConditionalEnabled());
+        assertThat(resource.isConditionalEnabled()).isFalse();
     }
 }

@@ -36,7 +36,6 @@ import org.kie.kogito.process.Processes;
 import org.kie.kogito.process.impl.AbstractProcessConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -113,8 +112,8 @@ class LightProcessRuntimeTest {
         timer.setTimeType(timerType);
         timer.setDelay(delay);
         ExpirationTime timerInstance = rt.createTimerInstance(timer, runtime);
-        assertEquals(repeatLimit, timerInstance.repeatLimit());
-        assertEquals(repeatInterval, timerInstance.repeatInterval());
+        assertThat(timerInstance.repeatLimit()).isEqualTo(repeatLimit);
+        assertThat(timerInstance.repeatInterval()).isEqualTo(repeatInterval);
     }
 
 }

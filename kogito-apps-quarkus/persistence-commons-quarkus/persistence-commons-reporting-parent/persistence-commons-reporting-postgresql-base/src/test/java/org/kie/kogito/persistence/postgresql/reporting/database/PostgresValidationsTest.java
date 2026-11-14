@@ -28,7 +28,7 @@ import org.kie.kogito.persistence.postgresql.reporting.model.PostgresMapping;
 import org.kie.kogito.persistence.postgresql.reporting.model.PostgresPartitionField;
 import org.kie.kogito.persistence.reporting.database.Validations;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class PostgresValidationsTest {
 
@@ -36,24 +36,21 @@ class PostgresValidationsTest {
     void testValidateSourceTableIdentityFieldsBlankFieldName() {
         final PostgresField field = new PostgresField("");
         final List<PostgresField> fields = List.of(field);
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableIdentityFields(fields));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableIdentityFields(fields));
     }
 
     @Test
     void testValidateSourceTablePartitionFieldsBlankFieldName() {
         final PostgresPartitionField field = new PostgresPartitionField("", "value");
         final List<PostgresPartitionField> fields = List.of(field);
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTablePartitionFields(fields));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTablePartitionFields(fields));
     }
 
     @Test
     void testValidateSourceTablePartitionFieldsBlankFieldValue() {
         final PostgresPartitionField field = new PostgresPartitionField("field", "");
         final List<PostgresPartitionField> fields = List.of(field);
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTablePartitionFields(fields));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTablePartitionFields(fields));
     }
 
     @Test
@@ -61,8 +58,7 @@ class PostgresValidationsTest {
         final PostgresMapping mapping = new PostgresMapping("",
                 new PostgresJsonField("field", JsonType.STRING));
         final List<PostgresMapping> mappings = List.of(mapping);
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateFieldMappings(mappings));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateFieldMappings(mappings));
     }
 
 }

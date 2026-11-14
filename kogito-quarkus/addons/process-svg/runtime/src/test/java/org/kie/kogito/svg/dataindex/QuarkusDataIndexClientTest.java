@@ -29,9 +29,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class QuarkusDataIndexClientTest {
 
@@ -76,13 +74,13 @@ public class QuarkusDataIndexClientTest {
 
     @Test
     public void testWebClientToURLOptionsMalformedURL() {
-        assertThrows(MalformedURLException.class, () -> client.getWebClientToURLOptions("malformedURL"));
+        assertThatExceptionOfType(MalformedURLException.class).isThrownBy(() -> client.getWebClientToURLOptions("malformedURL"));
     }
 
     @Test
     public void testSetupMalformedURL() {
         QuarkusDataIndexClient testClient = new QuarkusDataIndexClient("malformedURL", null, null);
-        assertThrows(MalformedURLException.class, () -> testClient.setup());
+        assertThatExceptionOfType(MalformedURLException.class).isThrownBy(() -> testClient.setup());
     }
 
     @Test
@@ -100,7 +98,7 @@ public class QuarkusDataIndexClientTest {
         WebClientOptions webClientOptions = client.getWebClientToURLOptions(dataindexurl);
         assertThat(webClientOptions.getDefaultPort()).isEqualTo(80);
         assertThat(webClientOptions.getDefaultHost()).isEqualTo("dataIndex.com");
-        assertFalse(webClientOptions.isSsl());
+        assertThat(webClientOptions.isSsl()).isFalse();
     }
 
     @Test
@@ -109,7 +107,7 @@ public class QuarkusDataIndexClientTest {
         WebClientOptions webClientOptions = client.getWebClientToURLOptions(dataindexurl);
         assertThat(webClientOptions.getDefaultPort()).isEqualTo(443);
         assertThat(webClientOptions.getDefaultHost()).isEqualTo("dataIndex.com");
-        assertTrue(webClientOptions.isSsl());
+        assertThat(webClientOptions.isSsl()).isTrue();
     }
 
 }

@@ -36,9 +36,7 @@ import org.kie.kogito.persistence.postgresql.reporting.model.PostgresPartitionFi
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresBootstrapLoaderImplTest {
 
@@ -60,12 +58,12 @@ class PostgresBootstrapLoaderImplTest {
         final PostgresBootstrapLoaderImpl loader = new PostgresBootstrapLoaderImpl(() -> is);
 
         final Optional<PostgresMappingDefinitions> result = loader.load();
-        assertNotNull(result);
-        assertTrue(result.isPresent());
-        assertEquals(1, result.get().getMappingDefinitions().size());
+        assertThat(result).isNotNull();
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().getMappingDefinitions().size()).isEqualTo(1);
 
         final PostgresMappingDefinition resultDefinition = result.get().getMappingDefinitions().iterator().next();
-        assertEquals(definition, resultDefinition);
+        assertThat(resultDefinition).isEqualTo(definition);
     }
 
     @Test
@@ -75,8 +73,8 @@ class PostgresBootstrapLoaderImplTest {
         final PostgresBootstrapLoaderImpl loader = new PostgresBootstrapLoaderImpl(() -> is);
 
         final Optional<PostgresMappingDefinitions> result = loader.load();
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertThat(result).isNotNull();
+        assertThat(result.isEmpty()).isTrue();
     }
 
 }

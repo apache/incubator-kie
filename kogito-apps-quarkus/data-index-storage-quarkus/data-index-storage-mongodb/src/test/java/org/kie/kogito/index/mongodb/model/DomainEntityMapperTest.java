@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.index.mongodb.model.DomainEntityMapper.ID;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MAPPER;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
@@ -37,7 +37,7 @@ class DomainEntityMapperTest {
 
     @Test
     void testGetEntityClass() {
-        assertEquals(Document.class, domainEntityMapper.getEntityClass());
+        assertThat(domainEntityMapper.getEntityClass()).isEqualTo(Document.class);
     }
 
     @Test
@@ -52,7 +52,7 @@ class DomainEntityMapperTest {
         Document document = new Document(MONGO_ID, testId).append("testKey", "testValue");
 
         Document result = domainEntityMapper.mapToEntity(testId, object);
-        assertEquals(document, result);
+        assertThat(result).isEqualTo(document);
     }
 
     @Test
@@ -67,6 +67,6 @@ class DomainEntityMapperTest {
         Document document = new Document(MONGO_ID, testId).append("testKey", "testValue");
 
         ObjectNode result = domainEntityMapper.mapToModel(document);
-        assertEquals(object, result);
+        assertThat(result).isEqualTo(object);
     }
 }

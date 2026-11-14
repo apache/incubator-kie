@@ -24,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SchemaGenerationActionTest {
 
@@ -34,8 +34,8 @@ class SchemaGenerationActionTest {
             final SchemaGenerationAction expectedStrategy,
             final String expectedJpaText) {
         final SchemaGenerationAction actualStrategy = SchemaGenerationAction.fromString(jpaText);
-        assertEquals(expectedStrategy, actualStrategy);
-        assertEquals(expectedJpaText, actualStrategy.getActionString());
+        assertThat(actualStrategy).isEqualTo(expectedStrategy);
+        assertThat(actualStrategy.getActionString()).isEqualTo(expectedJpaText);
     }
 
     private static Stream<Arguments> parameters() {

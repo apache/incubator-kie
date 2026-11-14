@@ -21,7 +21,7 @@ package org.kie.kogito.persistence.postgresql.reporting.database.sqlbuilders;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class PostgresIndexesSqlBuilderTest extends BaseSqlBuilderImplTest {
@@ -45,7 +45,7 @@ class PostgresIndexesSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertCreateSql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "CREATE INDEX idx_targetTableName_0",
                 "sourceTableJsonFieldName->'root'",
@@ -61,7 +61,7 @@ class PostgresIndexesSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertDestroySql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "DROP INDEX IF EXISTS idx_targetTableName_0",
                 "DROP INDEX IF EXISTS idx_targetTableName_1",

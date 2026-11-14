@@ -46,8 +46,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 public class StatefulProcessResourceTest {
@@ -90,8 +89,8 @@ public class StatefulProcessResourceTest {
                 .id(ProcessInstanceId.class);
 
         var data = approvalsCreated.data().as(MapDataContext.class);
-        assertEquals(id, pid.processId());
-        assertNull(data.get("approver"));
+        assertThat(pid.processId()).isEqualTo(id);
+        assertThat(data.get("approver")).isNull();
     }
 
     @Test
@@ -106,11 +105,11 @@ public class StatefulProcessResourceTest {
                 .as(ProcessMetaDataContext.class)
                 .id(ProcessInstanceId.class);
 
-        assertEquals(id, pid.processId());
+        assertThat(pid.processId()).isEqualTo(id);
 
         ExtendedDataContext result = processSvc.get(pid);
         var data = result.data().as(MapDataContext.class);
-        assertNull(data.get("approver"));
+        assertThat(data.get("approver")).isNull();
 
     }
 
@@ -127,17 +126,16 @@ public class StatefulProcessResourceTest {
                 .id(ProcessInstanceId.class);
 
         var data = approvalsCreated.data().as(MapDataContext.class);
-        assertEquals(id, pid.processId());
-        assertNull(data.get("approver"));
+        assertThat(pid.processId()).isEqualTo(id);
+        assertThat(data.get("approver")).isNull();
 
         MapDataContext traveller = ctx.get("traveller", MapDataContext.class);
         traveller.set("firstName", "Josh");
         ctx.set("traveller", traveller);
 
         ExtendedDataContext updatedResult = processSvc.update(pid, ctx);
-        assertEquals("Josh",
-                updatedResult.data().as(MapDataContext.class)
-                        .get("traveller", MapDataContext.class).get("firstName"));
+        assertThat(updatedResult.data().as(MapDataContext.class)
+                .get("traveller", MapDataContext.class).get("firstName")).isEqualTo("Josh");
     }
 
     @Test
@@ -152,7 +150,7 @@ public class StatefulProcessResourceTest {
                 .id(ProcessInstanceId.class);
 
         ExtendedDataContext result = processSvc.abort(pid);
-        assertNull(result.data().as(MapDataContext.class).get("approver"));
+        assertThat(result.data().as(MapDataContext.class).get("approver")).isNull();
     }
 
     @Test
@@ -179,7 +177,7 @@ public class StatefulProcessResourceTest {
 
         /// get first active task id
         List<TaskInstanceId> taskIdList = tasks.meta().as(TaskWorkItemDataContext.class).tasks();
-        assertEquals(1, taskIdList.size());
+        assertThat(taskIdList.size()).isEqualTo(1);
         var taskId = taskIdList.get(0);
 
         ExtendedDataContext result = taskSvc.complete(taskId,
@@ -187,9 +185,7 @@ public class StatefulProcessResourceTest {
                         taskMeta,
                         MapDataContext.of(Map.of("some", "value"))));
 
-        assertEquals(
-                taskMeta.policy().user(),
-                result.data().as(MapDataContext.class).get("approver"));
+        assertThat(result.data().as(MapDataContext.class).get("approver")).isEqualTo(taskMeta.policy().user());
 
     }
 
@@ -217,7 +213,7 @@ public class StatefulProcessResourceTest {
 
         /// get first active task id
         List<TaskInstanceId> taskIdList = tasks.meta().as(TaskWorkItemDataContext.class).tasks();
-        assertEquals(1, taskIdList.size());
+        assertThat(taskIdList.size()).isEqualTo(1);
         var taskId = taskIdList.get(0);
 
         ExtendedDataContext result = taskSvc.complete(taskId,
@@ -225,9 +221,7 @@ public class StatefulProcessResourceTest {
                         taskMeta,
                         MapDataContext.of(Map.of("some", "value"))));
 
-        assertEquals(
-                taskMeta.policy().user(),
-                result.data().as(MapDataContext.class).get("approver"));
+        assertThat(result.data().as(MapDataContext.class).get("approver")).isEqualTo(taskMeta.policy().user());
 
         /// /processes/my.process/instances/my.instance.id/tasks
         taskMeta = TaskMetaDataContext.of(
@@ -239,7 +233,7 @@ public class StatefulProcessResourceTest {
 
         /// get first active task id
         taskIdList = tasks.meta().as(TaskWorkItemDataContext.class).tasks();
-        assertEquals(1, taskIdList.size());
+        assertThat(taskIdList.size()).isEqualTo(1);
         taskId = taskIdList.get(0);
 
         result = taskSvc.complete(taskId,
@@ -247,9 +241,7 @@ public class StatefulProcessResourceTest {
                         taskMeta,
                         MapDataContext.of(Map.of("some", "value"))));
 
-        assertEquals(
-                "admin",
-                result.data().as(MapDataContext.class).get("approver"));
+        assertThat(result.data().as(MapDataContext.class).get("approver")).isEqualTo("admin");
 
     }
 
@@ -267,9 +259,8 @@ public class StatefulProcessResourceTest {
                 .as(ProcessMetaDataContext.class)
                 .id(ProcessInstanceId.class);
 
-        assertEquals("started",
-                created.data().as(MapDataContext.class)
-                        .get("test", Payload.class).getValue());
+        assertThat(created.data().as(MapDataContext.class)
+                .get("test", Payload.class).getValue()).isEqualTo("started");
 
         TaskMetaDataContext tmdc = TaskMetaDataContext.of(Policy.of("manager", Collections.emptyList()));
 
@@ -281,8 +272,7 @@ public class StatefulProcessResourceTest {
 
         ExtendedDataContext result = taskSvc.complete(taskInstanceId, ExtendedDataContext.of(tmdc, EmptyDataContext.Instance));
 
-        assertEquals("ad-hoc",
-                result.data().as(MapDataContext.class).get("test", Payload.class).getValue());
+        assertThat(result.data().as(MapDataContext.class).get("test", Payload.class).getValue()).isEqualTo("ad-hoc");
 
     }
 
@@ -301,16 +291,14 @@ public class StatefulProcessResourceTest {
                 .as(ProcessMetaDataContext.class)
                 .id(ProcessInstanceId.class);
 
-        assertEquals("started",
-                created.data().as(MapDataContext.class)
-                        .get("test", Payload.class).getValue());
+        assertThat(created.data().as(MapDataContext.class)
+                .get("test", Payload.class).getValue()).isEqualTo("started");
 
         // send signal to complete (empty data context for this signal)
         ExtendedDataContext result = processSvc.signal(pid.signals().get("sig"), EmptyDataContext.Instance);
 
-        assertEquals("done",
-                result.data().as(MapDataContext.class)
-                        .get("test", Payload.class).getValue());
+        assertThat(result.data().as(MapDataContext.class)
+                .get("test", Payload.class).getValue()).isEqualTo("done");
 
     }
 }

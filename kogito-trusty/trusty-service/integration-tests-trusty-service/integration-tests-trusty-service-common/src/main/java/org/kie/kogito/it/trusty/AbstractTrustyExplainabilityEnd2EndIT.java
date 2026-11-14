@@ -66,10 +66,7 @@ import static io.restassured.RestAssured.given;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractTrustyExplainabilityEnd2EndIT {
 
@@ -156,22 +153,22 @@ public abstract class AbstractTrustyExplainabilityEnd2EndIT {
                         .withNetwork(network)
                         .withNetworkAliases(KOGITO_SERVICE_ALIAS)) {
             infinispan.start();
-            assertTrue(infinispan.isRunning());
+            assertThat(infinispan.isRunning()).isTrue();
 
             kafka.start();
-            assertTrue(kafka.isRunning());
+            assertThat(kafka.isRunning()).isTrue();
 
             keycloak.start();
-            assertTrue(keycloak.isRunning());
+            assertThat(keycloak.isRunning()).isTrue();
 
             explService.start();
-            assertTrue(explService.isRunning());
+            assertThat(explService.isRunning()).isTrue();
 
             trustyService.start();
-            assertTrue(trustyService.isRunning());
+            assertThat(trustyService.isRunning()).isTrue();
 
             kogitoService.start();
-            assertTrue(kogitoService.isRunning());
+            assertThat(kogitoService.isRunning()).isTrue();
 
             final String accessToken = given()
                     .port(keycloak.getFirstMappedPort())
@@ -184,7 +181,7 @@ public abstract class AbstractTrustyExplainabilityEnd2EndIT {
                     .post(KEYCLOAK_ACCESS_TOKEN_PATH)
                     .jsonPath().get("access_token");
 
-            assertNotNull(accessToken);
+            assertThat(accessToken).isNotNull();
 
             final List<String> executionIds = new ArrayList<>();
             final int expectedExecutions = KOGITO_SERVICE_PAYLOADS.size();
@@ -210,7 +207,7 @@ public abstract class AbstractTrustyExplainabilityEnd2EndIT {
                                 .then().statusCode(200)
                                 .extract().as(ExecutionsResponse.class);
 
-                        assertSame(expectedExecutions, executionsResponse.getHeaders().size());
+                        assertThat(executionsResponse.getHeaders()).hasSize(expectedExecutions);
                         executionsResponse.getHeaders().forEach(h -> executionIds.add(h.getExecutionId()));
                     });
 
@@ -227,7 +224,7 @@ public abstract class AbstractTrustyExplainabilityEnd2EndIT {
                                 .then().statusCode(200)
                                 .extract().as(SalienciesResponse.class);
 
-                        assertEquals("SUCCEEDED", salienciesResponse.getStatus());
+                        assertThat(salienciesResponse.getStatus()).isEqualTo("SUCCEEDED");
                     }));
 
             LOGGER.info("Request Counterfactuals for each execution and check responses generated...");
@@ -362,8 +359,7 @@ public abstract class AbstractTrustyExplainabilityEnd2EndIT {
                     .extract().as(CounterfactualRequestResponse[].class));
 
             // We should only have one per execution
-            assertNotNull(counterfactualRequests);
-            assertEquals(1, counterfactualRequests.size());
+            assertThat(counterfactualRequests).isNotNull().hasSize(1);
 
             // Verify there are counterfactual results available
             String counterfactualId = counterfactualRequests.get(0).getCounterfactualId();

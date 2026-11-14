@@ -51,10 +51,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.codegen.common.GeneratedFileType.REST;
 import static org.drools.codegen.common.GeneratedFileType.SOURCE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DecisionModelResourcesProviderGeneratorTest {
 
@@ -84,15 +80,15 @@ public class DecisionModelResourcesProviderGeneratorTest {
         List<GeneratedFile> generatedRESTFiles = generatedFiles.stream()
                 .filter(gf -> gf.type().equals(REST))
                 .collect(toList());
-        assertFalse(generatedRESTFiles.isEmpty());
-        assertEquals(numberOfModels, generatedRESTFiles.size());
+        assertThat(generatedRESTFiles.isEmpty()).isFalse();
+        assertThat(generatedRESTFiles.size()).isEqualTo(numberOfModels);
 
         List<GeneratedFile> generatedCLASSFile = generatedFiles.stream()
                 .filter(gf -> gf.type().equals(SOURCE))
                 .collect(toList());
-        assertEquals(1, generatedCLASSFile.size());
+        assertThat(generatedCLASSFile.size()).isEqualTo(1);
         GeneratedFile classFile = generatedCLASSFile.get(0);
-        assertEquals("org/kie/kogito/app/DecisionModelResourcesProvider.java", classFile.relativePath());
+        assertThat(classFile.relativePath()).isEqualTo("org/kie/kogito/app/DecisionModelResourcesProvider.java");
 
         final CompilationUnit compilationUnit = parse(new ByteArrayInputStream(classFile.contents()));
 
@@ -100,34 +96,34 @@ public class DecisionModelResourcesProviderGeneratorTest {
                 .findFirst(ClassOrInterfaceDeclaration.class)
                 .orElseThrow(() -> new NoSuchElementException("Compilation unit doesn't contain a class or interface declaration!"));
 
-        assertNotNull(classDeclaration);
+        assertThat(classDeclaration).isNotNull();
 
         final MethodDeclaration methodDeclaration = classDeclaration
                 .findFirst(MethodDeclaration.class,
                         d -> d.getName().getIdentifier().equals("getResources"))
                 .orElseThrow(() -> new NoSuchElementException("Class declaration doesn't contain a method named \"getResources\"!"));
-        assertNotNull(methodDeclaration);
-        assertTrue(methodDeclaration.getBody().isPresent());
+        assertThat(methodDeclaration).isNotNull();
+        assertThat(methodDeclaration.getBody().isPresent()).isTrue();
 
         final BlockStmt body = methodDeclaration.getBody().get();
-        assertTrue(body.getStatements().size() > 2);
-        assertTrue(body.getStatements().get(1).isExpressionStmt());
+        assertThat(body.getStatements().size() > 2).isTrue();
+        assertThat(body.getStatements().get(1).isExpressionStmt()).isTrue();
 
         final ExpressionStmt expression = (ExpressionStmt) body.getStatements().get(1);
-        assertTrue(expression.getExpression() instanceof MethodCallExpr);
+        assertThat((expression.getExpression() instanceof MethodCallExpr)).isTrue();
 
         final MethodCallExpr call = (MethodCallExpr) expression.getExpression();
-        assertEquals("add", call.getName().getIdentifier());
-        assertTrue(call.getScope().isPresent());
-        assertTrue(call.getScope().get().isNameExpr());
+        assertThat(call.getName().getIdentifier()).isEqualTo("add");
+        assertThat(call.getScope().isPresent()).isTrue();
+        assertThat(call.getScope().get().isNameExpr()).isTrue();
 
         final NameExpr nameExpr = call.getScope().get().asNameExpr();
-        assertEquals("resourcePaths", nameExpr.getName().getIdentifier());
+        assertThat(nameExpr.getName().getIdentifier()).isEqualTo("resourcePaths");
 
         long numberOfAddStms = body.getStatements().stream()
                 .filter(this::isAddStatement)
                 .count();
-        assertEquals(numberOfModels, numberOfAddStms);
+        assertThat(numberOfAddStms).isEqualTo(numberOfModels);
 
         List<NodeList<Expression>> defaultDecisionModelResources = body.getStatements().stream()
                 .filter(this::isAddStatement)
@@ -135,13 +131,13 @@ public class DecisionModelResourcesProviderGeneratorTest {
                 .collect(toList());
 
         // verify .add(..) number of parameters
-        defaultDecisionModelResources.forEach(nodeList -> assertEquals(1, nodeList.size()));
+        defaultDecisionModelResources.forEach(nodeList -> assertThat(nodeList).hasSize(1));
 
         Set<String> distinctDefaultDecisionModelResources = defaultDecisionModelResources.stream()
                 .map(nodeList -> nodeList.get(0).toString())
                 .collect(toSet());
 
-        assertEquals(defaultDecisionModelResources.size(), distinctDefaultDecisionModelResources.size());
+        assertThat(distinctDefaultDecisionModelResources.size()).isEqualTo(defaultDecisionModelResources.size());
     }
 
     private boolean isAddStatement(Statement stm) {

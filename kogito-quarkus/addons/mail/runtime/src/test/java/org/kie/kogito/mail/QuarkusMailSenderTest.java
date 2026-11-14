@@ -33,7 +33,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 public class QuarkusMailSenderTest {
@@ -67,9 +67,9 @@ public class QuarkusMailSenderTest {
                 .build();
         sender.onDeadline(event);
         List<Mail> messages = mailBox.getMessagesSentTo(TO);
-        assertEquals(1, messages.size());
+        assertThat(messages.size()).isEqualTo(1);
         Mail message = messages.get(0);
-        assertEquals(TEXT, message.getText());
-        assertEquals(SUBJECT, message.getSubject());
+        assertThat(message.getText()).isEqualTo(TEXT);
+        assertThat(message.getSubject()).isEqualTo(SUBJECT);
     }
 }
