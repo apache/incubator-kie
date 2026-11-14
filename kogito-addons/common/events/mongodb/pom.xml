@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-addons-events-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
 
   <artifactId>kie-addons-events-mongodb</artifactId>

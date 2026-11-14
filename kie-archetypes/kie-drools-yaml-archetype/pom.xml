@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-archetypes</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
 
   <artifactId>kie-drools-yaml-archetype</artifactId>

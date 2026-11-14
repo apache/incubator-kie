@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kogito-addons-quarkus-marshallers-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
   <artifactId>kie-addons-quarkus-marshallers-avro-parent</artifactId>
   <packaging>pom</packaging>

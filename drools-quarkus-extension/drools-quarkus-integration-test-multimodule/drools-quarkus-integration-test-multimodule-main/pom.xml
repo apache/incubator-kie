@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.drools</groupId>
     <artifactId>drools-quarkus-integration-test-multimodule</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
 
   <name>Drools :: Quarkus Extension :: Integration Test :: Multi Module :: Main</name>

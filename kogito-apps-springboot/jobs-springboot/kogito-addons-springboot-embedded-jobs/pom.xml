@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.kie</groupId>
         <artifactId>jobs-springboot</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.999-SNAPSHOT</version>
     </parent>
 
     <artifactId>kogito-addons-springboot-embedded-jobs</artifactId>

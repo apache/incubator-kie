@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.kie</groupId>
         <artifactId>kogito-addons-quarkus-job-sink-recipient-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.999-SNAPSHOT</version>
     </parent>
     <artifactId>kogito-addons-quarkus-job-sink-recipient-deployment</artifactId>
     <name>Kogito Apps :: Jobs Service :: Kogito Add-Ons Quarkus Job Sink Recipient - Deployment</name>

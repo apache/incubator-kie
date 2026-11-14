@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.jbpm</groupId>
         <artifactId>jbpm-quarkus-extension</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.999-SNAPSHOT</version>
     </parent>
 
     <artifactId>jbpm-quarkus-integration-test</artifactId>

@@ -26,14 +26,14 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-quarkus-workflow-extension-common</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
 
   <artifactId>kogito-quarkus-workflow-common-deployment</artifactId>
   <name>Kogito :: Quarkus Workflow Extension Common :: Deployment</name>
 
   <properties>
-    <data-index-ephemeral.image.tagVersion>main</data-index-ephemeral.image.tagVersion>
+    <data-index-ephemeral.image.tagVersion>10.3.x</data-index-ephemeral.image.tagVersion>
     <data-index-ephemeral.image>docker.io/apache/incubator-kie-kogito-data-index-ephemeral:${data-index-ephemeral.image.tagVersion}</data-index-ephemeral.image>
     <java.module.name>org.kie.kogito.quarkus.workflow.deployment</java.module.name>
   </properties>

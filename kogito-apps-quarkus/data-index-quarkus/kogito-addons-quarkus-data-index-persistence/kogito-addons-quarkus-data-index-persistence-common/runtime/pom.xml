@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.kie</groupId>
         <artifactId>kogito-addons-quarkus-data-index-persistence-common-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.999-SNAPSHOT</version>
     </parent>
     <artifactId>kogito-addons-quarkus-data-index-persistence-common-runtime</artifactId>
     <name>Kogito Apps :: Kogito Addons Quarkus Data Index Persistence Common :: Runtime</name>

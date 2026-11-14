@@ -25,7 +25,7 @@
     <parent>
         <artifactId>jbpm-addon-quarkus-usertask-storage-jpa-parent</artifactId>
         <groupId>org.jbpm</groupId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.999-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

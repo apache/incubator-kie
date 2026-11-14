@@ -30,7 +30,7 @@
     <parent>
         <artifactId>kogito-addons-quarkus-parent</artifactId>
         <groupId>org.kie</groupId>
-        <version>999-SNAPSHOT</version>
+        <version>10.3.999-SNAPSHOT</version>
     </parent>
     <artifactId>kie-addons-quarkus-source-files-parent</artifactId>
     <packaging>pom</packaging>

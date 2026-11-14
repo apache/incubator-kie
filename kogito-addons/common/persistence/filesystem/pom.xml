@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-addons-persistence-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
   <artifactId>kie-addons-persistence-filesystem</artifactId>
   <name>KIE :: Add-Ons :: Persistence :: File System</name>

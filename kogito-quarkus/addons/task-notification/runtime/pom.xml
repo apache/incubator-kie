@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.jbpm</groupId>
     <artifactId>jbpm-addons-quarkus-task-notification-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>10.3.999-SNAPSHOT</version>
   </parent>
   <artifactId>jbpm-addons-quarkus-task-notification</artifactId>
   <name>jBPM Add-On Task Notification</name>
