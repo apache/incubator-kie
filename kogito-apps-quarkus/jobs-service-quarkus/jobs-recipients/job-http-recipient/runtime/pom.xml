@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kogito-addons-quarkus-job-http-recipient-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kogito-addons-quarkus-job-http-recipient</artifactId>
   <name>Kogito Apps :: Jobs Service :: Kogito Add-Ons Quarkus Job Http Recipient - Runtime</name>

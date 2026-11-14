@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-apps-springboot-bom</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kogito-apps-springboot-bom/pom.xml</relativePath>
   </parent>
   <packaging>pom</packaging>

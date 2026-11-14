@@ -29,7 +29,7 @@
   </parent>
   <name>Kogito :: IDE/Tools - Config</name>
   <groupId>org.kie.kogito</groupId>
-  <version>10.3.999-SNAPSHOT</version>
+  <version>10.3.0</version>
   <artifactId>kogito-ide-config</artifactId>
 
 </project>

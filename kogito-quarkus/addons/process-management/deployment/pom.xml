@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-addons-quarkus-process-management-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kie-addons-quarkus-process-management-deployment</artifactId>
   <name>KIE Add-On Process Management - Deployment</name>

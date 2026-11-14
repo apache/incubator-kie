@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>explainability</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>explainability-service</artifactId>

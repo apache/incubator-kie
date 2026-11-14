@@ -27,7 +27,7 @@
   <parent>
     <artifactId>kie-dmn</artifactId>
     <groupId>org.kie</groupId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>kie-dmn-core</artifactId>

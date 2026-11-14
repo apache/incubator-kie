@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-addons-springboot-persistence-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <name>KIE :: Add-Ons :: Persistence MongoDB :: Springboot</name>

@@ -26,7 +26,7 @@
     <parent>
         <artifactId>kie-addons-quarkus-source-files-parent</artifactId>
         <groupId>org.kie</groupId>
-        <version>10.3.999-SNAPSHOT</version>
+        <version>10.3.0</version>
     </parent>
     <artifactId>kie-addons-quarkus-source-files-deployment</artifactId>
     <name>KIE Add-On Source Files - Deployment</name>

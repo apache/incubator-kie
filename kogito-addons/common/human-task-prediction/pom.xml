@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kogito-addons-common-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <groupId>org.jbpm</groupId>
   <artifactId>jbpm-addons-human-task-prediction-parent</artifactId>

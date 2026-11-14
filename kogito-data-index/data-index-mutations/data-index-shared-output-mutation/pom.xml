@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>data-index-mutations</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>data-index-shared-output-mutation</artifactId>
   <dependencies>

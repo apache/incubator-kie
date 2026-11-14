@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-quarkus-bom</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kogito-quarkus/bom/pom.xml</relativePath>
   </parent>
   <artifactId>kogito-apps-quarkus</artifactId>
@@ -28,7 +28,7 @@
   <description>Kogito Apps :: Quarkus</description>
   <properties>
     <java.module.name>org.kie.kogito.apps.quarkus</java.module.name>
-    <project.build.outputTimestamp>2026-11-14T09:26:09Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-11-14T09:34:47Z</project.build.outputTimestamp>
   </properties>
 
   <modules>

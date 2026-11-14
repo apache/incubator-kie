@@ -25,7 +25,7 @@
 
   <groupId>org.drools</groupId>
   <artifactId>drools-verifier-test-jar</artifactId>
-  <version>10.3.999-SNAPSHOT</version>
+  <version>10.3.0</version>
   <packaging>jar</packaging>
 
   <name>Drools :: Verifier :: jar for test</name>

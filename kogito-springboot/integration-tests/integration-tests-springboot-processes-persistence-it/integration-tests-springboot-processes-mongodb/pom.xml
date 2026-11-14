@@ -24,7 +24,7 @@
   <parent>
     <artifactId>integration-tests-springboot-processes-persistence-it</artifactId>
     <groupId>org.kie.kogito</groupId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>

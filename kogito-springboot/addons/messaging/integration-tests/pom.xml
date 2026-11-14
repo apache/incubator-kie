@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-addons-springboot-messaging-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kie-addons-springboot-messaging-it</artifactId>
   <name>KIE :: Add-Ons :: Messaging :: Spring Boot (ITs)</name>

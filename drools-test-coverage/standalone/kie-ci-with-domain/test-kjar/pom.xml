@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.drools.testcoverage</groupId>
     <artifactId>drools-kie-ci-with-domain-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>drools-kie-ci-with-domain-test-kjar</artifactId>
