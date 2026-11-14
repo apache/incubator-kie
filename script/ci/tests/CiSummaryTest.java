@@ -19,12 +19,14 @@
 
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //JAVA 17+
+//DEPS org.junit.jupiter:junit-jupiter-api:5.11.4
+//DEPS org.junit.jupiter:junit-jupiter-params:5.11.4
 //DEPS org.junit.platform:junit-platform-console-standalone:1.11.4
 //DEPS org.assertj:assertj-core:3.26.3
 
 import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.MethodSource;
-import org.junit.jupiter.api.ParameterizedTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.*;
