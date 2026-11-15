@@ -83,7 +83,7 @@ public class KnowledgeBuilderImplCompilerFJPoolTest {
 
         // Verify all worker threads have the expected classloader
         for (ClassLoader workerClassLoader : results) {
-			assertThat(workerClassLoader).as("Worker thread should have inherited the custom classloader").isSameAs(customClassLoader);
+            assertThat(workerClassLoader).as("Worker thread should have inherited the custom classloader").isSameAs(customClassLoader);
         }
     }
 }
