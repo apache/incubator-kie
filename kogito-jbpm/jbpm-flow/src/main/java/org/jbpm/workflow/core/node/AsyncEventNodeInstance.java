@@ -22,9 +22,11 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.jbpm.process.instance.InternalProcessRuntime;
 import org.jbpm.workflow.instance.NodeInstanceContainer;
+import org.jbpm.workflow.instance.impl.NodeInstanceImpl;
 import org.jbpm.workflow.instance.node.EventNodeInstance;
 import org.kie.api.definition.process.Node;
 import org.kie.api.runtime.process.NodeInstance;
@@ -95,8 +97,9 @@ public class AsyncEventNodeInstance extends EventNodeInstance {
         addAsyncStatus();
 
         final InternalProcessRuntime processRuntime = (InternalProcessRuntime) getProcessInstance().getKnowledgeRuntime().getProcessRuntime();
-        setJobId(getStringId());
-        //Deffer the timer scheduling to the end of current UnitOfWork execution chain
+        // the job has its own identity, the id of this instance is passed as node instance id and reused by the actual node instance
+        setJobId(UUID.randomUUID().toString());
+        //Defer the timer scheduling to the end of current UnitOfWork execution chain
         processRuntime.getUnitOfWorkManager().currentUnitOfWork().intercept(
                 new BaseWorkUnit<>(this, instance -> {
                     ExpirationTime expirationTime = ExactExpirationTime.of(ZonedDateTime.now().plus(1, ChronoUnit.MILLIS));
@@ -193,6 +196,9 @@ public class AsyncEventNodeInstance extends EventNodeInstance {
         instanceContainer.setState(ProcessInstance.STATE_ACTIVE);
 
         NodeInstance actualInstance = instanceContainer.getNodeInstance(getNode());
+        // the job was scheduled with the id of this virtual instance as node instance id, the actual node instance must keep it
+        // so that jobs, node events and the nodes of the process instance can be correlated
+        ((NodeInstanceImpl) actualInstance).setId(getStringId());
         //trigger the actual node
         triggerNodeInstance((org.jbpm.workflow.instance.NodeInstance) actualInstance, org.jbpm.workflow.core.Node.CONNECTION_DEFAULT_TYPE);
         clearAsyncStatus();
