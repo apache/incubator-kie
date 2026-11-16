@@ -18,6 +18,7 @@
  */
 package org.kie.kogito.process.impl.lock;
 
+@FunctionalInterface
 public interface WorkflowAtomicExecutor<T> {
 
     T execute();

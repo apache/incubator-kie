@@ -151,18 +151,7 @@ public class GenericRepository extends Repository {
     void insertInternal(String processId, String processVersion, String rootProcessId, String rootProcessVersion,
             String rootProcessInstanceId, UUID id, byte[] payload, String businessKey, String[] eventTypes) {
         try (Connection connection = dataSource.getConnection();
-                PreparedStatement statement = connection.prepareStatement(INSERT);
-                PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE);
-                PreparedStatement insertEventStatement = connection.prepareStatement(INSERT_WAITING_FOR_EVENT_TYPE)) {
-
-            eventStatement.setString(1, id.toString());
-            eventStatement.executeUpdate();
-
-            for (String eventType : eventTypes) {
-                insertEventStatement.setString(1, id.toString());
-                insertEventStatement.setString(2, eventType);
-                insertEventStatement.executeUpdate();
-            }
+                PreparedStatement statement = connection.prepareStatement(INSERT)) {
 
             String processInstanceId = id.toString();
             statement.setString(1, processInstanceId);
@@ -181,6 +170,8 @@ public class GenericRepository extends Repository {
                     businessKeyStmt.executeUpdate();
                 }
             }
+
+            updateEventTypes(connection, id, eventTypes);
         } catch (Exception e) {
             throw uncheckedException(e, "Error inserting process instance id: %s, processId: %s processVersion: %s business key: %s", id, processId, processVersion, businessKey);
         }
@@ -189,18 +180,7 @@ public class GenericRepository extends Repository {
     @Override
     void updateInternal(String processId, String processVersion, UUID id, byte[] payload, String[] eventTypes) {
         try (Connection connection = dataSource.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(UPDATE, processVersion));
-                PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE);
-                PreparedStatement insertEventStatement = connection.prepareStatement(INSERT_WAITING_FOR_EVENT_TYPE)) {
-
-            eventStatement.setString(1, id.toString());
-            eventStatement.executeUpdate();
-
-            for (String eventType : eventTypes) {
-                insertEventStatement.setString(1, id.toString());
-                insertEventStatement.setString(2, eventType);
-                insertEventStatement.executeUpdate();
-            }
+                PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(UPDATE, processVersion))) {
 
             statement.setBytes(1, payload);
             statement.setString(2, processId);
@@ -209,6 +189,8 @@ public class GenericRepository extends Repository {
                 statement.setString(4, processVersion);
             }
             statement.executeUpdate();
+
+            updateEventTypes(connection, id, eventTypes);
         } catch (Exception e) {
             throw uncheckedException(e, "Error updating process instance %s", id);
         }
@@ -217,18 +199,7 @@ public class GenericRepository extends Repository {
     @Override
     boolean updateWithLock(String processId, String processVersion, UUID id, byte[] payload, long version, String[] eventTypes) {
         try (Connection connection = dataSource.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(UPDATE_WITH_LOCK, processVersion));
-                PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE);
-                PreparedStatement insertEventStatement = connection.prepareStatement(INSERT_WAITING_FOR_EVENT_TYPE)) {
-
-            eventStatement.setString(1, id.toString());
-            eventStatement.executeUpdate();
-
-            for (String eventType : eventTypes) {
-                insertEventStatement.setString(1, id.toString());
-                insertEventStatement.setString(2, eventType);
-                insertEventStatement.executeUpdate();
-            }
+                PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(UPDATE_WITH_LOCK, processVersion))) {
 
             statement.setBytes(1, payload);
             statement.setLong(2, version + 1);
@@ -239,9 +210,46 @@ public class GenericRepository extends Repository {
                 statement.setString(6, processVersion);
             }
             int count = statement.executeUpdate();
-            return count == 1;
+            if (count != 1) {
+                return false;
+            }
+
+            updateEventTypes(connection, id, eventTypes);
+            return true;
         } catch (Exception e) {
             throw uncheckedException(e, "Error updating with lock process instance %s", id);
+        }
+    }
+
+    private void updateEventTypes(Connection connection, UUID id, String[] eventTypes) throws SQLException {
+        Set<String> newEvents = eventTypes == null || eventTypes.length == 0 ? Collections.emptySet() : new HashSet<>(Arrays.asList(eventTypes));
+        Set<String> currentEvents = new HashSet<>();
+        try (PreparedStatement findStmt = connection.prepareStatement(FIND_EVENT_TYPES_BY_PROCESS_INSTANCE_ID)) {
+            findStmt.setString(1, id.toString());
+            try (ResultSet rs = findStmt.executeQuery()) {
+                while (rs.next()) {
+                    currentEvents.add(rs.getString(1));
+                }
+            }
+        }
+
+        if (currentEvents.equals(newEvents)) {
+            LOGGER.debug("Event types unchanged for process instance id: {}, skipping update", id);
+            return;
+        }
+
+        LOGGER.debug("Updating event types for process instance id: {} (current: {}, new: {})", id, currentEvents, newEvents);
+        try (PreparedStatement deleteStmt = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE);
+                PreparedStatement insertStmt = connection.prepareStatement(INSERT_WAITING_FOR_EVENT_TYPE)) {
+            deleteStmt.setString(1, id.toString());
+            deleteStmt.executeUpdate();
+
+            for (String eventType : newEvents) {
+                LOGGER.trace("Inserting event type: {} for process instance id: {}", eventType, id);
+                insertStmt.setString(1, id.toString());
+                insertStmt.setString(2, eventType);
+                insertStmt.executeUpdate();
+            }
         }
     }
 
@@ -251,15 +259,16 @@ public class GenericRepository extends Repository {
                 PreparedStatement statement = connection.prepareStatement(sqlIncludingVersion(DELETE, processVersion));
                 PreparedStatement eventStatement = connection.prepareStatement(DELETE_ALL_WAITING_FOR_EVENT_TYPE)) {
 
-            eventStatement.setString(1, id.toString());
-            eventStatement.executeUpdate();
-
+            // process_instances first, then event_types: same lock order as insert/update, to avoid deadlocks between concurrent writers
             statement.setString(1, processId);
             statement.setString(2, id.toString());
             if (processVersion != null) {
                 statement.setString(3, processVersion);
             }
             int count = statement.executeUpdate();
+
+            eventStatement.setString(1, id.toString());
+            eventStatement.executeUpdate();
             return count == 1;
         } catch (Exception e) {
             throw uncheckedException(e, "Error deleting process instance %s", id);
