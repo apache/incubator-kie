@@ -51,7 +51,8 @@ class MongoDBQuarkusTestResourceTest {
     @Test
     void shouldGetDockerImageName() {
         givenResource();
-        assertThat(resource.getTestResource().getDockerImageName()).isEqualTo(System.getenv("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX") + System.getProperty(Constants.CONTAINER_NAME_PREFIX + KogitoMongoDBContainer.NAME));
+        assertThat(resource.getTestResource().getDockerImageName())
+                .isEqualTo(System.getenv("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX") + System.getProperty(Constants.CONTAINER_NAME_PREFIX + KogitoMongoDBContainer.NAME));
     }
 
     private void givenConditionalResource() {
