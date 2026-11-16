@@ -89,7 +89,7 @@ public abstract class BaseKeycloakJobServiceTest {
         // Resetting the date to set the right UTC ZoneId. This is required due to recent changes on jackson-datatype-jsr310
         response.setExpirationTime(DateUtil.instantToZonedDateTime(response.getExpirationTime().toInstant()));
 
-        assertThat(response).isEqualTo(job);
+        assertThat(job).isEqualTo(response);
     }
 
     private ValidatableResponse createJob(String body, String token, int statusCode) throws IOException {
@@ -159,7 +159,7 @@ public abstract class BaseKeycloakJobServiceTest {
         // Resetting the date to set the right UTC ZoneId. This is required due to recent changes on jackson-datatype-jsr310
         response.setExpirationTime(DateUtil.instantToZonedDateTime(response.getExpirationTime().toInstant()));
 
-        assertThat(response).isEqualTo(job);
+        assertThat(job).isEqualTo(response);
     }
 
     @Test
