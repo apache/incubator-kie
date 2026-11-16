@@ -42,8 +42,8 @@ import org.kie.dmn.model.api.DMNModelInstrumentedBase;
 import org.kie.internal.io.ResourceFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.getModelFromIoUtils;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

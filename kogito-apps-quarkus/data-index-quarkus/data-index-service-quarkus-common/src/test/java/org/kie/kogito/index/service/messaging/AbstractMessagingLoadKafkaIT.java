@@ -43,10 +43,10 @@ import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.assertj.core.api.Assertions.fail;
 import static org.kie.kogito.index.model.ProcessInstanceState.ACTIVE;
 import static org.kie.kogito.index.model.ProcessInstanceState.COMPLETED;
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessDefinitionByIdAndVersion;
