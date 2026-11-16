@@ -144,7 +144,7 @@ class PostgreSqlJobRepositoryExecutionTest {
                 .build();
 
         CompletionStage<JobDetails> result = repository.doSave(job);
-        assertThat(result).isEqualTo(completableFuture);
+        assertThat((Object) result).isSameAs(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -191,7 +191,7 @@ class PostgreSqlJobRepositoryExecutionTest {
     @Test
     void get() {
         CompletionStage<JobDetails> result = repository.get("test");
-        assertThat(result).isEqualTo(completableFuture);
+        assertThat((Object) result).isSameAs(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -209,7 +209,7 @@ class PostgreSqlJobRepositoryExecutionTest {
     @Test
     void exists() {
         CompletionStage<Boolean> result = repository.exists("test");
-        assertThat(result).isEqualTo(completableFuture);
+        assertThat((Object) result).isSameAs(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
@@ -226,7 +226,7 @@ class PostgreSqlJobRepositoryExecutionTest {
     @Test
     void delete() {
         CompletionStage<JobDetails> result = repository.delete("test");
-        assertThat(result).isEqualTo(completableFuture);
+        assertThat((Object) result).isSameAs(completableFuture);
 
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Tuple> parameterCaptor = ArgumentCaptor.forClass(Tuple.class);
