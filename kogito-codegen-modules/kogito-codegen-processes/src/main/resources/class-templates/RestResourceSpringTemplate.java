@@ -68,7 +68,7 @@ public class $Type$Resource {
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(operationId = "createProcessInstance_$name$", summary = "$documentation$", description = "$processInstanceDescription$")
-    public ResponseEntity<$Type$Output> createResource_$name$(@RequestHeader HttpHeaders httpHeaders,
+    public ResponseEntity<$Type$Output> createResource_$name$(@io.swagger.v3.oas.annotations.Parameter(hidden = true) @RequestHeader HttpHeaders httpHeaders,
                                                               @RequestParam(value = "businessKey", required = false) String businessKey,
                                                               @RequestBody(required = false) $Type$Input resource,
                                                               UriComponentsBuilder uriComponentsBuilder) {
