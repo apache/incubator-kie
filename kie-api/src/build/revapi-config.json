@@ -8,6 +8,16 @@
           "code": "java.annotation.attributeAdded",
           "annotationType": "java.lang.Deprecated",
           "justification": "Adding version information (since/forRemoval attributes) to existing @Deprecated annotations is a documentation improvement that does not affect binary or source compatibility"
+        },
+        {
+          "code": "java.method.addedToInterface",
+          "new": "method void org.kie.api.runtime.rule.RuleFlowGroup::activate()",
+          "justification": "incubator-kie#7231: Added public API to activate a ruleflow-group. RuleFlowGroup is implemented only by Drools internal classes"
+        },
+        {
+          "code": "java.method.addedToInterface",
+          "new": "method org.kie.api.command.Command org.kie.api.command.KieCommands::newActivateRuleFlowGroup(java.lang.String)",
+          "justification": "incubator-kie#7231: Added command factory method to activate a ruleflow-group. KieCommands is implemented only by Drools internal classes"
         }
       ]
     }
