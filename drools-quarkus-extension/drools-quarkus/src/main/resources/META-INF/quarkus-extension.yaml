@@ -28,7 +28,7 @@ metadata:
   - "DRL"
   guide: "https://quarkus.io/guides/drools"
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"
   codestart:
       name: quarkus-drools

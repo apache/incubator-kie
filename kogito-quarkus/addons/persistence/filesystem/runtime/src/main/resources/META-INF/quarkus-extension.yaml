@@ -27,7 +27,7 @@ metadata:
     - processes
   guide: https://quarkus.io/guides/kie
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"
   config:
     - "kogito.persistence.filesystem"

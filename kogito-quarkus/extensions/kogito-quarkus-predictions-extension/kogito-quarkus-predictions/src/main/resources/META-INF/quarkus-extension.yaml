@@ -27,5 +27,5 @@ metadata:
     - "PMML"
   guide: "https://quarkus.io/guides/kie-pmml"
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"

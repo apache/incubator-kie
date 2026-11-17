@@ -27,5 +27,5 @@ metadata:
     - "DRL"
   guide: "https://quarkus.io/guides/drools-drl"
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"

@@ -26,7 +26,7 @@ metadata:
     - monitoring
   guide: https://quarkus.io/guides/kie
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"
   config:
     - "kogito.monitoring."

@@ -28,7 +28,7 @@ metadata:
     - jobs
   guide: https://quarkus.io/guides/kogito
   categories:
-    - "business-automation"
+    - "automation"
   status: "preview"
   config:
     - "kogito.job-service."
