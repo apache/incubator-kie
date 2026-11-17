@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<definitions id="Definition"
+             targetNamespace="http://www.example.org/MinimalExample"
+             typeLanguage="http://www.java.com/javaTypes"
+             expressionLanguage="http://www.mvel.org/2.0"
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             xmlns:tns="http://www.jboss.org/drools">
+
+  <itemDefinition id="_sItem" structureRef="String" />
+
+  <itemDefinition id="_RetryServiceTask_InMessageType" structureRef="java.lang.String"/>
+  <message id="_RetryServiceTask_InMessage" itemRef="_RetryServiceTask_InMessageType" />
+  <interface id="_RetryServiceTask_ServiceInterface" name="org.jbpm.bpmn2.objects.HelloService">
+    <operation id="_RetryServiceTask_ServiceOperation" name="hello">
+      <inMessageRef>_RetryServiceTask_InMessage</inMessageRef>
+    </operation>
+  </interface>
+
+  <process processType="Private" isExecutable="true" id="AsyncServiceTaskRetry" name="Async Service Task Retry" tns:packageName="org.jbpm.bpmn2.async">
+
+    <!-- process variables -->
+    <property id="s" itemSubjectRef="_sItem"/>
+
+    <!-- nodes -->
+    <startEvent id="_1" name="StartProcess" />
+    <serviceTask id="RetryServiceTask" name="Hello" operationRef="_RetryServiceTask_ServiceOperation" implementation="Other" >
+      <extensionElements>
+        <tns:metaData name="customAsync">
+          <tns:metaValue>true</tns:metaValue>
+        </tns:metaData>
+      </extensionElements>
+      <ioSpecification>
+        <dataInput id="_RetryServiceTask_param" name="Parameter" />
+        <dataOutput id="_RetryServiceTask_result" name="Result" />
+        <inputSet>
+          <dataInputRefs>_RetryServiceTask_param</dataInputRefs>
+        </inputSet>
+        <outputSet>
+          <dataOutputRefs>_RetryServiceTask_result</dataOutputRefs>
+        </outputSet>
+      </ioSpecification>
+      <dataInputAssociation>
+        <sourceRef>s</sourceRef>
+        <targetRef>_RetryServiceTask_param</targetRef>
+      </dataInputAssociation>
+      <dataOutputAssociation>
+        <sourceRef>_RetryServiceTask_result</sourceRef>
+        <targetRef>s</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <endEvent id="_3" name="EndProcess" />
+
+    <!-- connections -->
+    <sequenceFlow id="_1-RetryServiceTask" sourceRef="_1" targetRef="RetryServiceTask" />
+    <sequenceFlow id="RetryServiceTask-_3" sourceRef="RetryServiceTask" targetRef="_3" />
+
+  </process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="AsyncServiceTaskRetry" >
+      <bpmndi:BPMNShape bpmnElement="_1" >
+        <dc:Bounds x="16" y="16" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="RetryServiceTask" >
+        <dc:Bounds x="96" y="16" width="100" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_3" >
+        <dc:Bounds x="228" y="16" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="_1-RetryServiceTask" >
+        <di:waypoint x="40" y="40" />
+        <di:waypoint x="146" y="40" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="RetryServiceTask-_3" >
+        <di:waypoint x="146" y="40" />
+        <di:waypoint x="252" y="40" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</definitions>

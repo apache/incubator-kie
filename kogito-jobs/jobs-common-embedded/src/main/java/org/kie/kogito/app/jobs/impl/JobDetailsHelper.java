@@ -45,6 +45,16 @@ public final class JobDetailsHelper {
         return jobDescription;
     }
 
+    /**
+     * Resolves the process instance id the job belongs to, or null when the job is not bound to a process instance.
+     */
+    public static String resolveProcessInstanceId(JobDetails jobDetails) {
+        if (jobDetails.getRecipient() == null) {
+            return null;
+        }
+        return JobDescriptionHelper.resolveProcessInstanceId(extractJobDescription(jobDetails));
+    }
+
     public static JobDetails newScheduledJobDetails(JobDescription jobDescription) {
 
         Long delay = Optional.ofNullable(jobDescription.expirationTime().repeatInterval()).orElse(0L);

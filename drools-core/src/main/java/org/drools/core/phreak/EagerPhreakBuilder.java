@@ -471,7 +471,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                     for (int i = proto2.getPos() + 1; i < newList.length; i++) {
                         newList[i] = oldList[i - 1];
                         newList[i].setPos(i);
-                        newList[i].setSegmentPosMaskBit(1 << i);
+                        newList[i].setSegmentPosMaskBit(1L << i);
                     }
                 }
                 endNode.setSegmentPrototypes(newList);
@@ -748,7 +748,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                 if (proto1.getPos() + 1 != newList.length) {
                     for (int i = proto1.getPos() + 1; i < newList.length; i++) {
                         newList[i].setPos(i);
-                        newList[i].setSegmentPosMaskBit(1 << i);
+                        newList[i].setSegmentPosMaskBit(1L << i);
                     }
                 }
                 endNode.setSegmentPrototypes(newList);
@@ -1301,7 +1301,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                         }
                     } else {
                         // ensure the pmem is unset for this position, can happen if the segment that set this before shifted up
-                        pmem.setLinkedSegmentMask(pmem.getLinkedSegmentMask() & ~(1 << i));
+                        pmem.setLinkedSegmentMask(pmem.getLinkedSegmentMask() & ~(1L << i));
                     }
                 }
                 pmem.setSegmentMemories(newSmems);
