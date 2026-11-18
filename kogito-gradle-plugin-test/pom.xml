@@ -40,8 +40,6 @@
     <exec.plugin.version>3.6.3</exec.plugin.version>
     <!-- Since there are no java code to compile, we can skip javadoc generation -->
     <maven.javadoc.skip>true</maven.javadoc.skip>
-    <!-- Integration-test only module: it is not a release deliverable, so do not deploy it to -->
-    <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
 
   <dependencies>
