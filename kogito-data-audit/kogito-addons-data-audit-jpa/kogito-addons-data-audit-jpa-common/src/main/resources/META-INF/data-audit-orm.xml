@@ -342,7 +342,7 @@
 	               roles.role as role,
                    log.event_user as eventUser
 	          FROM Process_Instance_State_Log log
-	     LEFT JOIN Process_Instance_State_Log log_newer ON log.event_date &lt; log_newer.event_date AND log.process_instance_id = log_newer.process_instance_id
+	     LEFT JOIN Process_Instance_State_Log log_newer ON log.process_instance_id = log_newer.process_instance_id AND (log.event_date &lt; log_newer.event_date OR (log.event_date = log_newer.event_date AND log.id &lt; log_newer.id))
 	     LEFT JOIN Process_Instance_State_Roles_Log roles ON log.id = roles.process_instance_state_log_id 
 	         WHERE log_newer.event_id IS NULL
 	      ORDER BY log.event_date DESC
@@ -371,7 +371,7 @@
                roles.role as role,
                log.event_user as eventUser
           FROM Process_Instance_State_Log log
-     LEFT JOIN Process_Instance_State_Log log_newer ON log.event_date &lt; log_newer.event_date AND log.process_instance_id = log_newer.process_instance_id
+     LEFT JOIN Process_Instance_State_Log log_newer ON log.process_instance_id = log_newer.process_instance_id AND (log.event_date &lt; log_newer.event_date OR (log.event_date = log_newer.event_date AND log.id &lt; log_newer.id))
      LEFT JOIN Process_Instance_State_Roles_Log roles ON log.id = roles.process_instance_state_log_id 
          WHERE log_newer.event_id IS NULL AND log.state = :status
       ORDER BY log.event_date DESC
@@ -400,7 +400,7 @@
                roles.role as role,
                log.event_user as eventUser
           FROM Process_Instance_State_Log log
-     LEFT JOIN Process_Instance_State_Log log_newer ON log.event_date &lt; log_newer.event_date AND log.process_instance_id = log_newer.process_instance_id
+     LEFT JOIN Process_Instance_State_Log log_newer ON log.process_instance_id = log_newer.process_instance_id AND (log.event_date &lt; log_newer.event_date OR (log.event_date = log_newer.event_date AND log.id &lt; log_newer.id))
      LEFT JOIN Process_Instance_State_Roles_Log roles ON log.id = roles.process_instance_state_log_id 
          WHERE log_newer.event_id IS NULL AND log.process_id = :processId
       ORDER BY log.event_date DESC
@@ -491,7 +491,7 @@
                log.input_args,
                log.output_args
           FROM Process_Instance_Node_Log log
-     LEFT JOIN Process_Instance_Node_Log log_newer ON log.event_date &lt; log_newer.event_date AND log.process_instance_id = log_newer.process_instance_id AND log.node_instance_id = log_newer.node_instance_id 
+     LEFT JOIN Process_Instance_Node_Log log_newer ON log.process_instance_id = log_newer.process_instance_id AND (log.event_date &lt; log_newer.event_date OR (log.event_date = log_newer.event_date AND log.id &lt; log_newer.id)) AND log.node_instance_id = log_newer.node_instance_id 
          WHERE log_newer.event_id IS NULL AND log.process_instance_id = :processInstanceId
       ORDER BY log.event_date DESC
     </query>
@@ -541,9 +541,9 @@
 	               log.variable_value,
                    log.event_user as eventUser
 	          FROM Process_Instance_Variable_Log log
-	     LEFT JOIN Process_Instance_Variable_Log log_newer ON log.event_date &lt; log_newer.event_date 
-	                                                   AND log.process_instance_id = log_newer.process_instance_id 
-	                                                   AND log.variable_id = log_newer.variable_id                                                      
+	     LEFT JOIN Process_Instance_Variable_Log log_newer ON log.process_instance_id = log_newer.process_instance_id 
+	                                                   AND log.variable_id = log_newer.variable_id
+	                                                   AND (log.event_date &lt; log_newer.event_date OR (log.event_date = log_newer.event_date AND log.id &lt; log_newer.id))                                                      
 	         WHERE log_newer.event_id IS NULL AND log.process_instance_id = :processInstanceId
 	      ORDER BY log.event_date DESC
         </query>
