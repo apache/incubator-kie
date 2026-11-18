@@ -34,7 +34,7 @@ public class $Type$Resource {
 
     Process<$Type$> process;
     @PostMapping(value = "/$signalName$", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<$Type$Output> signalProcess(@RequestHeader HttpHeaders httpHeaders,
+    public ResponseEntity<$Type$Output> signalProcess(@io.swagger.v3.oas.annotations.Parameter(hidden = true) @RequestHeader HttpHeaders httpHeaders,
                                                       @RequestParam(value = "businessKey", required = false) String businessKey,
                                                       @RequestBody(required = false) $signalType$ data,
                                                       UriComponentsBuilder uriComponentsBuilder) {
