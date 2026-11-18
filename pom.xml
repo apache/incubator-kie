@@ -238,7 +238,6 @@
     <module>kogito-gradle-plugin</module>
     <module>kogito-springboot</module>
     <module>kogito-maven-plugin-test</module>
-    <module>kogito-gradle-plugin-test</module>
     <!-- END kogito-runtimes modules (auto) -->
     <!-- BEGIN kogito-apps modules (auto) -->
     <module>kogito-apps-parent</module>

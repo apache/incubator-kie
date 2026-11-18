@@ -52,3 +52,6 @@
 
 # To prevent GitHub to presume those optaplanner-examples/data files are Objective-C++ code.
 *.mm linguist-language=Text
+
+# Release archive exclusions (prevent shipping binary wrapper jars in source releases)
+kogito-gradle-plugin-test/** export-ignore
