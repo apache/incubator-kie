@@ -54,4 +54,5 @@
 *.mm linguist-language=Text
 
 # Release archive exclusions (prevent shipping binary wrapper jars in source releases)
-kogito-gradle-plugin-test/** export-ignore
+/kogito-gradle-plugin-test export-ignore
+/kogito-gradle-plugin-test/** export-ignore
