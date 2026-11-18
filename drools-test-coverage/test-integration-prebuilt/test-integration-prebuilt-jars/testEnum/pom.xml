@@ -25,7 +25,7 @@
 
   <groupId>org.drools.testcoverage</groupId>
   <artifactId>testEnum</artifactId>
-  <version>10.3.999-SNAPSHOT</version>
+  <version>10.3.0</version>
   <packaging>jar</packaging>
 
   <name>Drools :: Test Coverage :: Integration tests with prebuilt JARs - Jar with enum</name>

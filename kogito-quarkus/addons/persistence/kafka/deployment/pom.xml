@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-addons-quarkus-persistence-kafka-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kie-addons-quarkus-persistence-kafka-deployment</artifactId>
   <name>KIE Add-On Persistence Kafka Streams - Deployment</name>

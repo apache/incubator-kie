@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jbpm</groupId>
     <artifactId>jbpm-with-drools-quarkus-extension</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>jbpm-with-drools-quarkus-deployment</artifactId>

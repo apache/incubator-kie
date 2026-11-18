@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-apps-quarkus-bom</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kogito-apps-quarkus/kogito-apps-quarkus-bom/pom.xml</relativePath>
   </parent>
   <artifactId>explainability</artifactId>
