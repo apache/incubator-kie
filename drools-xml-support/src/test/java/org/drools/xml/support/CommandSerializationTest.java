@@ -51,6 +51,7 @@ import org.drools.commands.runtime.process.AbortWorkItemCommand;
 import org.drools.commands.runtime.process.CompleteWorkItemCommand;
 import org.drools.commands.runtime.process.SignalEventCommand;
 import org.drools.commands.runtime.process.StartProcessCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -339,6 +340,10 @@ public class CommandSerializationTest {
             ClassObjectFilter filter = new ClassObjectFilter(String.class);
             GetObjectsCommand cmd = new GetObjectsCommand(filter, "out-id");
 
+            batchCmd.addCommand(cmd);
+        }
+        {
+            ActivateRuleFlowGroupCommand cmd = new ActivateRuleFlowGroupCommand(randomString());
             batchCmd.addCommand(cmd);
         }
         {

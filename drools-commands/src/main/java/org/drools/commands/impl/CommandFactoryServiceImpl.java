@@ -38,6 +38,7 @@ import org.drools.commands.runtime.process.CompleteWorkItemCommand;
 import org.drools.commands.runtime.process.RegisterWorkItemHandlerCommand;
 import org.drools.commands.runtime.process.SignalEventCommand;
 import org.drools.commands.runtime.process.StartProcessCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -294,6 +295,10 @@ public class CommandFactoryServiceImpl implements ExtendedKieCommands {
 
     public Command newAgendaGroupSetFocus(String name) {
         return new AgendaGroupSetFocusCommand(name);
+    }
+
+    public Command newActivateRuleFlowGroup(String name) {
+        return new ActivateRuleFlowGroupCommand(name);
     }
 
     @Override

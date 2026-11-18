@@ -53,4 +53,8 @@ public class SerializableRuleFlowGroup implements RuleFlowGroup, Externalizable 
         throw new UnsupportedOperationException();
     }
 
+    public void activate() {
+        throw new UnsupportedOperationException();
+    }
+
 }

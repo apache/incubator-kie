@@ -26,4 +26,20 @@ public interface RuleFlowGroup {
     public String getName();
 
     public void clear();
+
+    /**
+     * Activates this ruleflow-group by pushing it onto the focus stack,
+     * so that its rules become eligible to fire.
+     * <p>
+     * Before/after {@code RuleFlowGroupActivated} events are fired synchronously
+     * on the calling thread. The corresponding {@code RuleFlowGroupDeactivated}
+     * event fires only when the group was activated by a process node instance;
+     * a plain {@code activate()} call never fires {@code RuleFlowGroupDeactivated}.
+     *
+     * @since 10.4.0
+     * @apiNote This is the ruleflow-group counterpart of {@link AgendaGroup#setFocus()}.
+     *          In addition to pushing the group onto the focus stack, it fires
+     *          {@code RuleFlowGroupActivated} events.
+     */
+    void activate();
 }
