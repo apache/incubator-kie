@@ -19,6 +19,7 @@
 package org.jbpm.process.workitem.builtin;
 
 import java.util.Arrays;
+import java.util.Set;
 
 import org.kie.api.runtime.process.ProcessWorkItemHandlerException;
 import org.kie.kogito.internal.process.workitem.KogitoWorkItem;
@@ -31,6 +32,14 @@ public class ProcessWorkItemHandlerExceptionHandler extends AbstractExceptionHan
     public static final String ERROR_HANDLER_PROCESS_ID = "ErrorHandlerProcessId";
     public static final String ERROR_HANDLING_STRATEGY = "ErrorHandlingStrategy";
     public static final String ERROR_HANDLING_RETRIES = "ErrorHandlingRetries";
+
+    /**
+     * Internal parameters that configure exception handling. They are not part of a task's data contract.
+     */
+    public static final Set<String> ERROR_HANDLING_PARAMETERS = Set.of(
+            ERROR_HANDLER_PROCESS_ID,
+            ERROR_HANDLING_STRATEGY,
+            ERROR_HANDLING_RETRIES);
 
     public static boolean canDecorate(KogitoWorkItemHandler handler, KogitoWorkItem workItem) {
         if (handler == null || handler instanceof AbstractExceptionHandlingTaskHandler || workItem == null) {
