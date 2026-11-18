@@ -686,7 +686,14 @@ public final class AsmUtil {
                 break;
             case 5 : mv.visitInsn( Opcodes.ICONST_5 );
                 break;
-            default : mv.visitIntInsn( Opcodes.BIPUSH, j );
+            default :
+                if ( j >= Byte.MIN_VALUE && j <= Byte.MAX_VALUE ) {
+                    mv.visitIntInsn( Opcodes.BIPUSH, j );
+                } else if ( j >= Short.MIN_VALUE && j <= Short.MAX_VALUE ) {
+                    mv.visitIntInsn( Opcodes.SIPUSH, j );
+                } else {
+                    mv.visitLdcInsn( j );
+                }
         }
     }
 }
