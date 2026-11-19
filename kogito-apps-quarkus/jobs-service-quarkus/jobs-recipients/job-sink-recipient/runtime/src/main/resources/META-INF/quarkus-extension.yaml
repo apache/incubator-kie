@@ -31,7 +31,7 @@ metadata:
     - cloudevents
   guide: https://quarkus.io/guides/kogito
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"
   config:
     - "kogito.job.recipient.sink."

@@ -29,5 +29,5 @@ metadata:
     - "BPMN2"
   guide: "https://quarkus.io/guides/jbpm"
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"

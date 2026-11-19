@@ -23,6 +23,6 @@ metadata:
     - "json-b"
     - "json"
   categories:
-    - "business-automation"
+    - "automation"
     - "serialization"
   status: "stable"

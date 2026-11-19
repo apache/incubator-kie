@@ -28,7 +28,7 @@ metadata:
     - events
   guide: https://quarkus.io/guides/kie
   categories:
-    - "business-automation"
+    - "automation"
     - "cloud"
   status: "stable"
   config:

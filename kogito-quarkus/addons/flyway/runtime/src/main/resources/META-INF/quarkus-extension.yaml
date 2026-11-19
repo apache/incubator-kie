@@ -27,7 +27,7 @@ metadata:
     - jdbc
   guide: https://quarkus.io/guides/kie
   categories:
-    - "business-automation"
+    - "automation"
     - "cloud"
     - "flyway"
     - "persistence"

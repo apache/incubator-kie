@@ -27,7 +27,7 @@ metadata:
     - "DMN"
   guide: "https://quarkus.io/guides/drools-dmn"
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"
   codestart:
     name: "drools-dmn-codestart"
