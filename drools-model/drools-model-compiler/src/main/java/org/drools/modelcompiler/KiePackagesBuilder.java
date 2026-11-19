@@ -580,36 +580,8 @@ public class KiePackagesBuilder {
                 while (true) {
                     final Condition absenceStep = steps.get(i);
                     final List<Condition> inner = absenceStep.getSubConditions();
-                    // Validate: all children must be simple PATTERNs.
-                    for (Condition child : inner) {
-                        if (child.getType() != Condition.Type.PATTERN) {
-                            throw new UnsupportedOperationException(
-                                "sequence absent() children must all be simple patterns; got " + child.getType());
-                        }
-                    }
                     // Build one veto gate per absence pattern in this absent() step.
-                    for (Condition child : inner) {
-                        int absenceFilterIdx  = filters.size();
-                        int absenceAdapterIdx = signalAdapterCounter[0]++;
-
-                        PatternImpl absencePattern = (PatternImpl) child;
-                        RuleConditionElement builtAbsence = buildPattern(ctx, group, absencePattern);
-                        if (!(builtAbsence instanceof Pattern)) {
-                            throw new IllegalStateException("NOT/NOR step pattern must compile to Pattern, got " + builtAbsence);
-                        }
-                        filters.add((Pattern) builtAbsence);
-
-                        // Absence leaf gate: single filter input, output to VetoSignalProcessor.
-                        // Does NOT wire into a parent AND composite — it is an independent side-channel.
-                        LogicGate absenceLeaf = new LogicGate(
-                            Gates::and,
-                            gateCounter[0]++,
-                            new int[]{absenceFilterIdx},
-                            new int[]{absenceAdapterIdx},
-                            0);
-                        absenceLeaf.setOutput(VetoSignalProcessor.get());
-                        allGates.add(absenceLeaf);
-                    }
+                    allGates.addAll(buildAbsenceLeaves(ctx, group, inner, filters, gateCounter, signalAdapterCounter));
                     // Check the next step: keep consuming if it is another absent() step.
                     if (i + 1 >= n) {
                         // No following step — should have been caught by ViewPatternBuilder; defensive.
@@ -693,6 +665,42 @@ public class KiePackagesBuilder {
     private static final String DEFERRED_GATE_ERROR =
             "sequence(...) does not yet support condition type %s as a composite step gate.";
 
+    /**
+     * Builds one veto leaf gate per absence pattern of an {@code absent()} step. Each leaf has a single
+     * filter input and its output is the {@link VetoSignalProcessor}: it is an independent side-channel,
+     * not wired into any parent AND composite.
+     */
+    private List<LogicGate> buildAbsenceLeaves(RuleContext ctx, GroupElement group, List<Condition> absencePatterns,
+                                               List<Pattern> filters, int[] gateCounter, int[] signalAdapterCounter) {
+        for (Condition child : absencePatterns) {
+            if (child.getType() != Condition.Type.PATTERN) {
+                throw new UnsupportedOperationException(
+                    "sequence absent() children must all be simple patterns; got " + child.getType());
+            }
+        }
+        List<LogicGate> leaves = new ArrayList<>();
+        for (Condition child : absencePatterns) {
+            int absenceFilterIdx  = filters.size();
+            int absenceAdapterIdx = signalAdapterCounter[0]++;
+
+            RuleConditionElement builtAbsence = buildPattern(ctx, group, (PatternImpl) child);
+            if (!(builtAbsence instanceof Pattern)) {
+                throw new IllegalStateException("NOT/NOR step pattern must compile to Pattern, got " + builtAbsence);
+            }
+            filters.add((Pattern) builtAbsence);
+
+            LogicGate absenceLeaf = new LogicGate(
+                Gates::and,
+                gateCounter[0]++,
+                new int[]{absenceFilterIdx},
+                new int[]{absenceAdapterIdx},
+                0);
+            absenceLeaf.setOutput(VetoSignalProcessor.get());
+            leaves.add(absenceLeaf);
+        }
+        return leaves;
+    }
+
     private LogicGate buildStepGate(RuleContext ctx, GroupElement group,
                                     Condition node, List<Pattern> filters,
                                     List<LogicGate> stepGates, int[] gateCounter,
@@ -731,10 +739,27 @@ public class KiePackagesBuilder {
             throw new IllegalStateException(
                     "SEQUENCE composite node has no children: " + type);
         }
-        LogicGate[] inputs = new LogicGate[children.size()];
-        for (int i = 0; i < children.size(); i++) {
-            inputs[i] = buildStepGate(ctx, group, children.get(i), filters, stepGates, gateCounter, seqIdx, signalAdapterCounter);
+        List<LogicGate> inputList = new ArrayList<>(children.size());
+        for (Condition child : children) {
+            LogicGate previous = inputList.isEmpty() ? null : inputList.get(inputList.size() - 1);
+            if ((child.getType() == Condition.Type.NOT || child.getType() == Condition.Type.NOR)
+                    && type == Condition.Type.AND && previous != null && previous.isStatusCanRevert()) {
+                // absent() written inside a folded oneOf()/noneOrAll() run, i.e. directly after a
+                // revertible gate. It is a veto side-channel, not an input of this composite. Its
+                // window opens once that gate is MATCHED, so a blocker that arrived earlier is
+                // invisible (arrival order governs). Any other NOT/NOR child falls through to
+                // buildStepGate() and is rejected as an unsupported composite step gate.
+                for (LogicGate leaf : buildAbsenceLeaves(ctx, group, child.getSubConditions(), filters,
+                                                          gateCounter, signalAdapterCounter)) {
+                    leaf.setDeferredActivation(true);
+                    previous.addArmOnMatch(leaf);
+                    stepGates.add(leaf);
+                }
+                continue;
+            }
+            inputList.add(buildStepGate(ctx, group, child, filters, stepGates, gateCounter, seqIdx, signalAdapterCounter));
         }
+        LogicGate[] inputs = inputList.toArray(new LogicGate[0]);
         boolean statusCanRevert = (type == Condition.Type.XOR || type == Condition.Type.XNOR);
         for (LogicGate input : inputs) {
             if (input.isStatusCanRevert()) {
