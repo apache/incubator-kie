@@ -20,6 +20,7 @@ package org.drools.core.reteoo;
 
 import org.drools.base.base.ObjectType;
 import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.reteoo.DeliveryClock;
 import org.drools.base.reteoo.DynamicFilter;
 import org.drools.base.reteoo.DynamicFilterProto;
 import org.drools.base.reteoo.NodeTypeEnums;
@@ -199,6 +200,8 @@ public class SequenceNode extends LeftTupleSource
 
         private DynamicFilter[] filters;
 
+        private final DeliveryClock clock = new DeliveryClock();
+
         private SequenceNode node;
 
         private long          nodePosMaskBit;
@@ -273,6 +276,7 @@ public class SequenceNode extends LeftTupleSource
                 }
             }
             java.util.Arrays.fill(filters, null);
+            clock.reset();
         }
 
         public DynamicFilter getActiveDynamicFilter(int filterIndex) {
@@ -280,7 +284,7 @@ public class SequenceNode extends LeftTupleSource
 
             if (filter == null) {
                 DynamicFilterProto proto = node.getDynamicFilters()[filterIndex];
-                filter = new DynamicFilter(proto);
+                filter = new DynamicFilter(proto, clock);
                 filters[filterIndex] = filter;
                 addActiveFilter(filter);
             } else if (filter.getSignalAdapters().isEmpty()) {
@@ -337,17 +341,57 @@ public class SequenceNode extends LeftTupleSource
             this.node = node;
         }
 
+        /**
+         * Delivers a newly inserted fact to every active filter registered for this adapter's
+         * object-type index.
+         *
+         * <h3>Snapshot walk</h3>
+         * Delivering a fact to a filter can cause an anchor to advance or be reset. Advancing
+         * deactivates the current step and activates the next, which removes the filter for
+         * the current step from the live {@code activeFilters} list (its signal-adapter list
+         * becomes empty) and possibly inserts a new filter for the next step. Walking the live
+         * list directly would therefore stop prematurely and skip filters for sequences that are
+         * still at the same step; a later snapshot entry whose adapters were removed by an
+         * earlier entry's delivery is detected and skipped via {@code isEmpty()}.
+         *
+         * <h3>Single-thread invariant</h3>
+         * This method runs entirely on the engine's working-memory thread. Agenda rules fire
+         * only after propagation is complete: in the normal {@code fireAllRules} path the
+         * propagation queue is flushed before each rule fires, and {@code flushPropagations()}
+         * is called again after each {@link org.drools.core.phreak.RuleExecutor#fireActivation}
+         * returns. There is therefore no preemption window in which another rule could fire
+         * between the snapshot copy and the per-filter loop — the {@code isEmpty()} guard
+         * covers only <em>within-delivery</em> deactivation caused by an earlier filter in the
+         * same loop iteration, not any form of agenda interleaving.
+         *
+         * <h3>New adapters registered during delivery</h3>
+         * If an anchor advances while this loop is running, a new signal adapter may be
+         * registered on a later snapshot entry. The shared {@link DeliveryClock} stamps that
+         * adapter with the current epoch, which is equal to the delivery start epoch, so
+         * {@link DynamicFilter#assertObject} skips it — the advancing fact is not delivered to
+         * the step it just unlocked.
+         */
         public void assertObject(final InternalFactHandle factHandle,
                                  final PropagationContext pctx,
                                  final ReteEvaluator reteEvaluator) {
             SequenceNodeMemory memory = reteEvaluator.getNodeMemory(node);
 
             LinkedList<DynamicFilter> filters = memory.getActiveFilters()[adapterIndex];
-            if (filters != null) {
-                for (DynamicFilter f = filters.getFirst(); f != null; ) {
-                    DynamicFilter next = f.getNext();
-                    f.assertObject(factHandle, reteEvaluator);
-                    f = next;
+            if (filters != null && !filters.isEmpty()) {
+                int n = filters.size();
+                DynamicFilter[] snapshot = new DynamicFilter[n];
+                int i = 0;
+                for (DynamicFilter f = filters.getFirst(); f != null; f = f.getNext()) {
+                    snapshot[i++] = f;
+                }
+                for (int j = 0; j < n; j++) {
+                    // An earlier filter in this loop may have advanced or reset an anchor,
+                    // deactivating this filter's step and emptying its signal-adapter list.
+                    // Skip it; DynamicFilter.assertObject would be a no-op anyway, but the
+                    // check makes the intent explicit and avoids the clock.beginDelivery call.
+                    if (!snapshot[j].getSignalAdapters().isEmpty()) {
+                        snapshot[j].assertObject(factHandle, reteEvaluator);
+                    }
                 }
             }
         }
