@@ -127,11 +127,14 @@ public class JobDetailsEntityHelper {
             return null;
         }
 
-        instance.getRecipient().remove("classType");
-        RecipientInstance recipient = new RecipientInstance(getObjectMapperInstance().convertValue(instance.getRecipient(), InVMRecipient.class));
+        // work on copies, mutating the managed entity's JSON would make Hibernate flag it as dirty and issue an UPDATE
+        ObjectNode recipientNode = instance.getRecipient().deepCopy();
+        recipientNode.remove("classType");
+        RecipientInstance recipient = new RecipientInstance(getObjectMapperInstance().convertValue(recipientNode, InVMRecipient.class));
 
-        instance.getTrigger().remove("classType");
-        Trigger trigger = getObjectMapperInstance().convertValue(instance.getTrigger(), SimpleTimerTrigger.class);
+        ObjectNode triggerNode = instance.getTrigger().deepCopy();
+        triggerNode.remove("classType");
+        Trigger trigger = getObjectMapperInstance().convertValue(triggerNode, SimpleTimerTrigger.class);
 
         // Map exception details if present
         JobExecutionExceptionDetails exceptionDetails = null;
