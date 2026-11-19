@@ -50,7 +50,9 @@ public class DynamicNodeInstance extends CompositeContextNodeInstance {
             }
         });
         completeEventListener = ContextAwareEventListener.using(listener -> {
-            if (canComplete() && getState() == KogitoProcessInstance.STATE_ACTIVE) {
+            // autocomplete is only evaluated when a child node instance completes (see nodeInstanceCompleted),
+            // otherwise an empty ad hoc subprocess would be closed by any unrelated event, e.g. a variable change
+            if (!getDynamicNode().isAutoComplete() && canComplete() && getState() == KogitoProcessInstance.STATE_ACTIVE) {
                 triggerCompleted(CONNECTION_DEFAULT_TYPE);
             }
         });
