@@ -50,7 +50,6 @@ import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.internal.process.runtime.KogitoProcessInstance.STATE_ACTIVE;
 import static org.kie.kogito.internal.process.runtime.KogitoProcessInstance.STATE_COMPLETED;
 import static org.kie.kogito.test.utils.ProcessInstancesTestUtils.abort;
@@ -254,8 +253,8 @@ abstract class AbstractProcessInstancesIT {
                 ResultSet resultSet = connection.createStatement().executeQuery("SELECT process_id, process_version FROM process_instances")) {
 
             while (resultSet.next()) {
-                assertEquals(resultSet.getString(1), "migrated");
-                assertEquals(resultSet.getString(2), "2");
+                assertThat(resultSet.getString(1)).isEqualTo("migrated");
+                assertThat(resultSet.getString(2)).isEqualTo("2");
             }
         }
     }
@@ -276,8 +275,8 @@ abstract class AbstractProcessInstancesIT {
                 ResultSet resultSet = connection.createStatement().executeQuery("SELECT process_id, process_version FROM process_instances WHERE id = '" + processInstance1.id() + "'")) {
 
             while (resultSet.next()) {
-                assertEquals(resultSet.getString(1), "migrated");
-                assertEquals(resultSet.getString(2), "2");
+                assertThat(resultSet.getString(1)).isEqualTo("migrated");
+                assertThat(resultSet.getString(2)).isEqualTo("2");
             }
         }
 
@@ -285,8 +284,8 @@ abstract class AbstractProcessInstancesIT {
                 ResultSet resultSet = connection.createStatement().executeQuery("SELECT process_id, process_version FROM process_instances WHERE id = '" + processInstance2.id() + "'")) {
 
             while (resultSet.next()) {
-                assertEquals(resultSet.getString(1), "BPMN2_UserTask");
-                assertEquals(resultSet.getString(2), "1.0");
+                assertThat(resultSet.getString(1)).isEqualTo("BPMN2_UserTask");
+                assertThat(resultSet.getString(2)).isEqualTo("1.0");
             }
         }
 

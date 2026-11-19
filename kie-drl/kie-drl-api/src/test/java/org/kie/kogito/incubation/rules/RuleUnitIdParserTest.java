@@ -25,36 +25,36 @@ import org.kie.drl.api.identifiers.RuleUnitId;
 import org.kie.drl.api.identifiers.RuleUnitIdParser;
 import org.kie.drl.api.identifiers.RuleUnitInstanceId;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class RuleUnitIdParserTest {
 
     @Test
     void parseRuleUnitId() {
-        assertEquals(RuleUnitId.class, RuleUnitIdParser.parse("/rule-units/u").getClass());
-        assertEquals("u", RuleUnitIdParser.parse("/rule-units/u", RuleUnitId.class).ruleUnitId());
+        assertThat(RuleUnitIdParser.parse("/rule-units/u").getClass()).isEqualTo(RuleUnitId.class);
+        assertThat(RuleUnitIdParser.parse("/rule-units/u", RuleUnitId.class).ruleUnitId()).isEqualTo("u");
     }
 
     @Test
     void parseQueryId() {
-        assertEquals(QueryId.class, RuleUnitIdParser.parse("/rule-units/u/queries/q").getClass());
-        assertEquals("u", RuleUnitIdParser.parse("/rule-units/u/queries/q", RuleUnitId.class).ruleUnitId());
-        assertEquals("q", RuleUnitIdParser.parse("/rule-units/u/queries/q", QueryId.class).queryId());
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/queries/q").getClass()).isEqualTo(QueryId.class);
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/queries/q", RuleUnitId.class).ruleUnitId()).isEqualTo("u");
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/queries/q", QueryId.class).queryId()).isEqualTo("q");
     }
 
     @Test
     void parseRuleUnitInstanceId() {
-        assertEquals(RuleUnitInstanceId.class, RuleUnitIdParser.parse("/rule-units/u/instances/ui").getClass());
-        assertEquals("u", RuleUnitIdParser.parse("/rule-units/u/instances/ui", RuleUnitId.class).ruleUnitId());
-        assertEquals("ui", RuleUnitIdParser.parse("/rule-units/u/instances/ui", RuleUnitInstanceId.class).ruleUnitInstanceId());
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui").getClass()).isEqualTo(RuleUnitInstanceId.class);
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui", RuleUnitId.class).ruleUnitId()).isEqualTo("u");
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui", RuleUnitInstanceId.class).ruleUnitInstanceId()).isEqualTo("ui");
     }
 
     @Test
     void parseInstanceQueryId() {
-        assertEquals(InstanceQueryId.class, RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q").getClass());
-        assertEquals("u", RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q", RuleUnitId.class).ruleUnitId());
-        assertEquals("ui", RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q", RuleUnitInstanceId.class).ruleUnitInstanceId());
-        assertEquals("q", RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q", InstanceQueryId.class).queryId());
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q").getClass()).isEqualTo(InstanceQueryId.class);
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q", RuleUnitId.class).ruleUnitId()).isEqualTo("u");
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q", RuleUnitInstanceId.class).ruleUnitInstanceId()).isEqualTo("ui");
+        assertThat(RuleUnitIdParser.parse("/rule-units/u/instances/ui/queries/q", InstanceQueryId.class).queryId()).isEqualTo("q");
     }
 
 }

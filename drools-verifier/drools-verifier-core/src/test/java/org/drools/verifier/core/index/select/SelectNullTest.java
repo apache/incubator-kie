@@ -21,13 +21,13 @@ package org.drools.verifier.core.index.select;
 import org.drools.verifier.core.maps.MultiMapFactory;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class SelectNullTest {
 
     @Test
     void testAll() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
             new Select<>(MultiMapFactory.make(),
                     null);
         });

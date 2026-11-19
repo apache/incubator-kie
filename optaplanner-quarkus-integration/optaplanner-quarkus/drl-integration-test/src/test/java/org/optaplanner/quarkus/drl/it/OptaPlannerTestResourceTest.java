@@ -19,10 +19,11 @@
 
 package org.optaplanner.quarkus.drl.it;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.StringReader;
 import java.util.Properties;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -48,11 +49,12 @@ class OptaPlannerTestResourceTest {
                 .post("/optaplanner/test/solver-factory")
                 .then()
                 .extract().body().asString()));
-        Assertions.assertEquals("0", result.get("score"));
-        Assertions.assertNotNull(result.get("entity.0.fullValue"));
-        Assertions.assertNotNull(result.get("entity.1.fullValue"));
-        Assertions.assertNotEquals(result.get("entity.0.fullValue"), result.get("entity.1.fullValue"),
-                "Both entities have the same value. Maybe property reactive is set to ALWAYS?");
+        assertThat(result.get("score")).isEqualTo("0");
+        assertThat(result.get("entity.0.fullValue")).isNotNull();
+        assertThat(result.get("entity.1.fullValue")).isNotNull();
+        assertThat(result.get("entity.1.fullValue"))
+                .as("Both entities have the same value. Maybe property reactive is set to ALWAYS?")
+                .isNotEqualTo(result.get("entity.0.fullValue"));
     }
 
 }

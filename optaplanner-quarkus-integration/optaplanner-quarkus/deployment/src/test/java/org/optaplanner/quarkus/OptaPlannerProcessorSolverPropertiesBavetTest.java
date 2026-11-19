@@ -19,8 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
 
@@ -55,10 +54,10 @@ class OptaPlannerProcessorSolverPropertiesBavetTest {
 
     @Test
     void solverProperties() {
-        assertEquals(ConstraintStreamImplType.BAVET,
-                solverConfig.getScoreDirectorFactoryConfig().getConstraintStreamImplType());
+        assertThat(solverConfig.getScoreDirectorFactoryConfig().getConstraintStreamImplType())
+                .isEqualTo(ConstraintStreamImplType.BAVET);
 
-        assertNotNull(solverFactory);
+        assertThat(solverFactory).isNotNull();
     }
 
 }

@@ -54,10 +54,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -187,10 +184,10 @@ class DecisionsApiV1IT {
 
     private <T> void assertCollection(Collection<T> expected, Collection<T> actual, BiConsumer<T, T> itemAssertor) {
         if (expected == null) {
-            assertNull(actual);
+            assertThat(actual).isNull();
             return;
         }
-        assertSame(expected.size(), actual.size());
+        assertThat(actual.size()).isSameAs(expected.size());
         Iterator<T> itExpected = expected.iterator();
         Iterator<T> itActual = actual.iterator();
         while (itExpected.hasNext() && itActual.hasNext()) {
@@ -199,84 +196,84 @@ class DecisionsApiV1IT {
     }
 
     private void assertDecisionOutcomeResponse(DecisionOutcome expected, DecisionOutcome actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getOutcomeId(), actual.getOutcomeId());
-        assertEquals(expected.getOutcomeName(), actual.getOutcomeName());
-        assertEquals(expected.getEvaluationStatus(), actual.getEvaluationStatus());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getOutcomeId()).isEqualTo(expected.getOutcomeId());
+        assertThat(actual.getOutcomeName()).isEqualTo(expected.getOutcomeName());
+        assertThat(actual.getEvaluationStatus()).isEqualTo(expected.getEvaluationStatus());
         assertTypedValueResponse(expected, actual);
         assertCollection(expected.getOutcomeInputs(), actual.getOutcomeInputs(), this::assertTypedValueResponse);
         assertCollection(expected.getMessages(), actual.getMessages(), this::assertMessageResponse);
     }
 
     private void assertDecisionOutcomesResponse(DecisionOutcomesResponse expected, DecisionOutcomesResponse actual) {
-        assertNotNull(actual);
+        assertThat(actual).isNotNull();
         assertExecutionHeaderResponse(expected.getHeader(), actual.getHeader());
         assertCollection(expected.getOutcomes(), actual.getOutcomes(), this::assertDecisionOutcomeResponse);
     }
 
     private void assertDecisionStructuredInputResponse(DecisionStructuredInputsResponse expected,
             DecisionStructuredInputsResponse actual) {
-        assertNotNull(actual);
+        assertThat(actual).isNotNull();
         assertCollection(expected.getInputs(), actual.getInputs(), this::assertTypedValueResponse);
     }
 
     private void assertExecutionHeaderResponse(DecisionHeaderResponse expected, DecisionHeaderResponse actual) {
-        assertNotNull(actual);
-        assertSame(expected.getExecutionType(), actual.getExecutionType());
-        assertEquals(expected.getExecutionId(), actual.getExecutionId());
-        assertEquals(expected.getExecutionDate(), actual.getExecutionDate());
-        assertEquals(expected.getExecutorName(), actual.getExecutorName());
-        assertEquals(expected.hasSucceeded(), actual.hasSucceeded());
-        assertEquals(expected.getExecutedModelName(), actual.getExecutedModelName());
-        assertEquals(expected.getExecutedModelNamespace(), actual.getExecutedModelNamespace());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getExecutionType()).isSameAs(expected.getExecutionType());
+        assertThat(actual.getExecutionId()).isEqualTo(expected.getExecutionId());
+        assertThat(actual.getExecutionDate()).isEqualTo(expected.getExecutionDate());
+        assertThat(actual.getExecutorName()).isEqualTo(expected.getExecutorName());
+        assertThat(actual.hasSucceeded()).isEqualTo(expected.hasSucceeded());
+        assertThat(actual.getExecutedModelName()).isEqualTo(expected.getExecutedModelName());
+        assertThat(actual.getExecutedModelNamespace()).isEqualTo(expected.getExecutedModelNamespace());
     }
 
     private void assertMessageResponse(Message expected, Message actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getLevel(), actual.getLevel());
-        assertEquals(expected.getCategory(), actual.getCategory());
-        assertEquals(expected.getType(), actual.getType());
-        assertEquals(expected.getSourceId(), actual.getSourceId());
-        assertEquals(expected.getText(), actual.getText());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getLevel()).isEqualTo(expected.getLevel());
+        assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
+        assertThat(actual.getType()).isEqualTo(expected.getType());
+        assertThat(actual.getSourceId()).isEqualTo(expected.getSourceId());
+        assertThat(actual.getText()).isEqualTo(expected.getText());
         assertMessageExceptionField(expected.getException(), actual.getException());
     }
 
     private void assertMessageExceptionField(MessageExceptionField expected, MessageExceptionField actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getMessage(), actual.getMessage());
-        assertEquals(expected.getClassName(), actual.getClassName());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getMessage()).isEqualTo(expected.getMessage());
+        assertThat(actual.getClassName()).isEqualTo(expected.getClassName());
         if (expected.getCause() == null) {
-            assertNull(actual.getCause());
+            assertThat(actual.getCause()).isNull();
         } else {
             assertMessageExceptionField(expected.getCause(), actual.getCause());
         }
     }
 
     private void assertTypedValueResponse(DecisionInput expected, DecisionInput actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getName(), actual.getName());
-        assertEquals(TypedValue.Kind.UNIT, actual.getValue().getKind());
-        assertEquals(expected.getValue().getKind(), actual.getValue().getKind());
-        assertEquals(expected.getValue().getType(), actual.getValue().getType());
-        assertEquals(expected.getValue().toUnit().getValue(), actual.getValue().toUnit().getValue());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getName()).isEqualTo(expected.getName());
+        assertThat(actual.getValue().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(actual.getValue().getKind()).isEqualTo(expected.getValue().getKind());
+        assertThat(actual.getValue().getType()).isEqualTo(expected.getValue().getType());
+        assertThat(actual.getValue().toUnit().getValue()).isEqualTo(expected.getValue().toUnit().getValue());
     }
 
     private void assertTypedValueResponse(DecisionOutcome expected, DecisionOutcome actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getOutcomeName(), actual.getOutcomeName());
-        assertEquals(TypedValue.Kind.UNIT, actual.getOutcomeResult().getKind());
-        assertEquals(expected.getOutcomeResult().getKind(), actual.getOutcomeResult().getKind());
-        assertEquals(expected.getOutcomeResult().getType(), actual.getOutcomeResult().getType());
-        assertEquals(expected.getOutcomeResult().toUnit().getValue(), actual.getOutcomeResult().toUnit().getValue());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getOutcomeName()).isEqualTo(expected.getOutcomeName());
+        assertThat(actual.getOutcomeResult().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(actual.getOutcomeResult().getKind()).isEqualTo(expected.getOutcomeResult().getKind());
+        assertThat(actual.getOutcomeResult().getType()).isEqualTo(expected.getOutcomeResult().getType());
+        assertThat(actual.getOutcomeResult().toUnit().getValue()).isEqualTo(expected.getOutcomeResult().toUnit().getValue());
     }
 
     private void assertTypedValueResponse(NamedTypedValue expected, NamedTypedValue actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getName(), actual.getName());
-        assertEquals(TypedValue.Kind.UNIT, actual.getValue().getKind());
-        assertEquals(expected.getValue().getKind(), actual.getValue().getKind());
-        assertEquals(expected.getValue().getType(), actual.getValue().getType());
-        assertEquals(expected.getValue().toUnit().getValue(), actual.getValue().toUnit().getValue());
+        assertThat(actual).isNotNull();
+        assertThat(actual.getName()).isEqualTo(expected.getName());
+        assertThat(actual.getValue().getKind()).isEqualTo(TypedValue.Kind.UNIT);
+        assertThat(actual.getValue().getKind()).isEqualTo(expected.getValue().getKind());
+        assertThat(actual.getValue().getType()).isEqualTo(expected.getValue().getType());
+        assertThat(actual.getValue().toUnit().getValue()).isEqualTo(expected.getValue().toUnit().getValue());
     }
 
     private Decision buildValidDecision(ListStatus inputsStatus, ListStatus outcomesStatus) throws Exception {

@@ -32,9 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CounterfactualDomainSerialisationTest {
 
@@ -58,21 +56,21 @@ public class CounterfactualDomainSerialisationTest {
 
         mapper.writeValue(writer, searchDomain);
         String searchDomainJson = writer.toString();
-        assertNotNull(searchDomainJson);
+        assertThat(searchDomainJson).isNotNull();
 
         CounterfactualSearchDomain roundTrippedSearchDomain = mapper.readValue(searchDomainJson, CounterfactualSearchDomain.class);
 
-        assertTrue(roundTrippedSearchDomain.getValue() instanceof CounterfactualSearchDomainUnitValue);
-        assertEquals(searchDomain.getValue().getKind(), roundTrippedSearchDomain.getValue().getKind());
-        assertEquals(searchDomain.getName(), roundTrippedSearchDomain.getName());
-        assertEquals(searchDomain.getValue().getType(), roundTrippedSearchDomain.getValue().getType());
-        assertEquals(searchDomain.getValue().toUnit().getBaseType(), roundTrippedSearchDomain.getValue().toUnit().getBaseType());
-        assertEquals(searchDomain.getValue().toUnit().isFixed(), roundTrippedSearchDomain.getValue().toUnit().isFixed());
-        assertTrue(roundTrippedSearchDomain.getValue().toUnit().getDomain() instanceof CounterfactualDomainRange);
+        assertThat((roundTrippedSearchDomain.getValue() instanceof CounterfactualSearchDomainUnitValue)).isTrue();
+        assertThat(roundTrippedSearchDomain.getValue().getKind()).isEqualTo(searchDomain.getValue().getKind());
+        assertThat(roundTrippedSearchDomain.getName()).isEqualTo(searchDomain.getName());
+        assertThat(roundTrippedSearchDomain.getValue().getType()).isEqualTo(searchDomain.getValue().getType());
+        assertThat(roundTrippedSearchDomain.getValue().toUnit().getBaseType()).isEqualTo(searchDomain.getValue().toUnit().getBaseType());
+        assertThat(roundTrippedSearchDomain.getValue().toUnit().isFixed()).isEqualTo(searchDomain.getValue().toUnit().isFixed());
+        assertThat((roundTrippedSearchDomain.getValue().toUnit().getDomain() instanceof CounterfactualDomainRange)).isTrue();
 
         CounterfactualDomainRange roundTrippedDomainRange = (CounterfactualDomainRange) roundTrippedSearchDomain.getValue().toUnit().getDomain();
-        assertEquals(domainRange.getLowerBound(), roundTrippedDomainRange.getLowerBound());
-        assertEquals(domainRange.getUpperBound(), roundTrippedDomainRange.getUpperBound());
+        assertThat(roundTrippedDomainRange.getLowerBound()).isEqualTo(domainRange.getLowerBound());
+        assertThat(roundTrippedDomainRange.getUpperBound()).isEqualTo(domainRange.getUpperBound());
     }
 
     @Test
@@ -86,20 +84,20 @@ public class CounterfactualDomainSerialisationTest {
 
         mapper.writeValue(writer, searchDomain);
         String searchDomainJson = writer.toString();
-        assertNotNull(searchDomainJson);
+        assertThat(searchDomainJson).isNotNull();
 
         CounterfactualSearchDomain roundTrippedSearchDomain = mapper.readValue(searchDomainJson, CounterfactualSearchDomain.class);
 
-        assertTrue(roundTrippedSearchDomain.getValue() instanceof CounterfactualSearchDomainUnitValue);
-        assertEquals(searchDomain.getValue().getKind(), roundTrippedSearchDomain.getValue().getKind());
-        assertEquals(searchDomain.getName(), roundTrippedSearchDomain.getName());
-        assertEquals(searchDomain.getValue().getType(), roundTrippedSearchDomain.getValue().getType());
-        assertEquals(searchDomain.getValue().toUnit().getBaseType(), roundTrippedSearchDomain.getValue().toUnit().getBaseType());
-        assertEquals(searchDomain.getValue().toUnit().isFixed(), roundTrippedSearchDomain.getValue().toUnit().isFixed());
-        assertTrue(roundTrippedSearchDomain.getValue().toUnit().getDomain() instanceof CounterfactualDomainCategorical);
+        assertThat((roundTrippedSearchDomain.getValue() instanceof CounterfactualSearchDomainUnitValue)).isTrue();
+        assertThat(roundTrippedSearchDomain.getValue().getKind()).isEqualTo(searchDomain.getValue().getKind());
+        assertThat(roundTrippedSearchDomain.getName()).isEqualTo(searchDomain.getName());
+        assertThat(roundTrippedSearchDomain.getValue().getType()).isEqualTo(searchDomain.getValue().getType());
+        assertThat(roundTrippedSearchDomain.getValue().toUnit().getBaseType()).isEqualTo(searchDomain.getValue().toUnit().getBaseType());
+        assertThat(roundTrippedSearchDomain.getValue().toUnit().isFixed()).isEqualTo(searchDomain.getValue().toUnit().isFixed());
+        assertThat((roundTrippedSearchDomain.getValue().toUnit().getDomain() instanceof CounterfactualDomainCategorical)).isTrue();
 
         CounterfactualDomainCategorical roundTrippedDomainCategorical = (CounterfactualDomainCategorical) roundTrippedSearchDomain.getValue().toUnit().getDomain();
-        assertEquals(domainCategorical.getCategories().size(), roundTrippedDomainCategorical.getCategories().size());
-        assertTrue(roundTrippedDomainCategorical.getCategories().containsAll(domainCategorical.getCategories()));
+        assertThat(roundTrippedDomainCategorical.getCategories().size()).isEqualTo(domainCategorical.getCategories().size());
+        assertThat(roundTrippedDomainCategorical.getCategories().containsAll(domainCategorical.getCategories())).isTrue();
     }
 }

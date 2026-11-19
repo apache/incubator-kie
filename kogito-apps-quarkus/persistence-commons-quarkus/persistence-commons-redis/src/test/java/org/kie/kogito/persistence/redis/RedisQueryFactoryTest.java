@@ -21,7 +21,6 @@ package org.kie.kogito.persistence.redis;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.persistence.api.query.AttributeFilter;
 import org.kie.kogito.persistence.api.query.QueryFilterFactory;
@@ -30,6 +29,8 @@ import org.mockito.Mockito;
 import io.redisearch.Query;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.persistence.redis.TestContants.TEST_INDEX_NAME;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -91,7 +92,7 @@ public class RedisQueryFactoryTest {
         filters.add(QueryFilterFactory.between("shouldBeIgnored", 0, 1));
         String result = RedisQueryFactory.buildQueryBody(TEST_INDEX_NAME, filters);
 
-        Assertions.assertEquals("@indexName:myIndexName @firstAttribute:firstValue @secondAttribute:secondValue", result);
+        assertThat(result).isEqualTo("@indexName:myIndexName @firstAttribute:firstValue @secondAttribute:secondValue");
     }
 
     @Test
@@ -114,6 +115,6 @@ public class RedisQueryFactoryTest {
     }
 
     private void testFilterShouldNotBeSupported(AttributeFilter<?> filter) {
-        Assertions.assertThrows(UnsupportedOperationException.class, () -> RedisQueryFactory.addFilters(new Query(""), singletonList(filter)));
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> RedisQueryFactory.addFilters(new Query(""), singletonList(filter)));
     }
 }

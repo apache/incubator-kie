@@ -40,7 +40,6 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.transaction.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 @QuarkusTestResource(PostgreSqlQuarkusTestResource.class)
@@ -84,16 +83,16 @@ class BasicTypeMappingIT {
 
         assertThat(results).hasSize(2);
         final BasicTypeExtractRow row0 = results.get(0);
-        assertEquals("key1", row0.key);
-        assertEquals(CACHE_NAME, row0.name);
-        assertEquals(1, row0.field1MappedField);
-        assertEquals("A", row0.field2MappedField);
+        assertThat(row0.key).isEqualTo("key1");
+        assertThat(row0.name).isEqualTo(CACHE_NAME);
+        assertThat(row0.field1MappedField).isEqualTo(1);
+        assertThat(row0.field2MappedField).isEqualTo("A");
 
         final BasicTypeExtractRow row1 = results.get(1);
-        assertEquals("key2", row1.key);
-        assertEquals(CACHE_NAME, row1.name);
-        assertEquals(3, row1.field1MappedField);
-        assertEquals("B", row1.field2MappedField);
+        assertThat(row1.key).isEqualTo("key2");
+        assertThat(row1.name).isEqualTo(CACHE_NAME);
+        assertThat(row1.field1MappedField).isEqualTo(3);
+        assertThat(row1.field2MappedField).isEqualTo("B");
     }
 
     @Test
@@ -137,22 +136,22 @@ class BasicTypeMappingIT {
 
         assertThat(results).hasSize(3);
         final BasicTypeExtractRow row0 = results.get(0);
-        assertEquals("key1", row0.key);
-        assertEquals(CACHE_NAME, row0.name);
-        assertEquals(1, row0.field1MappedField);
-        assertEquals("A", row0.field2MappedField);
+        assertThat(row0.key).isEqualTo("key1");
+        assertThat(row0.name).isEqualTo(CACHE_NAME);
+        assertThat(row0.field1MappedField).isEqualTo(1);
+        assertThat(row0.field2MappedField).isEqualTo("A");
 
         final BasicTypeExtractRow row1 = results.get(1);
-        assertEquals("key2", row1.key);
-        assertEquals(CACHE_NAME, row1.name);
-        assertEquals(22, row1.field1MappedField);
-        assertEquals("BBB", row1.field2MappedField);
+        assertThat(row1.key).isEqualTo("key2");
+        assertThat(row1.name).isEqualTo(CACHE_NAME);
+        assertThat(row1.field1MappedField).isEqualTo(22);
+        assertThat(row1.field2MappedField).isEqualTo("BBB");
 
         final BasicTypeExtractRow row2 = results.get(2);
-        assertEquals("key3", row2.key);
-        assertEquals(CACHE_NAME, row2.name);
-        assertEquals(3, row2.field1MappedField);
-        assertEquals("C", row2.field2MappedField);
+        assertThat(row2.key).isEqualTo("key3");
+        assertThat(row2.name).isEqualTo(CACHE_NAME);
+        assertThat(row2.field1MappedField).isEqualTo(3);
+        assertThat(row2.field2MappedField).isEqualTo("C");
     }
 
     @SuppressWarnings("unchecked")

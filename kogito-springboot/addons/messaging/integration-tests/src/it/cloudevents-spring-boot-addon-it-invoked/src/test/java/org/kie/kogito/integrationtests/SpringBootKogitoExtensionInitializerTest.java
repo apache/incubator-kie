@@ -26,8 +26,7 @@ import org.kie.kogito.event.cloudevents.utils.CloudEventUtils;
 import org.kie.kogito.event.cloudevents.extension.KogitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = KogitoSpringbootApplication.class)
 public class SpringBootKogitoExtensionInitializerTest {
@@ -51,9 +50,9 @@ public class SpringBootKogitoExtensionInitializerTest {
         CloudEvent event = CloudEventUtils.decode(eventJson).orElseThrow(IllegalStateException::new);
         KogitoExtension kogitoExtension = ExtensionProvider.getInstance().parseExtension(KogitoExtension.class, event);
 
-        assertNotNull(kogitoExtension, "KogitoExtension not registered, please make sure " +
-                "bean org.kie.kogito.addon.cloudevents.spring.SpringBootKogitoExtensionInitializer has been loaded");
-        assertEquals(MODEL_NAME, kogitoExtension.getDmnModelName());
-        assertEquals(MODEL_NAMESPACE, kogitoExtension.getDmnModelNamespace());
+        assertThat(kogitoExtension).as("KogitoExtension not registered, please make sure " +
+                "bean org.kie.kogito.addon.cloudevents.spring.SpringBootKogitoExtensionInitializer has been loaded").isNotNull();
+        assertThat(kogitoExtension.getDmnModelName()).isEqualTo(MODEL_NAME);
+        assertThat(kogitoExtension.getDmnModelNamespace()).isEqualTo(MODEL_NAMESPACE);
     }
 }

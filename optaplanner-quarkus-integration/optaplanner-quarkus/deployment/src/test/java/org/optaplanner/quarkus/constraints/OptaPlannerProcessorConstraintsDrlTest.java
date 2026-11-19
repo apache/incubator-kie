@@ -19,8 +19,7 @@
 
 package org.optaplanner.quarkus.constraints;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 
@@ -59,8 +58,8 @@ class OptaPlannerProcessorConstraintsDrlTest {
 
     @Test
     void constraintsDrl() {
-        assertEquals(Collections.singletonList(CONSTRAINTS_DRL),
-                solverConfig.getScoreDirectorFactoryConfig().getScoreDrlList());
-        assertNotNull(solverFactory.buildSolver());
+        assertThat(solverConfig.getScoreDirectorFactoryConfig().getScoreDrlList())
+                .isEqualTo(Collections.singletonList(CONSTRAINTS_DRL));
+        assertThat(solverFactory.buildSolver()).isNotNull();
     }
 }

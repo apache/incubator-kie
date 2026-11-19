@@ -34,10 +34,8 @@ import io.restassured.http.ContentType;
 import net.jcip.annotations.NotThreadSafe;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @NotThreadSafe
 public class HotReloadTest {
@@ -93,8 +91,8 @@ public class HotReloadTest {
                 .extract()
                 .as(Map.class);
 
-        assertEquals(2, result.size());
-        assertEquals("HELLO", result.get("mytext"));
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get("mytext")).isEqualTo("HELLO");
 
         test.modifySourceFile(HotReloadTestHelper.class, s -> s.replace("toUpperCase", "toLowerCase"));
 
@@ -122,8 +120,8 @@ public class HotReloadTest {
                 .extract()
                 .as(Map.class);
 
-        assertEquals(2, result.size());
-        assertEquals("hello", result.get("mytext"));
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get("mytext")).isEqualTo("hello");
     }
 
     @Test
@@ -156,8 +154,8 @@ public class HotReloadTest {
                 .extract()
                 .as(Map.class);
 
-        assertEquals(2, result.size());
-        assertEquals("HELLO", result.get("mytext"));
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get("mytext")).isEqualTo("HELLO");
 
         test.modifyResourceFile(RESOURCE_FILE, s -> s.replaceAll(PROCESS_NAME, "new_" + PROCESS_NAME));
 
@@ -185,8 +183,8 @@ public class HotReloadTest {
                 .extract()
                 .as(Map.class);
 
-        assertEquals(2, result.size());
-        assertEquals("HELLO", result.get("mytext"));
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get("mytext")).isEqualTo("HELLO");
     }
 
     @Test
@@ -201,8 +199,8 @@ public class HotReloadTest {
                 .statusCode(200)
                 .extract().body().asString();
 
-        assertNotNull(jsonSchema);
-        assertFalse(jsonSchema.isEmpty());
+        assertThat(jsonSchema).isNotNull();
+        assertThat(jsonSchema.isEmpty()).isFalse();
 
         test.modifyResourceFile(RESOURCE_FILE, s -> s.replaceAll(PROCESS_NAME, "new_" + PROCESS_NAME));
 
@@ -226,10 +224,10 @@ public class HotReloadTest {
                 .statusCode(200)
                 .extract().body().asString();
 
-        assertNotNull(newJsonSchema);
-        assertFalse(newJsonSchema.isEmpty());
+        assertThat(newJsonSchema).isNotNull();
+        assertThat(newJsonSchema.isEmpty()).isFalse();
 
-        assertEquals(jsonSchema, newJsonSchema);
+        assertThat(newJsonSchema).isEqualTo(jsonSchema);
     }
 
     @Test
@@ -244,8 +242,8 @@ public class HotReloadTest {
                 .statusCode(200)
                 .extract().body().asString();
 
-        assertNotNull(jsonSchema);
-        assertFalse(jsonSchema.isEmpty());
+        assertThat(jsonSchema).isNotNull();
+        assertThat(jsonSchema.isEmpty()).isFalse();
 
         // rename Task name (<![CDATA[Task]]>)
         test.modifyResourceFile(RESOURCE_FILE, s -> s.replaceAll("\\[Task]", "[Task1]"));
@@ -270,10 +268,10 @@ public class HotReloadTest {
                 .statusCode(200)
                 .extract().body().asString();
 
-        assertNotNull(newJsonSchema);
-        assertFalse(newJsonSchema.isEmpty());
+        assertThat(newJsonSchema).isNotNull();
+        assertThat(newJsonSchema.isEmpty()).isFalse();
 
-        assertEquals(jsonSchema, newJsonSchema);
+        assertThat(newJsonSchema).isEqualTo(jsonSchema);
     }
 
 }

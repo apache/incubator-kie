@@ -41,10 +41,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.node.IntNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -98,32 +96,32 @@ public class LIMESaliencyConverterTest {
 
         SalienciesResponse response = converter.fromResult(EXECUTION_ID, result);
 
-        assertNotNull(response);
-        assertEquals(ExplainabilityStatus.SUCCEEDED.name(), response.getStatus());
-        assertEquals(2, response.getSaliencies().size());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(ExplainabilityStatus.SUCCEEDED.name());
+        assertThat(response.getSaliencies().size()).isEqualTo(2);
 
         List<SaliencyResponse> saliencyResponses = new ArrayList<>(response.getSaliencies());
 
         SaliencyResponse saliencyResponse1 = saliencyResponses.get(0);
-        assertEquals("outcomeId1", saliencyResponse1.getOutcomeId());
-        assertEquals("outcomeName1", saliencyResponse1.getOutcomeName());
-        assertEquals(2, saliencyResponse1.getFeatureImportance().size());
+        assertThat(saliencyResponse1.getOutcomeId()).isEqualTo("outcomeId1");
+        assertThat(saliencyResponse1.getOutcomeName()).isEqualTo("outcomeName1");
+        assertThat(saliencyResponse1.getFeatureImportance().size()).isEqualTo(2);
 
         Optional<FeatureImportanceModel> oFeatureImportance1Model1 = saliencyResponse1.getFeatureImportance().stream().filter(fim -> fim.getFeatureName().equals("feature1a")).findFirst();
-        assertTrue(oFeatureImportance1Model1.isPresent());
-        assertEquals(1.0, oFeatureImportance1Model1.get().getFeatureScore());
+        assertThat(oFeatureImportance1Model1.isPresent()).isTrue();
+        assertThat(oFeatureImportance1Model1.get().getFeatureScore()).isEqualTo(1.0);
         Optional<FeatureImportanceModel> oFeatureImportance2Model1 = saliencyResponse1.getFeatureImportance().stream().filter(fim -> fim.getFeatureName().equals("feature1b")).findFirst();
-        assertTrue(oFeatureImportance2Model1.isPresent());
-        assertEquals(2.0, oFeatureImportance2Model1.get().getFeatureScore());
+        assertThat(oFeatureImportance2Model1.isPresent()).isTrue();
+        assertThat(oFeatureImportance2Model1.get().getFeatureScore()).isEqualTo(2.0);
 
         SaliencyResponse saliencyResponse2 = saliencyResponses.get(1);
-        assertEquals("outcomeId2", saliencyResponse2.getOutcomeId());
-        assertEquals("outcomeName2", saliencyResponse2.getOutcomeName());
-        assertEquals(1, saliencyResponse2.getFeatureImportance().size());
+        assertThat(saliencyResponse2.getOutcomeId()).isEqualTo("outcomeId2");
+        assertThat(saliencyResponse2.getOutcomeName()).isEqualTo("outcomeName2");
+        assertThat(saliencyResponse2.getFeatureImportance().size()).isEqualTo(1);
 
         Optional<FeatureImportanceModel> oFeatureImportance1Model2 = saliencyResponse2.getFeatureImportance().stream().filter(fim -> fim.getFeatureName().equals("feature2")).findFirst();
-        assertTrue(oFeatureImportance1Model2.isPresent());
-        assertEquals(3.0, oFeatureImportance1Model2.get().getFeatureScore());
+        assertThat(oFeatureImportance1Model2.isPresent()).isTrue();
+        assertThat(oFeatureImportance1Model2.get().getFeatureScore()).isEqualTo(3.0);
     }
 
     @Test
@@ -160,20 +158,20 @@ public class LIMESaliencyConverterTest {
 
         SalienciesResponse response = converter.fromResult(EXECUTION_ID, result);
 
-        assertNotNull(response);
-        assertEquals(ExplainabilityStatus.SUCCEEDED.name(), response.getStatus());
-        assertEquals(1, response.getSaliencies().size());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(ExplainabilityStatus.SUCCEEDED.name());
+        assertThat(response.getSaliencies().size()).isEqualTo(1);
 
         List<SaliencyResponse> saliencyResponses = new ArrayList<>(response.getSaliencies());
 
         SaliencyResponse saliencyResponse1 = saliencyResponses.get(0);
-        assertEquals("outcomeId1", saliencyResponse1.getOutcomeId());
-        assertEquals("outcomeName1", saliencyResponse1.getOutcomeName());
-        assertEquals(1, saliencyResponse1.getFeatureImportance().size());
+        assertThat(saliencyResponse1.getOutcomeId()).isEqualTo("outcomeId1");
+        assertThat(saliencyResponse1.getOutcomeName()).isEqualTo("outcomeName1");
+        assertThat(saliencyResponse1.getFeatureImportance().size()).isEqualTo(1);
 
         Optional<FeatureImportanceModel> oFeatureImportance1Model1 = saliencyResponse1.getFeatureImportance().stream().filter(fim -> fim.getFeatureName().equals("feature1")).findFirst();
-        assertTrue(oFeatureImportance1Model1.isPresent());
-        assertEquals(1.0, oFeatureImportance1Model1.get().getFeatureScore());
+        assertThat(oFeatureImportance1Model1.isPresent()).isTrue();
+        assertThat(oFeatureImportance1Model1.get().getFeatureScore()).isEqualTo(1.0);
     }
 
     @Test
@@ -187,6 +185,6 @@ public class LIMESaliencyConverterTest {
 
         when(trustyService.getDecisionById(eq(EXECUTION_ID))).thenThrow(new IllegalArgumentException());
 
-        assertThrows(IllegalArgumentException.class, () -> converter.fromResult(EXECUTION_ID, result));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> converter.fromResult(EXECUTION_ID, result));
     }
 }

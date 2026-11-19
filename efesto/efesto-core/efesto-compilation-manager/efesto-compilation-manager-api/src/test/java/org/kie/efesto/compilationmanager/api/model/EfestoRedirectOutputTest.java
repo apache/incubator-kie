@@ -25,7 +25,7 @@ import org.kie.efesto.common.api.identifiers.LocalUri;
 import org.kie.efesto.common.api.identifiers.ModelLocalUriId;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class EfestoRedirectOutputTest {
 
@@ -47,24 +47,16 @@ class EfestoRedirectOutputTest {
     }
     @Test
     void constructorMissingRequiredTarget() {
-        KieEfestoCommonException thrown = assertThrows(
-                KieEfestoCommonException.class,
-                () -> new EfestoRedirectOutput(modelLocalUriId, null, "content") {},
-                "Expected constructor to throw, but it didn't"
-        );
-        String expectedMessage = "Missing required target";
-        assertThat(thrown.getMessage()).isEqualTo(expectedMessage);
+        assertThatThrownBy(() -> new EfestoRedirectOutput(modelLocalUriId, null, "content") {})
+                .isInstanceOf(KieEfestoCommonException.class)
+                .hasMessage("Missing required target");
     }
 
     @Test
     void constructorEmptyTarget() {
-        KieEfestoCommonException thrown = assertThrows(
-                KieEfestoCommonException.class,
-                () -> new EfestoRedirectOutput(modelLocalUriId, "", "content") {},
-                "Expected constructor to throw, but it didn't"
-        );
-        String expectedMessage = "Missing required target";
-        assertThat(thrown.getMessage()).isEqualTo(expectedMessage);
+        assertThatThrownBy(() -> new EfestoRedirectOutput(modelLocalUriId, "", "content") {})
+                .isInstanceOf(KieEfestoCommonException.class)
+                .hasMessage("Missing required target");
     }
 
     @Test

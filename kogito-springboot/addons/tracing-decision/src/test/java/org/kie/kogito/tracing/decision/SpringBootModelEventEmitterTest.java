@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.jackson.JsonFormat;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -60,15 +60,15 @@ public class SpringBootModelEventEmitterTest {
         final ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockedKarkaTemplate, times(2)).send(topicCaptor.capture(), payloadCaptor.capture());
 
-        topicCaptor.getAllValues().forEach(v -> assertEquals(TEST_TOPIC, v));
+        topicCaptor.getAllValues().forEach(v -> assertThat(v).isEqualTo(TEST_TOPIC));
 
         final String rawCloudEvent1 = payloadCaptor.getAllValues().get(0);
         final String rawCloudEvent2 = payloadCaptor.getAllValues().get(1);
         final CloudEvent cloudEvent1 = OBJECT_MAPPER.readValue(rawCloudEvent1, CloudEvent.class);
         final CloudEvent cloudEvent2 = OBJECT_MAPPER.readValue(rawCloudEvent2, CloudEvent.class);
 
-        assertEquals("id", cloudEvent1.getId());
-        assertEquals("id", cloudEvent2.getId());
+        assertThat(cloudEvent1.getId()).isEqualTo("id");
+        assertThat(cloudEvent2.getId()).isEqualTo("id");
     }
 
     private DecisionModelResource makeModel() {

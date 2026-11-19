@@ -56,6 +56,7 @@
     <java.module.name/>
     <latestReleasedVersionFromThisBranch>notYetReleased</latestReleasedVersionFromThisBranch>
     <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+    <maven.compiler.release>17</maven.compiler.release>
     <!-- Javadoc is disabled by default; modules that publish a javadoc jar must set this property to false. -->
     <maven.javadoc.skip>true</maven.javadoc.skip>
     <maven.compiler.source>17</maven.compiler.source>
@@ -191,8 +192,8 @@
     <version.jdepend.maven.plugin>2.0</version.jdepend.maven.plugin>
     <!-- DROOLS-7140 Drools 8 enforce JDK and Maven versions as a rule -->
     <version.jdk>${maven.compiler.release}</version.jdk>
-    <!-- JUnit 4 API for legacy test classes that still use org.junit.* annotations.
-         junit-vintage-engine (part of JUnit 6) runs them on the JUnit Platform. -->
+    <!-- JUnit 4 API kept only for fixtures / transitive exclusions that still reference junit:junit.
+         Prefer org.junit.jupiter / version.org.junit for new code. -->
     <version.junit>4.13.2</version.junit>
     <version.lifecycle-mapping>1.0.0</version.lifecycle-mapping>
     <version.maven>${version.org.apache.maven}</version.maven>
@@ -280,10 +281,10 @@
     <version.org.jpmml.model>1.6.4</version.org.jpmml.model>
     <version.org.json-unit-assertj>2.9.0</version.org.json-unit-assertj>
     <!-- JUnit 6: single version property for jupiter + platform + vintage artifacts. See version.junit above for the legacy JUnit 4 API. -->
-    <version.org.junit>6.0.3</version.org.junit>
+    <version.org.junit>6.1.3</version.org.junit>
     <version.org.keycloak>26.1.5</version.org.keycloak>
     <version.org.mapstruct>1.5.5.Final</version.org.mapstruct>
-    <version.org.mockito>5.18.0</version.org.mockito>
+    <version.org.mockito>5.24.0</version.org.mockito>
     <version.org.mongo>5.3.1</version.org.mongo>
     <version.org.mozilla.rhino>1.8.1</version.org.mozilla.rhino>
     <version.org.mvel>2.5.4.Final</version.org.mvel>

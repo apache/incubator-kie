@@ -33,12 +33,12 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.emptyOrNullString;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @QuarkusIntegrationTest
 class BasicRestIT {
@@ -159,8 +159,8 @@ class BasicRestIT {
 
         // UUID is no longer the BusinessKey or generated from it
         String unexpectedId = UUID.nameUUIDFromBytes(businessKey.getBytes()).toString();
-        assertNotEquals(businessKey, id);
-        assertNotEquals(unexpectedId, id);
+        assertThat(id).isNotEqualTo(businessKey);
+        assertThat(id).isNotEqualTo(unexpectedId);
 
         given()
                 .contentType(ContentType.JSON)

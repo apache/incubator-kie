@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.index.json.JsonUtils.getObjectMapper;
 import static org.kie.kogito.index.model.ProcessInstanceState.COMPLETED;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
@@ -237,7 +237,7 @@ public class DataIndexEventPublisherTest {
                         .kogitoRootProcessVersion(ROOT_PROCESS_VERSION)
                         .build();
 
-        assertThrows(UncheckedIOException.class, () -> dataIndexEventPublisher.publish(event));
+        assertThatExceptionOfType(UncheckedIOException.class).isThrownBy(() -> dataIndexEventPublisher.publish(event));
         verifyNoInteractions(indexingService);
     }
 

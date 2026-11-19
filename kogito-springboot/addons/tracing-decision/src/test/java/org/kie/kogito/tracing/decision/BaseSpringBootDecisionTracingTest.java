@@ -46,8 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.jackson.JsonFormat;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -144,12 +143,12 @@ public abstract class BaseSpringBootDecisionTracingTest {
                 .decode(payloadCaptor.getValue())
                 .orElseThrow(() -> new IllegalStateException("Can't decode CloudEvent"));
 
-        assertEquals(TEST_EXECUTION_ID, cloudEvent.getId());
-        assertNotNull(cloudEvent.getData());
+        assertThat(cloudEvent.getId()).isEqualTo(TEST_EXECUTION_ID);
+        assertThat(cloudEvent.getData()).isNotNull();
 
         TraceEvent traceEvent = MAPPER.readValue(cloudEvent.getData().toBytes(), TraceEvent.class);
 
-        assertNotNull(traceEvent);
-        assertEquals(TEST_SERVICE_URL, traceEvent.getHeader().getResourceId().getServiceUrl());
+        assertThat(traceEvent).isNotNull();
+        assertThat(traceEvent.getHeader().getResourceId().getServiceUrl()).isEqualTo(TEST_SERVICE_URL);
     }
 }

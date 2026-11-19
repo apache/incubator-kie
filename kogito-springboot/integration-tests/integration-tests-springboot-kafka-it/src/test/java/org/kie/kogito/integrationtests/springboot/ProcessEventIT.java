@@ -47,7 +47,7 @@ import io.cloudevents.jackson.JsonFormat;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = KogitoSpringbootApplication.class)
@@ -86,24 +86,24 @@ class ProcessEventIT extends BaseRestTest {
                 if ("handleApprovals".equals(data.get("processId"))) {
                     switch (event.getType()) {
                         case "ProcessInstanceStateDataEvent":
-                            assertEquals("ProcessInstanceStateDataEvent", event.getType());
-                            assertEquals("/handleApprovals", event.getSource().toString());
-                            assertEquals("handleApprovals", data.get("processId"));
-                            assertEquals("1.0", event.getKogitoProcessVersion());
-                            assertEquals("BPMN", data.get("processType"));
-                            assertEquals("BPMN", event.getKogitoProcessType());
+                            assertThat(event.getType()).isEqualTo("ProcessInstanceStateDataEvent");
+                            assertThat(event.getSource().toString()).isEqualTo("/handleApprovals");
+                            assertThat(data.get("processId")).isEqualTo("handleApprovals");
+                            assertThat(event.getKogitoProcessVersion()).isEqualTo("1.0");
+                            assertThat(data.get("processType")).isEqualTo("BPMN");
+                            assertThat(event.getKogitoProcessType()).isEqualTo("BPMN");
                             break;
                         case "UserTaskInstanceStateDataEvent":
-                            assertEquals("UserTaskInstanceEvent", event.getType());
-                            assertEquals("/handleApprovals", event.getSource().toString());
-                            assertEquals("handleApprovals", data.get("processId"));
-                            assertEquals("1.0", event.getKogitoProcessVersion());
+                            assertThat(event.getType()).isEqualTo("UserTaskInstanceEvent");
+                            assertThat(event.getSource().toString()).isEqualTo("/handleApprovals");
+                            assertThat(data.get("processId")).isEqualTo("handleApprovals");
+                            assertThat(event.getKogitoProcessVersion()).isEqualTo("1.0");
                             break;
                         case "ProcessInstanceVariableDataEvent":
-                            assertEquals("ProcessInstanceVariableDataEvent", event.getType());
-                            assertEquals("/handleApprovals", event.getSource().toString());
-                            assertEquals("handleApprovals", data.get("processId"));
-                            assertEquals("1.0", event.getKogitoProcessVersion());
+                            assertThat(event.getType()).isEqualTo("ProcessInstanceVariableDataEvent");
+                            assertThat(event.getSource().toString()).isEqualTo("/handleApprovals");
+                            assertThat(data.get("processId")).isEqualTo("handleApprovals");
+                            assertThat(event.getKogitoProcessVersion()).isEqualTo("1.0");
                             break;
                     }
                 }
@@ -139,7 +139,7 @@ class ProcessEventIT extends BaseRestTest {
 
         Map<String, Object> model = Collections.singletonMap("approved", true);
 
-        assertEquals(model, given().contentType(ContentType.JSON)
+        assertThat(given().contentType(ContentType.JSON)
                 .when()
                 .queryParam("user", "admin")
                 .queryParam("group", "managers")
@@ -150,9 +150,9 @@ class ProcessEventIT extends BaseRestTest {
                 .then()
                 .statusCode(200)
                 .extract()
-                .as(Map.class));
+                .as(Map.class)).isEqualTo(model);
 
-        assertEquals(true, given().contentType(ContentType.JSON)
+        Boolean approved = given().contentType(ContentType.JSON)
                 .when()
                 .queryParam("user", "admin")
                 .queryParam("group", "managers")
@@ -162,7 +162,8 @@ class ProcessEventIT extends BaseRestTest {
                 .then()
                 .statusCode(200)
                 .extract()
-                .path("results.approved"));
+                .path("results.approved");
+        assertThat(approved).isTrue();
 
         String humanTaskId = given()
                 .contentType(ContentType.JSON)

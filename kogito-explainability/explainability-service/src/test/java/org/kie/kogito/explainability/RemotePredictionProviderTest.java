@@ -36,11 +36,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.explainability.TestUtils.LIME_REQUEST;
 
 class RemotePredictionProviderTest {
@@ -59,14 +55,14 @@ class RemotePredictionProviderTest {
 
     @Test
     void toPredictionOutput() {
-        assertNull(predictionProvider.toPredictionOutput(null));
-        assertNull(predictionProvider.toPredictionOutput(new JsonObject(emptyMap())));
+        assertThat(predictionProvider.toPredictionOutput(null)).isNull();
+        assertThat(predictionProvider.toPredictionOutput(new JsonObject(emptyMap()))).isNull();
         Map<String, Object> predictionMap = singletonMap("result", emptyMap());
 
         PredictionOutput predictionOutput = predictionProvider.toPredictionOutput(new JsonObject(predictionMap));
-        assertNotNull(predictionOutput);
-        assertEquals(LIME_REQUEST.getOutputs().size(), predictionOutput.getOutputs().size());
-        assertEquals(Type.UNDEFINED, predictionOutput.getOutputs().get(0).getType());
+        assertThat(predictionOutput).isNotNull();
+        assertThat(predictionOutput.getOutputs().size()).isEqualTo(LIME_REQUEST.getOutputs().size());
+        assertThat(predictionOutput.getOutputs().get(0).getType()).isEqualTo(Type.UNDEFINED);
     }
 
     @Test
@@ -79,13 +75,13 @@ class RemotePredictionProviderTest {
 
         Map<String, Object> result1 = predictionProvider.toMap(features1);
 
-        assertNotNull(result1);
-        assertEquals(features1.size(), result1.size());
-        assertTrue(result1.containsKey("simple"));
-        assertEquals(10, result1.get("simple"));
-        assertTrue(result1.containsKey("undefined"));
-        assertTrue(result1.containsKey("composite"));
-        assertTrue(result1.get("composite") instanceof Map);
+        assertThat(result1).isNotNull();
+        assertThat(result1.size()).isEqualTo(features1.size());
+        assertThat(result1.containsKey("simple")).isTrue();
+        assertThat(result1.get("simple")).isEqualTo(10);
+        assertThat(result1.containsKey("undefined")).isTrue();
+        assertThat(result1.containsKey("composite")).isTrue();
+        assertThat((result1.get("composite") instanceof Map)).isTrue();
 
         // context test
         Feature context = new Feature("context", Type.COMPOSITE, new Value(singletonList(simple)));
@@ -94,29 +90,29 @@ class RemotePredictionProviderTest {
 
         Map<String, Object> result2 = predictionProvider.toMap(features2);
 
-        assertNotNull(result2);
-        assertEquals(1, result2.size());
-        assertTrue(result2.containsKey("simple"));
-        assertFalse(result2.containsKey("simple2"));
+        assertThat(result2).isNotNull();
+        assertThat(result2.size()).isEqualTo(1);
+        assertThat(result2.containsKey("simple")).isTrue();
+        assertThat(result2.containsKey("simple2")).isFalse();
 
         // multiple nesting test
         Feature nestedComposite = new Feature("nestedComposite", Type.COMPOSITE, new Value(asList(simple, composite)));
         List<Feature> features3 = asList(simple, nestedComposite);
         Map<String, Object> result3 = predictionProvider.toMap(features3);
 
-        assertNotNull(result3);
-        assertEquals(features3.size(), result3.size());
-        assertTrue(result3.containsKey("simple"));
-        assertEquals(10, result3.get("simple"));
-        assertTrue(result3.containsKey("nestedComposite"));
-        assertTrue(result3.get("nestedComposite") instanceof Map);
+        assertThat(result3).isNotNull();
+        assertThat(result3.size()).isEqualTo(features3.size());
+        assertThat(result3.containsKey("simple")).isTrue();
+        assertThat(result3.get("simple")).isEqualTo(10);
+        assertThat(result3.containsKey("nestedComposite")).isTrue();
+        assertThat((result3.get("nestedComposite") instanceof Map)).isTrue();
         @SuppressWarnings("unchecked")
         Map<String, Object> nestedCompositeMap = (Map<String, Object>) result3.get("nestedComposite");
 
-        assertEquals(2, nestedCompositeMap.size());
-        assertTrue(nestedCompositeMap.containsKey("simple"));
-        assertEquals(10, nestedCompositeMap.get("simple"));
-        assertTrue(nestedCompositeMap.containsKey("composite"));
-        assertTrue(nestedCompositeMap.get("composite") instanceof Map);
+        assertThat(nestedCompositeMap.size()).isEqualTo(2);
+        assertThat(nestedCompositeMap.containsKey("simple")).isTrue();
+        assertThat(nestedCompositeMap.get("simple")).isEqualTo(10);
+        assertThat(nestedCompositeMap.containsKey("composite")).isTrue();
+        assertThat((nestedCompositeMap.get("composite") instanceof Map)).isTrue();
     }
 }

@@ -26,7 +26,7 @@ import org.drools.verifier.core.maps.util.HasKeys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class KeyTreeMapUUIDKeyTest {
 
@@ -39,7 +39,7 @@ public class KeyTreeMapUUIDKeyTest {
 
     @Test
     void testNoKey() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
             final KeyTreeMap<NoKey> map = new KeyTreeMap<>(UUIDKey.UNIQUE_UUID);
 
             map.put(new NoKey());
@@ -48,7 +48,7 @@ public class KeyTreeMapUUIDKeyTest {
 
     @Test
     void testTwoKeys() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
             final KeyTreeMap<TwoKeys> map = new KeyTreeMap<>(UUIDKey.UNIQUE_UUID);
 
             map.put(new TwoKeys());

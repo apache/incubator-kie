@@ -23,7 +23,6 @@ import java.time.Duration;
 
 import org.awaitility.Awaitility;
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.trusty.service.common.TrustyService;
@@ -33,6 +32,7 @@ import org.kie.kogito.trusty.storage.api.model.decision.Decision;
 
 import io.smallrye.context.SmallRyeManagedExecutor;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -79,7 +79,7 @@ class TraceEventConsumerTest {
         Message<String> message = mockMessage(TrustyServiceTestUtils.buildCloudEventJsonString(TrustyServiceTestUtils.buildCorrectTraceEvent(TrustyServiceTestUtils.CORRECT_CLOUDEVENT_ID)));
 
         doThrow(new RuntimeException("Something really bad")).when(trustyService).storeDecision(any(String.class), any(Decision.class));
-        Assertions.assertDoesNotThrow(() -> consumer.handleMessage(message));
+        assertThatCode(() -> consumer.handleMessage(message)).doesNotThrowAnyException();
     }
 
     @Test

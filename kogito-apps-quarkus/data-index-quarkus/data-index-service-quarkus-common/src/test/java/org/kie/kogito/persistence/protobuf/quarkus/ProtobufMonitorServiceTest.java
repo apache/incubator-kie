@@ -32,7 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
@@ -73,7 +73,7 @@ class ProtobufMonitorServiceTest {
             protobufMonitorService.startMonitoring(null);
 
             latch.await(1, TimeUnit.MINUTES);
-            assertEquals(0, latch.getCount());
+            assertThat(latch.getCount()).isEqualTo(0);
         } finally {
             if (dir != null) {
                 try {
@@ -112,7 +112,7 @@ class ProtobufMonitorServiceTest {
             protobufMonitorService.startMonitoring(null);
 
             latch.await(1, TimeUnit.MINUTES);
-            assertEquals(0, latch.getCount());
+            assertThat(latch.getCount()).isEqualTo(0);
         } finally {
             if (dir != null) {
                 try {

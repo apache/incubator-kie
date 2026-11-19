@@ -36,8 +36,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.index.storage.Constants.PROCESS_ID_MODEL_STORAGE;
 
 @QuarkusTest
@@ -75,8 +74,8 @@ class ProcessIndexObserverIT {
 
         Storage<String, String> processIdStorage = new MongoStorage<>(mongoClientManager.getCollection(PROCESS_ID_MODEL_STORAGE, ProcessIdEntity.class),
                 String.class.getName(), new ProcessIdEntityMapper());
-        assertTrue(processIdStorage.containsKey(processId));
-        assertEquals(processType, processIdStorage.get(processId));
+        assertThat(processIdStorage.containsKey(processId)).isTrue();
+        assertThat(processIdStorage.get(processId)).isEqualTo(processType);
 
         mockIndexCreateOrUpdateEventListener.assertFire("testProcess_domain", processType);
     }

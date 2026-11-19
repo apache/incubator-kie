@@ -25,10 +25,8 @@ import org.kie.kogito.testcontainers.KogitoMongoDBContainer;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.spy;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +40,7 @@ class MongoDBSpringBootTestResourceTest {
     @Test
     void shouldGetProperty() {
         givenResource();
-        assertThrows(IllegalStateException.class, () -> resource.getProperties().get(MongoDBSpringBootTestResource.MONGODB_CONNECTION_PROPERTY));
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> resource.getProperties().get(MongoDBSpringBootTestResource.MONGODB_CONNECTION_PROPERTY));
     }
 
     @Test
@@ -60,8 +58,8 @@ class MongoDBSpringBootTestResourceTest {
     @Test
     void shouldGetDockerImageName() {
         givenResource();
-        assertEquals(System.getenv("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX") + System.getProperty(Constants.CONTAINER_NAME_PREFIX + KogitoMongoDBContainer.NAME),
-                resource.getTestResource().getDockerImageName());
+        assertThat(resource.getTestResource().getDockerImageName())
+                .isEqualTo(System.getenv("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX") + System.getProperty(Constants.CONTAINER_NAME_PREFIX + KogitoMongoDBContainer.NAME));
     }
 
     private void givenConditionalResource() {
@@ -73,10 +71,10 @@ class MongoDBSpringBootTestResourceTest {
     }
 
     private void thenConditionalIsEnabled() {
-        assertTrue(resource.isConditionalEnabled());
+        assertThat(resource.isConditionalEnabled()).isTrue();
     }
 
     private void thenConditionalIsDisabled() {
-        assertFalse(resource.isConditionalEnabled());
+        assertThat(resource.isConditionalEnabled()).isFalse();
     }
 }

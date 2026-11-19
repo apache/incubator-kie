@@ -20,12 +20,12 @@ package org.kie.kogito.explainability;
 
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.context.ThreadContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.explainability.model.PredictionProvider;
 
 import io.vertx.mutiny.core.Vertx;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.explainability.TestUtils.LIME_REQUEST;
 
 class PredictionProviderFactoryImplTest {
@@ -39,7 +39,7 @@ class PredictionProviderFactoryImplTest {
         PredictionProvider predictionProvider = factory.createPredictionProvider(LIME_REQUEST.getServiceUrl(),
                 LIME_REQUEST.getModelIdentifier(),
                 LIME_REQUEST.getOutputs());
-        Assertions.assertNotNull(predictionProvider);
-        Assertions.assertTrue(predictionProvider instanceof RemotePredictionProvider);
+        assertThat(predictionProvider).isNotNull();
+        assertThat((predictionProvider instanceof RemotePredictionProvider)).isTrue();
     }
 }

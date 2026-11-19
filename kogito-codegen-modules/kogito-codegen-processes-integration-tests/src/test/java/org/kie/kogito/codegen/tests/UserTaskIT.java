@@ -66,8 +66,6 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.CLAIM;
 import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.COMPLETE;
 import static org.kie.kogito.usertask.impl.lifecycle.DefaultUserTaskLifeCycle.RELEASE;
@@ -576,9 +574,8 @@ public class UserTaskIT extends AbstractCodegenIT {
         assertThat(userTaskInstances).isNotNull().hasSize(1);
         UserTaskInstance ut_2 = userTaskInstances.get(0);
         // attempt to claim task with excluded user (manager)
-        assertThrows(UserTaskInstanceNotAuthorizedException.class, () -> {
-            ut_2.transition(CLAIM, emptyMap(), IdentityProviders.of("manager", singletonList("managers")));
-        });
+        assertThatExceptionOfType(UserTaskInstanceNotAuthorizedException.class)
+                .isThrownBy(() -> ut_2.transition(CLAIM, emptyMap(), IdentityProviders.of("manager", singletonList("managers"))));
         // claim and complete task with different user (admin)
         ut_2.transition(CLAIM, emptyMap(), IdentityProviders.of("admin", singletonList("managers")));
         ut_2.transition(COMPLETE, emptyMap(), IdentityProviders.of("admin", singletonList("managers")));
@@ -1243,7 +1240,7 @@ public class UserTaskIT extends AbstractCodegenIT {
         ProcessInstance<? extends Model> otherProcessInstance = p.createInstance(businessKey, m);
         assertThat(otherProcessInstance.id()).isNotEqualTo(processInstance.id());
         assertThat(otherProcessInstance.businessKey()).isEqualTo(processInstance.businessKey()).isEqualTo(businessKey);
-        assertTrue(latch.await(5L, TimeUnit.SECONDS));
+        assertThat(latch.await(5L, TimeUnit.SECONDS)).isTrue();
         latch.await(5L, TimeUnit.SECONDS);
         String subject = "Not completedTask is ready for ${owners[0].id}";
         String body = "my body!!!";
@@ -1331,7 +1328,7 @@ public class UserTaskIT extends AbstractCodegenIT {
         ProcessInstance<? extends Model> otherProcessInstance = p.createInstance(businessKey, m);
         assertThat(otherProcessInstance.id()).isNotEqualTo(processInstance.id());
         assertThat(otherProcessInstance.businessKey()).isEqualTo(processInstance.businessKey()).isEqualTo(businessKey);
-        assertTrue(latch.await(5L, TimeUnit.SECONDS));
+        assertThat(latch.await(5L, TimeUnit.SECONDS)).isTrue();
 
     }
 

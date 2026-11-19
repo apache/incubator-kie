@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.kie.api.definition.process.Node;
 import org.kie.api.definition.process.NodeType;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class NodeTypeTest {
 
@@ -31,50 +31,50 @@ public class NodeTypeTest {
     public void testNodeTypeSpec() {
 
         Node node = new ActionNode();
-        assertEquals(NodeType.SCRIPT_TASK, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.SCRIPT_TASK);
         node = new ForEachNode();
-        assertEquals(NodeType.FOR_EACH, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.FOR_EACH);
         node = new MilestoneNode();
-        assertEquals(NodeType.MILESTONE, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.MILESTONE);
         node = new FaultNode();
-        assertEquals(NodeType.FAULT, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.FAULT);
         node = new Join();
-        assertEquals(NodeType.COMPLEX_GATEWAY, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.COMPLEX_GATEWAY);
         node = new Split(Split.TYPE_AND);
-        assertEquals(NodeType.PARALLEL_GATEWAY, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.PARALLEL_GATEWAY);
         node = new Split(Split.TYPE_OR);
-        assertEquals(NodeType.INCLUSIVE_GATEWAY, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.INCLUSIVE_GATEWAY);
         node = new Split(Split.TYPE_XOR);
-        assertEquals(NodeType.EXCLUSIVE_GATEWAY, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.EXCLUSIVE_GATEWAY);
         node = new Split(Split.TYPE_XAND);
-        assertEquals(NodeType.EVENT_BASED_GATEWAY, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.EVENT_BASED_GATEWAY);
         node = new ThrowLinkNode();
-        assertEquals(NodeType.THROW_LINK, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.THROW_LINK);
         node = new CatchLinkNode();
-        assertEquals(NodeType.CATCH_LINK, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.CATCH_LINK);
         node = new RuleSetNode();
-        assertEquals(NodeType.BUSINESS_RULE, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.BUSINESS_RULE);
         node = new TimerNode();
-        assertEquals(NodeType.TIMER, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.TIMER);
         node = new WorkItemNode();
-        assertEquals(NodeType.WORKITEM_TASK, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.WORKITEM_TASK);
         node = new SubProcessNode();
-        assertEquals(NodeType.SUBPROCESS, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.SUBPROCESS);
         node = new StateNode();
-        assertEquals(NodeType.CONDITIONAL, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.CONDITIONAL);
         node = new StartNode();
-        assertEquals(NodeType.START, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.START);
         node = new HumanTaskNode();
-        assertEquals(NodeType.HUMAN_TASK, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.HUMAN_TASK);
         node = new EventNode();
-        assertEquals(NodeType.CATCH_EVENT, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.CATCH_EVENT);
         node = new EndNode();
-        assertEquals(NodeType.END, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.END);
         node = new DynamicNode();
-        assertEquals(NodeType.AD_HOC_SUBPROCESS, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.AD_HOC_SUBPROCESS);
         node = new EventSubProcessNode();
-        assertEquals(NodeType.EVENT_SUBPROCESS, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.EVENT_SUBPROCESS);
         node = new BoundaryEventNode();
-        assertEquals(NodeType.BOUNDARY_EVENT, node.getNodeType());
+        assertThat(node.getNodeType()).isEqualTo(NodeType.BOUNDARY_EVENT);
     }
 }

@@ -39,14 +39,13 @@
 #set( $symbol_escape = '\' )
 package ${package};
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static utils.shim.Map.of;
 
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieRuntimeFactory;
@@ -64,8 +63,8 @@ public class TrafficViolationTest {
     private DMNRuntime dmnRuntime;
     private DMNModel dmnModelUT;
     
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         KieServices kieServices = KieServices.Factory.get();
         KieContainer kieContainer = kieServices.getKieClasspathContainer();
         dmnRuntime = KieRuntimeFactory.of(kieContainer.getKieBase()).get(DMNRuntime.class);
@@ -76,7 +75,7 @@ public class TrafficViolationTest {
     }
     
     @Test
-    public void test() {
+    void test() {
         Map<String, ?> driver = of("Points", 2);
         Map<String, ?> violation = of("Type", "speed", "Actual Speed", 120, "Speed Limit", 100);
         
@@ -88,9 +87,9 @@ public class TrafficViolationTest {
         DMNResult dmnResult = dmnRuntime.evaluateAll(dmnModelUT, dmnContext);
 
         LOG.info("Checking results: {}", dmnResult);
-        assertFalse(dmnResult.hasErrors());
+        assertThat(dmnResult.hasErrors()).isFalse();
 
-        assertEquals(DecisionEvaluationStatus.SUCCEEDED, dmnResult.getDecisionResultByName("Should the driver be suspended?").getEvaluationStatus());
-        assertEquals("No", dmnResult.getDecisionResultByName("Should the driver be suspended?").getResult());
+        assertThat(dmnResult.getDecisionResultByName("Should the driver be suspended?").getEvaluationStatus()).isEqualTo(DecisionEvaluationStatus.SUCCEEDED);
+        assertThat(dmnResult.getDecisionResultByName("Should the driver be suspended?").getResult()).isEqualTo("No");
     }
 }

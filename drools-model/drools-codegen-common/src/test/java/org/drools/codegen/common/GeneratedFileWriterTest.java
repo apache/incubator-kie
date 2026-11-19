@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -49,9 +49,9 @@ class GeneratedFileWriterTest {
         System.setProperty(sourcesDirectoryProperty, sourcesDirectory);
         GeneratedFileWriter.Builder retrieved = GeneratedFileWriter.builder(finalPath, resourcesDirectoryProperty,
                                                                             sourcesDirectoryProperty, bt);
-        assertEquals(bt.CLASSES_PATH.toString(), retrieved.classesDir);
-        assertEquals(resourcesDirectory, retrieved.resourcesDir);
-        assertEquals(sourcesDirectory, retrieved.sourcesDir);
+        assertThat(retrieved.classesDir).isEqualTo(bt.CLASSES_PATH.toString());
+        assertThat(retrieved.resourcesDir).isEqualTo(resourcesDirectory);
+        assertThat(retrieved.sourcesDir).isEqualTo(sourcesDirectory);
         System.clearProperty(resourcesDirectoryProperty);
         System.clearProperty(sourcesDirectoryProperty);
     }
@@ -64,12 +64,12 @@ class GeneratedFileWriterTest {
         String finalPath = "final";
         GeneratedFileWriter.Builder retrieved = GeneratedFileWriter.builder(finalPath, resourcesDirectoryProperty,
                                                                             sourcesDirectoryProperty, bt);
-        assertEquals(bt.CLASSES_PATH.toString(), retrieved.classesDir);
+        assertThat(retrieved.classesDir).isEqualTo(bt.CLASSES_PATH.toString());
         String expected = String.format("%s/%s", bt.GENERATED_RESOURCES_PATH.toString(), finalPath).replace("/",
                                                                                                             File.separator);
-        assertEquals(expected, retrieved.resourcesDir);
+        assertThat(retrieved.resourcesDir).isEqualTo(expected);
         expected = String.format("%s/%s", bt.GENERATED_SOURCES_PATH.toString(), finalPath).replace("/", File.separator);
-        assertEquals(expected, retrieved.sourcesDir);
+        assertThat(retrieved.sourcesDir).isEqualTo(expected);
     }
 
     @ParameterizedTest

@@ -67,7 +67,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -272,8 +272,7 @@ public class KogitoAddonRuntimeClientImplTest {
     void testAbortProcessInstanceError() {
         ProcessInstance pI = createProcessInstance(PROCESS_INSTANCE_ID, ACTIVE);
         mockProcessInstanceStatusError().abort();
-        assertThrows(ProcessInstanceExecutionException.class,
-                () -> client.abortProcessInstance(SERVICE_URL, pI));
+        assertThatExceptionOfType(ProcessInstanceExecutionException.class).isThrownBy(() -> client.abortProcessInstance(SERVICE_URL, pI));
         verify(processInstance, times(1)).error();
         verify(processInstance, times(1)).abort();
     }
@@ -381,7 +380,7 @@ public class KogitoAddonRuntimeClientImplTest {
         WebClientOptions webClientOptions = client.getWebClientToURLOptions(dataIndexUrl);
         assertThat(webClientOptions.getDefaultPort()).isEqualTo(80);
         assertThat(webClientOptions.getDefaultHost()).isEqualTo("service.com");
-        assertFalse(webClientOptions.isSsl());
+        assertThat(webClientOptions.isSsl()).isFalse();
     }
 
     @Test
@@ -390,7 +389,7 @@ public class KogitoAddonRuntimeClientImplTest {
         WebClientOptions webClientOptions = client.getWebClientToURLOptions(dataIndexurl);
         assertThat(webClientOptions.getDefaultPort()).isEqualTo(443);
         assertThat(webClientOptions.getDefaultHost()).isEqualTo("service.com");
-        assertTrue(webClientOptions.isSsl());
+        assertThat(webClientOptions.isSsl()).isTrue();
     }
 
     @Test
@@ -428,9 +427,8 @@ public class KogitoAddonRuntimeClientImplTest {
 
         ProcessInstance pI = createProcessInstance(PROCESS_INSTANCE_ID, ACTIVE);
 
-        assertThatThrownBy(() -> {
-            client.updateProcessInstanceVariables("http://example.com", pI, mapper.writeValueAsString(originalVariables));
-        }).isInstanceOf(DataIndexServiceException.class).hasMessageContaining("Failure to update the variables");
+        assertThatThrownBy(() -> client.updateProcessInstanceVariables("http://example.com", pI, mapper.writeValueAsString(originalVariables))).isInstanceOf(DataIndexServiceException.class)
+                .hasMessageContaining("Failure to update the variables");
     }
 
     @Test
@@ -445,7 +443,7 @@ public class KogitoAddonRuntimeClientImplTest {
 
         CompletableFuture<String> result = client.updateProcessInstanceVariables("http://service.url", pI, mapper.writeValueAsString(originalVariables));
 
-        assertNotNull(result);
+        assertThat(result).isNotNull();
         verify(processInstance).updateVariables(any());
 
         String updatedVariablesString = result.get();

@@ -28,7 +28,7 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 
 import mutiny.zero.flow.adapters.AdaptersToReactiveStreams;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ExplainabilityRequestProducerTest {
 
@@ -45,6 +45,6 @@ class ExplainabilityRequestProducerTest {
                 Collections.emptyList(),
                 Collections.emptyList()));
 
-        assertEquals(1, subscriber.getItems().size());
+        assertThat(subscriber.getItems().size()).isEqualTo(1);
     }
 }

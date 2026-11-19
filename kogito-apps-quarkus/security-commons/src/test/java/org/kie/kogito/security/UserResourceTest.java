@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import io.quarkus.security.credential.TokenCredential;
 import io.quarkus.security.identity.SecurityIdentity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,9 +53,9 @@ class UserResourceTest {
         when(mockCredential.getToken()).thenReturn(testToken);
 
         UserResource.User u = userResourceTest.me();
-        assertEquals(userName, u.getUserName());
-        assertEquals(roles, u.getRoles());
-        assertEquals(testToken, u.getToken());
+        assertThat(u.getUserName()).isEqualTo(userName);
+        assertThat(u.getRoles()).isEqualTo(roles);
+        assertThat(u.getToken()).isEqualTo(testToken);
     }
 
 }

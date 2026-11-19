@@ -19,9 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 
@@ -55,16 +53,16 @@ class OptaPlannerProcessorXMLNoneTest {
 
     @Test
     void solverConfigXml_default() {
-        assertNotNull(solverConfig);
-        assertEquals(TestdataQuarkusSolution.class, solverConfig.getSolutionClass());
-        assertEquals(DomainAccessType.GIZMO, solverConfig.getDomainAccessType());
-        assertEquals(Collections.singletonList(TestdataQuarkusEntity.class), solverConfig.getEntityClassList());
-        assertEquals(TestdataQuarkusConstraintProvider.class,
-                solverConfig.getScoreDirectorFactoryConfig().getConstraintProviderClass());
+        assertThat(solverConfig).isNotNull();
+        assertThat(solverConfig.getSolutionClass()).isEqualTo(TestdataQuarkusSolution.class);
+        assertThat(solverConfig.getDomainAccessType()).isEqualTo(DomainAccessType.GIZMO);
+        assertThat(solverConfig.getEntityClassList()).isEqualTo(Collections.singletonList(TestdataQuarkusEntity.class));
+        assertThat(solverConfig.getScoreDirectorFactoryConfig().getConstraintProviderClass())
+                .isEqualTo(TestdataQuarkusConstraintProvider.class);
         // No termination defined (solverConfig.xml isn't included)
-        assertNull(solverConfig.getTerminationConfig().getSecondsSpentLimit());
-        assertNotNull(solverFactory);
-        assertNotNull(solverFactory.buildSolver());
+        assertThat(solverConfig.getTerminationConfig().getSecondsSpentLimit()).isNull();
+        assertThat(solverFactory).isNotNull();
+        assertThat(solverFactory.buildSolver()).isNotNull();
     }
 
 }

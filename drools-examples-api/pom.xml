@@ -36,6 +36,14 @@
 
   <packaging>pom</packaging>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
   <modules>
     <module>default-kiesession</module>
     <module>named-kiesession</module>

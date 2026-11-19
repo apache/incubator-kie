@@ -44,9 +44,7 @@ import io.quarkus.kubernetes.spi.KubernetesDeploymentTargetBuildItem;
 import io.quarkus.kubernetes.spi.KubernetesResourceMetadataBuildItem;
 
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -75,7 +73,7 @@ class KogitoProcessKnativeEventingProcessorTest {
         final KogitoProcessKnativeEventingProcessor processor = new KogitoProcessKnativeEventingProcessor();
         final MockKogitoKnativeMetadataProducer metadata = new MockKogitoKnativeMetadataProducer();
 
-        assertNull(metadata.getItem());
+        assertThat(metadata.getItem()).isNull();
     }
 
     @Test
@@ -89,7 +87,7 @@ class KogitoProcessKnativeEventingProcessorTest {
 
         Optional<KogitoServiceDeploymentTarget> selectedTarget = processor.selectDeploymentTarget(null, kubernetesMetaBuildItems);
 
-        assertTrue(selectedTarget.isPresent());
+        assertThat(selectedTarget.isPresent()).isTrue();
 
         // Create a set of cloud events including the process event and extended events
         Set<CloudEventMeta> cloudEvents = new HashSet<>();
@@ -102,10 +100,10 @@ class KogitoProcessKnativeEventingProcessorTest {
                 selectedTarget.get());
         metadata.produce(item);
 
-        assertNotNull(metadata.getItem());
+        assertThat(metadata.getItem()).isNotNull();
         Set<CloudEventMeta> resultCloudEvents = metadata.getItem().getCloudEvents();
-        assertTrue(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT1));
-        assertTrue(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT2));
+        assertThat(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT1)).isTrue();
+        assertThat(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT2)).isTrue();
     }
 
     @Test
@@ -121,7 +119,7 @@ class KogitoProcessKnativeEventingProcessorTest {
 
         Optional<KogitoServiceDeploymentTarget> selectedTarget = processor.selectDeploymentTarget(deploymentTargets, kubernetesMetaBuildItems);
 
-        assertTrue(selectedTarget.isPresent());
+        assertThat(selectedTarget.isPresent()).isTrue();
 
         // Create a set of cloud events including the process event and extended events
         Set<CloudEventMeta> cloudEvents = new HashSet<>();
@@ -134,10 +132,10 @@ class KogitoProcessKnativeEventingProcessorTest {
                 selectedTarget.get());
         metadata.produce(item);
 
-        assertNotNull(metadata.getItem());
+        assertThat(metadata.getItem()).isNotNull();
         Set<CloudEventMeta> resultCloudEvents = metadata.getItem().getCloudEvents();
-        assertTrue(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT1));
-        assertTrue(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT2));
+        assertThat(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT1)).isTrue();
+        assertThat(resultCloudEvents.contains(EXTENDED_CLOUD_EVENT2)).isTrue();
     }
 
     private static final class MockKogitoKnativeMetadataProducer implements BuildProducer<KogitoKnativeResourcesMetadataBuildItem> {

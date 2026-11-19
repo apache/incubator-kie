@@ -20,7 +20,7 @@ package org.drools.example.api.defaultkiesessionfromfile;
 
 import java.io.ByteArrayOutputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.PrintStream;
 
 import org.junit.jupiter.api.Test;
@@ -40,6 +40,6 @@ public class DefaultKieSessionFromFileExampleTest {
         String expected = "" +
                           "Dave: Hello, HAL. Do you read me, HAL?" + NL +
                           "HAL: Dave. I read you." + NL;
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 }

@@ -20,8 +20,7 @@ package org.kie.kogito.persistence.postgresql.reporting.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresJsonFieldTest {
 
@@ -30,21 +29,15 @@ class PostgresJsonFieldTest {
 
     @Test
     void testEquality() {
-        assertEquals(FIELD,
-                FIELD);
-        assertNotEquals(FIELD,
-                new PostgresJsonField("field1", JsonType.NUMBER));
-        assertNotEquals(FIELD,
-                new PostgresJsonField("field2", JsonType.STRING));
+        assertThat(FIELD).isEqualTo(FIELD);
+        assertThat(new PostgresJsonField("field1", JsonType.NUMBER)).isNotEqualTo(FIELD);
+        assertThat(new PostgresJsonField("field2", JsonType.STRING)).isNotEqualTo(FIELD);
     }
 
     @Test
     void testHashCode() {
-        assertEquals(FIELD_HASHCODE,
-                FIELD.hashCode());
-        assertNotEquals(FIELD_HASHCODE,
-                new PostgresJsonField("field1", JsonType.NUMBER).hashCode());
-        assertNotEquals(FIELD_HASHCODE,
-                new PostgresJsonField("field2", JsonType.STRING).hashCode());
+        assertThat(FIELD.hashCode()).isEqualTo(FIELD_HASHCODE);
+        assertThat(new PostgresJsonField("field1", JsonType.NUMBER).hashCode()).isNotEqualTo(FIELD_HASHCODE);
+        assertThat(new PostgresJsonField("field2", JsonType.STRING).hashCode()).isNotEqualTo(FIELD_HASHCODE);
     }
 }

@@ -18,10 +18,10 @@
  */
 package org.kie.kogito.addons.quarkus.fabric8.k8s.service.catalog;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.kogito.addons.quarkus.fabric8.k8s.service.catalog.GVK.DEPLOYMENT;
 import static org.kie.kogito.addons.quarkus.fabric8.k8s.service.catalog.GVK.DEPLOYMENT_CONFIG;
 import static org.kie.kogito.addons.quarkus.fabric8.k8s.service.catalog.GVK.INGRESS;
@@ -37,96 +37,90 @@ public class KubeURIParserGVKTest {
     public void testValidGVK() {
         KubernetesResourceUri address = KubernetesResourceUri.parse("deployments.v1.apps/default/kogito-app-1");
         assertThat(address.getGvk()).isEqualTo(DEPLOYMENT);
-        Assertions.assertEquals("kogito-app-1", address.getResourceName());
+        assertThat(address.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri url1 = KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.io/default/kogito-app-1");
         assertThat(url1.getGvk()).isEqualTo(DEPLOYMENT_CONFIG);
-        Assertions.assertEquals("kogito-app-1", url1.getResourceName());
+        assertThat(url1.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address2 = KubernetesResourceUri.parse("statefulsets.v1.apps/namespace2/kogito-app-1");
-        Assertions.assertEquals(STATEFUL_SET, address2.getGvk());
-        Assertions.assertEquals("kogito-app-1", address2.getResourceName());
+        assertThat(address2.getGvk()).isEqualTo(STATEFUL_SET);
+        assertThat(address2.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address3 = KubernetesResourceUri.parse("statefulsets.v1.apps/namespace2/kogito-app-1");
-        Assertions.assertEquals(STATEFUL_SET, address3.getGvk());
-        Assertions.assertEquals("kogito-app-1", address3.getResourceName());
+        assertThat(address3.getGvk()).isEqualTo(STATEFUL_SET);
+        assertThat(address3.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address4 = KubernetesResourceUri.parse("services.v1/namespace2/kogito-app-1");
-        Assertions.assertEquals(SERVICE, address4.getGvk());
-        Assertions.assertEquals("kogito-app-1", address4.getResourceName());
+        assertThat(address4.getGvk()).isEqualTo(SERVICE);
+        assertThat(address4.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address5 = KubernetesResourceUri.parse("services.v1/namespace2/kogito-app-1");
-        Assertions.assertEquals(SERVICE, address5.getGvk());
-        Assertions.assertEquals("kogito-app-1", address5.getResourceName());
+        assertThat(address5.getGvk()).isEqualTo(SERVICE);
+        assertThat(address5.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address6 = KubernetesResourceUri.parse("routes.v1.route.openshift.io/namespace10/kogito-app-1");
-        Assertions.assertEquals(ROUTE, address6.getGvk());
-        Assertions.assertEquals("kogito-app-1", address6.getResourceName());
+        assertThat(address6.getGvk()).isEqualTo(ROUTE);
+        assertThat(address6.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address7 = KubernetesResourceUri.parse("ingresses.v1.networking.k8s.io/namespace9/kogito-app-1");
-        Assertions.assertEquals(INGRESS, address7.getGvk());
-        Assertions.assertEquals("kogito-app-1", address7.getResourceName());
+        assertThat(address7.getGvk()).isEqualTo(INGRESS);
+        assertThat(address7.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri address8 = KubernetesResourceUri.parse("pods.v1/namespace9/kogito-app-1");
-        Assertions.assertEquals(POD, address8.getGvk());
-        Assertions.assertEquals("kogito-app-1", address8.getResourceName());
+        assertThat(address8.getGvk()).isEqualTo(POD);
+        assertThat(address8.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri url9 = KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.io/default/kogito-app-1");
-        Assertions.assertEquals(DEPLOYMENT_CONFIG, url9.getGvk());
-        Assertions.assertEquals("kogito-app-1", url9.getResourceName());
+        assertThat(url9.getGvk()).isEqualTo(DEPLOYMENT_CONFIG);
+        assertThat(url9.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri url10 = KubernetesResourceUri.parse("services.v1.serving.knative.dev/default/knative-app-1");
-        Assertions.assertEquals(KNATIVE_SERVICE, url10.getGvk());
-        Assertions.assertEquals("knative-app-1", url10.getResourceName());
+        assertThat(url10.getGvk()).isEqualTo(KNATIVE_SERVICE);
+        assertThat(url10.getResourceName()).isEqualTo("knative-app-1");
     }
 
     @Test
     public void testInvalidGVK() {
-        Assertions.assertThrowsExactly(IllegalArgumentException.class, () -> {
-            KubernetesResourceUri.parse("authorization.openshift.io/v1/roleBinding/default/kogito-app-3");
-        });
+        assertThatThrownBy(() -> KubernetesResourceUri.parse("authorization.openshift.io/v1/roleBinding/default/kogito-app-3"))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
 
-        Assertions.assertThrowsExactly(IllegalArgumentException.class, () -> {
-            KubernetesResourceUri.parse("v40/invalid/deployment/default/kogito-app-3");
-        });
+        assertThatThrownBy(() -> KubernetesResourceUri.parse("v40/invalid/deployment/default/kogito-app-3"))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
 
-        Assertions.assertThrowsExactly(IllegalArgumentException.class, () -> {
-            KubernetesResourceUri.parse("authorization.openshift.io/v1/roleBinding/kogito-app-3");
-        });
+        assertThatThrownBy(() -> KubernetesResourceUri.parse("authorization.openshift.io/v1/roleBinding/kogito-app-3"))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
 
-        Assertions.assertThrowsExactly(IllegalArgumentException.class, () -> {
-            KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.ios/default/kogito-app2");
-        });
+        assertThatThrownBy(() -> KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.ios/default/kogito-app2"))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void testValidGVKWithNoNamespace() {
         KubernetesResourceUri url = KubernetesResourceUri.parse("deployments.v1.apps/kogito-app-1");
-        Assertions.assertEquals(DEPLOYMENT, url.getGvk());
-        Assertions.assertEquals("kogito-app-1", url.getResourceName());
+        assertThat(url.getGvk()).isEqualTo(DEPLOYMENT);
+        assertThat(url.getResourceName()).isEqualTo("kogito-app-1");
 
         KubernetesResourceUri url1 = KubernetesResourceUri.parse("services.v1/kogito-app-2");
-        Assertions.assertEquals(SERVICE, url1.getGvk());
-        Assertions.assertEquals("kogito-app-2", url1.getResourceName());
+        assertThat(url1.getGvk()).isEqualTo(SERVICE);
+        assertThat(url1.getResourceName()).isEqualTo("kogito-app-2");
 
         KubernetesResourceUri url2 = KubernetesResourceUri.parse("services.v1/kogito-app-2");
-        Assertions.assertEquals(SERVICE, url2.getGvk());
-        Assertions.assertEquals("kogito-app-2", url2.getResourceName());
+        assertThat(url2.getGvk()).isEqualTo(SERVICE);
+        assertThat(url2.getResourceName()).isEqualTo("kogito-app-2");
 
         KubernetesResourceUri url3 = KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.io/kogito-app-3");
-        Assertions.assertEquals(DEPLOYMENT_CONFIG, url3.getGvk());
-        Assertions.assertEquals("kogito-app-3", url3.getResourceName());
+        assertThat(url3.getGvk()).isEqualTo(DEPLOYMENT_CONFIG);
+        assertThat(url3.getResourceName()).isEqualTo("kogito-app-3");
 
     }
 
     @Test
     public void testEmptyGVKValues() {
-        Assertions.assertThrowsExactly(IllegalArgumentException.class, () -> {
-            KubernetesResourceUri.parse("kubernetes:roleBinding/kogito-app-3");
-        });
+        assertThatThrownBy(() -> KubernetesResourceUri.parse("kubernetes:roleBinding/kogito-app-3"))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
 
-        Assertions.assertThrowsExactly(IllegalArgumentException.class, () -> {
-            KubernetesResourceUri.parse("apps.openshift.io/deploymentconfig/kogito-app-3");
-        });
+        assertThatThrownBy(() -> KubernetesResourceUri.parse("apps.openshift.io/deploymentconfig/kogito-app-3"))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
     }
 }

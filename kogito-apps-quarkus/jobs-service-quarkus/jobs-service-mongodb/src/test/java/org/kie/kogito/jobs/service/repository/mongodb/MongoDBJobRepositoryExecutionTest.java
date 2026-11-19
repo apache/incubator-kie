@@ -67,8 +67,6 @@ import static com.mongodb.client.model.Filters.lte;
 import static com.mongodb.client.model.Indexes.ascending;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.kie.kogito.jobs.service.repository.mongodb.MongoDBJobRepository.CREATED_COLUMN;
 import static org.kie.kogito.jobs.service.repository.mongodb.MongoDBJobRepository.FIRE_TIME_COLUMN;
 import static org.kie.kogito.jobs.service.repository.mongodb.MongoDBJobRepository.ID;
@@ -179,7 +177,7 @@ class MongoDBJobRepositoryExecutionTest {
         ArgumentCaptor<JsonObject> unmarshallCaptor = ArgumentCaptor.forClass(JsonObject.class);
 
         verify(collection, times(1)).find(filterCaptor.capture());
-        assertEquals(eq(ID, job.getId()), filterCaptor.getValue());
+        assertThat(filterCaptor.getValue()).isEqualTo(eq(ID, job.getId()));
 
         verify(jobDetailsMarshaller).unmarshall(unmarshallCaptor.capture());
         assertThat(unmarshallCaptor.getValue()).isEqualTo(new JsonObject(document.toJson()));
@@ -197,7 +195,7 @@ class MongoDBJobRepositoryExecutionTest {
 
         ArgumentCaptor<Bson> filterCaptor = ArgumentCaptor.forClass(Bson.class);
         verify(collection, times(1)).find(filterCaptor.capture());
-        assertEquals(eq(ID, job.getId()), filterCaptor.getValue());
+        assertThat(filterCaptor.getValue()).isEqualTo(eq(ID, job.getId()));
     }
 
     @Test
@@ -214,7 +212,7 @@ class MongoDBJobRepositoryExecutionTest {
         ArgumentCaptor<JsonObject> unmarshallCaptor = ArgumentCaptor.forClass(JsonObject.class);
 
         verify(collection, times(1)).findOneAndDelete(filterCaptor.capture());
-        assertEquals(eq(ID, job.getId()), filterCaptor.getValue());
+        assertThat(filterCaptor.getValue()).isEqualTo(eq(ID, job.getId()));
 
         verify(jobDetailsMarshaller).unmarshall(unmarshallCaptor.capture());
         assertThat(unmarshallCaptor.getValue()).isEqualTo(new JsonObject(document.toJson()));
@@ -233,7 +231,7 @@ class MongoDBJobRepositoryExecutionTest {
         PublisherBuilder<JobDetails> result = mongoDBJobRepository.findByStatusBetweenDates(from, to,
                 new JobStatus[] { JobStatus.SCHEDULED, JobStatus.RETRY },
                 new ReactiveJobRepository.SortTerm[] { ReactiveJobRepository.SortTerm.byFireTime(true) });
-        assertNotNull(result);
+        assertThat(result).isNotNull();
 
         ArgumentCaptor<Bson> filterCaptor = ArgumentCaptor.forClass(Bson.class);
         ArgumentCaptor<FindOptions> optionCaptor = ArgumentCaptor.forClass(FindOptions.class);
@@ -245,11 +243,10 @@ class MongoDBJobRepositoryExecutionTest {
         optionCaptor.getValue().apply(findPublisher);
         verify(findPublisher).filter(filterCaptor.capture());
 
-        assertEquals(and(
+        assertThat(filterCaptor.getValue()).isEqualTo(and(
                 in("status", Arrays.stream(new JobStatus[] { JobStatus.SCHEDULED, JobStatus.RETRY }).map(Enum::name).collect(toList())),
                 gte("trigger.nextFireTime", from.toInstant().toEpochMilli()),
-                lte("trigger.nextFireTime", to.toInstant().toEpochMilli())),
-                filterCaptor.getValue());
+                lte("trigger.nextFireTime", to.toInstant().toEpochMilli())));
     }
 
     @Test
@@ -263,8 +260,8 @@ class MongoDBJobRepositoryExecutionTest {
         ArgumentCaptor<Bson> indexCaptor = ArgumentCaptor.forClass(Bson.class);
         verify(collection, times(2)).createIndex(indexCaptor.capture());
 
-        assertEquals(ascending(STATUS_COLUMN, FIRE_TIME_COLUMN), indexCaptor.getAllValues().get(0));
-        assertEquals(ascending(CREATED_COLUMN, FIRE_TIME_COLUMN, ID), indexCaptor.getAllValues().get(1));
+        assertThat(indexCaptor.getAllValues().get(0)).isEqualTo(ascending(STATUS_COLUMN, FIRE_TIME_COLUMN));
+        assertThat(indexCaptor.getAllValues().get(1)).isEqualTo(ascending(CREATED_COLUMN, FIRE_TIME_COLUMN, ID));
     }
 
     @Test
@@ -278,7 +275,7 @@ class MongoDBJobRepositoryExecutionTest {
                 .append("testKey1", "testValue1")
                 .append("testKey2", 1618276009165L);
 
-        assertEquals(object, MongoDBJobRepository.documentToJson(document));
+        assertThat(MongoDBJobRepository.documentToJson(document)).isEqualTo(object);
     }
 
     @Test
@@ -292,7 +289,7 @@ class MongoDBJobRepositoryExecutionTest {
                 .append("testKey1", "testValue1")
                 .append("testKey2", 1618276009165L);
 
-        assertEquals(document, MongoDBJobRepository.jsonToDocument(object));
+        assertThat(MongoDBJobRepository.jsonToDocument(object)).isEqualTo(document);
     }
 
     private static JobDetails createExistingJob() {

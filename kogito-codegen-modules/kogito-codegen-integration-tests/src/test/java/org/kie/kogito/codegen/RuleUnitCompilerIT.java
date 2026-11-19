@@ -54,9 +54,7 @@ import org.kie.kogito.rules.RuleUnits;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
@@ -75,15 +73,15 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
         RuleUnit<AdultUnit> unit = application.get(RuleUnits.class).create(AdultUnit.class);
         RuleUnitInstance<AdultUnit> instance = unit.createInstance(adults);
 
-        assertTrue(instance.getClock() instanceof SessionPseudoClock);
+        assertThat((instance.getClock() instanceof SessionPseudoClock)).isTrue();
 
-        assertEquals(2, instance.fire());
-        assertTrue(adults.getResults().getResults().containsAll(asList("Mario", "Marilena")));
+        assertThat(instance.fire()).isEqualTo(2);
+        assertThat(adults.getResults().getResults().containsAll(asList("Mario", "Marilena"))).isTrue();
 
         sofia.setAge(22);
         adults.getPersons().update(dhSofia, sofia);
-        assertEquals(1, instance.fire());
-        assertTrue(adults.getResults().getResults().containsAll(asList("Mario", "Marilena", "Sofia")));
+        assertThat(instance.fire()).isEqualTo(1);
+        assertThat(adults.getResults().getResults().containsAll(asList("Mario", "Marilena", "Sofia"))).isTrue();
     }
 
     @Test
@@ -98,9 +96,9 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
         RuleUnit<AdultUnit> unit = application.get(RuleUnits.class).create(AdultUnit.class);
         RuleUnitInstance<AdultUnit> instance = unit.createInstance(adults);
 
-        assertEquals(2, instance.fire());
+        assertThat(instance.fire()).isEqualTo(2);
 
-        assertTrue(adults.getResults().getResults().containsAll(asList("Sofia")));
+        assertThat(adults.getResults().getResults().containsAll(asList("Sofia"))).isTrue();
     }
 
     @Test
@@ -119,8 +117,8 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
         instance.fire();
 
         List<String> results = adults.getResults().getResults();
-        assertEquals(2, results.size());
-        assertTrue(results.containsAll(asList("Mario", "Marilena")));
+        assertThat(results.size()).isEqualTo(2);
+        assertThat(results.containsAll(asList("Mario", "Marilena"))).isTrue();
     }
 
     @Test
@@ -141,8 +139,8 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
         List<String> results = (List<String>) queryClass.getMethod("execute", RuleUnitInstance.class).invoke(null, instance);
 
-        assertEquals(2, results.size());
-        assertTrue(results.containsAll(asList("Mario", "Marilena")));
+        assertThat(results.size()).isEqualTo(2);
+        assertThat(results.containsAll(asList("Mario", "Marilena"))).isTrue();
     }
 
     @Test
@@ -160,8 +158,8 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
         List<Object> results = instance.executeQuery("FindAdultsAge").toList("$age");
 
-        assertEquals(2, results.size());
-        assertTrue(results.containsAll(asList(45, 47)));
+        assertThat(results.size()).isEqualTo(2);
+        assertThat(results.containsAll(asList(45, 47))).isTrue();
     }
 
     @Test
@@ -179,7 +177,7 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
         List<Object> results = instance.executeQuery("FindAdultsAge").toList("$sum");
 
-        assertEquals(1, results.size());
+        assertThat(results.size()).isEqualTo(1);
         assertThat(results).containsExactlyInAnyOrder(99);
     }
 
@@ -205,10 +203,10 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
         RuleUnit<PersonsUnit> personsUnit = application.get(RuleUnits.class).create(PersonsUnit.class);
         personsUnit.createInstance(new PersonsUnit(persons)).fire();
 
-        assertEquals(2, adultData18.getResults().getResults().size());
-        assertTrue(adultData18.getResults().getResults().containsAll(asList("Mario", "Marilena")));
-        assertEquals(1, adultData21.getResults().getResults().size());
-        assertTrue(adultData21.getResults().getResults().containsAll(asList("Mario")));
+        assertThat(adultData18.getResults().getResults().size()).isEqualTo(2);
+        assertThat(adultData18.getResults().getResults().containsAll(asList("Mario", "Marilena"))).isTrue();
+        assertThat(adultData21.getResults().getResults().size()).isEqualTo(1);
+        assertThat(adultData21.getResults().getResults().containsAll(asList("Mario"))).isTrue();
     }
 
     @Test
@@ -229,7 +227,7 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
         data.getValues().add("start");
         instance.fire();
 
-        assertEquals(asList("start", "middle", "done"), strings);
+        assertThat(strings).isEqualTo(asList("start", "middle", "done"));
 
     }
 
@@ -250,13 +248,13 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
         unitData.getInput().set(new Datum("start"));
         instance.fire();
-        assertEquals(asList("continue", "updated", null, "done"), data);
+        assertThat(data).isEqualTo(asList("continue", "updated", null, "done"));
 
         lastSeen.get().setValue("updated");
         unitData.getOutput().update();
         instance.fire();
 
-        assertEquals(asList("continue", "updated", null, "done", "updated", null, "done"), data);
+        assertThat(data).isEqualTo(asList("continue", "updated", null, "done", "updated", null, "done"));
 
     }
 
@@ -282,8 +280,8 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
         List<Object> results = instance.executeQuery("FindPeopleInMilano").toList("$p");
 
-        assertEquals(1, results.size());
-        assertEquals("Mario", ((Person) results.get(0)).getName());
+        assertThat(results.size()).isEqualTo(1);
+        assertThat(((Person) results.get(0)).getName()).isEqualTo("Mario");
     }
 
     @Test
@@ -309,7 +307,7 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
         stockUnit.getStockTicks().append(new StockTick("IBM", 1500, 240));
 
         ValueDrop valueDrop = (ValueDrop) instance.executeQuery("highestValueDrop", "IBM").iterator().next().get("$s");
-        assertEquals(300, valueDrop.getDropAmount());
+        assertThat(valueDrop.getDropAmount()).isEqualTo(300);
     }
 
     @ParameterizedTest
@@ -333,7 +331,7 @@ public class RuleUnitCompilerIT extends AbstractCodegenIT {
 
         instance.fire();
 
-        assertEquals(usePropertyReactivity ? 46 : 50, mario.getAge());
+        assertThat(mario.getAge()).isEqualTo(usePropertyReactivity ? 46 : 50);
     }
 
     private Application createApplication(String... drls) throws Exception {

@@ -40,8 +40,6 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.transaction.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
 @QuarkusTestResource(PostgreSqlQuarkusTestResource.class)
@@ -100,28 +98,28 @@ class ComplexHierarchicalTypeMappingIT {
 
         assertThat(results).hasSize(3);
         final ComplexHierarchicalTypeExtractRow row0 = results.get(0);
-        assertEquals("key1", row0.key);
-        assertEquals(CACHE_NAME, row0.name);
-        assertEquals("root1", row0.root);
-        assertEquals("A", row0.nestedBasicMappedField);
-        assertEquals("Aa", row0.nestedComplexCollectionMappedField1);
-        assertEquals("Ba", row0.nestedComplexCollectionMappedSubField1);
+        assertThat(row0.key).isEqualTo("key1");
+        assertThat(row0.name).isEqualTo(CACHE_NAME);
+        assertThat(row0.root).isEqualTo("root1");
+        assertThat(row0.nestedBasicMappedField).isEqualTo("A");
+        assertThat(row0.nestedComplexCollectionMappedField1).isEqualTo("Aa");
+        assertThat(row0.nestedComplexCollectionMappedSubField1).isEqualTo("Ba");
 
         final ComplexHierarchicalTypeExtractRow row1 = results.get(1);
-        assertEquals("key1", row1.key);
-        assertEquals(CACHE_NAME, row1.name);
-        assertEquals("root1", row1.root);
-        assertEquals("A", row1.nestedBasicMappedField);
-        assertEquals("Aa", row1.nestedComplexCollectionMappedField1);
-        assertEquals("Bb", row1.nestedComplexCollectionMappedSubField1);
+        assertThat(row1.key).isEqualTo("key1");
+        assertThat(row1.name).isEqualTo(CACHE_NAME);
+        assertThat(row1.root).isEqualTo("root1");
+        assertThat(row1.nestedBasicMappedField).isEqualTo("A");
+        assertThat(row1.nestedComplexCollectionMappedField1).isEqualTo("Aa");
+        assertThat(row1.nestedComplexCollectionMappedSubField1).isEqualTo("Bb");
 
         final ComplexHierarchicalTypeExtractRow row2 = results.get(2);
-        assertEquals("key1", row2.key);
-        assertEquals(CACHE_NAME, row2.name);
-        assertEquals("root1", row2.root);
-        assertEquals("A", row2.nestedBasicMappedField);
-        assertEquals("Ab", row2.nestedComplexCollectionMappedField1);
-        assertEquals("Ca", row2.nestedComplexCollectionMappedSubField1);
+        assertThat(row2.key).isEqualTo("key1");
+        assertThat(row2.name).isEqualTo(CACHE_NAME);
+        assertThat(row2.root).isEqualTo("root1");
+        assertThat(row2.nestedBasicMappedField).isEqualTo("A");
+        assertThat(row2.nestedComplexCollectionMappedField1).isEqualTo("Ab");
+        assertThat(row2.nestedComplexCollectionMappedSubField1).isEqualTo("Ca");
     }
 
     @Test
@@ -184,11 +182,11 @@ class ComplexHierarchicalTypeMappingIT {
 
         assertThat(results).hasSize(1);
         final ComplexHierarchicalTypeExtractRow row0 = results.get(0);
-        assertEquals("key1", row0.key);
-        assertEquals(CACHE_NAME, row0.name);
-        assertEquals("root1-1", row0.root);
-        assertEquals("A-1", row0.nestedBasicMappedField);
-        assertNull(row0.nestedComplexCollectionMappedSubField1);
+        assertThat(row0.key).isEqualTo("key1");
+        assertThat(row0.name).isEqualTo(CACHE_NAME);
+        assertThat(row0.root).isEqualTo("root1-1");
+        assertThat(row0.nestedBasicMappedField).isEqualTo("A-1");
+        assertThat(row0.nestedComplexCollectionMappedSubField1).isNull();
     }
 
     @SuppressWarnings("unchecked")

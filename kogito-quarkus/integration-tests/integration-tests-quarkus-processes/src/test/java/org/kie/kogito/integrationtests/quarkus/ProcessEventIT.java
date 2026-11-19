@@ -47,7 +47,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusIntegrationTest
 @QuarkusTestResource(KafkaQuarkusTestResource.class)
@@ -97,27 +97,27 @@ class ProcessEventIT {
                 if ("handleApprovals".equals(data.get("processId"))) {
                     switch (event.getType()) {
                         case "ProcessInstanceStateEvent":
-                            assertEquals("ProcessInstanceEvent", event.getType());
-                            assertEquals("/handleApprovals", event.getSource().toString());
-                            assertEquals("handleApprovals", data.get("processId"));
-                            assertEquals("1.0", event.getKogitoProcessVersion());
-                            assertEquals("BPMN", data.get("processType"));
-                            assertEquals("BPMN", event.getKogitoProcessType());
-                            assertEquals(username, event.getKogitoIdentity());
+                            assertThat(event.getType()).isEqualTo("ProcessInstanceEvent");
+                            assertThat(event.getSource().toString()).isEqualTo("/handleApprovals");
+                            assertThat(data.get("processId")).isEqualTo("handleApprovals");
+                            assertThat(event.getKogitoProcessVersion()).isEqualTo("1.0");
+                            assertThat(data.get("processType")).isEqualTo("BPMN");
+                            assertThat(event.getKogitoProcessType()).isEqualTo("BPMN");
+                            assertThat(event.getKogitoIdentity()).isEqualTo(username);
                             break;
                         case "UserTaskInstanceStateEvent":
-                            assertEquals("UserTaskInstanceEvent", event.getType());
-                            assertEquals("/handleApprovals", event.getSource().toString());
-                            assertEquals("handleApprovals", data.get("processId"));
-                            assertEquals("1.0", event.getKogitoProcessVersion());
-                            assertEquals(username, event.getKogitoIdentity());
+                            assertThat(event.getType()).isEqualTo("UserTaskInstanceEvent");
+                            assertThat(event.getSource().toString()).isEqualTo("/handleApprovals");
+                            assertThat(data.get("processId")).isEqualTo("handleApprovals");
+                            assertThat(event.getKogitoProcessVersion()).isEqualTo("1.0");
+                            assertThat(event.getKogitoIdentity()).isEqualTo(username);
                             break;
                         case "ProcessInstanceVariableEvent":
-                            assertEquals("VariableInstanceEvent", event.getType());
-                            assertEquals("/handleApprovals", event.getSource().toString());
-                            assertEquals("handleApprovals", data.get("processId"));
-                            assertEquals("1.0", event.getKogitoProcessVersion());
-                            assertEquals(username, event.getKogitoIdentity());
+                            assertThat(event.getType()).isEqualTo("VariableInstanceEvent");
+                            assertThat(event.getSource().toString()).isEqualTo("/handleApprovals");
+                            assertThat(data.get("processId")).isEqualTo("handleApprovals");
+                            assertThat(event.getKogitoProcessVersion()).isEqualTo("1.0");
+                            assertThat(event.getKogitoIdentity()).isEqualTo(username);
                             break;
                     }
                 }
@@ -155,7 +155,7 @@ class ProcessEventIT {
 
         Map<String, Object> model = Collections.singletonMap("approved", true);
 
-        assertEquals(model, given()
+        assertThat(given()
                 .contentType(ContentType.JSON)
                 .auth().basic(username, password)
                 .when()
@@ -168,9 +168,9 @@ class ProcessEventIT {
                 .then()
                 .statusCode(200)
                 .extract()
-                .as(Map.class));
+                .as(Map.class)).isEqualTo(model);
 
-        assertEquals(true, given()
+        Boolean approved = given()
                 .contentType(ContentType.JSON)
                 .auth().basic(username, password)
                 .when()
@@ -182,7 +182,8 @@ class ProcessEventIT {
                 .then()
                 .statusCode(200)
                 .extract()
-                .path("results.approved"));
+                .path("results.approved");
+        assertThat(approved).isTrue();
 
         given()
                 .contentType(ContentType.JSON)

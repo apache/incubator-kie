@@ -22,9 +22,9 @@ package it.pkg;
 import org.drools.scenariosimulation.backend.runner.TestScenarioActivator;
 
 /**
- * ScenarioJunitActivator is a custom JUnit runner that enables the execution of Test Scenario files (*.scesim).
- * This activator class, when executed, will load all scesim files available in the project and run them.
- * Each row of the scenario will generate a test JUnit result.
+ * Marker class annotated with {@link TestScenarioActivator} so the Test Scenario engine
+ * discovers and executes all {@code *.scesim} files in the project. Each scenario row
+ * becomes a JUnit Platform test result.
  */
 @TestScenarioActivator
 public class ScenarioJunitActivatorTest {

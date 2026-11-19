@@ -27,7 +27,7 @@ import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * This tests also covers the findServicePort method
@@ -49,7 +49,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("http://" + externalName + ":" + 80), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("http://" + externalName + ":" + 80));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("http://10.10.10.10:80"), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("http://10.10.10.10:80"));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("https://10.10.10.10:443"), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("https://10.10.10.10:443"));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("http://10.10.10.10:801"), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("http://10.10.10.10:801"));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("http://10.10.10.10:820"), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("http://10.10.10.10:820"));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("http://10.10.10.10:809"), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("http://10.10.10.10:809"));
     }
 
     @Test
@@ -149,7 +149,7 @@ public class ServiceUtilsTest {
                 .withInternalTrafficPolicy("Cluster")
                 .endSpec()
                 .build();
-        assertEquals(URI.create("http://10.10.10.10:8080"), ServiceUtils.getURLFromService(service, kubeURI).get());
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI).get()).isEqualTo(URI.create("http://10.10.10.10:8080"));
     }
 
     @Test
@@ -165,7 +165,7 @@ public class ServiceUtilsTest {
                 .endSpec()
                 .build();
 
-        assertEquals(Optional.empty(), ServiceUtils.getURLFromService(service, kubeURI));
+        assertThat(ServiceUtils.getURLFromService(service, kubeURI)).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -180,7 +180,7 @@ public class ServiceUtilsTest {
                 .endSpec()
                 .build();
 
-        assertEquals(Optional.empty(), ServiceUtils.getURLFromService(service, null));
+        assertThat(ServiceUtils.getURLFromService(service, null)).isEqualTo(Optional.empty());
     }
 
 }

@@ -25,17 +25,27 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
-import org.junit.runner.Description;
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunListener;
-import org.junit.runners.model.TestTimedOutException;
+import org.junit.platform.engine.TestExecutionResult;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestIdentifier;
+import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TestStatusListener extends RunListener {
+/**
+ * JUnit Platform {@link TestExecutionListener} that records test lifecycle events
+ * to {@code target/testStatusListener.*.log}.
+ * <p>
+ * Registration is opt-in: enable the {@code enableTestStatusListener} Maven profile
+ * (for example {@code -DenableTestStatusListener} on {@code drools-compiler}), which
+ * puts a {@code META-INF/services/org.junit.platform.launcher.TestExecutionListener}
+ * descriptor on the Surefire classpath so the Platform launcher discovers this class.
+ */
+public class TestStatusListener implements TestExecutionListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestStatusListener.class);
 
@@ -54,38 +64,88 @@ public class TestStatusListener extends RunListener {
     }
 
     @Override
+    public void testPlanExecutionStarted(final TestPlan testPlan) {
+        try {
+            write("testPlanExecutionStarted", "tests=" + testPlan.countTestIdentifiers(TestIdentifier::isTest));
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void testPlanExecutionFinished(final TestPlan testPlan) {
+        try {
+            write("testPlanExecutionFinished", "tests=" + testPlan.countTestIdentifiers(TestIdentifier::isTest));
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void executionStarted(final TestIdentifier testIdentifier) {
+        try {
+            write("executionStarted", testIdentifier);
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void executionFinished(final TestIdentifier testIdentifier, final TestExecutionResult testExecutionResult) {
+        try {
+            if (testExecutionResult.getStatus() == TestExecutionResult.Status.FAILED) {
+                final Optional<Throwable> throwable = testExecutionResult.getThrowable();
+                if (throwable.isPresent() && isTimeoutFailure(throwable.get())) {
+                    writeThreadDump();
+                }
+                write("executionFailed", testIdentifier.getDisplayName() + "\t" + throwable.map(Throwable::toString).orElse(""));
+            } else if (testExecutionResult.getStatus() == TestExecutionResult.Status.ABORTED) {
+                write("executionAborted", testIdentifier.getDisplayName() + "\t"
+                        + testExecutionResult.getThrowable().map(Throwable::toString).orElse(""));
+            } else {
+                write("executionFinished", testIdentifier);
+            }
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
+    public void executionSkipped(final TestIdentifier testIdentifier, final String reason) {
+        try {
+            write("executionSkipped", testIdentifier.getDisplayName() + "\t" + reason);
+        } catch (final IOException e) {
+            LOG.error("Exception", e);
+        }
+    }
+
+    @Override
     protected void finalize() throws Throwable {
         if (writer != null) {
             writer.close();
         }
     }
 
-    private synchronized void write(final String method, final Description description) throws IOException {
+    private synchronized void write(final String method, final TestIdentifier testIdentifier) throws IOException {
         writer.write(method);
         writer.write("\t");
-        writer.write(description.getClassName());
-        writer.write(".");
-        if ( description.getMethodName() != null ) { writer.write(description.getMethodName()); }
+        writer.write(testIdentifier.getUniqueId());
+        writer.write("\t");
+        writer.write(testIdentifier.getDisplayName());
         writer.newLine();
         writer.flush();
     }
-    
-    private synchronized void write(final String method, final Failure failure) throws IOException {
+
+    private synchronized void write(final String method, final String detail) throws IOException {
         writer.write(method);
         writer.write("\t");
-        if ( failure.getMessage() != null ) { writer.write(failure.getMessage()); }
+        if (detail != null) {
+            writer.write(detail);
+        }
         writer.newLine();
         writer.flush();
     }
-    
-    private synchronized void write(final String method, final Result result) throws IOException {
-        writer.write(method);
-        writer.write("\t");
-        writer.write(result.toString());
-        writer.newLine();
-        writer.flush();
-    }
-    
+
     private synchronized void writeThreadDump() throws IOException {
         final ThreadMXBean threadMxBean = ManagementFactory.getThreadMXBean();
         for (final ThreadInfo ti : threadMxBean.dumpAllThreads(true, true)) {
@@ -95,7 +155,7 @@ public class TestStatusListener extends RunListener {
         writer.newLine();
         writer.flush();
     }
-    
+
     private static String fullStackTrace(final ThreadInfo ti) {
         final StringBuilder sb = new StringBuilder();
         Stream.of( ti.getStackTrace() )
@@ -114,47 +174,18 @@ public class TestStatusListener extends RunListener {
         return sb.toString();
     }
 
-    @Override
-    public void testRunStarted(final Description description) throws Exception {
-        write("testRunStarted", description);
-    }
-
-    @Override
-    public void testRunFinished(final Result result) throws Exception {
-        write("testRunFinished", result);
-    }
-
-    @Override
-    public void testStarted(final Description description) throws Exception {
-        write("testStarted", description);
-    }
-
-    @Override
-    public void testFinished(final Description description) throws Exception {
-        write("testFinished", description);
-    }
-
-    @Override
-    public void testFailure(final Failure failure) throws Exception {
-        if ( failure.getException() instanceof TestTimedOutException ) {
-            writeThreadDump();
+    private static boolean isTimeoutFailure(final Throwable throwable) {
+        for (Throwable current = throwable; current != null; current = current.getCause()) {
+            if (current instanceof TimeoutException
+                    || current.getClass().getSimpleName().contains("Timeout")) {
+                return true;
+            }
+            final String message = current.getMessage();
+            if (message != null && message.toLowerCase().contains("timed out")) {
+                return true;
+            }
         }
-        write("testFailure", failure);
+        return false;
     }
 
-    @Override
-    public void testAssumptionFailure(final Failure failure) {
-        try {
-            write("testAssumptionFailure", failure);
-        } catch (final IOException e) {
-            // can't do anything at this point to report it to log file
-            LOG.error("Exception", e);
-        }
-    }
-
-    @Override
-    public void testIgnored(final Description description) throws Exception {
-        write("testIgnored", description);
-    }
-    
 }

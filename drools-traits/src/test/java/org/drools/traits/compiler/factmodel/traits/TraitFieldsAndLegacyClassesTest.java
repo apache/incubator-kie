@@ -24,11 +24,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.drools.traits.compiler.CommonTraitTest;
-import org.drools.traits.compiler.ReviseTraitTestWithPRAlwaysCategory;
 import org.drools.traits.core.factmodel.TraitFactoryImpl;
 import org.drools.traits.core.factmodel.VirtualPropertyMode;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
@@ -401,7 +400,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         assertThat(list).contains("correct");
     }
 
-    @Category(ReviseTraitTestWithPRAlwaysCategory.class)
+    @Tag("ReviseTraitTestWithPRAlways")
     @ParameterizedTest
     @MethodSource("modes")
     public void testTraitFieldUpdate4(VirtualPropertyMode mode) {

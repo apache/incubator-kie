@@ -32,7 +32,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * This test covers the queryIngressByName method from {@link IngressUtils}
@@ -58,8 +58,7 @@ public class IngressUtilsTest {
 
         KubeTestUtils.createWithStatusPreserved(client, ingress, namespace, Ingress.class);
 
-        assertEquals(Optional.empty(),
-                discovery.query(KubernetesResourceUri.parse("ingresses.v1.networking.k8s.io/" + namespace + "/invalid")));
+        assertThat(discovery.query(KubernetesResourceUri.parse("ingresses.v1.networking.k8s.io/" + namespace + "/invalid"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -74,7 +73,7 @@ public class IngressUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, ingress, namespace, Ingress.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://80.80.25.9:80", url.get());
+        assertThat(url.get()).isEqualTo("http://80.80.25.9:80");
     }
 
     @Test
@@ -89,6 +88,6 @@ public class IngressUtilsTest {
         KubeTestUtils.createWithStatusPreserved(client, ingress, namespace, Ingress.class);
 
         Optional<String> url = discovery.query(kubeURI).map(URI::toString);
-        assertEquals("https://80.80.25.9:443", url.get());
+        assertThat(url.get()).isEqualTo("https://80.80.25.9:443");
     }
 }

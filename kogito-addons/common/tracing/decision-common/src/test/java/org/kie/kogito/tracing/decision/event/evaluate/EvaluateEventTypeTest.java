@@ -45,7 +45,7 @@ import org.kie.dmn.api.core.event.DMNRuntimeEventListener;
 import org.kie.dmn.feel.util.Pair;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * The purpose of this test is ensure that the structure of {@link DMNRuntimeEventListener} remains
@@ -77,9 +77,11 @@ class EvaluateEventTypeTest {
 
     @Test
     void testExistingEvents() {
-        CHECK_MAP.forEach((type, checkPair) -> assertDoesNotThrow(
-                () -> LISTENER_CLASS.getDeclaredMethod(checkPair.getLeft(), checkPair.getRight()),
-                () -> String.format("Listener method \"%s(%s)\" not found for EvaluateEventType.%s", checkPair.getLeft(), checkPair.getRight().getSimpleName(), type)));
+        CHECK_MAP.forEach((type, checkPair) -> assertThatCode(() -> LISTENER_CLASS.getDeclaredMethod(
+                checkPair.getLeft(), checkPair.getRight()))
+                        .as("Listener method \"%s(%s)\" not found for EvaluateEventType.%s",
+                                checkPair.getLeft(), checkPair.getRight().getSimpleName(), type)
+                        .doesNotThrowAnyException());
     }
 
     @Test

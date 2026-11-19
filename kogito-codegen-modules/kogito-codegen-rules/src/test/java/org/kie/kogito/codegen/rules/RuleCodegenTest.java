@@ -30,7 +30,6 @@ import org.drools.codegen.common.GeneratedFile;
 import org.drools.drl.extensions.DecisionTableFactory;
 import org.drools.drl.extensions.DecisionTableProvider;
 import org.drools.model.codegen.project.MissingDecisionTableDependencyError;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -332,22 +331,22 @@ public class RuleCodegenTest {
                 .orElseThrow(() -> new RuntimeException("No return statement for executeQueryFirst method. Template has changed."));
 
         // SystemMetricsCollectorProvider field has been created
-        Assertions.assertTrue(clazz.getFieldByName("systemMetricsCollectorProvider").isPresent());
+        assertThat(clazz.getFieldByName("systemMetricsCollectorProvider").isPresent()).isTrue();
 
         // Return expression should not be a call, otherwise the elapsed time would not be calculated properly
-        Assertions.assertFalse(executeQueryReturnStmt.getExpression().get().isMethodCallExpr());
-        Assertions.assertFalse(executeQueryFirstReturnStmt.getExpression().get().isMethodCallExpr());
+        assertThat(executeQueryReturnStmt.getExpression().get().isMethodCallExpr()).isFalse();
+        assertThat(executeQueryFirstReturnStmt.getExpression().get().isMethodCallExpr()).isFalse();
 
         // The monitoring code is generated
         String statementsExecuteQuery = clazz.getMethodsByName("executeQuery").get(0).getBody().get().getStatements().toString();
-        Assertions.assertTrue(statementsExecuteQuery.contains("startTime"));
-        Assertions.assertTrue(statementsExecuteQuery.contains("endTime"));
-        Assertions.assertTrue(statementsExecuteQuery.contains("registerElapsedTimeSampleMetrics"));
+        assertThat(statementsExecuteQuery.contains("startTime")).isTrue();
+        assertThat(statementsExecuteQuery.contains("endTime")).isTrue();
+        assertThat(statementsExecuteQuery.contains("registerElapsedTimeSampleMetrics")).isTrue();
 
         String statementsExecuteQueryFirst = clazz.getMethodsByName("executeQueryFirst").get(0).getBody().get().getStatements().toString();
-        Assertions.assertTrue(statementsExecuteQueryFirst.contains("startTime"));
-        Assertions.assertTrue(statementsExecuteQueryFirst.contains("endTime"));
-        Assertions.assertTrue(statementsExecuteQueryFirst.contains("registerElapsedTimeSampleMetrics"));
+        assertThat(statementsExecuteQueryFirst.contains("startTime")).isTrue();
+        assertThat(statementsExecuteQueryFirst.contains("endTime")).isTrue();
+        assertThat(statementsExecuteQueryFirst.contains("registerElapsedTimeSampleMetrics")).isTrue();
     }
 
     private static void assertRules(int expectedRules, int expectedPackages, int actualGeneratedFiles) {

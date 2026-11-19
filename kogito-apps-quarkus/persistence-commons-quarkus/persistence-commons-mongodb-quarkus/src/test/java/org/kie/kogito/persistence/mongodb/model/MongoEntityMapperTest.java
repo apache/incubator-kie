@@ -21,7 +21,7 @@ package org.kie.kogito.persistence.mongodb.model;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.persistence.mongodb.mock.MockMongoEntityMapper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 
 class MongoEntityMapperTest {
@@ -31,21 +31,21 @@ class MongoEntityMapperTest {
     @Test
     void testConvertToMongoAttribute() {
         String testAttribute = "test";
-        assertEquals(testAttribute, mockMongoEntityMapper.convertToMongoAttribute(testAttribute));
+        assertThat(mockMongoEntityMapper.convertToMongoAttribute(testAttribute)).isEqualTo(testAttribute);
 
         String idAttribute = ModelUtils.ID;
-        assertEquals(MONGO_ID, mockMongoEntityMapper.convertToMongoAttribute(idAttribute));
+        assertThat(mockMongoEntityMapper.convertToMongoAttribute(idAttribute)).isEqualTo(MONGO_ID);
     }
 
     @Test
     void testConvertToModelAttribute() {
         String idAttribute = MONGO_ID;
-        assertEquals(ModelUtils.ID, mockMongoEntityMapper.convertToModelAttribute(idAttribute));
+        assertThat(mockMongoEntityMapper.convertToModelAttribute(idAttribute)).isEqualTo(ModelUtils.ID);
 
         String testAttribute = "nodes";
-        assertEquals(testAttribute, mockMongoEntityMapper.convertToModelAttribute(testAttribute));
+        assertThat(mockMongoEntityMapper.convertToModelAttribute(testAttribute)).isEqualTo(testAttribute);
 
         String testSubAttribute = "nodes.name.go";
-        assertEquals("go", mockMongoEntityMapper.convertToModelAttribute(testSubAttribute));
+        assertThat(mockMongoEntityMapper.convertToModelAttribute(testSubAttribute)).isEqualTo("go");
     }
 }

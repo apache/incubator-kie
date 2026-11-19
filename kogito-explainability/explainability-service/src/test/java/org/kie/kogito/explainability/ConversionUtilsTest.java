@@ -60,12 +60,8 @@ import io.vertx.core.json.JsonObject;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class ConversionUtilsTest {
 
@@ -91,15 +87,15 @@ class ConversionUtilsTest {
 
         final List<Feature> features = ConversionUtils.toFeatureList(List.of(typedValue), List.of(domain));
 
-        assertEquals(1, features.size());
+        assertThat(features.size()).isEqualTo(1);
         final Feature feature = features.get(0);
-        assertEquals(Type.NUMBER, feature.getType());
-        assertEquals("f-1", feature.getName());
-        assertEquals(20.0, feature.getValue().asNumber());
-        assertFalse(feature.isConstrained());
-        assertFalse(feature.getDomain().isEmpty());
-        assertEquals(18, feature.getDomain().getLowerBound());
-        assertEquals(65, feature.getDomain().getUpperBound());
+        assertThat(feature.getType()).isEqualTo(Type.NUMBER);
+        assertThat(feature.getName()).isEqualTo("f-1");
+        assertThat(feature.getValue().asNumber()).isEqualTo(20.0);
+        assertThat(feature.isConstrained()).isFalse();
+        assertThat(feature.getDomain().isEmpty()).isFalse();
+        assertThat(feature.getDomain().getLowerBound()).isEqualTo(18);
+        assertThat(feature.getDomain().getUpperBound()).isEqualTo(65);
     }
 
     @Test
@@ -115,57 +111,57 @@ class ConversionUtilsTest {
 
         final List<Feature> features = ConversionUtils.toFeatureList(values, domains);
 
-        assertEquals(10, features.size());
-        assertTrue(features.stream().allMatch(f -> f.getType() == Type.NUMBER));
-        assertTrue(features.stream().noneMatch(Feature::isConstrained));
-        assertTrue(features.stream().map(Feature::getDomain).noneMatch(FeatureDomain::isEmpty));
-        assertTrue(features.stream().map(Feature::getDomain).map(FeatureDomain::getLowerBound).allMatch(lb -> lb == -1.0));
-        assertTrue(features.stream().map(Feature::getDomain).map(FeatureDomain::getUpperBound).allMatch(ub -> ub == 1.0));
+        assertThat(features.size()).isEqualTo(10);
+        assertThat(features.stream().allMatch(f -> f.getType() == Type.NUMBER)).isTrue();
+        assertThat(features.stream().noneMatch(Feature::isConstrained)).isTrue();
+        assertThat(features.stream().map(Feature::getDomain).noneMatch(FeatureDomain::isEmpty)).isTrue();
+        assertThat(features.stream().map(Feature::getDomain).map(FeatureDomain::getLowerBound).allMatch(lb -> lb == -1.0)).isTrue();
+        assertThat(features.stream().map(Feature::getDomain).map(FeatureDomain::getUpperBound).allMatch(ub -> ub == 1.0)).isTrue();
     }
 
     @Test
     void toFeatureTypedValue() {
         Feature name = ConversionUtils.toFeature("name", new UnitValue("number", new DoubleNode(10d)));
-        assertNotNull(name);
-        assertEquals("name", name.getName());
-        assertEquals(Type.NUMBER, name.getType());
-        assertEquals(10d, name.getValue().getUnderlyingObject());
-        assertTrue(name.isConstrained());
-        assertTrue(name.getDomain().isEmpty());
+        assertThat(name).isNotNull();
+        assertThat(name.getName()).isEqualTo("name");
+        assertThat(name.getType()).isEqualTo(Type.NUMBER);
+        assertThat(name.getValue().getUnderlyingObject()).isEqualTo(10d);
+        assertThat(name.isConstrained()).isTrue();
+        assertThat(name.getDomain().isEmpty()).isTrue();
 
         Feature name1 = ConversionUtils.toFeature("name1",
                 new StructureValue("complex", singletonMap(
                         "key",
                         new UnitValue("string1", new TextNode("stringValue")))));
-        assertNotNull(name1);
-        assertTrue(name1.isConstrained());
-        assertTrue(name1.getDomain().isEmpty());
-        assertEquals("name1", name1.getName());
-        assertEquals(Type.COMPOSITE, name1.getType());
+        assertThat(name1).isNotNull();
+        assertThat(name1.isConstrained()).isTrue();
+        assertThat(name1.getDomain().isEmpty()).isTrue();
+        assertThat(name1.getName()).isEqualTo("name1");
+        assertThat(name1.getType()).isEqualTo(Type.COMPOSITE);
 
-        assertTrue(name1.getValue().getUnderlyingObject() instanceof List);
+        assertThat((name1.getValue().getUnderlyingObject() instanceof List)).isTrue();
         @SuppressWarnings("unchecked")
         List<Feature> features = (List<Feature>) name1.getValue().getUnderlyingObject();
-        assertEquals(1, features.size());
-        assertEquals(Type.TEXT, features.get(0).getType());
-        assertEquals("stringValue", features.get(0).getValue().getUnderlyingObject());
+        assertThat(features.size()).isEqualTo(1);
+        assertThat(features.get(0).getType()).isEqualTo(Type.TEXT);
+        assertThat(features.get(0).getValue().getUnderlyingObject()).isEqualTo("stringValue");
 
         List<TypedValue> values = List.of(new UnitValue("number", new DoubleNode(0d)),
                 new UnitValue("number", new DoubleNode(1d)));
         Feature collectionFeature = ConversionUtils.toFeature("name", new CollectionValue("list", values));
-        assertNotNull(collectionFeature);
-        assertEquals("name", collectionFeature.getName());
-        assertEquals(Type.COMPOSITE, collectionFeature.getType());
-        assertTrue(collectionFeature.getValue().getUnderlyingObject() instanceof List);
+        assertThat(collectionFeature).isNotNull();
+        assertThat(collectionFeature.getName()).isEqualTo("name");
+        assertThat(collectionFeature.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((collectionFeature.getValue().getUnderlyingObject() instanceof List)).isTrue();
         @SuppressWarnings("unchecked")
         List<Feature> objects = (List<Feature>) collectionFeature.getValue().getUnderlyingObject();
-        assertEquals(2, objects.size());
+        assertThat(objects.size()).isEqualTo(2);
         for (Feature f : objects) {
-            assertNotNull(f);
-            assertNotNull(f.getName());
-            assertNotNull(f.getType());
-            assertEquals(Type.NUMBER, f.getType());
-            assertNotNull(f.getValue());
+            assertThat(f).isNotNull();
+            assertThat(f.getName()).isNotNull();
+            assertThat(f.getType()).isNotNull();
+            assertThat(f.getType()).isEqualTo(Type.NUMBER);
+            assertThat(f.getValue()).isNotNull();
         }
     }
 
@@ -194,34 +190,34 @@ class ConversionUtilsTest {
         depthOne.add(depthOneRight);
         CollectionValue value = new CollectionValue("list", depthOne);
         Feature collectionFeature = ConversionUtils.toFeature("name", value);
-        assertNotNull(collectionFeature);
-        assertEquals("name", collectionFeature.getName());
-        assertEquals(Type.COMPOSITE, collectionFeature.getType());
-        assertTrue(collectionFeature.getValue().getUnderlyingObject() instanceof List);
+        assertThat(collectionFeature).isNotNull();
+        assertThat(collectionFeature.getName()).isEqualTo("name");
+        assertThat(collectionFeature.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((collectionFeature.getValue().getUnderlyingObject() instanceof List)).isTrue();
         @SuppressWarnings("unchecked")
         List<Feature> deepFeatures = (List<Feature>) collectionFeature.getValue().getUnderlyingObject();
-        assertEquals(2, deepFeatures.size());
+        assertThat(deepFeatures.size()).isEqualTo(2);
         for (Feature f : deepFeatures) {
-            assertNotNull(f);
-            assertNotNull(f.getName());
-            assertNotNull(f.getType());
-            assertEquals(Type.COMPOSITE, f.getType());
-            assertNotNull(f.getValue());
+            assertThat(f).isNotNull();
+            assertThat(f.getName()).isNotNull();
+            assertThat(f.getType()).isNotNull();
+            assertThat(f.getType()).isEqualTo(Type.COMPOSITE);
+            assertThat(f.getValue()).isNotNull();
             List<Feature> nestedOneValues = (List<Feature>) f.getValue().getUnderlyingObject();
             for (Feature nestedOneValue : nestedOneValues) {
-                assertNotNull(nestedOneValue);
-                assertNotNull(nestedOneValue.getName());
-                assertNotNull(nestedOneValue.getType());
-                assertEquals(Type.COMPOSITE, nestedOneValue.getType());
-                assertNotNull(nestedOneValue.getValue());
+                assertThat(nestedOneValue).isNotNull();
+                assertThat(nestedOneValue.getName()).isNotNull();
+                assertThat(nestedOneValue.getType()).isNotNull();
+                assertThat(nestedOneValue.getType()).isEqualTo(Type.COMPOSITE);
+                assertThat(nestedOneValue.getValue()).isNotNull();
                 List<Feature> nestedTwoValues = (List<Feature>) nestedOneValue.getValue().getUnderlyingObject();
                 for (Feature nestedTwoValue : nestedTwoValues) {
-                    assertNotNull(nestedTwoValue);
-                    assertNotNull(nestedTwoValue.getName());
-                    assertNotNull(nestedTwoValue.getType());
-                    assertEquals(Type.TEXT, nestedTwoValue.getType());
-                    assertNotNull(nestedTwoValue.getValue());
-                    assertTrue(nestedTwoValue.getValue().asString().contains("value"));
+                    assertThat(nestedTwoValue).isNotNull();
+                    assertThat(nestedTwoValue.getName()).isNotNull();
+                    assertThat(nestedTwoValue.getType()).isNotNull();
+                    assertThat(nestedTwoValue.getType()).isEqualTo(Type.TEXT);
+                    assertThat(nestedTwoValue.getValue()).isNotNull();
+                    assertThat(nestedTwoValue.getValue().asString().contains("value")).isTrue();
                 }
             }
         }
@@ -229,51 +225,51 @@ class ConversionUtilsTest {
 
     @Test
     void testToList() {
-        assertEquals(emptyList(), ConversionUtils.toList((JsonObject) null, (a, b) -> a));
-        assertEquals(emptyList(), ConversionUtils.toList((Map<String, TypedValue>) null, (a, b) -> a));
+        assertThat(ConversionUtils.toList((JsonObject) null, (a, b) -> a)).isEqualTo(emptyList());
+        assertThat(ConversionUtils.toList((Map<String, TypedValue>) null, (a, b) -> a)).isEqualTo(emptyList());
     }
 
     @Test
     void toOutputObject() {
         Output name = ConversionUtils.toOutput("name", 10d);
-        assertNotNull(name);
-        assertEquals("name", name.getName());
-        assertEquals(Type.NUMBER, name.getType());
-        assertEquals(10d, name.getValue().getUnderlyingObject());
+        assertThat(name).isNotNull();
+        assertThat(name.getName()).isEqualTo("name");
+        assertThat(name.getType()).isEqualTo(Type.NUMBER);
+        assertThat(name.getValue().getUnderlyingObject()).isEqualTo(10d);
 
         JsonObject jsonObject = new JsonObject(singletonMap("key", 10d));
         Output output = ConversionUtils.toOutput("output", jsonObject);
-        assertNotNull(output);
-        assertEquals("output", output.getName());
-        assertEquals(Type.COMPOSITE, output.getType());
-        assertEquals(10d, name.getValue().getUnderlyingObject());
+        assertThat(output).isNotNull();
+        assertThat(output.getName()).isEqualTo("output");
+        assertThat(output.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat(name.getValue().getUnderlyingObject()).isEqualTo(10d);
     }
 
     @Test
     void toOutputTypedValue() {
         Output name = ConversionUtils.toOutput("name", new UnitValue("number", new DoubleNode(10d)));
-        assertNotNull(name);
-        assertEquals("name", name.getName());
-        assertEquals(Type.NUMBER, name.getType());
-        assertEquals(10d, name.getValue().getUnderlyingObject());
+        assertThat(name).isNotNull();
+        assertThat(name.getName()).isEqualTo("name");
+        assertThat(name.getType()).isEqualTo(Type.NUMBER);
+        assertThat(name.getValue().getUnderlyingObject()).isEqualTo(10d);
 
         Output name1 = ConversionUtils.toOutput("name1",
                 new StructureValue("complex", singletonMap(
                         "key",
                         new UnitValue("string1", new TextNode("stringValue")))));
-        assertNotNull(name1);
-        assertEquals("name1", name1.getName());
-        assertEquals(Type.COMPOSITE, name1.getType());
-        assertTrue(name1.getValue().getUnderlyingObject() instanceof List);
+        assertThat(name1).isNotNull();
+        assertThat(name1.getName()).isEqualTo("name1");
+        assertThat(name1.getType()).isEqualTo(Type.COMPOSITE);
+        assertThat((name1.getValue().getUnderlyingObject() instanceof List)).isTrue();
         @SuppressWarnings("unchecked")
         List<Output> outputs = (List<Output>) name1.getValue().getUnderlyingObject();
-        assertEquals(1, outputs.size());
-        assertEquals(Type.TEXT, outputs.get(0).getType());
-        assertEquals("stringValue", outputs.get(0).getValue().getUnderlyingObject());
+        assertThat(outputs.size()).isEqualTo(1);
+        assertThat(outputs.get(0).getType()).isEqualTo(Type.TEXT);
+        assertThat(outputs.get(0).getValue().getUnderlyingObject()).isEqualTo("stringValue");
 
         List<TypedValue> values = List.of(new UnitValue("number", new DoubleNode(0d)),
                 new UnitValue("number", new DoubleNode(1d)));
-        assertNotNull(ConversionUtils.toOutput("name", new CollectionValue("list", values)));
+        assertThat(ConversionUtils.toOutput("name", new CollectionValue("list", values))).isNotNull();
     }
 
     @Test
@@ -281,14 +277,14 @@ class ConversionUtilsTest {
         commonTypeValuePairObject("string", Type.TEXT, "string");
         commonTypeValuePairObject(10d, Type.NUMBER, 10d);
         commonTypeValuePairObject(true, Type.BOOLEAN, true);
-        assertFalse(ConversionUtils.toTypeValuePair(new Object()).isPresent());
+        assertThat(ConversionUtils.toTypeValuePair(new Object()).isPresent()).isFalse();
     }
 
     private void commonTypeValuePairObject(Object input, Type type, Object value) {
         Optional<Pair<Type, Value>> result = ConversionUtils.toTypeValuePair(input);
-        assertTrue(result.isPresent());
-        assertEquals(type, result.get().getKey());
-        assertEquals(value, result.get().getValue().getUnderlyingObject());
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().getKey()).isEqualTo(type);
+        assertThat(result.get().getValue().getUnderlyingObject()).isEqualTo(value);
     }
 
     @Test
@@ -296,14 +292,14 @@ class ConversionUtilsTest {
         commonTypeValuePairJson(new TextNode("string"), Type.TEXT, "string");
         commonTypeValuePairJson(new DoubleNode(10d), Type.NUMBER, 10d);
         commonTypeValuePairJson(BooleanNode.TRUE, Type.BOOLEAN, true);
-        assertFalse(ConversionUtils.toTypeValuePair(new ObjectNode(JsonNodeFactory.instance)).isPresent());
+        assertThat(ConversionUtils.toTypeValuePair(new ObjectNode(JsonNodeFactory.instance)).isPresent()).isFalse();
     }
 
     private void commonTypeValuePairJson(JsonNode input, Type type, Object value) {
         Optional<Pair<Type, Value>> result = ConversionUtils.toTypeValuePair(input);
-        assertTrue(result.isPresent());
-        assertEquals(type, result.get().getKey());
-        assertEquals(value, result.get().getValue().getUnderlyingObject());
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().getKey()).isEqualTo(type);
+        assertThat(result.get().getValue().getUnderlyingObject()).isEqualTo(value);
     }
 
     @Test
@@ -314,11 +310,11 @@ class ConversionUtilsTest {
                         true,
                         new CounterfactualDomainRange(IntNode.valueOf(18),
                                 IntNode.valueOf(65))));
-        assertTrue(featureDomain instanceof NumericalFeatureDomain);
+        assertThat((featureDomain instanceof NumericalFeatureDomain)).isTrue();
         NumericalFeatureDomain numericalFeatureDomain = (NumericalFeatureDomain) featureDomain;
-        assertEquals(18.0, numericalFeatureDomain.getLowerBound());
-        assertEquals(65.0, numericalFeatureDomain.getUpperBound());
-        assertNull(numericalFeatureDomain.getCategories());
+        assertThat(numericalFeatureDomain.getLowerBound()).isEqualTo(18.0);
+        assertThat(numericalFeatureDomain.getUpperBound()).isEqualTo(65.0);
+        assertThat(numericalFeatureDomain.getCategories()).isNull();
     }
 
     @Test
@@ -330,16 +326,16 @@ class ConversionUtilsTest {
                         new CounterfactualDomainRange(DoubleNode.valueOf(-273.15),
                                 DoubleNode.valueOf(Double.MAX_VALUE))));
 
-        assertTrue(featureDomain instanceof NumericalFeatureDomain);
+        assertThat((featureDomain instanceof NumericalFeatureDomain)).isTrue();
         NumericalFeatureDomain numericalFeatureDomain = (NumericalFeatureDomain) featureDomain;
-        assertEquals(-273.15, numericalFeatureDomain.getLowerBound());
-        assertEquals(Double.MAX_VALUE, numericalFeatureDomain.getUpperBound());
-        assertNull(numericalFeatureDomain.getCategories());
+        assertThat(numericalFeatureDomain.getLowerBound()).isEqualTo(-273.15);
+        assertThat(numericalFeatureDomain.getUpperBound()).isEqualTo(Double.MAX_VALUE);
+        assertThat(numericalFeatureDomain.getCategories()).isNull();
     }
 
     @Test
     void testToFeatureDomain_UnitRangeString() {
-        assertThrows(IllegalArgumentException.class, () -> ConversionUtils.toFeatureDomain(
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> ConversionUtils.toFeatureDomain(
                 new CounterfactualSearchDomainUnitValue("string",
                         "string",
                         true,
@@ -349,7 +345,7 @@ class ConversionUtilsTest {
 
     @Test
     void testToFeatureDomain_UnitCategoricalNumber() {
-        assertThrows(IllegalArgumentException.class, () -> ConversionUtils.toFeatureDomain(
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> ConversionUtils.toFeatureDomain(
                 new CounterfactualSearchDomainUnitValue("string",
                         "string",
                         true,
@@ -363,12 +359,12 @@ class ConversionUtilsTest {
                         "string",
                         true,
                         new CounterfactualDomainCategorical(List.of(TextNode.valueOf("Black"), TextNode.valueOf("White")))));
-        assertTrue(featureDomain instanceof CategoricalFeatureDomain);
+        assertThat((featureDomain instanceof CategoricalFeatureDomain)).isTrue();
         CategoricalFeatureDomain categoricalFeatureDomain = (CategoricalFeatureDomain) featureDomain;
-        assertEquals(2, categoricalFeatureDomain.getCategories().size());
-        assertTrue(categoricalFeatureDomain.getCategories().containsAll(List.of("White", "Black")));
-        assertNull(categoricalFeatureDomain.getLowerBound());
-        assertNull(categoricalFeatureDomain.getUpperBound());
+        assertThat(categoricalFeatureDomain.getCategories().size()).isEqualTo(2);
+        assertThat(categoricalFeatureDomain.getCategories().containsAll(List.of("White", "Black"))).isTrue();
+        assertThat(categoricalFeatureDomain.getLowerBound()).isNull();
+        assertThat(categoricalFeatureDomain.getUpperBound()).isNull();
     }
 
     @Test
@@ -378,7 +374,7 @@ class ConversionUtilsTest {
                         "integer",
                         true,
                         null));
-        assertTrue(featureDomain instanceof EmptyFeatureDomain);
+        assertThat((featureDomain instanceof EmptyFeatureDomain)).isTrue();
     }
 
     @Test
@@ -388,12 +384,12 @@ class ConversionUtilsTest {
                         "string",
                         true,
                         null));
-        assertTrue(featureDomain instanceof EmptyFeatureDomain);
+        assertThat((featureDomain instanceof EmptyFeatureDomain)).isTrue();
     }
 
     @Test
     void testToFeatureDomain_UnitNull() {
-        assertThrows(IllegalArgumentException.class, () -> ConversionUtils.toFeatureDomain(
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> ConversionUtils.toFeatureDomain(
                 new CounterfactualSearchDomainUnitValue("integer",
                         "integer",
                         true,

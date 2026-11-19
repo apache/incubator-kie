@@ -28,8 +28,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(MongoDBQuarkusTestResource.class)
@@ -50,8 +49,8 @@ class MongoStorageManagerIT {
         String storageName = "testCache";
         storage = mongoStorageManager.getCache(storageName);
 
-        assertTrue(storage instanceof MongoStorage);
-        assertEquals(storageName, ((MongoStorage) storage).mongoCollection.getNamespace().getCollectionName());
+        assertThat((storage instanceof MongoStorage)).isTrue();
+        assertThat(((MongoStorage) storage).mongoCollection.getNamespace().getCollectionName()).isEqualTo(storageName);
     }
 
     @Test
@@ -59,8 +58,8 @@ class MongoStorageManagerIT {
         String storageName = "testCacheWithClass";
         storage = mongoStorageManager.getCache(storageName, String.class);
 
-        assertTrue(storage instanceof MongoStorage);
-        assertEquals(storageName, ((MongoStorage) storage).mongoCollection.getNamespace().getCollectionName());
+        assertThat((storage instanceof MongoStorage)).isTrue();
+        assertThat(((MongoStorage) storage).mongoCollection.getNamespace().getCollectionName()).isEqualTo(storageName);
     }
 
     @Test
@@ -68,7 +67,7 @@ class MongoStorageManagerIT {
         String storageName = "testCacheWithDataFormat";
         storage = mongoStorageManager.getCache(storageName, String.class, "type");
 
-        assertTrue(storage instanceof MongoStorage);
-        assertEquals(storageName, ((MongoStorage) storage).mongoCollection.getNamespace().getCollectionName());
+        assertThat((storage instanceof MongoStorage)).isTrue();
+        assertThat(((MongoStorage) storage).mongoCollection.getNamespace().getCollectionName()).isEqualTo(storageName);
     }
 }

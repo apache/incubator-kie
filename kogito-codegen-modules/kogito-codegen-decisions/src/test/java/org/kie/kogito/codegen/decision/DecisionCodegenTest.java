@@ -35,7 +35,6 @@ import java.util.stream.IntStream;
 import org.assertj.core.api.AbstractStringAssert;
 import org.drools.codegen.common.GeneratedFile;
 import org.drools.codegen.common.GeneratedFileType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -57,8 +56,7 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.dmn.core.assembler.DMNAssemblerService.DMN_PROFILE_PREFIX;
 import static org.kie.kogito.codegen.api.utils.KogitoContextTestUtils.mockClassAvailabilityResolver;
 import static org.kie.kogito.grafana.utils.GrafanaDashboardUtils.DISABLED_DOMAIN_DASHBOARDS;
@@ -155,14 +153,14 @@ public class DecisionCodegenTest {
             JGrafana vacationOperationalDashboard =
                     JGrafana.parse(new String(dashboards.stream().filter(x -> x.relativePath().contains("operational-dashboard-Vacations.json")).findFirst().get().contents()));
 
-            assertEquals(6, vacationOperationalDashboard.getDashboard().panels.size());
-            assertEquals(0, vacationOperationalDashboard.getDashboard().links.size());
+            assertThat(vacationOperationalDashboard.getDashboard().panels.size()).isEqualTo(6);
+            assertThat(vacationOperationalDashboard.getDashboard().links.size()).isEqualTo(0);
 
             JGrafana vacationDomainDashboard =
                     JGrafana.parse(new String(dashboards.stream().filter(x -> x.relativePath().contains("domain-dashboard-Vacations.json")).findFirst().get().contents()));
 
-            assertEquals(1, vacationDomainDashboard.getDashboard().panels.size());
-            assertEquals(0, vacationDomainDashboard.getDashboard().links.size());
+            assertThat(vacationDomainDashboard.getDashboard().panels.size()).isEqualTo(1);
+            assertThat(vacationDomainDashboard.getDashboard().links.size()).isEqualTo(0);
 
             assertRestResource(decisionCodeGenerator);
         }
@@ -194,12 +192,12 @@ public class DecisionCodegenTest {
             JGrafana vacationOperationalDashboard =
                     JGrafana.parse(new String(dashboards.stream().filter(x -> x.relativePath().contains("operational-dashboard-Vacations.json")).findFirst().get().contents()));
 
-            assertEquals(1, vacationOperationalDashboard.getDashboard().links.size());
+            assertThat(vacationOperationalDashboard.getDashboard().links.size()).isEqualTo(1);
 
             JGrafana vacationDomainDashboard =
                     JGrafana.parse(new String(dashboards.stream().filter(x -> x.relativePath().contains("domain-dashboard-Vacations.json")).findFirst().get().contents()));
 
-            assertEquals(1, vacationDomainDashboard.getDashboard().links.size());
+            assertThat(vacationDomainDashboard.getDashboard().links.size()).isEqualTo(1);
 
             assertRestResource(decisionCodeGenerator);
         }
@@ -220,9 +218,10 @@ public class DecisionCodegenTest {
     @MethodSource("org.kie.kogito.codegen.api.utils.KogitoContextTestUtils#contextBuilders")
     public void emptyName(KogitoBuildContext.Builder contextBuilder) {
         DecisionCodegen codeGenerator = getDecisionCodegen("src/test/resources/decision-empty-name", contextBuilder);
-        RuntimeException re = Assertions.assertThrows(RuntimeException.class, codeGenerator::generate);
         String expected = "DMN: Invalid name '': Name cannot be null or empty (DMN id: _9efe7fc6-f41b-422c-accd-95dcaaa67a39, The listed name is not a valid FEEL identifier)";
-        assertTrue(re.getMessage().contains(expected));
+        assertThatThrownBy(codeGenerator::generate)
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining(expected);
     }
 
     @ParameterizedTest
@@ -397,7 +396,7 @@ public class DecisionCodegenTest {
                 .filter(x -> x.type().equals(DashboardGeneratedFileUtils.DASHBOARD_TYPE))
                 .collect(Collectors.toList());
 
-        assertEquals(expectedDashboards, dashboards.size());
+        assertThat(dashboards.size()).isEqualTo(expectedDashboards);
 
         return dashboards;
     }

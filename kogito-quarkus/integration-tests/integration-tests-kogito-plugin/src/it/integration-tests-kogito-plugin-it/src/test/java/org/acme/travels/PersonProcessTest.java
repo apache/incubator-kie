@@ -18,9 +18,7 @@
  */
 package org.acme.travels;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,10 +54,10 @@ public class PersonProcessTest {
         ProcessInstance<?> processInstance = personProcess.createInstance(m);
         processInstance.start();
 
-        assertEquals(ProcessInstance.STATE_COMPLETED, processInstance.status());
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
         Model result = (Model) processInstance.variables();
-        assertEquals(1, result.toMap().size());
-        assertTrue(((Person) result.toMap().get("person")).isAdult());
+        assertThat(result.toMap()).hasSize(1);
+        assertThat(((Person) result.toMap().get("person")).isAdult()).isTrue();
     }
 
     @Test
@@ -72,16 +70,16 @@ public class PersonProcessTest {
         ProcessInstance<?> processInstance = personProcess.createInstance(m);
         processInstance.start();
 
-        assertEquals(ProcessInstance.STATE_ACTIVE, processInstance.status());
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_ACTIVE);
         Model result = (Model) processInstance.variables();
-        assertEquals(1, result.toMap().size());
-        assertFalse(((Person) result.toMap().get("person")).isAdult());
+        assertThat(result.toMap()).hasSize(1);
+        assertThat(((Person) result.toMap().get("person")).isAdult()).isFalse();
 
         List<WorkItem> workItems = processInstance.workItems();
-        assertEquals(1, workItems.size());
+        assertThat(workItems).hasSize(1);
 
         processInstance.completeWorkItem(workItems.get(0).getId(), null);
 
-        assertEquals(ProcessInstance.STATE_COMPLETED, processInstance.status());
+        assertThat(processInstance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
     }
 }

@@ -18,22 +18,22 @@
  */
 package org.drools.base.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 
-public class LinkedListTest {
+class LinkedListTest {
 
     LinkedList        list  = null;
     DoubleLinkedEntry node1 = null;
     DoubleLinkedEntry node2 = null;
     DoubleLinkedEntry node3 = null;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         this.list = new LinkedList();
         this.node1 = new AbstractBaseLinkedListNodeMock();
         this.node2 = new AbstractBaseLinkedListNodeMock();
@@ -49,7 +49,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.add(LinkedListNode)'
      */
     @Test
-    public void testAdd() {
+    void testAdd() {
         this.list.add( this.node1 );
         assertThat(this.node1.getPrevious()).as("Node1 previous should be null").isNull();
         assertThat(this.node1.getNext()).as("Node1 next should be null").isNull();
@@ -74,7 +74,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.remove(LinkedListNode)'
      */
     @Test
-    public void testRemove() {
+    void testRemove() {
         this.list.add( this.node1 );
         this.list.add( this.node2 );
         this.list.add( this.node3 );
@@ -103,7 +103,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.getFirst()'
      */
     @Test
-    public void testGetFirst() {
+    void testGetFirst() {
         assertThat(this.list.getFirst()).as("Empty list should return null on getFirst()").isNull();
         
         this.list.add( this.node1 );
@@ -120,7 +120,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.getLast()'
      */
     @Test
-    public void testGetLast() {
+    void testGetLast() {
         assertThat(this.list.getLast()).as("Empty list should return null on getLast()").isNull();
         this.list.add( this.node1 );
         assertThat(this.node1).as("Last node should be node1").isSameAs(this.list.getLast());
@@ -134,7 +134,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.removeFirst()'
      */
     @Test
-    public void testRemoveFirst() {
+    void testRemoveFirst() {
         this.list.add( this.node1 );
         this.list.add( this.node2 );
         this.list.add( this.node3 );
@@ -154,7 +154,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.removeLast()'
      */
     @Test
-    public void testRemoveLast() {
+    void testRemoveLast() {
         this.list.add( this.node1 );
         this.list.add( this.node2 );
         this.list.add( this.node3 );
@@ -175,7 +175,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.isEmpty()'
      */
     @Test
-    public void testIsEmpty() {
+    void testIsEmpty() {
         assertThat(this.list.isEmpty()).as("Empty list should return true on isEmpty()").isTrue();
         
         this.list.add( this.node1 );
@@ -186,7 +186,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.clear()'
      */
     @Test
-    public void testClear() {
+    void testClear() {
         this.list.add( this.node1 );
         this.list.add( this.node2 );
         this.list.add( this.node3 );
@@ -200,7 +200,7 @@ public class LinkedListTest {
      * Test method for 'org.kie.util.LinkedList.size()'
      */
     @Test
-    public void testSize() {
+    void testSize() {
         this.list.add( this.node1 );
         assertThat(this.list.size()).as("LinkedList should have 1 node").isEqualTo(1);
 
@@ -212,7 +212,7 @@ public class LinkedListTest {
     }
 
     @Test
-    public void testInsertAfter() {
+    void testInsertAfter() {
         try {
             this.list.insertAfter( null,
                                    this.node1 );

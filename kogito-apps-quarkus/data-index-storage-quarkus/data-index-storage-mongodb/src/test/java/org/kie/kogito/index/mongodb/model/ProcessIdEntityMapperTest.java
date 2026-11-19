@@ -20,7 +20,7 @@ package org.kie.kogito.index.mongodb.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.index.mongodb.model.ProcessIdEntityMapper.PROCESS_ID_ATTRIBUTE;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 
@@ -30,7 +30,7 @@ class ProcessIdEntityMapperTest {
 
     @Test
     void testGetEntityClass() {
-        assertEquals(ProcessIdEntity.class, processIdEntityMapper.getEntityClass());
+        assertThat(processIdEntityMapper.getEntityClass()).isEqualTo(ProcessIdEntity.class);
     }
 
     @Test
@@ -43,7 +43,7 @@ class ProcessIdEntityMapperTest {
         processIdEntity.setProcessId(testId);
         processIdEntity.setFullTypeName(testValue);
 
-        assertEquals(processIdEntity, result);
+        assertThat(result).isEqualTo(processIdEntity);
     }
 
     @Test
@@ -57,22 +57,22 @@ class ProcessIdEntityMapperTest {
 
         String result = processIdEntityMapper.mapToModel(processIdEntity);
 
-        assertEquals(testValue, result);
+        assertThat(result).isEqualTo(testValue);
     }
 
     @Test
     void testConvertToMongoAttribute() {
-        assertEquals(MONGO_ID, processIdEntityMapper.convertToMongoAttribute(PROCESS_ID_ATTRIBUTE));
+        assertThat(processIdEntityMapper.convertToMongoAttribute(PROCESS_ID_ATTRIBUTE)).isEqualTo(MONGO_ID);
 
         String testAttribute = "testAttribute";
-        assertEquals(testAttribute, processIdEntityMapper.convertToMongoAttribute(testAttribute));
+        assertThat(processIdEntityMapper.convertToMongoAttribute(testAttribute)).isEqualTo(testAttribute);
     }
 
     @Test
     void testConvertToModelAttribute() {
-        assertEquals(PROCESS_ID_ATTRIBUTE, processIdEntityMapper.convertToModelAttribute(MONGO_ID));
+        assertThat(processIdEntityMapper.convertToModelAttribute(MONGO_ID)).isEqualTo(PROCESS_ID_ATTRIBUTE);
 
         String testAttribute = "test.attribute.name";
-        assertEquals("name", processIdEntityMapper.convertToModelAttribute(testAttribute));
+        assertThat(processIdEntityMapper.convertToModelAttribute(testAttribute)).isEqualTo("name");
     }
 }

@@ -34,8 +34,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(MongoDBQuarkusTestResource.class)
@@ -67,8 +66,8 @@ class StorageListenerIT {
         storage.put("testKey_insert_3", "testValue3");
 
         testListener.await();
-        assertEquals(3, testListener.items.size(), "values: " + testListener.items.keySet());
-        assertTrue(testListener.items.keySet().containsAll(asList("testValue1", "testValue2", "testValue3")));
+        assertThat(testListener.items.size()).as("values: " + testListener.items.keySet()).isEqualTo(3);
+        assertThat(testListener.items.keySet().containsAll(asList("testValue1", "testValue2", "testValue3"))).isTrue();
     }
 
     @Test
@@ -82,8 +81,8 @@ class StorageListenerIT {
         cache.put("testKey_update_2", "testValue4");
 
         testListener.await();
-        assertEquals(2, testListener.items.size());
-        assertTrue(testListener.items.keySet().containsAll(asList("testValue2", "testValue4")));
+        assertThat(testListener.items.size()).isEqualTo(2);
+        assertThat(testListener.items.keySet().containsAll(asList("testValue2", "testValue4"))).isTrue();
     }
 
     @Test
@@ -97,7 +96,7 @@ class StorageListenerIT {
         cache.remove("testKey_remove_2");
 
         testListener.await();
-        assertEquals(2, testListener.items.size());
-        assertTrue(testListener.items.keySet().containsAll(asList("testKey_remove_1", "testKey_remove_2")));
+        assertThat(testListener.items.size()).isEqualTo(2);
+        assertThat(testListener.items.keySet().containsAll(asList("testKey_remove_1", "testKey_remove_2"))).isTrue();
     }
 }

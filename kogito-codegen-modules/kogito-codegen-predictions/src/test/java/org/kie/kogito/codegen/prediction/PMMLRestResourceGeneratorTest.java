@@ -42,10 +42,7 @@ import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.efesto.common.api.constants.Constants.INDEXFILE_DIRECTORY_PROPERTY;
 import static org.kie.kogito.codegen.prediction.PMMLRestResourceGenerator.CONTENT;
 import static org.kie.kogito.codegen.prediction.PMMLRestResourceGenerator.QUARKUS_API_RESPONSE;
@@ -77,7 +74,7 @@ class PMMLRestResourceGeneratorTest {
     public static void setup() {
         context = QuarkusKogitoBuildContext.builder().build();
         pmmlRestResourceGenerator = new PMMLRestResourceGenerator(context, KIE_PMML_MODEL, APP_CANONICAL_NAME);
-        assertNotNull(pmmlRestResourceGenerator);
+        assertThat(pmmlRestResourceGenerator).isNotNull();
         String filePrefix = URLEncoder.encode(getSanitizedClassName(KIE_PMML_MODEL.getFileName().replace(".pmml", "")));
         String classPrefix = URLEncoder.encode(getSanitizedClassName(KIE_PMML_MODEL.getName()));
         expectedUrl = String.format("/%s/%s", filePrefix, classPrefix);
@@ -103,8 +100,8 @@ class PMMLRestResourceGeneratorTest {
 
     @Test
     void constructor() {
-        assertTrue(pmmlRestResourceGenerator.restPackageName.startsWith("org.kie.kogito"));
-        assertEquals(APP_CANONICAL_NAME, pmmlRestResourceGenerator.appCanonicalName);
+        assertThat(pmmlRestResourceGenerator.restPackageName.startsWith("org.kie.kogito")).isTrue();
+        assertThat(pmmlRestResourceGenerator.appCanonicalName).isEqualTo(APP_CANONICAL_NAME);
     }
 
     @Test
@@ -113,7 +110,7 @@ class PMMLRestResourceGeneratorTest {
         String retrieved = pmmlRestResourceGenerator.generate();
         commonEvaluateGenerate(retrieved);
         String expected = "Application application;";
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 
     @Test
@@ -122,65 +119,63 @@ class PMMLRestResourceGeneratorTest {
         String retrieved = pmmlRestResourceGenerator.generate();
         commonEvaluateGenerate(retrieved);
         String expected = String.format("Application application = new %s();", APP_CANONICAL_NAME);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 
     @Test
     void getNameURL() {
-        assertEquals(expectedUrl, pmmlRestResourceGenerator.getNameURL());
+        assertThat(pmmlRestResourceGenerator.getNameURL()).isEqualTo(expectedUrl);
     }
 
     @Test
     void getKiePMMLModel() {
-        assertEquals(KIE_PMML_MODEL, pmmlRestResourceGenerator.getKiePMMLModel());
+        assertThat(pmmlRestResourceGenerator.getKiePMMLModel()).isEqualTo(KIE_PMML_MODEL);
     }
 
     @Test
     void className() {
         String classPrefix = getSanitizedClassName(KIE_PMML_MODEL.getName());
         String expected = StringUtils.ucFirst(classPrefix) + "Resource";
-        assertEquals(expected, pmmlRestResourceGenerator.className());
+        assertThat(pmmlRestResourceGenerator.className()).isEqualTo(expected);
     }
 
     @Test
     void generatedFilePath() {
         String retrieved = pmmlRestResourceGenerator.generatedFilePath();
-        assertTrue(retrieved.startsWith("org/kie/kogito"));
+        assertThat(retrieved.startsWith("org/kie/kogito")).isTrue();
         String classPrefix = getSanitizedClassName(KIE_PMML_MODEL.getName());
         String expected = StringUtils.ucFirst(classPrefix) + "Resource.java";
-        assertTrue(retrieved.endsWith(expected));
+        assertThat(retrieved.endsWith(expected)).isTrue();
     }
 
     @Test
     void setPathValue() {
         final Optional<SingleMemberAnnotationExpr> retrievedOpt = TEMPLATE.findFirst(SingleMemberAnnotationExpr.class);
-        assertTrue(retrievedOpt.isPresent());
+        assertThat(retrievedOpt.isPresent()).isTrue();
         SingleMemberAnnotationExpr retrieved = retrievedOpt.get();
-        assertEquals("Path", retrieved.getName().asString());
+        assertThat(retrieved.getName().asString()).isEqualTo("Path");
         pmmlRestResourceGenerator.setPathValue(TEMPLATE);
-        assertEquals(expectedUrl, retrieved.getMemberValue().asStringLiteralExpr().asString());
+        assertThat(retrieved.getMemberValue().asStringLiteralExpr().asString()).isEqualTo(expectedUrl);
     }
 
     @Test
     void setPredictionFileName() {
-        assertTrue(TEMPLATE.getFieldByName("FILE_NAME").isPresent());
+        assertThat(TEMPLATE.getFieldByName("FILE_NAME").isPresent()).isTrue();
         final FieldDeclaration modelName = TEMPLATE.getFieldByName("FILE_NAME").get();
-        assertFalse(modelName.getVariable(0).getInitializer().isPresent());
+        assertThat(modelName.getVariable(0).getInitializer().isPresent()).isFalse();
         pmmlRestResourceGenerator.setPredictionFileName(TEMPLATE);
-        assertTrue(modelName.getVariable(0).getInitializer().isPresent());
-        assertEquals(KIE_PMML_MODEL.getFileName(),
-                modelName.getVariable(0).getInitializer().get().asStringLiteralExpr().asString());
+        assertThat(modelName.getVariable(0).getInitializer().isPresent()).isTrue();
+        assertThat(modelName.getVariable(0).getInitializer().get().asStringLiteralExpr().asString()).isEqualTo(KIE_PMML_MODEL.getFileName());
     }
 
     @Test
     void setPredictionModelName() {
-        assertTrue(TEMPLATE.getFieldByName("MODEL_NAME").isPresent());
+        assertThat(TEMPLATE.getFieldByName("MODEL_NAME").isPresent()).isTrue();
         final FieldDeclaration modelName = TEMPLATE.getFieldByName("MODEL_NAME").get();
-        assertFalse(modelName.getVariable(0).getInitializer().isPresent());
+        assertThat(modelName.getVariable(0).getInitializer().isPresent()).isFalse();
         pmmlRestResourceGenerator.setPredictionModelName(TEMPLATE);
-        assertTrue(modelName.getVariable(0).getInitializer().isPresent());
-        assertEquals(KIE_PMML_MODEL.getName(),
-                modelName.getVariable(0).getInitializer().get().asStringLiteralExpr().asString());
+        assertThat(modelName.getVariable(0).getInitializer().isPresent()).isTrue();
+        assertThat(modelName.getVariable(0).getInitializer().get().asStringLiteralExpr().asString()).isEqualTo(KIE_PMML_MODEL.getName());
     }
 
     @Test
@@ -204,7 +199,7 @@ class PMMLRestResourceGeneratorTest {
                 QUARKUS_SCHEMA,
                 REF,
                 INPUT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
         expected = String.format("@%1$s(%2$s = @org.eclipse.microprofile.openapi.annotations.media.Content(mediaType " +
                 "= \"application/json\", " +
                 "%3$s = @%4$s(%5$s = \"%6$s\")), description = \"PMML result\")",
@@ -214,7 +209,7 @@ class PMMLRestResourceGeneratorTest {
                 QUARKUS_SCHEMA,
                 REF,
                 RESULT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 
     @Test
@@ -238,7 +233,7 @@ class PMMLRestResourceGeneratorTest {
                 QUARKUS_SCHEMA,
                 REF,
                 INPUT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
         expected = String.format("@%1$s(%2$s = @org.eclipse.microprofile.openapi.annotations.media.Content(mediaType " +
                 "= \"application/json\", " +
                 "%3$s = @%4$s(%5$s = \"%6$s\")), description = \"PMML full output\")",
@@ -248,7 +243,7 @@ class PMMLRestResourceGeneratorTest {
                 QUARKUS_SCHEMA,
                 REF,
                 OUTPUT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 
     @Test
@@ -272,7 +267,7 @@ class PMMLRestResourceGeneratorTest {
                 SPRING_SCHEMA,
                 REF,
                 INPUT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
         expected = String.format("@%1$s(%2$s = @io.swagger.v3.oas.annotations.media.Content(mediaType = " +
                 "\"application/json\", " +
                 "%3$s = @%4$s(%5$s = \"%6$s\")), description = \"PMML result\")",
@@ -282,7 +277,7 @@ class PMMLRestResourceGeneratorTest {
                 SPRING_SCHEMA,
                 REF,
                 RESULT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 
     @Test
@@ -306,7 +301,7 @@ class PMMLRestResourceGeneratorTest {
                 SPRING_SCHEMA,
                 REF,
                 INPUT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
         expected = String.format("@%1$s(%2$s = @io.swagger.v3.oas.annotations.media.Content(mediaType = " +
                 "\"application/json\", " +
                 "%3$s = @%4$s(%5$s = \"%6$s\")), description = \"PMML full output\")",
@@ -316,16 +311,16 @@ class PMMLRestResourceGeneratorTest {
                 SPRING_SCHEMA,
                 REF,
                 OUTPUT_REF);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 
     private void commonEvaluateGenerate(String retrieved) {
-        assertNotNull(retrieved);
+        assertThat(retrieved).isNotNull();
         String classPrefix = getSanitizedClassName(KIE_PMML_MODEL.getName());
         String expected = String.format("@Path(\"%s\")", expectedUrl);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
         expected = StringUtils.ucFirst(classPrefix) + "Resource";
         expected = String.format("public class %s extends org.kie.kogito.pmml.AbstractPMMLRestResource {", expected);
-        assertTrue(retrieved.contains(expected));
+        assertThat(retrieved.contains(expected)).isTrue();
     }
 }

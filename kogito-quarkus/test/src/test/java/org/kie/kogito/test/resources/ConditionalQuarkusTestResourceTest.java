@@ -30,8 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.annotation.Resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -73,7 +72,7 @@ public class ConditionalQuarkusTestResourceTest {
 
     @Test
     public void shouldReturnResource() {
-        assertEquals(resource, instance.getTestResource());
+        assertThat(instance.getTestResource()).isEqualTo(resource);
     }
 
     @Test
@@ -154,23 +153,23 @@ public class ConditionalQuarkusTestResourceTest {
 
     private void thenConfigMapIsUpdated() {
         String actual = actualOutput.get(PROPERTY_KEY);
-        assertEquals(PROPERTY_VALUE, actual);
+        assertThat(actual).isEqualTo(PROPERTY_VALUE);
     }
 
     private void thenPropertyValueIsUpdated() {
-        assertEquals(PROPERTY_VALUE, testInstance.propertyValue);
+        assertThat(testInstance.propertyValue).isEqualTo(PROPERTY_VALUE);
     }
 
     private void thenPropertyValueWithDefaultValueIsUpdated() {
-        assertEquals(PROPERTY_DEFAULT_VALUE, testInstance.propertyWithDefaultValue);
+        assertThat(testInstance.propertyWithDefaultValue).isEqualTo(PROPERTY_DEFAULT_VALUE);
     }
 
     private void thenOtherPropertyValueIsNotUpdated() {
-        assertNull(testInstance.otherPropertyValue);
+        assertThat(testInstance.otherPropertyValue).isNull();
     }
 
     private void thenResourceIsUpdated() {
-        assertEquals(instance, testInstance.resource);
+        assertThat(testInstance.resource).isEqualTo(instance);
     }
 
     private class TestInstance {

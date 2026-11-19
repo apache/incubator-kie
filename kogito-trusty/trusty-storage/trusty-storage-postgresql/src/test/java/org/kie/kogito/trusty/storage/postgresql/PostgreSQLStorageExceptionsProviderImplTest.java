@@ -25,8 +25,7 @@ import org.hibernate.exception.JDBCConnectionException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class PostgreSQLStorageExceptionsProviderImplTest {
 
@@ -39,11 +38,11 @@ public class PostgreSQLStorageExceptionsProviderImplTest {
 
     @Test
     void testHibernateException() {
-        assertFalse(provider.isConnectionException(new HibernateException("error")));
+        assertThat(provider.isConnectionException(new HibernateException("error"))).isFalse();
     }
 
     @Test
     void testHibernateConnectionException() {
-        assertTrue(provider.isConnectionException(new JDBCConnectionException("error", new SQLException(""))));
+        assertThat(provider.isConnectionException(new JDBCConnectionException("error", new SQLException("")))).isTrue();
     }
 }

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.kie.api.builder.CompilationErrorsException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class UnsupportedMethodTest {
 
@@ -33,11 +33,11 @@ public class UnsupportedMethodTest {
         UnsupportedMethodUnit unit = new UnsupportedMethodUnit();
         unit.getPersons().add(new Person("John", 30));
 
-        CompilationErrorsException exception = assertThrows(CompilationErrorsException.class,
-                                                            () -> RuleUnitProvider.get().createRuleUnitInstance(unit));
-
-        assertThat(exception.getErrorMessages()).hasSize(2);
-        assertThat(exception.getErrorMessages())
-                .allSatisfy(error -> assertThat(error.getText()).contains("is not supported with RuleUnit"));
+        assertThatThrownBy(() -> RuleUnitProvider.get().createRuleUnitInstance(unit))
+                .isInstanceOfSatisfying(CompilationErrorsException.class, exception -> {
+                    assertThat(exception.getErrorMessages()).hasSize(2);
+                    assertThat(exception.getErrorMessages())
+                            .allSatisfy(error -> assertThat(error.getText()).contains("is not supported with RuleUnit"));
+                });
     }
 }

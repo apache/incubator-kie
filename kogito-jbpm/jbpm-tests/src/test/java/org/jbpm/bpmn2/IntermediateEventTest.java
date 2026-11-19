@@ -112,7 +112,6 @@ import org.jbpm.test.utils.EventTrackerProcessListener;
 import org.jbpm.test.utils.ProcessTestHelper;
 import org.jbpm.workflow.instance.WorkflowProcessInstance;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -136,10 +135,8 @@ import org.kie.kogito.process.WorkItem;
 import org.kie.kogito.process.impl.AbstractProcessInstance;
 import org.kie.kogito.process.workitems.impl.DefaultKogitoWorkItemHandler;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIterable;
+import static org.assertj.core.api.Assertions.*;
 import static org.jbpm.workflow.instance.node.TimerNodeInstance.TIMER_TRIGGERED_EVENT;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class IntermediateEventTest extends JbpmBpmn2TestCase {
 
@@ -645,7 +642,7 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
         org.kie.kogito.process.ProcessInstance<EventBasedSplit5Model> instance = processDefinition.createInstance(model);
         instance.start();
         assertThat(instance.status()).isEqualTo(org.kie.kogito.process.ProcessInstance.STATE_ACTIVE);
-        Assertions.assertNull(instance.variables().getX());
+        assertThat(instance.variables().getX()).isNull();
 
         receiveTaskHandler.getWorkItemId().stream().findFirst().ifPresent(id -> instance.completeWorkItem(id, Map.of("Message", "YesValue")));
         assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
@@ -656,7 +653,7 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
         org.kie.kogito.process.ProcessInstance<EventBasedSplit5Model> instance2 = processDefinition.createInstance(model);
         instance2.start();
         assertThat(instance2.status()).isEqualTo(org.kie.kogito.process.ProcessInstance.STATE_ACTIVE);
-        Assertions.assertNull(instance2.variables().getX());
+        assertThat(instance2.variables().getX()).isNull();
 
         receiveTaskHandler.getWorkItemId().stream().findFirst().ifPresent(id -> instance2.completeWorkItem(id, Map.of("Message", "NoValue")));
         assertThat(instance2.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
@@ -1013,8 +1010,8 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
         assertThat(instance.status()).isEqualTo(org.kie.kogito.process.ProcessInstance.STATE_COMPLETED);
         List<String> trackedNodes = nodeTriggeredProcessEventListener.tracked().stream()
                 .map(node -> node.getNodeInstance().getNodeName()).toList();
-        assertTrue(trackedNodes.containsAll(List.of("start", "User Task 1", "end", "Sub Process 1", "start-sub",
-                "Script Task 1", "end-sub")));
+        assertThat(trackedNodes.containsAll(List.of("start", "User Task 1", "end", "Sub Process 1", "start-sub",
+                "Script Task 1", "end-sub"))).isTrue();
     }
 
     @Test
@@ -1050,8 +1047,8 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
         assertThat(instance.status()).isEqualTo(org.kie.kogito.process.ProcessInstance.STATE_COMPLETED);
         List<String> trackedNodes = nodeTriggeredProcessEventListener.tracked().stream()
                 .map(node -> node.getNodeInstance().getNodeName()).toList();
-        assertTrue(trackedNodes.containsAll(List.of("start", "User Task 1", "end", "Sub Process 1", "start-sub",
-                "Script Task 1", "end-sub")));
+        assertThat(trackedNodes.containsAll(List.of("start", "User Task 1", "end", "Sub Process 1", "start-sub",
+                "Script Task 1", "end-sub"))).isTrue();
     }
 
     @Test

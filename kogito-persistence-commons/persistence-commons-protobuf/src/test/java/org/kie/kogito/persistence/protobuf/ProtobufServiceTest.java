@@ -31,9 +31,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.enterprise.event.Event;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.kie.kogito.persistence.protobuf.ProtobufService.SCHEMA_TYPE;
 import static org.kie.kogito.persistence.protobuf.TestUtils.getTestFileContent;
 import static org.kie.kogito.persistence.protobuf.TestUtils.getValidEntityIndexDescriptors;
@@ -87,7 +86,7 @@ class ProtobufServiceTest {
             exceptionMessage = e.getMessage();
         }
 
-        assertTrue(exceptionMessage.contains("Syntax error in test"));
+        assertThat(exceptionMessage.contains("Syntax error in test")).isTrue();
 
         verify(schemaEvent, never()).fire(any(SchemaRegisteredEvent.class));
         verify(domainModelEvent, never()).fire(any(FileDescriptorRegisteredEvent.class));
@@ -105,7 +104,7 @@ class ProtobufServiceTest {
             exceptionMessage = e.getMessage();
         }
 
-        assertTrue(exceptionMessage.contains("Could not find metadata attribute in proto message"));
+        assertThat(exceptionMessage.contains("Could not find metadata attribute in proto message")).isTrue();
 
         verify(schemaEvent, never()).fire(any(SchemaRegisteredEvent.class));
         verify(domainModelEvent, never()).fire(any(FileDescriptorRegisteredEvent.class));
@@ -125,7 +124,7 @@ class ProtobufServiceTest {
             exceptionMessage = e.getMessage();
         }
 
-        assertEquals(testExceptionMessage, exceptionMessage);
+        assertThat(exceptionMessage).isEqualTo(testExceptionMessage);
 
         verify(schemaEvent, times(1)).fire(new SchemaRegisteredEvent(
                 new SchemaDescriptor(TestUtils.PROCESS_ID + ".proto", content, getValidEntityIndexDescriptors(true), new ProcessDescriptor(TestUtils.PROCESS_ID, TestUtils.PROCESS_TYPE)),

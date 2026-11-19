@@ -25,7 +25,7 @@ import org.kie.kogito.jitexecutor.dmn.api.DMNResourceHelper;
 
 import jakarta.ws.rs.core.Response;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,8 +35,8 @@ public class DMNResourceHelperTest {
     public void testManageResponseWithSuccess() {
         Supplier<Response> responseSupplier = () -> Response.ok("Success").build();
         try (Response response = DMNResourceHelper.manageResponse(responseSupplier)) {
-            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-            assertEquals("Success", response.getEntity());
+            assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+            assertThat(response.getEntity()).isEqualTo("Success");
         }
 
     }
@@ -46,8 +46,8 @@ public class DMNResourceHelperTest {
         Supplier<Response> responseSupplier = mock(Supplier.class);
         when(responseSupplier.get()).thenThrow(new IllegalStateException("Error : Failed to validate"));
         try (Response response = DMNResourceHelper.manageResponse(responseSupplier)) {
-            assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-            assertEquals("Error : Failed to validate", response.getEntity());
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+            assertThat(response.getEntity()).isEqualTo("Error : Failed to validate");
         }
 
     }

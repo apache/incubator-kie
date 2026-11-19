@@ -18,9 +18,6 @@
  */
 package org.kie.kogito.integrationtests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.dmn.DecisionTestUtils;
 import org.kie.kogito.event.cloudevents.extension.KogitoExtension;
@@ -29,6 +26,8 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.CloudEventUtils;
 import io.cloudevents.core.provider.ExtensionProvider;
 import io.quarkus.test.junit.QuarkusTest;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 public class QuarkusKogitoExtensionInitializerTest {
@@ -49,9 +48,9 @@ public class QuarkusKogitoExtensionInitializerTest {
         CloudEvent event = CloudEventUtils.decode(eventJson).orElseThrow(IllegalStateException::new);
         KogitoExtension kogitoExtension = ExtensionProvider.getInstance().parseExtension(KogitoExtension.class, event);
 
-        assertNotNull(kogitoExtension, "KogitoExtension not registered, please make sure " +
-                "bean org.kie.kogito.addon.quarkus.messaging.common.QuarkusKogitoExtensionInitializer has been loaded");
-        assertEquals(DecisionTestUtils.MODEL_NAME, kogitoExtension.getDmnModelName());
-        assertEquals(DecisionTestUtils.MODEL_NAMESPACE, kogitoExtension.getDmnModelNamespace());
+        assertThat(kogitoExtension).as("KogitoExtension not registered, please make sure " +
+                "bean org.kie.kogito.addon.quarkus.messaging.common.QuarkusKogitoExtensionInitializer has been loaded").isNotNull();
+        assertThat(kogitoExtension.getDmnModelName()).isEqualTo(DecisionTestUtils.MODEL_NAME);
+        assertThat(kogitoExtension.getDmnModelNamespace()).isEqualTo(DecisionTestUtils.MODEL_NAMESPACE);
     }
 }
