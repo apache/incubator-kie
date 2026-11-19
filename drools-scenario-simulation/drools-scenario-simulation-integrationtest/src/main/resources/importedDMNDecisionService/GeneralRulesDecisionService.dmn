@@ -1,0 +1,118 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20240513/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20230324/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:kie="https://kie.org/dmn/extensions/1.0" expressionLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/" namespace="https://kie.org/dmn/_D100CBD0-5691-43FC-8EBD-06B2DFA56BC9" id="_F09E84FE-4C8F-4F62-A5FE-8CB222AC949F" name="GeneralRulesDS">
+  <itemDefinition id="_E21724D7-6E7A-4366-951B-EABB48969369" name="tRisk" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+    <itemComponent id="_8A807A47-802D-499E-A580-E4A1EC4495B8" name="Level" isCollection="false">
+      <typeRef>number</typeRef>
+    </itemComponent>
+  </itemDefinition>
+  <itemDefinition id="_34602704-CD44-4E43-8281-734B0BD07D7F" name="tPerson" isCollection="false" typeLanguage="https://www.omg.org/spec/DMN/20240513/FEEL/">
+    <itemComponent id="_8E7FC979-BADD-401D-9DCF-601943193B82" name="Age" isCollection="false">
+      <typeRef>number</typeRef>
+    </itemComponent>
+    <itemComponent id="_58D994DA-2472-4568-BEB5-F821CC38B85C" name="Name" isCollection="false">
+      <typeRef>string</typeRef>
+    </itemComponent>
+  </itemDefinition>
+  <decision name="List of countries" id="_B79F61DE-CA7F-4741-984D-C9D2B6DAD1C8">
+    <variable name="List of countries" id="_D0D30D68-408F-4B12-98AC-9A9B5029A704" typeRef="Any" />
+    <list id="_E430FB25-68AF-4D03-93B2-DF1ED8E55057" typeRef="Any" label="List of countries">
+      <literalExpression id="_1ED1D3E4-41EB-42CD-86E9-BC8BBCDB7B62">
+        <text>&quot;Canada&quot;</text>
+      </literalExpression>
+      <literalExpression id="_1C125BE2-69F9-4F1C-AC0B-80191C2DB67D">
+        <text>&quot;Cuba&quot;</text>
+      </literalExpression>
+      <literalExpression id="_DFDCA945-9008-4EDC-BF98-2D144B40ECFF">
+        <text>&quot;Brazil&quot;</text>
+      </literalExpression>
+    </list>
+  </decision>
+  <decision name="Have strict Rules?" id="_F236BB34-0DD0-432F-AFA6-84B41D635A27">
+    <variable name="Have strict Rules?" id="_4BEB03C0-0218-48D7-9920-1F71CCE2C005" typeRef="boolean" />
+    <informationRequirement id="_BF9B15FF-2FFD-42D6-9F7F-AD81E9A93F9E">
+      <requiredDecision href="#_B79F61DE-CA7F-4741-984D-C9D2B6DAD1C8" />
+    </informationRequirement>
+    <informationRequirement id="_0C475FCD-A85B-43A3-9A17-807D6133FB62">
+      <requiredInput href="#_34DA3863-BD6D-4DEE-947E-9D9616336939" />
+    </informationRequirement>
+    <literalExpression id="_C77B3991-68B7-4646-B185-68A50AD1EA3C" typeRef="boolean" label="Have strict Rules?">
+      <text>list contains(List of countries, Country )</text>
+    </literalExpression>
+  </decision>
+  <inputData name="Country" id="_34DA3863-BD6D-4DEE-947E-9D9616336939">
+    <variable name="Country" id="_E1E0120E-4A74-4ADA-9103-C3FA56715414" typeRef="string" />
+  </inputData>
+  <decisionService name="GeneralRulesDecisionService" id="_0666BBFF-AD2A-4614-9FFC-8C707B05A570">
+    <variable name="GeneralRulesDecisionService" id="_A83627D6-4E25-43CA-9B8D-E603838D13F6" typeRef="boolean" />
+    <outputDecision href="#_F236BB34-0DD0-432F-AFA6-84B41D635A27" />
+    <encapsulatedDecision href="#_B79F61DE-CA7F-4741-984D-C9D2B6DAD1C8" />
+    <inputData href="#_34DA3863-BD6D-4DEE-947E-9D9616336939" />
+  </decisionService>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_6CC03C9E-E340-4970-8C6F-9B95E3D60588" name="Default DRD" useAlternativeInputDataShape="false">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths dmnElementRef="_C77B3991-68B7-4646-B185-68A50AD1EA3C">
+            <kie:width>625</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_E430FB25-68AF-4D03-93B2-DF1ED8E55057">
+            <kie:width>50</kie:width>
+            <kie:width>200</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_1ED1D3E4-41EB-42CD-86E9-BC8BBCDB7B62">
+            <kie:width>200</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_1C125BE2-69F9-4F1C-AC0B-80191C2DB67D">
+            <kie:width>200</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_DFDCA945-9008-4EDC-BF98-2D144B40ECFF">
+            <kie:width>200</kie:width>
+          </kie:ComponentWidths>
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="_4E6AA0CD-977E-4C35-B523-D065A1F61786" dmnElementRef="_0666BBFF-AD2A-4614-9FFC-8C707B05A570" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="740" y="200" width="320" height="320" />
+        <dmndi:DMNDecisionServiceDividerLine id="_10166F08-EA48-45AA-8593-F4CFD5506083">
+          <di:waypoint x="740" y="360" />
+          <di:waypoint x="1060" y="360" />
+        </dmndi:DMNDecisionServiceDividerLine>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_D31F0684-AA57-44C4-A903-03BD2E062F80" dmnElementRef="_F236BB34-0DD0-432F-AFA6-84B41D635A27" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="820" y="260" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_9283C84E-11D3-4118-8472-650DD69C35DA" dmnElementRef="_B79F61DE-CA7F-4741-984D-C9D2B6DAD1C8" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="820" y="400" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_22094BFD-2F97-4F99-AEA3-9B54E5B3033D" dmnElementRef="_34DA3863-BD6D-4DEE-947E-9D9616336939" isCollapsed="false" isListedInputData="false">
+        <dc:Bounds x="520" y="260" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="_FB030393-7279-4FD9-9BD2-2785CDAB878F" dmnElementRef="_BF9B15FF-2FFD-42D6-9F7F-AD81E9A93F9E" sourceElement="_9283C84E-11D3-4118-8472-650DD69C35DA" targetElement="_D31F0684-AA57-44C4-A903-03BD2E062F80">
+        <di:waypoint x="900" y="440" />
+        <di:waypoint x="900" y="340" />
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_FB23E347-F7E5-43A7-B0A3-32AB570EC657" dmnElementRef="_0C475FCD-A85B-43A3-9A17-807D6133FB62" sourceElement="_22094BFD-2F97-4F99-AEA3-9B54E5B3033D" targetElement="_D31F0684-AA57-44C4-A903-03BD2E062F80">
+        <di:waypoint x="600" y="300" />
+        <di:waypoint x="820" y="300" />
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>
