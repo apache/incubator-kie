@@ -18,6 +18,7 @@
  */
 package org.jbpm.flow.migration.model;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,6 +31,16 @@ public class ProcessInstanceMigrationPlan {
     private ProcessDefinitionMigrationPlan targetProcessDefinition;
 
     private List<NodeInstanceMigrationPlan> nodeInstanceMigrationPlan;
+
+    private List<VariableMigrationPlan> variableMigrationPlan;
+
+    public List<VariableMigrationPlan> getVariableMigrationPlan() {
+        return variableMigrationPlan != null ? variableMigrationPlan : Collections.emptyList();
+    }
+
+    public void setVariableMigrationPlan(List<VariableMigrationPlan> variableMigrationPlan) {
+        this.variableMigrationPlan = variableMigrationPlan;
+    }
 
     public List<NodeInstanceMigrationPlan> getNodeInstanceMigrationPlan() {
         return nodeInstanceMigrationPlan;
@@ -72,7 +83,7 @@ public class ProcessInstanceMigrationPlan {
 
     @Override
     public int hashCode() {
-        return Objects.hash(nodeInstanceMigrationPlan, sourceProcessDefinition, targetProcessDefinition);
+        return Objects.hash(nodeInstanceMigrationPlan, variableMigrationPlan, sourceProcessDefinition, targetProcessDefinition);
     }
 
     @Override
@@ -84,7 +95,8 @@ public class ProcessInstanceMigrationPlan {
         if (getClass() != obj.getClass())
             return false;
         ProcessInstanceMigrationPlan other = (ProcessInstanceMigrationPlan) obj;
-        return Objects.equals(nodeInstanceMigrationPlan, other.nodeInstanceMigrationPlan) && Objects.equals(sourceProcessDefinition, other.sourceProcessDefinition)
+        return Objects.equals(nodeInstanceMigrationPlan, other.nodeInstanceMigrationPlan) && Objects.equals(variableMigrationPlan, other.variableMigrationPlan)
+                && Objects.equals(sourceProcessDefinition, other.sourceProcessDefinition)
                 && Objects.equals(targetProcessDefinition, other.targetProcessDefinition);
     }
 

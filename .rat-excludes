@@ -2334,6 +2334,7 @@ kogito-addons/common/persistence/postgresql/src/main/resources/META-INF/kogito.a
 kogito-addons/common/persistence/rocksdb/src/main/resources/META-INF/kogito.addon
 kogito-addons/common/process-instance-migration/src/test/resources/META-INF/migration-plan/simple_migration.mpf
 kogito-addons/common/process-instance-migration/src/test/resources/META-INF/migration-plan/simple_migration_version.mpf
+kogito-addons/common/process-instance-migration/src/test/resources/META-INF/migration-plan/variable_migration.mpf
 kogito-api/kogito-events-core/src/main/resources/META-INF/services/com.fasterxml.jackson.databind.Module
 kogito-api/kogito-events-core/src/main/resources/META-INF/services/org.kie.kogito.event.impl.adapter.DataEventAdapter
 kogito-drools/kogito-pmml/src/test/resources/org/kie/kogito/pmml/test_regression.pmml
