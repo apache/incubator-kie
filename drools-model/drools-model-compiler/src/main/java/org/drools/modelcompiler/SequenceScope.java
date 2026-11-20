@@ -60,7 +60,17 @@ class SequenceScope {
         if (position == null) {
             return null;
         }
-        int inScope = sequencesBeforeConsequence.getOrDefault( consequenceName, sequenceCount );
-        return new int[]{ inScope - 1 - position.sequence(), position.filter() };
+        return new int[]{ sequencesInScope( consequenceName ) - 1 - position.sequence(), position.filter() };
+    }
+
+    private int sequencesInScope( String consequenceName ) {
+        if (RuleImpl.DEFAULT_CONSEQUENCE_NAME.equals( consequenceName )) {
+            return sequenceCount;
+        }
+        Integer registered = sequencesBeforeConsequence.get( consequenceName );
+        if (registered == null) {
+            throw new IllegalStateException( "Named consequence '" + consequenceName + "' was not registered with the sequence scope" );
+        }
+        return registered;
     }
 }
