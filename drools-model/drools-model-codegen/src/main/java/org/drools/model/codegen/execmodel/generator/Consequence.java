@@ -250,7 +250,7 @@ public class Consequence {
                    .map(Optional::get)
                    .filter(sc -> sc instanceof ArrayAccessExpr)
                    .map(aae -> (ArrayAccessExpr)aae)
-                   .filter(aae -> aae.getName().asNameExpr().getNameAsString().equals("channels"))
+                   .filter(aae -> aae.getName().isNameExpr() && aae.getName().asNameExpr().getNameAsString().equals("channels"))
                    .forEach(aae -> {
                        String channelName = aae.getIndex().asStringLiteralExpr().asString();
                        MethodCallExpr mce = new MethodCallExpr(new NameExpr("drools"), GET_CHANNEL_CALL);
@@ -409,7 +409,12 @@ public class Consequence {
 
                     if ( !initializedBitmaskFields.contains( updatedVar ) ) {
                         Set<String> modifiedProps = findModifiedProperties(methodCallExprs, updatedVar, updatedClass );
-                        modifiedProps.addAll(findModifiedPropertiesFromAssignment(assignExprs, updatedVar));
+                        Set<String> assignedProps = findModifiedPropertiesFromAssignment(assignExprs, updatedVar);
+                        if (modifiedProps == null || assignedProps == null) {
+                            modifiedProps = null;
+                        } else {
+                            modifiedProps.addAll(assignedProps);
+                        }
                         MethodCallExpr bitMaskCreation = createBitMaskInitialization( updatedClass, modifiedProps );
                         AssignExpr bitMaskAssign = createBitMaskField(updatedVar, bitMaskCreation);
                         if (!DrlxParseUtil.hasDuplicateExpr(ruleBlock, bitMaskAssign)) {
@@ -467,6 +472,14 @@ public class Consequence {
             if (!isDirectExpression(methodCall)) {
                 continue; // don't evaluate a method which is a part of other expression
             }
+            if (hasArrayAccessInScope(methodCall)) {
+                // DrlxParseUtil.findRemoveRootNodeViaScope() rejects array access in the scope chain
+                if (isNameExprWithName(findRootThroughArrayAccess(methodCall), updatedVar)) {
+                    // can't tell which property is modified, so the mask has to be all set
+                    return null;
+                }
+                continue; // unrelated to the updated fact
+            }
             DrlxParseUtil.RemoveRootNodeResult removeRootNodeViaScope = DrlxParseUtil.findRemoveRootNodeViaScope(methodCall);
             Optional<Expression> root = removeRootNodeViaScope.getRootNode()
                     .filter(s -> isNameExprWithName(s, updatedVar));
@@ -506,7 +519,7 @@ public class Consequence {
                     }
                 } else {
                     // if we were unable to detect the property the mask has to be all set, so avoid the rest of the cycle
-                    return new HashSet<>();
+                    return null;
                 }
             }
         }
@@ -517,6 +530,12 @@ public class Consequence {
         Set<String> modifiedProps = new HashSet<>();
         for (AssignExpr assignExpr : assignExprs) {
             Expression target = assignExpr.getTarget();
+            if (hasArrayAccessInScope(target)) {
+                if (isNameExprWithName(findRootThroughArrayAccess(target), updatedVar)) {
+                    return null;
+                }
+                continue;
+            }
             if (target instanceof FieldAccessExpr) {
                 FieldAccessExpr fieldAccessExpr = (FieldAccessExpr)target;
                 Expression scope = fieldAccessExpr.getScope();
@@ -537,9 +556,47 @@ public class Consequence {
     }
 
     private static boolean hasDroolsScope( MethodCallExpr mce ) {
+        if (hasArrayAccessInScope(mce)) {
+            // DrlxParseUtil.findRootNodeViaScope() rejects array access in the scope chain
+            return isNameExprWithName(findRootThroughArrayAccess(mce), "drools");
+        }
         return DrlxParseUtil.findRootNodeViaScope(mce)
                 .filter(s -> isNameExprWithName(s, "drools"))
                 .isPresent();
+    }
+
+    private static boolean hasArrayAccessInScope( Expression expr ) {
+        for (Expression current = expr; current != null; current = nextInScopeChain(current).orElse(null)) {
+            if (current.isArrayAccessExpr()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Expression findRootThroughArrayAccess( Expression expr ) {
+        Expression root = expr;
+        Optional<Expression> next;
+        while ((next = nextInScopeChain(root)).isPresent()) {
+            root = next.get();
+        }
+        return root;
+    }
+
+    // One step towards the root of a scope chain, looking through array access, parentheses and casts
+    private static Optional<Expression> nextInScopeChain( Expression expr ) {
+        if (expr.isArrayAccessExpr()) {
+            return Optional.of(expr.asArrayAccessExpr().getName());
+        } else if (expr.isMethodCallExpr()) {
+            return expr.asMethodCallExpr().getScope();
+        } else if (expr.isFieldAccessExpr()) {
+            return Optional.of(expr.asFieldAccessExpr().getScope());
+        } else if (expr.isEnclosedExpr()) {
+            return Optional.of(expr.asEnclosedExpr().getInner());
+        } else if (expr.isCastExpr()) {
+            return Optional.of(expr.asCastExpr().getExpression());
+        }
+        return Optional.empty();
     }
 
     private boolean isDataStoreScope(Expression scope) {

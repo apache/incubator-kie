@@ -28,6 +28,7 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
@@ -42,6 +43,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Test for declared Enums
  */
 public class EnumTest {
+
+    @org.kie.api.definition.type.PropertyReactive
+    public static class FieldHolder {
+        public String name;
+        public StringBuilder[] items;
+
+        public StringBuilder[] getItems() {
+            return items;
+        }
+
+        public void setItems(StringBuilder[] items) {
+            this.items = items;
+        }
+    }
 
     public static Stream<KieBaseTestConfiguration> parameters() {
         return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
@@ -64,6 +79,275 @@ public class EnumTest {
         assertThat(list.contains(true)).isTrue();
         assertThat(list.contains("MONDAY")).isTrue();
 
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIndexedEnumValuesInConsequence(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare enum Color\n" +
+                "    RED, GREEN, BLUE;\n" +
+                "end\n" +
+                "rule R when\n" +
+                "then\n" +
+                "    list.add( Color.values()[1].name() );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("values()[1].name() must evaluate like Java, on every KieBase configuration")
+                .containsExactly("GREEN");
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIndexedEnumValuesStatementBeforeUpdateOfPropertyReactiveFact(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare enum Color\n" +
+                "    RED, GREEN, BLUE;\n" +
+                "end\n" +
+                "declare P\n" +
+                "    @propertyReactive\n" +
+                "    name : String\n" +
+                "end\n" +
+                "rule Init when\n" +
+                "then\n" +
+                "    insert( new P() );\n" +
+                "end\n" +
+                "rule R no-loop when\n" +
+                "    $p : P()\n" +
+                "then\n" +
+                "    Color.values()[1].name();\n" +
+                "    update( $p );\n" +
+                "    list.add( \"fired\" );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("a standalone values()[1].name() before update() of a property-reactive fact must not break rule compilation")
+                .containsExactly("fired");
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIndexedCallRootedAtUpdatedFactBeforeUpdateOfPropertyReactiveFact(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare P\n" +
+                "    @propertyReactive\n" +
+                "    items : String[]\n" +
+                "end\n" +
+                "rule Init when\n" +
+                "then\n" +
+                "    P p = new P();\n" +
+                "    p.setItems( new String[] { \"a\" } );\n" +
+                "    insert( p );\n" +
+                "end\n" +
+                "rule R no-loop when\n" +
+                "    $p : P()\n" +
+                "then\n" +
+                "    $p.getItems()[0].length();\n" +
+                "    update( $p );\n" +
+                "    list.add( \"fired\" );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("an indexed call rooted at the updated fact must not break rule compilation")
+                .containsExactly("fired");
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCastEnclosedIndexedCallRootedAtUpdatedFactWidensMask(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        Assumptions.assumeTrue(kieBaseTestConfiguration.isExecutableModel());
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare P\n" +
+                "    @propertyReactive\n" +
+                "    name  : String\n" +
+                "    items : StringBuilder[]\n" +
+                "end\n" +
+                "rule Init salience 100 when\n" +
+                "then\n" +
+                "    P p = new P();\n" +
+                "    p.setItems( new StringBuilder[] { new StringBuilder() } );\n" +
+                "    insert( p );\n" +
+                "end\n" +
+                "rule ListenOnItems salience 50 when\n" +
+                "    P( items != null )\n" +
+                "then\n" +
+                "    list.add( \"items\" );\n" +
+                "end\n" +
+                "rule Modify no-loop salience 0 when\n" +
+                "    $p : P()\n" +
+                "then\n" +
+                "    ((P) $p).getItems()[0].append( \"x\" );\n" +
+                "    $p.setName( \"n\" );\n" +
+                "    update( $p );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("an indexed call rooted at the updated fact through a cast/parentheses must widen the "
+                        + "update mask, so the rule listening on 'items' is re-evaluated by update()")
+                .containsExactly("items", "items");
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIndexedCallRootedAtUpdatedFactAfterSetterDiscardsCollectedProps(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare P\n" +
+                "    @propertyReactive\n" +
+                "    name  : String\n" +
+                "    items : StringBuilder[]\n" +
+                "end\n" +
+                "rule Init salience 100 when\n" +
+                "then\n" +
+                "    P p = new P();\n" +
+                "    p.setItems( new StringBuilder[] { new StringBuilder() } );\n" +
+                "    insert( p );\n" +
+                "end\n" +
+                "rule ListenOnItems salience 50 when\n" +
+                "    P( items != null )\n" +
+                "then\n" +
+                "    list.add( \"items\" );\n" +
+                "end\n" +
+                "rule Modify no-loop salience 0 when\n" +
+                "    $p : P()\n" +
+                "then\n" +
+                "    $p.setName( \"n\" );\n" +
+                "    $p.getItems()[0].append( \"x\" );\n" +
+                "    update( $p );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("an unresolvable indexed call after a setter must discard the already collected "
+                        + "properties and widen the update mask to all-set")
+                .containsExactly("items", "items");
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEnclosedIndexedCallBeforeUpdateOfPropertyReactiveFact(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare P\n" +
+                "    @propertyReactive\n" +
+                "    items : String[]\n" +
+                "end\n" +
+                "rule Init when\n" +
+                "then\n" +
+                "    P p = new P();\n" +
+                "    p.setItems( new String[] { \"a\" } );\n" +
+                "    insert( p );\n" +
+                "end\n" +
+                "rule R no-loop when\n" +
+                "    $p : P()\n" +
+                "then\n" +
+                "    ($p.getItems()[0]).length();\n" +
+                "    update( $p );\n" +
+                "    list.add( \"fired\" );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("an enclosed indexed call before update() of a property-reactive fact must not break rule compilation")
+                .containsExactly("fired");
+        ksession.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIndexedCallRootedAtUpdatedFactWithFieldAssignmentWidensMask(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        Assumptions.assumeTrue(kieBaseTestConfiguration.isExecutableModel());
+        final String drl =
+                "package org.test;\n" +
+                "import " + FieldHolder.class.getCanonicalName() + ";\n" +
+                "global java.util.List list;\n" +
+                "rule Init salience 100 when\n" +
+                "then\n" +
+                "    FieldHolder h = new FieldHolder();\n" +
+                "    h.setItems( new StringBuilder[] { new StringBuilder() } );\n" +
+                "    insert( h );\n" +
+                "end\n" +
+                "rule ListenOnItems salience 50 when\n" +
+                "    FieldHolder( items != null )\n" +
+                "then\n" +
+                "    list.add( \"items\" );\n" +
+                "end\n" +
+                "rule Modify no-loop salience 0 when\n" +
+                "    $p : FieldHolder()\n" +
+                "then\n" +
+                "    $p.getItems()[0].append( \"x\" );\n" +
+                "    $p.name = \"n\";\n" +
+                "    update( $p );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new java.util.ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list)
+                .as("an unresolvable indexed call combined with a direct field assignment must keep the "
+                        + "update mask all-set, so the rule listening on 'items' is re-evaluated by update()")
+                .containsExactly("items", "items");
         ksession.dispose();
     }
 
@@ -184,5 +468,6 @@ public class EnumTest {
         assertThat(rules).isEqualTo(1);
         ksession.dispose();
     }
+
 }
 
