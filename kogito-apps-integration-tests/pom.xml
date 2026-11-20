@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-apps-build-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kogito-apps-build-parent/pom.xml</relativePath>
   </parent>
   <artifactId>apps-integration-tests</artifactId>

@@ -25,7 +25,7 @@
   <parent>
     <artifactId>drools-impact-analysis</artifactId>
     <groupId>org.drools</groupId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
