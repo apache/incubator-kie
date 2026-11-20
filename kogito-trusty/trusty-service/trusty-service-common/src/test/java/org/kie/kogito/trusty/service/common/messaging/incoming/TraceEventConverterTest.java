@@ -39,8 +39,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class TraceEventConverterTest {
 
@@ -82,41 +81,41 @@ class TraceEventConverterTest {
 
     @Test
     void testDecisionHasSucceeded() {
-        assertFalse(TraceEventConverter.decisionHasSucceeded(
-                null), "Decision must be failed if input list is null");
+        assertThat(TraceEventConverter.decisionHasSucceeded(
+                null)).as("Decision must be failed if input list is null").isFalse();
 
-        assertTrue(TraceEventConverter.decisionHasSucceeded(
-                Collections.emptyList()), "Decision must be succeeeded if input list is empty");
+        assertThat(TraceEventConverter.decisionHasSucceeded(
+                Collections.emptyList())).as("Decision must be succeeeded if input list is empty").isTrue();
 
-        assertTrue(TraceEventConverter.decisionHasSucceeded(List.of(
+        assertThat(TraceEventConverter.decisionHasSucceeded(List.of(
                 buildTraceOutputValue(DecisionEvaluationStatus.SUCCEEDED, false),
                 buildTraceOutputValue(DecisionEvaluationStatus.SKIPPED, false),
-                buildTraceOutputValue(DecisionEvaluationStatus.NOT_EVALUATED, false))), "Decision must be succeeded " +
-                        "if there are no outputs with 'FAILED' status or containing error messages");
+                buildTraceOutputValue(DecisionEvaluationStatus.NOT_EVALUATED, false)))).as("Decision must be succeeded " +
+                        "if there are no outputs with 'FAILED' status or containing error messages").isTrue();
 
-        assertFalse(TraceEventConverter.decisionHasSucceeded(List.of(
+        assertThat(TraceEventConverter.decisionHasSucceeded(List.of(
                 buildTraceOutputValue(DecisionEvaluationStatus.SUCCEEDED, false),
-                buildTraceOutputValue(DecisionEvaluationStatus.FAILED, false))), "Decision must be failed if at least" +
-                        " one output has 'FAILED' status");
+                buildTraceOutputValue(DecisionEvaluationStatus.FAILED, false)))).as("Decision must be failed if at least" +
+                        " one output has 'FAILED' status").isFalse();
 
-        assertFalse(TraceEventConverter.decisionHasSucceeded(List.of(
+        assertThat(TraceEventConverter.decisionHasSucceeded(List.of(
                 buildTraceOutputValue(DecisionEvaluationStatus.SUCCEEDED, false),
-                buildTraceOutputValue(DecisionEvaluationStatus.SKIPPED, true))), "Decision must be failed if at least" +
-                        " one output contains error messages");
+                buildTraceOutputValue(DecisionEvaluationStatus.SKIPPED, true)))).as("Decision must be failed if at least" +
+                        " one output contains error messages").isFalse();
 
-        assertFalse(TraceEventConverter.decisionHasSucceeded(List.of(
+        assertThat(TraceEventConverter.decisionHasSucceeded(List.of(
                 buildTraceOutputValue(DecisionEvaluationStatus.SUCCEEDED, false),
-                buildTraceOutputValue(DecisionEvaluationStatus.NOT_EVALUATED, true))), "Decision must be failed if at" +
-                        " least one output contains error messages");
+                buildTraceOutputValue(DecisionEvaluationStatus.NOT_EVALUATED, true)))).as("Decision must be failed if at" +
+                        " least one output contains error messages").isFalse();
 
-        assertFalse(TraceEventConverter.decisionHasSucceeded(List.of(
+        assertThat(TraceEventConverter.decisionHasSucceeded(List.of(
                 buildTraceOutputValue(DecisionEvaluationStatus.SKIPPED, true),
-                buildTraceOutputValue(DecisionEvaluationStatus.FAILED, false))), "Decision must be failed if at least" +
-                        " one output has 'FAILED' status or contains error messages");
+                buildTraceOutputValue(DecisionEvaluationStatus.FAILED, false)))).as("Decision must be failed if at least" +
+                        " one output has 'FAILED' status or contains error messages").isFalse();
 
-        assertFalse(TraceEventConverter.decisionHasSucceeded(List.of(
+        assertThat(TraceEventConverter.decisionHasSucceeded(List.of(
                 buildTraceOutputValue(DecisionEvaluationStatus.NOT_EVALUATED, true),
-                buildTraceOutputValue(DecisionEvaluationStatus.FAILED, true))), "Decision must be failed if at least " +
-                        "one output has 'FAILED' status or contains error messages");
+                buildTraceOutputValue(DecisionEvaluationStatus.FAILED, true)))).as("Decision must be failed if at least " +
+                        "one output has 'FAILED' status or contains error messages").isFalse();
     }
 }

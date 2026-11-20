@@ -38,6 +38,7 @@ public class TimedRuleExecutionOption implements SingleValueRuleRuntimeOption {
         this.filter = filter;
     }
 
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

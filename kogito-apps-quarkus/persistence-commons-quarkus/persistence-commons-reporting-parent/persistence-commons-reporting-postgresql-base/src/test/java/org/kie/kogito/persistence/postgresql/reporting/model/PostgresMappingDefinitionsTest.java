@@ -22,8 +22,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PostgresMappingDefinitionsTest {
 
@@ -32,131 +31,113 @@ class PostgresMappingDefinitionsTest {
 
     @Test
     void testEquality() {
-        assertEquals(DEFINITIONS,
-                DEFINITIONS);
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("different",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "different",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "different",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD, PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD, PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "different",
-                        List.of(PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING, PostgresMappingTest.MAPPING)))));
-        assertNotEquals(DEFINITIONS,
-                new PostgresMappingDefinitions(List.of(PostgresMappingDefinitionTest.DEFINITION,
-                        PostgresMappingDefinitionTest.DEFINITION)));
+        assertThat(DEFINITIONS).isEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("different",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "different",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "different",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD, PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD, PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "different",
+                List.of(PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING, PostgresMappingTest.MAPPING))))).isNotEqualTo(DEFINITIONS);
+        assertThat(new PostgresMappingDefinitions(List.of(PostgresMappingDefinitionTest.DEFINITION,
+                PostgresMappingDefinitionTest.DEFINITION))).isNotEqualTo(DEFINITIONS);
     }
 
     @Test
     void testHashCode() {
-        assertEquals(DEFINITIONS_HASHCODE,
-                DEFINITIONS.hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("different",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "different",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "different",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD, PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD, PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "different",
-                        List.of(PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
-                        "sourceTableName",
-                        "sourceTableJsonFieldName",
-                        List.of(PostgresFieldTest.FIELD),
-                        List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
-                        "targetTableName",
-                        List.of(PostgresMappingTest.MAPPING, PostgresMappingTest.MAPPING)))).hashCode());
-        assertNotEquals(DEFINITIONS_HASHCODE,
-                new PostgresMappingDefinitions(List.of(PostgresMappingDefinitionTest.DEFINITION,
-                        PostgresMappingDefinitionTest.DEFINITION)).hashCode());
+        assertThat(DEFINITIONS.hashCode()).isEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("different",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "different",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "different",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD, PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD, PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "different",
+                List.of(PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(new PostgresMappingDefinition("mappingId",
+                "sourceTableName",
+                "sourceTableJsonFieldName",
+                List.of(PostgresFieldTest.FIELD),
+                List.of(PostgresPartitionFieldTest.PARTITION_FIELD),
+                "targetTableName",
+                List.of(PostgresMappingTest.MAPPING, PostgresMappingTest.MAPPING)))).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
+        assertThat(new PostgresMappingDefinitions(List.of(PostgresMappingDefinitionTest.DEFINITION,
+                PostgresMappingDefinitionTest.DEFINITION)).hashCode()).isNotEqualTo(DEFINITIONS_HASHCODE);
     }
 }

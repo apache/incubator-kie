@@ -31,7 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -76,9 +76,8 @@ public class KeyTreeMapTest {
 
     @Test
     void testReAdd() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> {
-            put(toni);
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+            put(toni));
     }
 
     @Test

@@ -8664,7 +8664,7 @@ public class Misc2Test {
      */
     @Disabled("This test deliberately creates a deadlock, failing the test with a timeout.\n" + 
             "Helpful to test thread dump when a timeout occur on the JUnit listener.\n" + 
-            "See org.kie.test.util.TestStatusListener#testFailure()")
+            "See org.kie.test.util.TestStatusListener#executionFinished()")
     @ParameterizedTest(name = "KieBase type={0}")
     @MethodSource("parameters")
     @Timeout(10000)

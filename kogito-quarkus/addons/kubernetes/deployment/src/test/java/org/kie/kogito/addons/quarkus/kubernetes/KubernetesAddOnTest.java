@@ -29,7 +29,7 @@ import io.quarkus.test.QuarkusUnitTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class KubernetesAddOnTest {
 
@@ -46,8 +46,8 @@ public class KubernetesAddOnTest {
 
     @Test
     void verifyBeanProcessorsAreInjected() {
-        assertNotNull(endpointCaller);
-        assertNotNull(endpointDiscovery);
+        assertThat(endpointCaller).isNotNull();
+        assertThat(endpointDiscovery).isNotNull();
     }
 
 }

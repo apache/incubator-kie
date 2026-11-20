@@ -75,6 +75,7 @@
       <groupId>org.kie</groupId>
       <artifactId>kie-pmml-compiler-api</artifactId>
       <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kie</groupId>
@@ -87,6 +88,11 @@
       <artifactId>kie-pmml-models-drools-tree-compiler</artifactId>
       <scope>test</scope>
     </dependency>
-  </dependencies>
+      <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+</dependencies>
 
 </project>

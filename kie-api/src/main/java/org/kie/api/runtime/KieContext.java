@@ -30,7 +30,11 @@ public interface KieContext {
     /**
      * Added for backwards compatibility.
      * Will be removed in the future.
+     *
+     * @return the KieRuntime instance
+     * @deprecated since 6.0.0, use {@link #getKieRuntime()} instead. This method uses the old
+     *             "Knowledge" naming convention from before the Kie rebrand. Will be removed in a future version.
      */
-    @Deprecated
+    @Deprecated(since = "6.0.0", forRemoval = true)
     KieRuntime getKnowledgeRuntime();
 }

@@ -36,7 +36,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @QuarkusTestResource(KubernetesMockServerTestResource.class) // Changed to use KubernetesMockServerTestResource
@@ -58,8 +58,7 @@ public class OpenShiftServiceDiscoveryTest {
 
         KubeTestUtils.createWithStatusPreserved(client, deploymentConfig, namespace, DeploymentConfig.class);
 
-        assertEquals(Optional.empty(),
-                kubeResourceDiscovery.query(KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.io/" + namespace + "/invalid")));
+        assertThat(kubeResourceDiscovery.query(KubernetesResourceUri.parse("deploymentconfigs.v1.apps.openshift.io/" + namespace + "/invalid"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -75,7 +74,7 @@ public class OpenShiftServiceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = kubeResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.12:80", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.12:80");
     }
 
     @Test
@@ -98,7 +97,7 @@ public class OpenShiftServiceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, pod, namespace, Pod.class);
 
         Optional<String> url = kubeResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://172.17.25.190:8080", url.get());
+        assertThat(url.get()).isEqualTo("http://172.17.25.190:8080");
     }
 
     @Test
@@ -108,8 +107,7 @@ public class OpenShiftServiceDiscoveryTest {
 
         KubeTestUtils.createWithStatusPreserved(client, route, namespace, Route.class);
 
-        assertEquals(Optional.empty(),
-                kubeResourceDiscovery.query(KubernetesResourceUri.parse("routes.v1.route.openshift.io/" + namespace + "/invalid")));
+        assertThat(kubeResourceDiscovery.query(KubernetesResourceUri.parse("routes.v1.route.openshift.io/" + namespace + "/invalid"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -122,7 +120,7 @@ public class OpenShiftServiceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, route, namespace, Route.class);
 
         Optional<String> url = kubeResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://test-route.org:80", url.get());
+        assertThat(url.get()).isEqualTo("http://test-route.org:80");
     }
 
     @Test
@@ -135,6 +133,6 @@ public class OpenShiftServiceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, route, namespace, Route.class);
 
         Optional<String> url = kubeResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("https://secure-test-route-tls:443", url.get());
+        assertThat(url.get()).isEqualTo("https://secure-test-route-tls:443");
     }
 }

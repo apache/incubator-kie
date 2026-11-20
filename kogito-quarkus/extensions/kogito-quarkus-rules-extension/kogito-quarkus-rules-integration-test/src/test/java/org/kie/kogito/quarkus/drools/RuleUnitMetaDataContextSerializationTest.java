@@ -34,7 +34,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 public class RuleUnitMetaDataContextSerializationTest {
@@ -50,9 +50,9 @@ public class RuleUnitMetaDataContextSerializationTest {
         String path = id.asLocalUri().path();
         RuleUnitMetaDataContext mdc = RuleUnitMetaDataContext.of(id);
         String out = mapper.writeValueAsString(mdc);
-        assertEquals("{\"id\":\"/rule-units/org.kie.kogito.quarkus.drools.AnotherService\"}", out);
+        assertThat(out).isEqualTo("{\"id\":\"/rule-units/org.kie.kogito.quarkus.drools.AnotherService\"}");
         Map m = mapper.convertValue(mdc, Map.class);
-        assertEquals(Map.of("id", path), m);
+        assertThat(m).isEqualTo(Map.of("id", path));
     }
 
     @Test
@@ -61,6 +61,6 @@ public class RuleUnitMetaDataContextSerializationTest {
         RuleUnitMetaDataContext mdc = RuleUnitMetaDataContext.of(id);
         ExtendedDataContext edc = ExtendedDataContext.of(mdc, EmptyDataContext.Instance);
         String out = mapper.writeValueAsString(edc);
-        assertEquals("{\"meta\":{\"id\":\"/rule-units/org.kie.kogito.quarkus.drools.AnotherService\"},\"data\":{}}", out);
+        assertThat(out).isEqualTo("{\"meta\":{\"id\":\"/rule-units/org.kie.kogito.quarkus.drools.AnotherService\"},\"data\":{}}");
     }
 }

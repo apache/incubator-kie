@@ -49,10 +49,9 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.test.utils.JsonSchemaMatchers.matchesJsonSchemaInClasspath;
 
 @ExtendWith(SpringExtension.class)
@@ -231,7 +230,7 @@ public class TaskTest extends BaseRestTest {
                 .then()
                 .statusCode(200);
 
-        assertEquals(commentText, given().contentType(ContentType.JSON)
+        String commentContent = given().contentType(ContentType.JSON)
                 .when()
                 .queryParam("user", "admin")
                 .queryParam("group", "managers")
@@ -239,7 +238,8 @@ public class TaskTest extends BaseRestTest {
                 .pathParam("commentId", commentId)
                 .get("/usertasks/instance/{taskId}/comments/{commentId}")
                 .then()
-                .statusCode(200).extract().path("content"));
+                .statusCode(200).extract().path("content");
+        assertThat(commentContent).isEqualTo(commentText);
 
         given().contentType(ContentType.JSON)
                 .when()
@@ -353,7 +353,7 @@ public class TaskTest extends BaseRestTest {
                 .path("[0].id");
 
         Map<String, Object> model = Collections.singletonMap("approved", true);
-        assertEquals(model, given().contentType(ContentType.JSON)
+        assertThat(given().contentType(ContentType.JSON)
                 .when()
                 .queryParam("user", "admin")
                 .queryParam("group", "managers")
@@ -364,9 +364,9 @@ public class TaskTest extends BaseRestTest {
                 .then()
                 .statusCode(200)
                 .extract()
-                .as(Map.class));
+                .as(Map.class)).isEqualTo(model);
 
-        assertEquals(true, given().contentType(ContentType.JSON)
+        Boolean approved = given().contentType(ContentType.JSON)
                 .when()
                 .queryParam("user", "admin")
                 .queryParam("group", "managers")
@@ -376,7 +376,8 @@ public class TaskTest extends BaseRestTest {
                 .then()
                 .statusCode(200)
                 .extract()
-                .path("results.approved"));
+                .path("results.approved");
+        assertThat(approved).isTrue();
     }
 
     @Test

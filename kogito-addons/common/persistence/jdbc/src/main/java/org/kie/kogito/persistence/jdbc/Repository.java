@@ -48,6 +48,7 @@ abstract class Repository {
     static final String ROOT_PROCESS_VERSION_IS_NULL = "and root_process_version is null";
     static final String FIND_ALL_WAITING_FOR_EVENT_TYPE =
             "SELECT process_instances.id, payload, process_id, process_version, root_process_id, root_process_version, version FROM event_types, process_instances WHERE process_instances.id = event_types.process_instance_id AND process_id = ? AND event_type = ?";
+    static final String FIND_EVENT_TYPES_BY_PROCESS_INSTANCE_ID = "SELECT event_type FROM event_types WHERE process_instance_id = ?";
     static final String DELETE_ALL_WAITING_FOR_EVENT_TYPE = "DELETE FROM event_types WHERE process_instance_id = ?";
     static final String INSERT_WAITING_FOR_EVENT_TYPE = "INSERT INTO event_types (process_instance_id, event_type) VALUES(?,?)";
 

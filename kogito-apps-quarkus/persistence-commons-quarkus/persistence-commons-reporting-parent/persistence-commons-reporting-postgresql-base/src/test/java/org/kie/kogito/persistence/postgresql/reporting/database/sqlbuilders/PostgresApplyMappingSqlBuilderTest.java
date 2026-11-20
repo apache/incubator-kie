@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class PostgresApplyMappingSqlBuilderTest extends BaseSqlBuilderImplTest {
@@ -41,7 +41,7 @@ class PostgresApplyMappingSqlBuilderTest extends BaseSqlBuilderImplTest {
 
     @Override
     protected void assertCreateSql(final String sql) {
-        assertNotNull(sql);
+        assertThat(sql).isNotNull();
         assertSequentialContent(sql,
                 "UPDATE sourceTableName ",
                 "SET id = id, ",

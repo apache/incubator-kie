@@ -225,7 +225,7 @@ public class KafkaProcessInstancesIT {
         ProcessInstance<BpmnVariables> processInstance = process.createInstance(BpmnVariables.create(singletonMap("test", "test")));
 
         processInstance.start();
-        assertEquals(STATE_ACTIVE, processInstance.status());
+        assertThat(processInstance.status()).isEqualTo(STATE_ACTIVE);
 
         awaitTillOne(instances);
 
@@ -236,9 +236,9 @@ public class KafkaProcessInstancesIT {
         List<WorkItem> workItems = processInstance.workItems(asJohn);
         assertThat(workItems).hasSize(1);
         WorkItem workItem = workItems.get(0);
-        assertEquals("john", workItem.getParameters().get("ActorId"));
+        assertThat(workItem.getParameters().get("ActorId")).isEqualTo("john");
         processInstance.completeWorkItem(workItem.getId(), null, asJohn);
-        assertEquals(STATE_COMPLETED, processInstance.status());
+        assertThat(processInstance.status()).isEqualTo(STATE_COMPLETED);
         awaitTillEmpty(instances);
     }
 

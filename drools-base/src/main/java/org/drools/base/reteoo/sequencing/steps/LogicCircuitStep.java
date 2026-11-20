@@ -37,8 +37,12 @@ public class LogicCircuitStep extends AbstractStep implements Step {
     }
 
     public void activate(SequenceMemory sequenceMemory, ValueResolver valueResolver) {
+        int thisStepIndex = sequenceMemory.getStep();
         for (LogicGate gate : circuit.getGates()) {
-            gate.activate(sequenceMemory);
+            if (sequenceMemory.getStep() != thisStepIndex) {
+                break;
+            }
+            gate.activate(sequenceMemory, valueResolver);
         }
     }
 

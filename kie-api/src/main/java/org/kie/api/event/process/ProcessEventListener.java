@@ -146,6 +146,8 @@ public interface ProcessEventListener
      * Invoked right after a process instance is modified.
      *
      * @param event the non-null {@link ProcessStateChangeEvent}
+     * @since 10.2.0
+     * @apiNote Use for SLA timer re-scheduling notifications
      */
     default void onProcessStateChanged(ProcessStateChangeEvent event) {}
 
@@ -153,6 +155,8 @@ public interface ProcessEventListener
      * Invoked right after a node in a process instance is modified.
      *
      * @param event the non-null {@link ProcessNodeStateChangeEvent}
+     * @since 10.2.0
+     * @apiNote Use for SLA timer re-scheduling notifications
      */
     default void onNodeStateChanged(ProcessNodeStateChangeEvent event) {}
 }

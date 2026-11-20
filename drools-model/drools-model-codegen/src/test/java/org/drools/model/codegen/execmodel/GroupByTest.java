@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 public class GroupByTest extends BaseModelTest {
 
@@ -55,14 +55,14 @@ public class GroupByTest extends BaseModelTest {
             KieSession ksession = getKieSession(testRunType, ruleString);
             kieSessionConsumer.accept(ksession);
         } else {
-            assertAll(() -> {
+            assertThatCode(() -> {
                         KieSession ksession = getKieSession(testRunType, "dialect \"java\";\n" + ruleString);
                         kieSessionConsumer.accept(ksession);
-                    },
-                    () -> {
+                    }).doesNotThrowAnyException();
+            assertThatCode(() -> {
                         KieSession ksession = getKieSession(testRunType, "dialect \"mvel\";\n" + ruleString);
                         kieSessionConsumer.accept(ksession);
-                    });
+                    }).doesNotThrowAnyException();
         }
     }
 

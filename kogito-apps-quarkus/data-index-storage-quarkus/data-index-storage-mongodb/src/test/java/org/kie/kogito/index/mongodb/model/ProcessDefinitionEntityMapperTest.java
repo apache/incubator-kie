@@ -26,7 +26,7 @@ import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.persistence.mongodb.model.ModelUtils;
 
 import static java.util.Collections.singleton;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 
 class ProcessDefinitionEntityMapperTest {
@@ -60,32 +60,32 @@ class ProcessDefinitionEntityMapperTest {
 
     @Test
     void testGetEntityClass() {
-        assertEquals(ProcessDefinitionEntity.class, mapper.getEntityClass());
+        assertThat(mapper.getEntityClass()).isEqualTo(ProcessDefinitionEntity.class);
     }
 
     @Test
     void testMapToEntity() {
         ProcessDefinitionEntity result = mapper.mapToEntity(pd.getId(), pd);
-        assertEquals(entity, result);
+        assertThat(result).isEqualTo(entity);
     }
 
     @Test
     void testMapToModel() {
         ProcessDefinition result = mapper.mapToModel(entity);
-        assertEquals(pd, result);
+        assertThat(result).isEqualTo(pd);
     }
 
     @Test
     void testConvertToMongoAttribute() {
-        assertEquals(MONGO_ID, mapper.convertToMongoAttribute(MONGO_ID));
+        assertThat(mapper.convertToMongoAttribute(MONGO_ID)).isEqualTo(MONGO_ID);
         String testAttribute = "testAttribute";
-        assertEquals(testAttribute, mapper.convertToMongoAttribute(testAttribute));
+        assertThat(mapper.convertToMongoAttribute(testAttribute)).isEqualTo(testAttribute);
     }
 
     @Test
     void testConvertToModelAttribute() {
-        assertEquals(ModelUtils.ID, mapper.convertToModelAttribute(ModelUtils.ID));
+        assertThat(mapper.convertToModelAttribute(ModelUtils.ID)).isEqualTo(ModelUtils.ID);
         String testAttribute = "test.attribute.go";
-        assertEquals(testAttribute, mapper.convertToModelAttribute(testAttribute));
+        assertThat(mapper.convertToModelAttribute(testAttribute)).isEqualTo(testAttribute);
     }
 }

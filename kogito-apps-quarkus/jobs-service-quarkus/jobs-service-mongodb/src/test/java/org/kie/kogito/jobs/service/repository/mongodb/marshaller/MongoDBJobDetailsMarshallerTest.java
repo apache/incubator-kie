@@ -33,7 +33,7 @@ import org.kie.kogito.timer.impl.PointInTimeTrigger;
 
 import io.vertx.core.json.JsonObject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.jobs.service.utils.DateUtil.DEFAULT_ZONE;
 
 class MongoDBJobDetailsMarshallerTest {
@@ -84,6 +84,6 @@ class MongoDBJobDetailsMarshallerTest {
                         .put("nextFireTime", trigger.hasNextFireTime().getTime())
                         .put("classType", PointInTimeTrigger.class.getName()));
 
-        assertEquals(jobDetails, mongoDBJobDetailsMarshaller.unmarshall(jsonObject));
+        assertThat(mongoDBJobDetailsMarshaller.unmarshall(jsonObject)).isEqualTo(jobDetails);
     }
 }

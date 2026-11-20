@@ -19,10 +19,11 @@
 
 package org.optaplanner.quarkus.benchmark.it;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -45,15 +46,16 @@ class OptaPlannerBenchmarkTestResourceTest {
                 .when()
                 .post("/optaplanner/test/benchmark")
                 .body().asString();
-        Assertions.assertNotNull(benchmarkResultDirectory);
+        assertThat(benchmarkResultDirectory).isNotNull();
         Path benchmarkResultDirectoryPath = Path.of(benchmarkResultDirectory);
-        Assertions.assertTrue(Files.isDirectory(benchmarkResultDirectoryPath));
+        assertThat(Files.isDirectory(benchmarkResultDirectoryPath)).isTrue();
         Path benchmarkResultPath = Files.walk(benchmarkResultDirectoryPath, 2)
                 .filter(path -> path.endsWith("plannerBenchmarkResult.xml")).findFirst().orElseThrow();
-        Assertions.assertTrue(Files.isRegularFile(benchmarkResultPath));
+        assertThat(Files.isRegularFile(benchmarkResultPath)).isTrue();
         XmlPath xmlPath = XmlPath.from(benchmarkResultPath.toFile());
-        Assertions.assertTrue(xmlPath.getBoolean(
-                "plannerBenchmarkResult.solverBenchmarkResult.singleBenchmarkResult.subSingleBenchmarkResult.succeeded"));
+        assertThat(xmlPath.getBoolean(
+                "plannerBenchmarkResult.solverBenchmarkResult.singleBenchmarkResult.subSingleBenchmarkResult.succeeded"))
+                .isTrue();
     }
 
 }

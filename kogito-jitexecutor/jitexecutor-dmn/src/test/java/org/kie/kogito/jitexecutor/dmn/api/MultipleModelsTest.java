@@ -61,7 +61,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.jitexecutor.dmn.TestingUtils.getModelFromIoUtils;
 import static org.kie.kogito.jitexecutor.dmn.api.JITDMNResourceTest.EVALUATION_HIT_IDS_FIELD_NAME;
 import static org.kie.kogito.jitexecutor.dmn.api.JITDMNResourceTest.buildMultipleHitContext;
@@ -253,7 +252,7 @@ public class MultipleModelsTest {
                 .asString();
         LOG.info("Validate response: {}", response);
         List<JITDMNMessage> messages = MAPPER.readValue(response, LIST_OF_MSGS);
-        assertEquals(1, messages.size());
+        assertThat(messages.size()).isEqualTo(1);
         assertThat(messages.get(0)).hasFieldOrPropertyWithValue("path", IMPORTING_MODEL_URI);
     }
 

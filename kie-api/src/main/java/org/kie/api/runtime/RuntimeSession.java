@@ -22,6 +22,12 @@ import org.kie.api.KieBase;
 
 import java.util.Map;
 
+/**
+ * Common interface for runtime session operations shared by stateful and stateless sessions.
+ * @since 10.1.0
+ * @apiNote Use this interface when writing code that works with both KieRuntime
+ *          and StatelessKieSession to avoid coupling to specific session types.
+ */
 public interface RuntimeSession extends CommandExecutor {
 
     /**

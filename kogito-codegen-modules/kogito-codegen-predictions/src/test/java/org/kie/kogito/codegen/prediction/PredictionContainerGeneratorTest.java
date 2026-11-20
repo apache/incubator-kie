@@ -40,9 +40,7 @@ import org.kie.pmml.commons.model.KiePMMLModel;
 
 import com.github.javaparser.ast.CompilationUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.pmml.CommonTestUtility.getKiePMMLModelInternal;
 
 class PredictionContainerGeneratorTest {
@@ -57,25 +55,25 @@ class PredictionContainerGeneratorTest {
                 JavaKogitoBuildContext.builder().build(),
                 APP_CANONICAL_NAME,
                 PMML_RESOURCES);
-        assertNotNull(predictionContainerGenerator);
+        assertThat(predictionContainerGenerator).isNotNull();
     }
 
     @Test
     void constructor() {
-        assertEquals(APP_CANONICAL_NAME, predictionContainerGenerator.applicationCanonicalName);
-        assertEquals(PMML_RESOURCES, predictionContainerGenerator.resources);
+        assertThat(predictionContainerGenerator.applicationCanonicalName).isEqualTo(APP_CANONICAL_NAME);
+        assertThat(predictionContainerGenerator.resources).isEqualTo(PMML_RESOURCES);
     }
 
     @Test
     void classDeclaration() {
         CompilationUnit retrieved = predictionContainerGenerator.compilationUnit();
-        assertNotNull(retrieved);
+        assertThat(retrieved).isNotNull();
         String retrievedString = retrieved.toString();
         String expected = PMML_RESOURCES
                 .stream()
                 .map(pmmlResource -> "\"" + pmmlResource.getModelPath() + "\"")
                 .collect(Collectors.joining(", "));
-        assertTrue(retrievedString.contains(expected));
+        assertThat(retrievedString.contains(expected)).isTrue();
 
     }
 

@@ -116,6 +116,13 @@ public interface KieCommands extends KieService {
                      String name,
                      Object[] arguments);
 
+    /**
+     * Creates a batch execution command from varargs.
+     * @param commands the commands to execute
+     * @return the batch execution command
+     * @since 10.1.0
+     * @apiNote Convenience method for varargs instead of List
+     */
     default BatchExecutionCommand newBatchExecution(Command... commands) {
         return newBatchExecution( asList(commands) );
     }
@@ -136,7 +143,17 @@ public interface KieCommands extends KieService {
     Command<FactHandle> fromExternalFactHandleCommand(String factHandleExternalForm, boolean disconnected);
 
     Command newAgendaGroupSetFocus(String name);
-    
+
+    /**
+     * Creates a command that activates the given ruleflow-group.
+     * @param name the name of the ruleflow-group to activate
+     * @return the command
+     * @since 10.4.0
+     * @apiNote Equivalent to {@code ksession.getAgenda().getRuleFlowGroup(name).activate()}.
+     *          This is the ruleflow-group counterpart of {@link #newAgendaGroupSetFocus(String)}.
+     */
+    Command newActivateRuleFlowGroup(String name);
+
     Command newGetFactHandles();
 
     Command newGetFactHandles(String outIdentifier);
@@ -151,6 +168,13 @@ public interface KieCommands extends KieService {
     Command<Long> newAdvanceSessionTime(long amount, TimeUnit unit);
     Command<Long> newAdvanceSessionTime(long amount, TimeUnit unit, String outIdentifier);
 
+    /**
+     * Creates a command to apply a PMML model.
+     * @param request the PMML request data as a Map
+     * @return the command
+     * @since 10.2.0
+     * @apiNote Replaces deprecated newApplyPmmlModel(PMMLRequestData). Convert PMMLRequestData to Map before calling.
+     */
     Command newApplyPmmlModel(Map<String, Object> request);
 
     ExecutionResults newExecutionResults();

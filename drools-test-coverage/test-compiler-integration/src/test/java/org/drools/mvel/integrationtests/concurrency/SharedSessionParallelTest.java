@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import org.drools.mvel.integrationtests.facts.BeanA;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;

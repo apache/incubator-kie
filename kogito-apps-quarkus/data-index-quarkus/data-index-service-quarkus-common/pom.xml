@@ -105,7 +105,12 @@
       <artifactId>json-unit-assertj</artifactId>
       <scope>test</scope>
     </dependency>
-  </dependencies>
+      <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+</dependencies>
   <build>
     <plugins>
       <plugin>

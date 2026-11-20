@@ -24,7 +24,6 @@
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.*;
@@ -99,7 +98,7 @@ public class CiComputeBuildScopesTest {
         Path actualChanged  = tmp.resolve("changed.txt");
 
         int rc = runScript(changedFiles, actualUpstream, actualAffected, actualChanged);
-        Assertions.assertEquals(0, rc, "CiComputeBuildScopes exited with rc=" + rc);
+        assertThat(rc).as("CiComputeBuildScopes exited with rc=" + rc).isZero();
 
         assertMatchesGolden(scenario, "upstream", actualUpstream);
         assertMatchesGolden(scenario, "affected", actualAffected);
@@ -108,9 +107,9 @@ public class CiComputeBuildScopesTest {
 
     private static void assertMatchesGolden(Path scenario, String label, Path actual) throws IOException {
         Path expected = scenario.resolve("expected-" + label + ".txt");
-        Assertions.assertTrue(
-                Files.isRegularFile(expected),
-                label + " golden missing: " + expected + "\n(run with CI_UPDATE_GOLDEN=1 to generate it)");
+        assertThat(Files.isRegularFile(expected))
+                .as(label + " golden missing: " + expected + "\n(run with CI_UPDATE_GOLDEN=1 to generate it)")
+                .isTrue();
         assertThat(Files.readAllLines(actual))
                 .as(label)
                 .containsExactlyInAnyOrderElementsOf(Files.readAllLines(expected));

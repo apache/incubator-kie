@@ -33,7 +33,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * This test also covers the queryServiceByName method from {@link ServiceUtils}
@@ -60,7 +60,7 @@ public class KubernetesResourceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = kubernetesResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.10:80", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.10:80");
     }
 
     @Test
@@ -76,7 +76,7 @@ public class KubernetesResourceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = kubernetesResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.10:8089", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.10:8089");
     }
 
     @Test
@@ -89,7 +89,7 @@ public class KubernetesResourceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = kubernetesResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.10:80", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.10:80");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class KubernetesResourceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
         Optional<String> url = kubernetesResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://my-public.domain.org:80", url.get());
+        assertThat(url.get()).isEqualTo("http://my-public.domain.org:80");
     }
 
     @Test
@@ -112,8 +112,7 @@ public class KubernetesResourceDiscoveryTest {
 
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
-        assertEquals(Optional.empty(),
-                kubernetesResourceDiscovery.query(KubernetesResourceUri.parse("services.v1/" + namespace + "/service-1")));
+        assertThat(kubernetesResourceDiscovery.query(KubernetesResourceUri.parse("services.v1/" + namespace + "/service-1"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -124,8 +123,7 @@ public class KubernetesResourceDiscoveryTest {
 
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, Service.class);
 
-        assertEquals(Optional.empty(),
-                kubernetesResourceDiscovery.query(KubernetesResourceUri.parse("services.v1/" + namespace + "/process-quarkus-example-pod-clusterip-svc")));
+        assertThat(kubernetesResourceDiscovery.query(KubernetesResourceUri.parse("services.v1/" + namespace + "/process-quarkus-example-pod-clusterip-svc"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -139,7 +137,7 @@ public class KubernetesResourceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, service, "default", Service.class);
 
         Optional<String> url = kubernetesResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://10.10.10.10:80", url.get());
+        assertThat(url.get()).isEqualTo("http://10.10.10.10:80");
     }
 
     @Test
@@ -152,8 +150,7 @@ public class KubernetesResourceDiscoveryTest {
 
         KubeTestUtils.createWithStatusPreserved(client, service, namespace, io.fabric8.knative.serving.v1.Service.class);
 
-        assertEquals(Optional.empty(),
-                kubernetesResourceDiscovery.query(KubernetesResourceUri.parse("services.v1.serving.knative.dev/" + namespace + "/invalid")));
+        assertThat(kubernetesResourceDiscovery.query(KubernetesResourceUri.parse("services.v1.serving.knative.dev/" + namespace + "/invalid"))).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -166,6 +163,6 @@ public class KubernetesResourceDiscoveryTest {
         KubeTestUtils.createWithStatusPreserved(client, kService, namespace, io.fabric8.knative.serving.v1.Service.class);
 
         Optional<String> url = kubernetesResourceDiscovery.query(kubeURI).map(URI::toString);
-        assertEquals("http://serverless-workflow-greeting-quarkus.default.10.99.154.147.sslip.io", url.get());
+        assertThat(url.get()).isEqualTo("http://serverless-workflow-greeting-quarkus.default.10.99.154.147.sslip.io");
     }
 }

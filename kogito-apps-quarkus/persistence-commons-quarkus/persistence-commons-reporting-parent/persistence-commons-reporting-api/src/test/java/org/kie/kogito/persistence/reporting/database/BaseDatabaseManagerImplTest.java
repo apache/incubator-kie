@@ -52,10 +52,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -287,13 +284,13 @@ class BaseDatabaseManagerImplTest {
     }
 
     private void assertPostgresContext(final TestContext context) {
-        assertEquals(context.getMappingId(), DEFINITION.getMappingId());
-        assertEquals(context.getSourceTableName(), DEFINITION.getSourceTableName());
-        assertEquals(context.getSourceTableIdentityFields(), DEFINITION.getSourceTableIdentityFields());
-        assertEquals(context.getSourceTablePartitionFields(), DEFINITION.getSourceTablePartitionFields());
-        assertEquals(context.getSourceTableJsonFieldName(), DEFINITION.getSourceTableJsonFieldName());
-        assertEquals(context.getTargetTableName(), DEFINITION.getTargetTableName());
-        assertEquals(context.getFieldMappings(), DEFINITION.getFieldMappings());
+        assertThat(DEFINITION.getMappingId()).isEqualTo(context.getMappingId());
+        assertThat(DEFINITION.getSourceTableName()).isEqualTo(context.getSourceTableName());
+        assertThat(DEFINITION.getSourceTableIdentityFields()).isEqualTo(context.getSourceTableIdentityFields());
+        assertThat(DEFINITION.getSourceTablePartitionFields()).isEqualTo(context.getSourceTablePartitionFields());
+        assertThat(DEFINITION.getSourceTableJsonFieldName()).isEqualTo(context.getSourceTableJsonFieldName());
+        assertThat(DEFINITION.getTargetTableName()).isEqualTo(context.getTargetTableName());
+        assertThat(DEFINITION.getFieldMappings()).isEqualTo(context.getFieldMappings());
     }
 
     @Test
@@ -304,17 +301,17 @@ class BaseDatabaseManagerImplTest {
                         String.class));
 
         final List<PathSegment> segments = manager.parsePathSegments(List.of(mapping));
-        assertNotNull(segments);
-        assertEquals(1, segments.size());
+        assertThat(segments).isNotNull();
+        assertThat(segments.size()).isEqualTo(1);
 
         final PathSegment segment1a = segments.get(0);
-        assertNull(segment1a.getParent());
-        assertTrue(segment1a.getChildren().isEmpty());
-        assertEquals("field1", segment1a.getSegment());
-        assertTrue(segment1a instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment1a.getParent()).isNull();
+        assertThat(segment1a.getChildren().isEmpty()).isTrue();
+        assertThat(segment1a.getSegment()).isEqualTo("field1");
+        assertThat((segment1a instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal1a = (TerminalPathSegment<?, ?, ?>) segment1a;
-        assertEquals(mapping, terminal1a.getMapping());
+        assertThat(terminal1a.getMapping()).isEqualTo(mapping);
     }
 
     @Test
@@ -325,22 +322,22 @@ class BaseDatabaseManagerImplTest {
                         String.class));
 
         final List<PathSegment> segments = manager.parsePathSegments(List.of(mapping));
-        assertNotNull(segments);
-        assertEquals(1, segments.size());
+        assertThat(segments).isNotNull();
+        assertThat(segments.size()).isEqualTo(1);
 
         final PathSegment segment1a = segments.get(0);
-        assertNull(segment1a.getParent());
-        assertEquals(1, segment1a.getChildren().size());
-        assertEquals("field1", segment1a.getSegment());
+        assertThat(segment1a.getParent()).isNull();
+        assertThat(segment1a.getChildren().size()).isEqualTo(1);
+        assertThat(segment1a.getSegment()).isEqualTo("field1");
 
         final PathSegment segment1b = segment1a.getChildren().get(0);
-        assertEquals(segment1a, segment1b.getParent());
-        assertTrue(segment1b.getChildren().isEmpty());
-        assertEquals("field2", segment1b.getSegment());
-        assertTrue(segment1b instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment1b.getParent()).isEqualTo(segment1a);
+        assertThat(segment1b.getChildren().isEmpty()).isTrue();
+        assertThat(segment1b.getSegment()).isEqualTo("field2");
+        assertThat((segment1b instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal1b = (TerminalPathSegment<?, ?, ?>) segment1b;
-        assertEquals(mapping, terminal1b.getMapping());
+        assertThat(terminal1b.getMapping()).isEqualTo(mapping);
     }
 
     @Test
@@ -356,31 +353,31 @@ class BaseDatabaseManagerImplTest {
                         String.class));
 
         final List<PathSegment> segments = manager.parsePathSegments(List.of(mapping1, mapping2));
-        assertNotNull(segments);
-        assertEquals(2, segments.size());
+        assertThat(segments).isNotNull();
+        assertThat(segments.size()).isEqualTo(2);
 
         final PathSegment segment1a = segments.get(0);
-        assertNull(segment1a.getParent());
-        assertEquals(1, segment1a.getChildren().size());
-        assertEquals("field1", segment1a.getSegment());
+        assertThat(segment1a.getParent()).isNull();
+        assertThat(segment1a.getChildren().size()).isEqualTo(1);
+        assertThat(segment1a.getSegment()).isEqualTo("field1");
 
         final PathSegment segment1b = segment1a.getChildren().get(0);
-        assertEquals(segment1a, segment1b.getParent());
-        assertTrue(segment1b.getChildren().isEmpty());
-        assertEquals("field2", segment1b.getSegment());
-        assertTrue(segment1b instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment1b.getParent()).isEqualTo(segment1a);
+        assertThat(segment1b.getChildren().isEmpty()).isTrue();
+        assertThat(segment1b.getSegment()).isEqualTo("field2");
+        assertThat((segment1b instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal1b = (TerminalPathSegment<?, ?, ?>) segment1b;
-        assertEquals(mapping1, terminal1b.getMapping());
+        assertThat(terminal1b.getMapping()).isEqualTo(mapping1);
 
         final PathSegment segment2a = segments.get(1);
-        assertNull(segment2a.getParent());
-        assertTrue(segment2a.getChildren().isEmpty());
-        assertEquals("field3", segment2a.getSegment());
-        assertTrue(segment2a instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment2a.getParent()).isNull();
+        assertThat(segment2a.getChildren().isEmpty()).isTrue();
+        assertThat(segment2a.getSegment()).isEqualTo("field3");
+        assertThat((segment2a instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal2a = (TerminalPathSegment<?, ?, ?>) segment2a;
-        assertEquals(mapping2, terminal2a.getMapping());
+        assertThat(terminal2a.getMapping()).isEqualTo(mapping2);
     }
 
     @Test
@@ -396,31 +393,31 @@ class BaseDatabaseManagerImplTest {
                         String.class));
 
         final List<PathSegment> segments = manager.parsePathSegments(List.of(mapping1, mapping2));
-        assertNotNull(segments);
-        assertEquals(1, segments.size());
+        assertThat(segments).isNotNull();
+        assertThat(segments.size()).isEqualTo(1);
 
         final PathSegment segment1a = segments.get(0);
-        assertNull(segment1a.getParent());
-        assertEquals(2, segment1a.getChildren().size());
-        assertEquals("field1", segment1a.getSegment());
+        assertThat(segment1a.getParent()).isNull();
+        assertThat(segment1a.getChildren().size()).isEqualTo(2);
+        assertThat(segment1a.getSegment()).isEqualTo("field1");
 
         final PathSegment segment1b = segment1a.getChildren().get(0);
-        assertEquals(segment1a, segment1b.getParent());
-        assertTrue(segment1b.getChildren().isEmpty());
-        assertEquals("field2", segment1b.getSegment());
-        assertTrue(segment1b instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment1b.getParent()).isEqualTo(segment1a);
+        assertThat(segment1b.getChildren().isEmpty()).isTrue();
+        assertThat(segment1b.getSegment()).isEqualTo("field2");
+        assertThat((segment1b instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal1b = (TerminalPathSegment<?, ?, ?>) segment1b;
-        assertEquals(mapping1, terminal1b.getMapping());
+        assertThat(terminal1b.getMapping()).isEqualTo(mapping1);
 
         final PathSegment segment2b = segment1a.getChildren().get(1);
-        assertEquals(segment1a, segment2b.getParent());
-        assertTrue(segment2b.getChildren().isEmpty());
-        assertEquals("field3", segment2b.getSegment());
-        assertTrue(segment2b instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment2b.getParent()).isEqualTo(segment1a);
+        assertThat(segment2b.getChildren().isEmpty()).isTrue();
+        assertThat(segment2b.getSegment()).isEqualTo("field3");
+        assertThat((segment2b instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal2b = (TerminalPathSegment<?, ?, ?>) segment2b;
-        assertEquals(mapping2, terminal2b.getMapping());
+        assertThat(terminal2b.getMapping()).isEqualTo(mapping2);
     }
 
     @Test
@@ -436,36 +433,36 @@ class BaseDatabaseManagerImplTest {
                         String.class));
 
         final List<PathSegment> segments = manager.parsePathSegments(List.of(mapping1, mapping2));
-        assertNotNull(segments);
-        assertEquals(1, segments.size());
+        assertThat(segments).isNotNull();
+        assertThat(segments.size()).isEqualTo(1);
 
         final PathSegment segment1a = segments.get(0);
-        assertNull(segment1a.getParent());
-        assertEquals(2, segment1a.getChildren().size());
-        assertEquals("field1", segment1a.getSegment());
+        assertThat(segment1a.getParent()).isNull();
+        assertThat(segment1a.getChildren().size()).isEqualTo(2);
+        assertThat(segment1a.getSegment()).isEqualTo("field1");
 
         final PathSegment segment1b = segment1a.getChildren().get(0);
-        assertEquals(segment1a, segment1b.getParent());
-        assertTrue(segment1b.getChildren().isEmpty());
-        assertEquals("field2", segment1b.getSegment());
-        assertTrue(segment1b instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment1b.getParent()).isEqualTo(segment1a);
+        assertThat(segment1b.getChildren().isEmpty()).isTrue();
+        assertThat(segment1b.getSegment()).isEqualTo("field2");
+        assertThat((segment1b instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal1b = (TerminalPathSegment<?, ?, ?>) segment1b;
-        assertEquals(mapping1, terminal1b.getMapping());
+        assertThat(terminal1b.getMapping()).isEqualTo(mapping1);
 
         final PathSegment segment2b = segment1a.getChildren().get(1);
-        assertEquals(segment1a, segment2b.getParent());
-        assertEquals(1, segment2b.getChildren().size());
-        assertEquals("field3", segment2b.getSegment());
+        assertThat(segment2b.getParent()).isEqualTo(segment1a);
+        assertThat(segment2b.getChildren().size()).isEqualTo(1);
+        assertThat(segment2b.getSegment()).isEqualTo("field3");
 
         final PathSegment segment2c = segment2b.getChildren().get(0);
-        assertEquals(segment2b, segment2c.getParent());
-        assertTrue(segment2c.getChildren().isEmpty());
-        assertEquals("field4", segment2c.getSegment());
-        assertTrue(segment2c instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment2c.getParent()).isEqualTo(segment2b);
+        assertThat(segment2c.getChildren().isEmpty()).isTrue();
+        assertThat(segment2c.getSegment()).isEqualTo("field4");
+        assertThat((segment2c instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal2c = (TerminalPathSegment<?, ?, ?>) segment2c;
-        assertEquals(mapping2, terminal2c.getMapping());
+        assertThat(terminal2c.getMapping()).isEqualTo(mapping2);
     }
 
     @Test
@@ -476,25 +473,25 @@ class BaseDatabaseManagerImplTest {
                         String.class));
 
         final List<PathSegment> segments = manager.parsePathSegments(List.of(mapping));
-        assertNotNull(segments);
-        assertEquals(1, segments.size());
+        assertThat(segments).isNotNull();
+        assertThat(segments.size()).isEqualTo(1);
 
         final PathSegment segment1a = segments.get(0);
-        assertNull(segment1a.getParent());
-        assertEquals(1, segment1a.getChildren().size());
-        assertEquals("field1[]", segment1a.getSegment());
-        assertTrue(segment1a instanceof JoinPathSegment);
+        assertThat(segment1a.getParent()).isNull();
+        assertThat(segment1a.getChildren().size()).isEqualTo(1);
+        assertThat(segment1a.getSegment()).isEqualTo("field1[]");
+        assertThat((segment1a instanceof JoinPathSegment)).isTrue();
 
         final JoinPathSegment join1a = (JoinPathSegment) segment1a;
-        assertEquals("g0", join1a.getGroupName());
+        assertThat(join1a.getGroupName()).isEqualTo("g0");
 
         final PathSegment segment1b = segment1a.getChildren().get(0);
-        assertEquals(segment1a, segment1b.getParent());
-        assertTrue(segment1b.getChildren().isEmpty());
-        assertEquals("field2", segment1b.getSegment());
-        assertTrue(segment1b instanceof TerminalPathSegment<?, ?, ?>);
+        assertThat(segment1b.getParent()).isEqualTo(segment1a);
+        assertThat(segment1b.getChildren().isEmpty()).isTrue();
+        assertThat(segment1b.getSegment()).isEqualTo("field2");
+        assertThat((segment1b instanceof TerminalPathSegment<?, ?, ?>)).isTrue();
 
         final TerminalPathSegment<?, ?, ?> terminal1b = (TerminalPathSegment<?, ?, ?>) segment1b;
-        assertEquals(mapping, terminal1b.getMapping());
+        assertThat(terminal1b.getMapping()).isEqualTo(mapping);
     }
 }

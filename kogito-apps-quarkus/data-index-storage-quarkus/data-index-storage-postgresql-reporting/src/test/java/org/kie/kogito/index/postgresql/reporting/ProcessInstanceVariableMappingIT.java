@@ -40,7 +40,6 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.transaction.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 @QuarkusTestResource(PostgreSqlQuarkusTestResource.class)
@@ -87,14 +86,14 @@ class ProcessInstanceVariableMappingIT {
 
         assertThat(results).hasSize(2);
         final ProcessInstanceVariableExtract row0 = results.get(0);
-        assertEquals("pi0", row0.id);
-        assertEquals("Michael", row0.firstName);
-        assertEquals("Anstis", row0.lastName);
+        assertThat(row0.id).isEqualTo("pi0");
+        assertThat(row0.firstName).isEqualTo("Michael");
+        assertThat(row0.lastName).isEqualTo("Anstis");
 
         final ProcessInstanceVariableExtract row1 = results.get(1);
-        assertEquals("pi1", row1.id);
-        assertEquals("Keith", row1.firstName);
-        assertEquals("Flint", row1.lastName);
+        assertThat(row1.id).isEqualTo("pi1");
+        assertThat(row1.firstName).isEqualTo("Keith");
+        assertThat(row1.lastName).isEqualTo("Flint");
     }
 
     @Entity

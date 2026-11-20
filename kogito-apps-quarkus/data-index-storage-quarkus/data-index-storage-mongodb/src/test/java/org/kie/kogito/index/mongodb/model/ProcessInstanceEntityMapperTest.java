@@ -33,7 +33,7 @@ import org.kie.kogito.persistence.mongodb.model.ModelUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MAPPER;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.jsonNodeToDocument;
@@ -165,46 +165,42 @@ class ProcessInstanceEntityMapperTest {
 
     @Test
     void testGetEntityClass() {
-        assertEquals(ProcessInstanceEntity.class, processInstanceEntityMapper.getEntityClass());
+        assertThat(processInstanceEntityMapper.getEntityClass()).isEqualTo(ProcessInstanceEntity.class);
     }
 
     @Test
     void testMapToEntity() {
         ProcessInstanceEntity result = processInstanceEntityMapper.mapToEntity(processInstance.getId(), processInstance);
-        assertEquals(processInstanceEntity, result);
+        assertThat(result).isEqualTo(processInstanceEntity);
     }
 
     @Test
     void testMapToModel() {
         ProcessInstance result = processInstanceEntityMapper.mapToModel(processInstanceEntity);
-        assertEquals(processInstance, result);
+        assertThat(result).isEqualTo(processInstance);
     }
 
     @Test
     void testConvertToMongoAttribute() {
-        assertEquals(MONGO_ID, processInstanceEntityMapper.convertToMongoAttribute(ModelUtils.ID));
+        assertThat(processInstanceEntityMapper.convertToMongoAttribute(ModelUtils.ID)).isEqualTo(MONGO_ID);
 
-        assertEquals(ProcessInstanceEntityMapper.MONGO_NODES_ID_ATTRIBUTE,
-                processInstanceEntityMapper.convertToMongoAttribute(ProcessInstanceEntityMapper.NODES_ID_ATTRIBUTE));
+        assertThat(processInstanceEntityMapper.convertToMongoAttribute(ProcessInstanceEntityMapper.NODES_ID_ATTRIBUTE)).isEqualTo(ProcessInstanceEntityMapper.MONGO_NODES_ID_ATTRIBUTE);
 
-        assertEquals(ProcessInstanceEntityMapper.MONGO_MILESTONES_ID_ATTRIBUTE,
-                processInstanceEntityMapper.convertToMongoAttribute(ProcessInstanceEntityMapper.MILESTONES_ID_ATTRIBUTE));
+        assertThat(processInstanceEntityMapper.convertToMongoAttribute(ProcessInstanceEntityMapper.MILESTONES_ID_ATTRIBUTE)).isEqualTo(ProcessInstanceEntityMapper.MONGO_MILESTONES_ID_ATTRIBUTE);
 
         String testAttribute = "testAttribute";
-        assertEquals(testAttribute, processInstanceEntityMapper.convertToMongoAttribute(testAttribute));
+        assertThat(processInstanceEntityMapper.convertToMongoAttribute(testAttribute)).isEqualTo(testAttribute);
     }
 
     @Test
     void testConvertToModelAttribute() {
-        assertEquals(ModelUtils.ID, processInstanceEntityMapper.convertToModelAttribute(MONGO_ID));
+        assertThat(processInstanceEntityMapper.convertToModelAttribute(MONGO_ID)).isEqualTo(ModelUtils.ID);
 
-        assertEquals(ModelUtils.ID,
-                processInstanceEntityMapper.convertToModelAttribute(ProcessInstanceEntityMapper.MONGO_NODES_ID_ATTRIBUTE));
+        assertThat(processInstanceEntityMapper.convertToModelAttribute(ProcessInstanceEntityMapper.MONGO_NODES_ID_ATTRIBUTE)).isEqualTo(ModelUtils.ID);
 
-        assertEquals(ModelUtils.ID,
-                processInstanceEntityMapper.convertToModelAttribute(ProcessInstanceEntityMapper.MONGO_MILESTONES_ID_ATTRIBUTE));
+        assertThat(processInstanceEntityMapper.convertToModelAttribute(ProcessInstanceEntityMapper.MONGO_MILESTONES_ID_ATTRIBUTE)).isEqualTo(ModelUtils.ID);
 
         String testAttribute = "test.attribute.go";
-        assertEquals("go", processInstanceEntityMapper.convertToModelAttribute(testAttribute));
+        assertThat(processInstanceEntityMapper.convertToModelAttribute(testAttribute)).isEqualTo("go");
     }
 }

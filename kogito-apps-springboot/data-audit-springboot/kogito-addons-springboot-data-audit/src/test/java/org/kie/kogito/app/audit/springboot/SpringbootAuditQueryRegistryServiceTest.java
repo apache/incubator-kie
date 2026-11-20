@@ -46,7 +46,6 @@ import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.kogito.app.audit.quarkus.DataAuditTestUtils.deriveNewState;
 import static org.kie.kogito.app.audit.quarkus.DataAuditTestUtils.newJobEvent;
 import static org.kie.kogito.app.audit.quarkus.DataAuditTestUtils.newProcessInstanceStateEvent;
@@ -280,7 +279,7 @@ public class SpringbootAuditQueryRegistryServiceTest {
                 .statusCode(200)
                 .extract().asString();
 
-        assertEquals(graphQLAfter, graphQLBefore);
+        assertThat(graphQLBefore).isEqualTo(graphQLAfter);
         Assertions.assertThat(graphQLAfter).doesNotContain("ErrorSQLQuery");
 
         Assertions.assertThat(DataAuditStoreProxyService.newAuditStoreService().findQueries(contextFactory.newDataAuditContext()))
@@ -335,7 +334,7 @@ public class SpringbootAuditQueryRegistryServiceTest {
                 .statusCode(200)
                 .extract().asString();
 
-        assertEquals(graphQLAfter, graphQLBefore);
+        assertThat(graphQLBefore).isEqualTo(graphQLAfter);
         Assertions.assertThat(graphQLAfter).doesNotContain("ErrorGraphQLQuery");
 
         Assertions.assertThat(DataAuditStoreProxyService.newAuditStoreService().findQueries(contextFactory.newDataAuditContext()))

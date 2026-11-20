@@ -41,6 +41,7 @@ public enum PrototypesOption implements SingleValueRuleBaseOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return PROPERTY_NAME;
     }

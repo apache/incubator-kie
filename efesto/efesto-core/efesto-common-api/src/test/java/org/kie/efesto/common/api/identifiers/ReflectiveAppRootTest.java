@@ -24,7 +24,7 @@ import org.kie.efesto.common.api.identifiers.componentroots.ComponentRootA;
 import org.kie.efesto.common.api.identifiers.componentroots.LocalComponentIdA;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ReflectiveAppRootTest {
 
@@ -68,24 +68,16 @@ class ReflectiveAppRootTest {
 
     @Test
     void getPrivateConstructorImplementation() {
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
-                () -> appRoot.get(ComponentRootPrivateConstructor.class),
-                "Expected constructor to throw, but it didn't"
-        );
-        String expectedMessage = "java.lang.NoSuchMethodException";
-        assertThat(thrown.getMessage()).startsWith(expectedMessage);
+        assertThatThrownBy(() -> appRoot.get(ComponentRootPrivateConstructor.class))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageStartingWith("java.lang.NoSuchMethodException");
     }
 
     @Test
     void getNoDefaultConstructorImplementation() {
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
-                () -> appRoot.get(ComponentRootNoDefaultConstructor.class),
-                "Expected constructor to throw, but it didn't"
-        );
-        String expectedMessage = "java.lang.NoSuchMethodException";
-        assertThat(thrown.getMessage()).startsWith(expectedMessage);
+        assertThatThrownBy(() -> appRoot.get(ComponentRootNoDefaultConstructor.class))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageStartingWith("java.lang.NoSuchMethodException");
     }
 
     private static class ComponentRootPrivateConstructor implements ComponentRoot {

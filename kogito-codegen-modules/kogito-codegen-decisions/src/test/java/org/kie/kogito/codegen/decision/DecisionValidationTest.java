@@ -23,13 +23,13 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-import org.assertj.core.api.Assertions;
 import org.drools.codegen.common.GeneratedFile;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.codegen.api.context.KogitoBuildContext;
 import org.kie.kogito.codegen.api.context.impl.JavaKogitoBuildContext;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class DecisionValidationTest {
 
@@ -49,11 +49,9 @@ public class DecisionValidationTest {
         DecisionCodegen codeGenerator = codeGenerator("src/test/resources/decision-validation-duplicateName",
                 p -> {
                 });
-        assertThrows(RuntimeException.class,
-                () -> {
-                    codeGenerator.generate();
-                },
-                "Expected Validation would have failed for defaults.");
+        assertThatThrownBy(codeGenerator::generate)
+                .as("Expected Validation would have failed for defaults.")
+                .isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -61,7 +59,7 @@ public class DecisionValidationTest {
         DecisionCodegen codeGenerator = codeGenerator("src/test/resources/decision-validation-duplicateName",
                 p -> p.setProperty(DecisionCodegen.VALIDATION_CONFIGURATION_KEY, "IGNORE"));
         Collection<GeneratedFile> files = codeGenerator.generate();
-        Assertions.assertThat(files).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(files).hasSizeGreaterThanOrEqualTo(1);
     }
 
     @Test
@@ -69,7 +67,7 @@ public class DecisionValidationTest {
         DecisionCodegen codeGenerator = codeGenerator("src/test/resources/decision-validation-duplicateName",
                 p -> p.setProperty(DecisionCodegen.VALIDATION_CONFIGURATION_KEY, "DISABLED"));
         Collection<GeneratedFile> files = codeGenerator.generate();
-        Assertions.assertThat(files).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(files).hasSizeGreaterThanOrEqualTo(1);
     }
 
     @Test
@@ -77,11 +75,9 @@ public class DecisionValidationTest {
         DecisionCodegen codeGenerator = codeGenerator("src/test/resources/decision-validation-DTsemanticError",
                 p -> {
                 });
-        assertThrows(RuntimeException.class,
-                () -> {
-                    codeGenerator.generate();
-                },
-                "Expected Validation would have failed for defaults.");
+        assertThatThrownBy(codeGenerator::generate)
+                .as("Expected Validation would have failed for defaults.")
+                .isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -89,7 +85,7 @@ public class DecisionValidationTest {
         DecisionCodegen codeGenerator = codeGenerator("src/test/resources/decision-validation-DTsemanticError",
                 p -> p.setProperty(DecisionCodegen.VALIDATION_CONFIGURATION_KEY, "IGNORE"));
         Collection<GeneratedFile> files = codeGenerator.generate();
-        Assertions.assertThat(files).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(files).hasSizeGreaterThanOrEqualTo(1);
     }
 
     @Test
@@ -97,6 +93,6 @@ public class DecisionValidationTest {
         DecisionCodegen codeGenerator = codeGenerator("src/test/resources/decision-validation-DTsemanticError",
                 p -> p.setProperty(DecisionCodegen.VALIDATION_CONFIGURATION_KEY, "DISABLED"));
         Collection<GeneratedFile> files = codeGenerator.generate();
-        Assertions.assertThat(files).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(files).hasSizeGreaterThanOrEqualTo(1);
     }
 }

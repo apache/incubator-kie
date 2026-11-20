@@ -35,9 +35,8 @@ import org.kie.kogito.persistence.postgresql.reporting.model.PostgresPartitionFi
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -73,8 +72,8 @@ class PostgresMappingServiceImplTest {
         when(storage.entries()).thenReturn(Map.of("mappingId", definition));
 
         final List<PostgresMappingDefinition> definitions = service.getAllMappingDefinitions();
-        assertEquals(1, definitions.size());
-        assertEquals(definition, definitions.get(0));
+        assertThat(definitions.size()).isEqualTo(1);
+        assertThat(definitions.get(0)).isEqualTo(definition);
     }
 
     @Test
@@ -92,15 +91,15 @@ class PostgresMappingServiceImplTest {
         when(storage.get(anyString())).thenReturn(definition);
 
         final PostgresMappingDefinition result = service.getMappingDefinitionById("mappingId");
-        assertNotNull(result);
-        assertEquals(definition, result);
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(definition);
     }
 
     @Test
     void testGetMappingDefinitionByIdWhenNotFound() {
         when(storage.containsKey(anyString())).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> service.getMappingDefinitionById("mappingId"));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.getMappingDefinitionById("mappingId"));
     }
 
     @Test
@@ -117,7 +116,7 @@ class PostgresMappingServiceImplTest {
 
         when(storage.containsKey(anyString())).thenThrow(new IllegalArgumentException());
 
-        assertThrows(IllegalArgumentException.class, () -> service.saveMappingDefinition(definition));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.saveMappingDefinition(definition));
     }
 
     @Test
@@ -155,7 +154,7 @@ class PostgresMappingServiceImplTest {
         when(storage.remove(anyString())).thenReturn(definition);
 
         final PostgresMappingDefinition deleted = service.deleteMappingDefinitionById("mappingId");
-        assertEquals(definition, deleted);
+        assertThat(deleted).isEqualTo(definition);
 
         verify(storage).remove("mappingId");
     }
@@ -164,7 +163,7 @@ class PostgresMappingServiceImplTest {
     void testDeleteMappingDefinitionByIdWhenNotFound() {
         when(storage.containsKey(anyString())).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> service.deleteMappingDefinitionById("mappingId"));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.deleteMappingDefinitionById("mappingId"));
     }
 
 }

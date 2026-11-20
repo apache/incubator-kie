@@ -50,7 +50,6 @@ public class PatternDSLSequenceTest {
 
     private final Rule rule =
             rule("seq-rule").build(
-                pattern(person),
                 sequence(
                     pattern(toy).expr("toy-filter",
                             t -> t.getName().equals("ball")),

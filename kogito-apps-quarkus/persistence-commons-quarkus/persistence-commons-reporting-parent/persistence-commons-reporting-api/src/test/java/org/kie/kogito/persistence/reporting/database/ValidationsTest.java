@@ -26,119 +26,101 @@ import org.kie.kogito.persistence.reporting.model.Field;
 import org.kie.kogito.persistence.reporting.model.PartitionField;
 import org.kie.kogito.persistence.reporting.test.TestTypes.TestMapping;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class ValidationsTest {
 
     @Test
     void testValidateMappingIdNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateMappingId(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateMappingId(null));
     }
 
     @Test
     void testValidateMappingIdBlank() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateMappingId(""));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateMappingId(""));
     }
 
     @Test
     void testValidateMappingId() {
-        assertEquals("mappingId",
-                Validations.validateMappingId("mappingId"));
+        assertThat(Validations.validateMappingId("mappingId")).isEqualTo("mappingId");
     }
 
     @Test
     void testValidateSourceTableNameNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableName(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableName(null));
     }
 
     @Test
     void testValidateSourceTableNameBlank() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableName(""));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableName(""));
     }
 
     @Test
     void testValidateSourceTableName() {
-        assertEquals("validateSourceTableName",
-                Validations.validateSourceTableName("validateSourceTableName"));
+        assertThat(Validations.validateSourceTableName("validateSourceTableName")).isEqualTo("validateSourceTableName");
     }
 
     @Test
     void testValidateSourceTableJsonFieldNameNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableJsonFieldName(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableJsonFieldName(null));
     }
 
     @Test
     void testValidateSourceTableJsonFieldNameBlank() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableJsonFieldName(""));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableJsonFieldName(""));
     }
 
     @Test
     void testValidateSourceTableJsonFieldName() {
-        assertEquals("validateSourceTableJsonFieldName",
-                Validations.validateSourceTableJsonFieldName("validateSourceTableJsonFieldName"));
+        assertThat(Validations.validateSourceTableJsonFieldName("validateSourceTableJsonFieldName")).isEqualTo("validateSourceTableJsonFieldName");
     }
 
     @Test
     void testValidateSourceTableIdentityFieldsNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableIdentityFields(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableIdentityFields(null));
     }
 
     @Test
     void testValidateSourceTableIdentityFieldsEmpty() {
         final List<Field> fields = Collections.emptyList();
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTableIdentityFields(fields));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTableIdentityFields(fields));
     }
 
     @Test
     void testValidateSourceTablePartitionFieldsNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateSourceTablePartitionFields(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateSourceTablePartitionFields(null));
     }
 
     @Test
     void testValidateSourceTablePartitionFieldsEmpty() {
         final List<PartitionField> partitionFields = Collections.emptyList();
-        assertEquals(Collections.emptyList(),
-                Validations.validateSourceTablePartitionFields(partitionFields));
+        assertThat(Validations.validateSourceTablePartitionFields(partitionFields)).isEqualTo(Collections.emptyList());
     }
 
     @Test
     void testValidateTargetTableNameNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateTargetTableName(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateTargetTableName(null));
     }
 
     @Test
     void testValidateTargetTableNameBlank() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateTargetTableName(""));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateTargetTableName(""));
     }
 
     @Test
     void testValidateTargetTableName() {
-        assertEquals("targetTableName",
-                Validations.validateTargetTableName("targetTableName"));
+        assertThat(Validations.validateTargetTableName("targetTableName")).isEqualTo("targetTableName");
     }
 
     @Test
     void testValidateTargetTableFieldsNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateFieldMappings(null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateFieldMappings(null));
     }
 
     @Test
     void testValidateTargetTableFieldsEmpty() {
         final List<TestMapping> mappings = Collections.emptyList();
-        assertThrows(IllegalArgumentException.class,
-                () -> Validations.validateFieldMappings(mappings));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> Validations.validateFieldMappings(mappings));
     }
 }

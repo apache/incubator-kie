@@ -65,7 +65,9 @@ public class DataAuditQuery {
         if (value == null) {
             return null;
         }
-        return value.replaceAll("\\R+", "_");
+        // Replace all control characters (CR, LF, tab, null byte, etc.) to prevent
+        // CWE-117 Log Forging via user-supplied input reaching the log sink.
+        return value.replaceAll("[\\p{Cntrl}]+", "_");
     }
 
 }

@@ -88,4 +88,21 @@ public class CircularArrayListTest {
         assertThat(list.toArray()).isEqualTo(new Object[] {6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
     }
 
+    @Test
+    public void testClearSlotsNullsSlotsButKeepsHead() {
+        CircularArrayList<Object> list = new CircularArrayList<>(10);
+        list.put(0, "a");
+        list.put(2, "c");
+        assertThat(list.size()).isEqualTo(3);
+
+        list.clearSlots();
+
+        assertThat(list.getOrNull(0)).isNull();
+        assertThat(list.getOrNull(2)).isNull();
+        assertThat(list.get(0)).isNull();
+        assertThat(list.get(2)).isNull();
+        assertThat(list.size()).isEqualTo(3);
+        assertThat(list.isEmpty()).isFalse();
+    }
+
 }

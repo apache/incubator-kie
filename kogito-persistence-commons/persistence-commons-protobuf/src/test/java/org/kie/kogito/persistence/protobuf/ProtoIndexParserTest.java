@@ -33,8 +33,7 @@ import org.kie.kogito.persistence.api.schema.AttributeDescriptor;
 import org.kie.kogito.persistence.api.schema.EntityIndexDescriptor;
 
 import static java.util.stream.Collectors.toMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.protobuf.ProtoIndexParser.INDEXED_ANNOTATION;
 import static org.kie.kogito.persistence.protobuf.ProtoIndexParser.configureBuilder;
 import static org.kie.kogito.persistence.protobuf.ProtoIndexParser.createAttributeDescriptor;
@@ -48,7 +47,7 @@ class ProtoIndexParserTest {
     void testConfigureBuilder() {
         Map<String, EntityIndexDescriptor> entityIndexes = createFileDescriptor().getMessageTypes().stream().map(t -> t.<EntityIndexDescriptor> getProcessedAnnotation(INDEXED_ANNOTATION))
                 .filter(Objects::nonNull).collect(toMap(EntityIndexDescriptor::getName, Function.identity()));
-        assertEquals(getValidEntityIndexDescriptors(false), entityIndexes);
+        assertThat(entityIndexes).isEqualTo(getValidEntityIndexDescriptors(false));
     }
 
     @Test
@@ -57,7 +56,7 @@ class ProtoIndexParserTest {
         FileDescriptorSource invalidFileDescriptorSource = FileDescriptorSource.fromString("invalid", "invalid");
         try {
             ctx.registerProtoFiles(invalidFileDescriptorSource);
-            fail("Failed to process invalid proto file");
+            org.assertj.core.api.Assertions.fail("Failed to process invalid proto file");
         } catch (DescriptorParserException ex) {
             // Successfully throw exception
         }
@@ -71,7 +70,7 @@ class ProtoIndexParserTest {
 
         Map<String, EntityIndexDescriptor> indexDescriptor = createEntityIndexDescriptors(fileDescriptor, entityIndexes);
 
-        assertEquals(getValidEntityIndexDescriptors(true), indexDescriptor);
+        assertThat(indexDescriptor).isEqualTo(getValidEntityIndexDescriptors(true));
     }
 
     @Test
@@ -80,7 +79,7 @@ class ProtoIndexParserTest {
                 .filter(descriptor -> "org.acme.travels.travels.Hotel".equals(descriptor.getFullName())).findAny().get().findFieldByName("room");
 
         AttributeDescriptor attributeDescriptor = createAttributeDescriptor(roomField, null);
-        assertEquals(new AttributeDescriptor("room", "string", true), attributeDescriptor);
+        assertThat(attributeDescriptor).isEqualTo(new AttributeDescriptor("room", "string", true));
     }
 
     private FileDescriptor createFileDescriptor() {

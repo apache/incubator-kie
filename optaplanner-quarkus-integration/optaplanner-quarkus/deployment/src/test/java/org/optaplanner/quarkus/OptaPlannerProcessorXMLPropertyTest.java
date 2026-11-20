@@ -19,8 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 
@@ -56,16 +55,16 @@ class OptaPlannerProcessorXMLPropertyTest {
 
     @Test
     void solverConfigXml_property() {
-        assertNotNull(solverConfig);
-        assertEquals(DomainAccessType.GIZMO, solverConfig.getDomainAccessType());
-        assertEquals(TestdataQuarkusSolution.class, solverConfig.getSolutionClass());
-        assertEquals(Collections.singletonList(TestdataQuarkusEntity.class), solverConfig.getEntityClassList());
-        assertEquals(TestdataQuarkusConstraintProvider.class,
-                solverConfig.getScoreDirectorFactoryConfig().getConstraintProviderClass());
+        assertThat(solverConfig).isNotNull();
+        assertThat(solverConfig.getDomainAccessType()).isEqualTo(DomainAccessType.GIZMO);
+        assertThat(solverConfig.getSolutionClass()).isEqualTo(TestdataQuarkusSolution.class);
+        assertThat(solverConfig.getEntityClassList()).isEqualTo(Collections.singletonList(TestdataQuarkusEntity.class));
+        assertThat(solverConfig.getScoreDirectorFactoryConfig().getConstraintProviderClass())
+                .isEqualTo(TestdataQuarkusConstraintProvider.class);
         // Properties defined in solverConfig.xml
-        assertEquals(3L, solverConfig.getTerminationConfig().getSecondsSpentLimit().longValue());
-        assertNotNull(solverFactory);
-        assertNotNull(solverFactory.buildSolver());
+        assertThat(solverConfig.getTerminationConfig().getSecondsSpentLimit().longValue()).isEqualTo(3L);
+        assertThat(solverFactory).isNotNull();
+        assertThat(solverFactory.buildSolver()).isNotNull();
     }
 
 }

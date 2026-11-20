@@ -19,11 +19,12 @@
 
 package org.optaplanner.benchmark.quarkus;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.optaplanner.benchmark.config.PlannerBenchmarkConfig;
@@ -49,10 +50,10 @@ class OptaPlannerBenchmarkProcessorPhasesTest {
 
     @Test
     void doesNotInheritPhasesFromSolverConfig() {
-        Assertions.assertEquals(2, plannerBenchmarkConfig.getSolverBenchmarkConfigList().get(0).getSolverConfig()
-                .getPhaseConfigList().size());
-        Assertions.assertEquals(3, plannerBenchmarkConfig.getSolverBenchmarkConfigList().get(1).getSolverConfig()
-                .getPhaseConfigList().size());
+        assertThat(plannerBenchmarkConfig.getSolverBenchmarkConfigList().get(0).getSolverConfig()
+                .getPhaseConfigList().size()).isEqualTo(2);
+        assertThat(plannerBenchmarkConfig.getSolverBenchmarkConfigList().get(1).getSolverConfig()
+                .getPhaseConfigList().size()).isEqualTo(3);
     }
 
 }

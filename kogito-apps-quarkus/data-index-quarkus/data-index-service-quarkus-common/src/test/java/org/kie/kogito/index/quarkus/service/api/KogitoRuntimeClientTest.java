@@ -58,11 +58,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.ABORT_PROCESS_INSTANCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.CANCEL_NODE_INSTANCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.GET_PROCESS_INSTANCE_DIAGRAM_PATH;
@@ -371,7 +367,7 @@ public class KogitoRuntimeClientTest {
 
         client.send(null, null, future, result);
 
-        assertEquals("OK", future.get());
+        assertThat(future.get()).isEqualTo("OK");
     }
 
     @Test
@@ -386,7 +382,7 @@ public class KogitoRuntimeClientTest {
 
         client.send(null, null, future, result);
 
-        assertNull(future.get());
+        assertThat(future.get()).isNull();
     }
 
     @Test
@@ -403,7 +399,7 @@ public class KogitoRuntimeClientTest {
             future.get();
             fail("Future should have failed");
         } catch (Exception ex) {
-            assertEquals("org.kie.kogito.index.service.DataIndexServiceException: FAILED: error", ex.getMessage());
+            assertThat(ex.getMessage()).isEqualTo("org.kie.kogito.index.service.DataIndexServiceException: FAILED: error");
             assertThat(ex.getCause()).isInstanceOf(DataIndexServiceException.class);
         }
     }
@@ -585,7 +581,7 @@ public class KogitoRuntimeClientTest {
         WebClientOptions webClientOptions = client.getWebClientToURLOptions(dataIndexUrl);
         assertThat(webClientOptions.getDefaultPort()).isEqualTo(80);
         assertThat(webClientOptions.getDefaultHost()).isEqualTo("service.com");
-        assertFalse(webClientOptions.isSsl());
+        assertThat(webClientOptions.isSsl()).isFalse();
     }
 
     @Test
@@ -594,7 +590,7 @@ public class KogitoRuntimeClientTest {
         WebClientOptions webClientOptions = client.getWebClientToURLOptions(dataIndexurl);
         assertThat(webClientOptions.getDefaultPort()).isEqualTo(443);
         assertThat(webClientOptions.getDefaultHost()).isEqualTo("service.com");
-        assertTrue(webClientOptions.isSsl());
+        assertThat(webClientOptions.isSsl()).isTrue();
     }
 
     @Test

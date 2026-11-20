@@ -19,9 +19,7 @@
 
 package org.optaplanner.quarkus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
@@ -71,14 +69,15 @@ class OptaPlannerProcessorGizmoKitchenSinkTest {
 
     @Test
     void singletonSolverFactory() {
-        assertNotNull(solverFactory);
-        assertNotNull(scoreManager);
+        assertThat(solverFactory).isNotNull();
+        assertThat(scoreManager).isNotNull();
         // There is only one ScoreDirectorFactory instance
-        assertSame(((DefaultSolverFactory<?>) solverFactory).getScoreDirectorFactory(),
-                ((DefaultSolutionManager<?, ?>) solutionManager).getScoreDirectorFactory());
-        assertNotNull(solverManager);
+        assertThat(((DefaultSolutionManager<?, ?>) solutionManager).getScoreDirectorFactory())
+                .isSameAs(((DefaultSolverFactory<?>) solverFactory).getScoreDirectorFactory());
+        assertThat(solverManager).isNotNull();
         // There is only one SolverFactory instance
-        assertSame(solverFactory, ((DefaultSolverManager<TestDataKitchenSinkSolution, Long>) solverManager).getSolverFactory());
+        assertThat(((DefaultSolverManager<TestDataKitchenSinkSolution, Long>) solverManager).getSolverFactory())
+                .isSameAs(solverFactory);
     }
 
     @Test
@@ -92,9 +91,9 @@ class OptaPlannerProcessorGizmoKitchenSinkTest {
 
         SolverJob<TestDataKitchenSinkSolution, Long> solverJob = solverManager.solve(1L, problem);
         TestDataKitchenSinkSolution solution = solverJob.getFinalBestSolution();
-        assertNotNull(solution);
-        assertEquals(1, solution.getPlanningEntityProperty().testGetIntVariable());
-        assertEquals("A", solution.getPlanningEntityProperty().testGetStringVariable());
+        assertThat(solution).isNotNull();
+        assertThat(solution.getPlanningEntityProperty().testGetIntVariable()).isEqualTo(1);
+        assertThat(solution.getPlanningEntityProperty().testGetStringVariable()).isEqualTo("A");
     }
 
 }

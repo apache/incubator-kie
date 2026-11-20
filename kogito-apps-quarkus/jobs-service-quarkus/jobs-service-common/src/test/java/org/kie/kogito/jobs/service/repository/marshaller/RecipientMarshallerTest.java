@@ -25,8 +25,7 @@ import org.kie.kogito.jobs.service.model.RecipientInstance;
 
 import io.vertx.core.json.JsonObject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class RecipientMarshallerTest {
 
@@ -36,7 +35,7 @@ class RecipientMarshallerTest {
     void marshall() {
         Recipient recipient = new RecipientInstance(HttpRecipient.builder().forStringPayload().url("test").build());
         JsonObject jsonObject = marshaller.marshall(recipient);
-        assertEquals(buildRecipient(), jsonObject);
+        assertThat(jsonObject).isEqualTo(buildRecipient());
     }
 
     private static JsonObject buildRecipient() {
@@ -48,26 +47,26 @@ class RecipientMarshallerTest {
     @Test
     void marshallNull() {
         JsonObject jsonObject = marshaller.marshall(null);
-        assertNull(jsonObject);
+        assertThat(jsonObject).isNull();
     }
 
     @Test
     void unmarshall() {
         JsonObject jsonObject = buildRecipient();
         Recipient recipient = marshaller.unmarshall(jsonObject);
-        assertEquals(HttpRecipient.builder().forStringPayload().url("test").build(), recipient.getRecipient());
+        assertThat(recipient.getRecipient()).isEqualTo(HttpRecipient.builder().forStringPayload().url("test").build());
     }
 
     @Test
     void unmarshallInvalid() {
         JsonObject jsonObject = new JsonObject();
         Recipient recipient = marshaller.unmarshall(jsonObject);
-        assertNull(recipient);
+        assertThat(recipient).isNull();
     }
 
     @Test
     void unmarshallNull() {
         Recipient recipient = marshaller.unmarshall(null);
-        assertNull(recipient);
+        assertThat(recipient).isNull();
     }
 }

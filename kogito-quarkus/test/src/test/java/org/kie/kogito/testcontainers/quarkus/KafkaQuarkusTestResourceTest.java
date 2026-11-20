@@ -22,9 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.testcontainers.KogitoKafkaContainer;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.spy;
 
 public class KafkaQuarkusTestResourceTest {
@@ -41,7 +40,7 @@ public class KafkaQuarkusTestResourceTest {
     @Test
     public void shouldGetProperty() {
         givenResource();
-        assertThrows(IllegalStateException.class, () -> resource.getProperties().get(KafkaQuarkusTestResource.KOGITO_KAFKA_PROPERTY));
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> resource.getProperties().get(KafkaQuarkusTestResource.KOGITO_KAFKA_PROPERTY));
     }
 
     @Test
@@ -65,10 +64,10 @@ public class KafkaQuarkusTestResourceTest {
     }
 
     private void thenConditionalIsEnabled() {
-        assertTrue(resource.isConditionalEnabled());
+        assertThat(resource.isConditionalEnabled()).isTrue();
     }
 
     private void thenConditionalIsDisabled() {
-        assertFalse(resource.isConditionalEnabled());
+        assertThat(resource.isConditionalEnabled()).isFalse();
     }
 }

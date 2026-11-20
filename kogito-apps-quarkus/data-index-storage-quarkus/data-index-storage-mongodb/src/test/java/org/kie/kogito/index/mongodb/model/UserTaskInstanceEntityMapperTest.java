@@ -31,7 +31,7 @@ import org.kie.kogito.persistence.mongodb.model.ModelUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MAPPER;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.MONGO_ID;
 import static org.kie.kogito.persistence.mongodb.model.ModelUtils.jsonNodeToDocument;
@@ -148,46 +148,42 @@ class UserTaskInstanceEntityMapperTest {
 
     @Test
     void testGetEntityClass() {
-        assertEquals(UserTaskInstanceEntity.class, userTaskInstanceEntityMapper.getEntityClass());
+        assertThat(userTaskInstanceEntityMapper.getEntityClass()).isEqualTo(UserTaskInstanceEntity.class);
     }
 
     @Test
     void testMapToEntity() {
         UserTaskInstanceEntity result = userTaskInstanceEntityMapper.mapToEntity(userTaskInstance.getId(), userTaskInstance);
-        assertEquals(userTaskInstanceEntity, result);
+        assertThat(result).isEqualTo(userTaskInstanceEntity);
     }
 
     @Test
     void testMapToModel() {
         UserTaskInstance result = userTaskInstanceEntityMapper.mapToModel(userTaskInstanceEntity);
-        assertEquals(userTaskInstance, result);
+        assertThat(result).isEqualTo(userTaskInstance);
     }
 
     @Test
     void testConvertToMongoAttribute() {
-        assertEquals(MONGO_ID, userTaskInstanceEntityMapper.convertToMongoAttribute(ModelUtils.ID));
+        assertThat(userTaskInstanceEntityMapper.convertToMongoAttribute(ModelUtils.ID)).isEqualTo(MONGO_ID);
 
-        assertEquals(UserTaskInstanceEntityMapper.MONGO_COMMENTS_ID_ATTRIBUTE,
-                userTaskInstanceEntityMapper.convertToMongoAttribute(UserTaskInstanceEntityMapper.COMMENTS_ID_ATTRIBUTE));
+        assertThat(userTaskInstanceEntityMapper.convertToMongoAttribute(UserTaskInstanceEntityMapper.COMMENTS_ID_ATTRIBUTE)).isEqualTo(UserTaskInstanceEntityMapper.MONGO_COMMENTS_ID_ATTRIBUTE);
 
-        assertEquals(UserTaskInstanceEntityMapper.MONGO_ATTACHMENTS_ID_ATTRIBUTE,
-                userTaskInstanceEntityMapper.convertToMongoAttribute(UserTaskInstanceEntityMapper.ATTACHMENTS_ID_ATTRIBUTE));
+        assertThat(userTaskInstanceEntityMapper.convertToMongoAttribute(UserTaskInstanceEntityMapper.ATTACHMENTS_ID_ATTRIBUTE)).isEqualTo(UserTaskInstanceEntityMapper.MONGO_ATTACHMENTS_ID_ATTRIBUTE);
 
         String testAttribute = "testAttribute";
-        assertEquals(testAttribute, userTaskInstanceEntityMapper.convertToMongoAttribute(testAttribute));
+        assertThat(userTaskInstanceEntityMapper.convertToMongoAttribute(testAttribute)).isEqualTo(testAttribute);
     }
 
     @Test
     void testConvertToModelAttribute() {
-        assertEquals(ModelUtils.ID, userTaskInstanceEntityMapper.convertToModelAttribute(MONGO_ID));
+        assertThat(userTaskInstanceEntityMapper.convertToModelAttribute(MONGO_ID)).isEqualTo(ModelUtils.ID);
 
-        assertEquals(ModelUtils.ID,
-                userTaskInstanceEntityMapper.convertToModelAttribute(UserTaskInstanceEntityMapper.MONGO_COMMENTS_ID_ATTRIBUTE));
+        assertThat(userTaskInstanceEntityMapper.convertToModelAttribute(UserTaskInstanceEntityMapper.MONGO_COMMENTS_ID_ATTRIBUTE)).isEqualTo(ModelUtils.ID);
 
-        assertEquals(ModelUtils.ID,
-                userTaskInstanceEntityMapper.convertToModelAttribute(UserTaskInstanceEntityMapper.MONGO_ATTACHMENTS_ID_ATTRIBUTE));
+        assertThat(userTaskInstanceEntityMapper.convertToModelAttribute(UserTaskInstanceEntityMapper.MONGO_ATTACHMENTS_ID_ATTRIBUTE)).isEqualTo(ModelUtils.ID);
 
         String testAttribute = "test.attribute.go";
-        assertEquals("go", userTaskInstanceEntityMapper.convertToModelAttribute(testAttribute));
+        assertThat(userTaskInstanceEntityMapper.convertToModelAttribute(testAttribute)).isEqualTo("go");
     }
 }

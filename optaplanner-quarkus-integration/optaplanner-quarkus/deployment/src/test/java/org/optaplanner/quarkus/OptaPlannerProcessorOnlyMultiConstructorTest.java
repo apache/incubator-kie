@@ -19,13 +19,14 @@
 
 package org.optaplanner.quarkus;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.concurrent.ExecutionException;
 
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.optaplanner.core.api.solver.SolverManager;
@@ -46,12 +47,9 @@ class OptaPlannerProcessorOnlyMultiConstructorTest {
                             PrivateNoArgsConstructorSolution.class,
                             PrivateNoArgsConstructorEntity.class,
                             OnlyMultiArgsConstructorEntity.class))
-            .assertException(throwable -> {
-                Assertions.assertEquals(
-                        "Class (" + OnlyMultiArgsConstructorEntity.class.getName()
-                                + ") must have a no-args constructor so it can be constructed by OptaPlanner.",
-                        throwable.getMessage());
-            });
+            .assertException(throwable -> assertThat(throwable.getMessage()).isEqualTo(
+                    "Class (" + OnlyMultiArgsConstructorEntity.class.getName()
+                            + ") must have a no-args constructor so it can be constructed by OptaPlanner."));
 
     @Inject
     SolverManager<PrivateNoArgsConstructorSolution, Long> solverManager;

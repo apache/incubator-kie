@@ -34,6 +34,7 @@ import org.drools.commands.runtime.process.AbortWorkItemCommand;
 import org.drools.commands.runtime.process.CompleteWorkItemCommand;
 import org.drools.commands.runtime.process.SignalEventCommand;
 import org.drools.commands.runtime.process.StartProcessCommand;
+import org.drools.commands.runtime.rule.ActivateRuleFlowGroupCommand;
 import org.drools.commands.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.commands.runtime.rule.ClearActivationGroupCommand;
 import org.drools.commands.runtime.rule.ClearAgendaCommand;
@@ -97,6 +98,7 @@ public class BatchExecutionCommandImpl implements Batch, ExecutableCommand<Execu
                          @XmlElement(name = "complete-work-item", type = CompleteWorkItemCommand.class),
                          @XmlElement(name = "get-objects", type = GetObjectsCommand.class),
                          @XmlElement(name = "set-focus", type = AgendaGroupSetFocusCommand.class),
+                         @XmlElement(name = "activate-ruleflow-group", type = ActivateRuleFlowGroupCommand.class),
                          @XmlElement(name = "clear-activation-group", type = ClearActivationGroupCommand.class),
                          @XmlElement(name = "clear-agenda", type = ClearAgendaCommand.class),
                          @XmlElement(name = "clear-agenda-group", type = ClearAgendaGroupCommand.class),

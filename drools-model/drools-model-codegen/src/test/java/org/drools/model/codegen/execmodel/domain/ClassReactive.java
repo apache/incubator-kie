@@ -16,10 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.kie.kogito.process.impl.lock;
+package org.drools.model.codegen.execmodel.domain;
 
-public interface WorkflowAtomicExecutor<T> {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    T execute();
+/**
+ * A custom annotation whose simple name collides with the built-in
+ * {@code org.kie.api.definition.type.ClassReactive}. Imported in a declare block, it must stay
+ * custom metadata and not switch off property reactivity the way the built-in does
+ * (see incubator-kie#7270).
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ClassReactive {
 
+    String value() default "";
 }

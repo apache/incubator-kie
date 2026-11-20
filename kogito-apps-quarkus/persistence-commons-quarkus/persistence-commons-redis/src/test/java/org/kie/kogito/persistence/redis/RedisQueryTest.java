@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.persistence.api.query.AttributeFilter;
 import org.kie.kogito.persistence.api.query.QueryFilterFactory;
@@ -38,6 +37,8 @@ import io.redisearch.client.Client;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.kie.kogito.persistence.api.query.QueryFilterFactory.orderBy;
 import static org.kie.kogito.persistence.redis.Constants.RAW_OBJECT_FIELD;
 import static org.kie.kogito.persistence.redis.Person.NAME_PROPERTY;
@@ -50,7 +51,7 @@ public class RedisQueryTest {
     @Test
     public void multipleAttributeSortingIsNotSupported() {
         RedisQuery<Person> redisQuery = new RedisQuery<>(new RedisClientMock(), TEST_INDEX_NAME, Person.class);
-        Assertions.assertThrows(UnsupportedOperationException.class, () -> redisQuery.sort(asList(orderBy("first", SortDirection.DESC), orderBy("second", SortDirection.ASC))));
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> redisQuery.sort(asList(orderBy("first", SortDirection.DESC), orderBy("second", SortDirection.ASC))));
     }
 
     @Test
@@ -78,8 +79,8 @@ public class RedisQueryTest {
 
         List<Person> result = redisQuery.execute();
 
-        Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals("pippo", result.get(0).getName());
-        Assertions.assertEquals(20, result.get(0).getAge());
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.get(0).getName()).isEqualTo("pippo");
+        assertThat(result.get(0).getAge()).isEqualTo(20);
     }
 }

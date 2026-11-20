@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -94,7 +94,8 @@ class DMNScenarioExecutableBuilderTest {
                 return pmmlFiles;
             });
             mockDMNSimulationUtils.when(() -> DMNSimulationUtils.compileModels(dmnFiles)).thenThrow(RuntimeException.class);
-            assertThrows(IllegalStateException.class, DMNScenarioExecutableBuilder::createBuilder);
+            assertThatThrownBy(DMNScenarioExecutableBuilder::createBuilder)
+                    .isInstanceOf(IllegalStateException.class);
             mockResourceHelper.verify(() -> ResourceHelper.getFileResourcesByExtension("dmn"), times(1));
             mockDMNSimulationUtils.verify(() -> DMNSimulationUtils.compileModels(dmnFiles), times(1));
         }
@@ -154,7 +155,8 @@ class DMNScenarioExecutableBuilderTest {
             DMNScenarioExecutableBuilder builder = DMNScenarioExecutableBuilder.createBuilder();
             assertThat(builder).isNotNull();
             assertThat(builder.generatedResourcesMap).isEqualTo(generatedResourcesMap);
-            assertThrows(IllegalStateException.class, () -> builder.setActiveModel("not-filename", "not-model-name"));
+            assertThatThrownBy(() -> builder.setActiveModel("not-filename", "not-model-name"))
+                    .isInstanceOf(IllegalStateException.class);
             assertThat(builder.dmnModelLocalUriId).isNull();
             assertThat(builder.dmnModel).isNull();
         }

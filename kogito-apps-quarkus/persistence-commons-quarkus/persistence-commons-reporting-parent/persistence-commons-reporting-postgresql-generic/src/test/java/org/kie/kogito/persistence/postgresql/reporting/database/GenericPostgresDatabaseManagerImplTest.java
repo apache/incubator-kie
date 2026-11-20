@@ -32,7 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,8 +75,7 @@ class GenericPostgresDatabaseManagerImplTest {
     void testGetEntityManager() {
         when(repository.getEntityManager()).thenReturn(entityManager);
 
-        assertEquals(entityManager,
-                manager.getEntityManager("does-not-matter"));
+        assertThat(manager.getEntityManager("does-not-matter")).isEqualTo(entityManager);
     }
 
 }

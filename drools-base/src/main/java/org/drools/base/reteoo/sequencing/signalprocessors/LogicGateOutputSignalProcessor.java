@@ -46,4 +46,8 @@ public class LogicGateOutputSignalProcessor extends SignalProcessor {
         // by each downstream LogicGate resetting itself via resetPrior(). There is no
         // state held here that needs clearing.
     }
+
+    public void clearParentBit(SequenceMemory memory, ValueResolver valueResolver) {
+        gate.clearInputBit(index, memory, valueResolver);
+    }
 }

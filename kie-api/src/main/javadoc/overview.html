@@ -20,12 +20,13 @@
 <body>
 
 <p>
-  KIE provides a knowledge-centric API, where rules and processes are first class citizens. The majority of KIE API
-  is considered stable and should not change, experimental classes and APIs will be marked as such.
+  Apache KIE provides a knowledge-centric API where rules and processes are first-class citizens. The majority of the KIE API
+  is considered stable and should not change; experimental classes and APIs will be marked as such.
 </p>
 
 <p>
   The most common interfaces you will use are:
+</p>
 <ul>
   <li><code>org.kie.api.KieBase</code></li>
   <li><code>org.kie.api.runtime.KieSession</code></li>
@@ -34,23 +35,21 @@
   <li><code>org.kie.api.builder.ReleaseId</code></li>
   <li><code>org.kie.api.builder.KieScanner</code></li>
 </ul>
-</p>
 
 <p>
-  Factory classes, with static methods, provide instances of the above interfaces. A pluggable provider approach is used
-  to allow provider implementations to
-  be wired up to the factories at runtime. The Factories you will most commonly use are:
+  Factory classes with static methods provide instances of the above interfaces. A pluggable provider approach is used
+  to allow provider implementations to be wired up to the factories at runtime. The factories you will most commonly use are:
+</p>
 <ul>
   <li><code>org.kie.api.KieServices</code></li>
   <li><code>org.kie.api.command.KieCommands</code></li>
   <li><code>org.kie.api.io.KieResources</code></li>
 </ul>
-</p>
 
 <p>
-  Typical example of loading and using knowledge resources (rules, processes, etc) found on classpath. By convention the
-  KIE API expects file <code>META-INF/kmodule.xml</code> which is a marker file and also enables additional configuration.
-  For very basic usage the file can just contain <code>&lt;kmodule xmlns="http://www.drools.org/xsd/kmodule"/&gt;</code>:
+  A typical example of loading and using knowledge resources (rules, processes and decisions) found on the classpath: By convention, the
+  KIE API expects the file <code>META-INF/kmodule.xml</code>, which is a marker file that also enables additional configuration.
+  For very basic usage, the file can contain just <code>&lt;kmodule xmlns="http://www.drools.org/xsd/kmodule"/&gt;</code>:
 <pre>
   KieServices kieServices = KieServices.Factory.get();
   KieContainer kieContainer = kieServices.getKieClasspathContainer();
@@ -65,8 +64,9 @@
 </p>
 
 <p>
-  Drools 8 introduced Rule Unit API as a recommended style which provides an atomic module defining a set of rules and a set of strongly typed
+  Drools 8 introduced the Rule Unit API, which provides an atomic module defining a set of rules and a set of strongly-typed
   data sources:
+</p>
 <pre>
   MeasurementUnit measurementUnit = new MeasurementUnit();
   RuleUnitInstance&lt;MeasurementUnit&gt; instance = RuleUnitProvider.get().createRuleUnitInstance(measurementUnit);
@@ -77,6 +77,4 @@
     instance.dispose();
   }
 </pre>
-</p>
-
 </body>

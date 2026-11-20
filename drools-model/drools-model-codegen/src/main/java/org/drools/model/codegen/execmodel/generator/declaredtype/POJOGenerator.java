@@ -70,6 +70,20 @@ public class POJOGenerator implements CompilationPhase {
 
     private static final List<String> exprAnnotations = Arrays.asList("duration", "timestamp");
 
+    /**
+     * Maps a built-in type annotation's FQN to the canonical name the generated model registers it
+     * under. Mirrors the known-annotation names in
+     * {@code org.drools.modelcompiler.util.TypeDeclarationUtil}.
+     */
+    private static final Map<String, String> BUILTIN_TYPE_ANNOTATIONS_BY_FQN = Map.of(
+            "org.kie.api.definition.type.Role", "role",
+            "org.kie.api.definition.type.Duration", "duration",
+            "org.kie.api.definition.type.Timestamp", "timestamp",
+            "org.kie.api.definition.type.Expires", "expires",
+            "org.kie.api.definition.type.PropertyReactive", "propertyReactive",
+            "org.kie.api.definition.type.ClassReactive", "classReactive",
+            "org.kie.api.definition.type.PropertyChangeSupport", "propertyChangeSupport");
+
     public POJOGenerator(BuildResultCollector builder, InternalKnowledgePackage pkg, PackageDescr packageDescr, PackageModel packageModel,
                          Collection<? extends PackageDescr> allPackages, PackageRegistryManager pkgRegistryManager) {
         this.builder = builder;
@@ -217,7 +231,7 @@ public class POJOGenerator implements CompilationPhase {
 
         for (AnnotationDescr ann : annotations) {
             typeMetaDataCall = new MethodCallExpr(typeMetaDataCall, ADD_ANNOTATION_CALL);
-            typeMetaDataCall.addArgument(toStringLiteral(ann.getName()));
+            typeMetaDataCall.addArgument(toStringLiteral(typeMetadataAnnotationName(ann)));
             for (Map.Entry<String, Object> entry : ann.getValueMap().entrySet()) {
                 MethodCallExpr annotationValueCall = createDslTopLevelMethod(ANNOTATION_VALUE_CALL);
                 annotationValueCall.addArgument(toStringLiteral(entry.getKey()));
@@ -237,6 +251,21 @@ public class POJOGenerator implements CompilationPhase {
         MethodCallExpr typeMetaDataCall = createDslTopLevelMethod(TYPE_META_DATA_CALL);
         typeMetaDataCall.addArgument(className + ".class");
         return typeMetaDataCall;
+    }
+
+    /**
+     * The name a type annotation is registered under in the generated model. {@code AnnotationNormalizer}
+     * resolved the annotation's identity before codegen, so when it resolved to a built-in the canonical
+     * (lowercase) name is emitted and {@code TypeDeclarationUtil} recognizes it no matter which spelling
+     * the DRL used ({@code @Role} or {@code @role}). Anything else keeps the name as written, so a custom
+     * annotation whose simple name collides with a built-in (e.g. an imported {@code com.acme.ClassReactive})
+     * stays custom metadata.
+     */
+    private static String typeMetadataAnnotationName(AnnotationDescr ann) {
+        String canonical = ann.getFullyQualifiedName() == null
+                ? null
+                : BUILTIN_TYPE_ANNOTATIONS_BY_FQN.get(ann.getFullyQualifiedName());
+        return canonical != null ? canonical : ann.getName();
     }
 
     private static void addAnnotationValueIfNotNull(MethodCallExpr typeMetaDataCall, Object value) {

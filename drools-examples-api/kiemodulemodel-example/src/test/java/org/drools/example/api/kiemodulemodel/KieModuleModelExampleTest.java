@@ -20,7 +20,7 @@ package org.drools.example.api.kiemodulemodel;
 
 import java.io.ByteArrayOutputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.PrintStream;
 
 import org.junit.jupiter.api.Test;
@@ -44,6 +44,6 @@ public class KieModuleModelExampleTest {
                           "HAL: I'm sorry, Dave. I'm afraid I can't do that." + NL +
                           "Dave: What's the problem?" + NL +
                           "HAL: I think you know what the problem is just as well as I do." + NL;
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 }

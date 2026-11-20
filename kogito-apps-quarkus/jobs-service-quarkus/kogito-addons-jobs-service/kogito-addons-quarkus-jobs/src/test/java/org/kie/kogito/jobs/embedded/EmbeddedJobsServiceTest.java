@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.job.JobInstanceDataEvent;
@@ -87,7 +86,7 @@ public class EmbeddedJobsServiceTest {
 
         List<DataEvent<?>> events = new ArrayList<>(publisher.getEvents());
 
-        Assertions.assertEquals(8, events.size());
+        assertThat(events.size()).isEqualTo(8);
 
         Consumer<DataEvent<?>> noRootProcess = e -> assertThat(e)
                 .hasFieldOrPropertyWithValue("kogitoRootProcessInstanceId", null)

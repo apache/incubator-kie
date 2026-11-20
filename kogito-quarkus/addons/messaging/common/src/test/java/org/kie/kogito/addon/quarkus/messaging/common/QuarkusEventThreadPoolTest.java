@@ -31,9 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @NotThreadSafe
 public class QuarkusEventThreadPoolTest {
@@ -134,22 +132,22 @@ public class QuarkusEventThreadPoolTest {
         }
 
         // Wait for all tasks to executed
-        assertTrue(latch.await(1, TimeUnit.MINUTES));
-        assertEquals(0, latch.getCount());
+        assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
+        assertThat(latch.getCount()).isEqualTo(0);
 
         for (int i = 0; i < answers.size(); i++) {
-            assertEquals(i + 1, answers.get(i).get());
+            assertThat(answers.get(i).get()).isEqualTo(i + 1);
         }
     }
 
     private void assertNotStop() {
-        assertEquals(0, controller.stopCounter.get());
-        assertEquals(0, controller.resumeCounter.get());
+        assertThat(controller.stopCounter.get()).isEqualTo(0);
+        assertThat(controller.resumeCounter.get()).isEqualTo(0);
     }
 
     private void assertStop() {
-        assertNotEquals(0, controller.stopCounter.get());
-        assertNotEquals(0, controller.resumeCounter.get());
-        assertEquals(controller.stopCounter.get(), controller.resumeCounter.get());
+        assertThat(controller.stopCounter.get()).isNotEqualTo(0);
+        assertThat(controller.resumeCounter.get()).isNotEqualTo(0);
+        assertThat(controller.resumeCounter.get()).isEqualTo(controller.stopCounter.get());
     }
 }

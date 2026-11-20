@@ -35,7 +35,7 @@ import org.kie.api.io.Resource;
 import org.kie.kogito.jitexecutor.bpmn.responses.JITBPMNValidationResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.kie.kogito.jitexecutor.bpmn.TestingUtils.MULTIPLE_BPMN2_FILE;
 import static org.kie.kogito.jitexecutor.bpmn.TestingUtils.MULTIPLE_INVALID_BPMN2_FILE;
 import static org.kie.kogito.jitexecutor.bpmn.TestingUtils.REST_WIH_ALL_VALID_SCENARIOS_BPMN2_FILE;
@@ -116,12 +116,10 @@ class JITBPMNServiceImplTest {
     @Test
     void parseModelXml_UnparsableBPMN2() throws IOException {
         String toParse = new String(IoUtils.readBytesFromInputStream(Objects.requireNonNull(JITBPMNService.class.getResourceAsStream(UNPARSABLE_BPMN2_FILE))));
-        RuntimeException thrown = assertThrows(
-                RuntimeException.class,
-                () -> JITBPMNServiceImpl.parseModelXml(toParse),
-                "Expected parseModelXml to throw, but it didn't");
-        String expectedMessage = "Could not parse";
-        assertThat(thrown.getMessage()).contains(expectedMessage);
+        assertThatThrownBy(() -> JITBPMNServiceImpl.parseModelXml(toParse))
+                .as("Expected parseModelXml to throw, but it didn't")
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Could not parse");
     }
 
     @Test
@@ -139,12 +137,10 @@ class JITBPMNServiceImplTest {
     @Test
     void parseModelResource_UnparsableBPMN2() {
         Resource resource = new FileSystemResource(new File(UNPARSABLE_BPMN2_FILE));
-        RuntimeException thrown = assertThrows(
-                RuntimeException.class,
-                () -> JITBPMNServiceImpl.parseModelResource(resource),
-                "Expected parseModelXml to throw, but it didn't");
-        String expectedMessage = "Could not parse";
-        assertThat(thrown.getMessage()).contains(expectedMessage);
+        assertThatThrownBy(() -> JITBPMNServiceImpl.parseModelResource(resource))
+                .as("Expected parseModelXml to throw, but it didn't")
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Could not parse");
     }
 
     @Test

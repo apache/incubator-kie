@@ -26,8 +26,7 @@ import org.kie.api.runtime.KieSession;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ReactiveKieSessionExampleTest {
 
@@ -43,9 +42,9 @@ public class ReactiveKieSessionExampleTest {
 
         ksession.fireAllRules();
 
-        assertEquals( 2, list.size() );
-        assertTrue( list.contains( "car" ) );
-        assertTrue( list.contains( "ball" ) );
+        assertThat( list.size() ).isEqualTo( 2 );
+        assertThat( list.contains( "car" ) ).isTrue();
+        assertThat( list.contains( "ball" ) ).isTrue();
 
         list.clear();
 
@@ -53,7 +52,7 @@ public class ReactiveKieSessionExampleTest {
         ksession.fireAllRules();
         ksession.fireAllRules();
 
-        assertEquals( 1, list.size() );
-        assertTrue( list.contains( "doll" ) );
+        assertThat( list.size() ).isEqualTo( 1 );
+        assertThat( list.contains( "doll" ) ).isTrue();
     }
 }

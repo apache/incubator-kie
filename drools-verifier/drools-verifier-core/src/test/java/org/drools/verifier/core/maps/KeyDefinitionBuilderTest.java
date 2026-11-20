@@ -21,15 +21,14 @@ package org.drools.verifier.core.maps;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class KeyDefinitionBuilderTest {
 
     @Test
     void testNoIdSet() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> {
-            KeyDefinition.newKeyDefinition().build();
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+            KeyDefinition.newKeyDefinition().build());
     }
 
     @Test

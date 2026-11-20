@@ -39,9 +39,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -51,7 +49,7 @@ class PostgresMappingsApiV1IT {
     @Order(1)
     void getAllMappingDefinitions() {
         PostgresMappingDefinitions response = given().contentType(ContentType.TEXT).when().get("/mappings").prettyPeek().as(PostgresMappingDefinitions.class);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertMappingDefinitions(List.of("BasicTypeMappingId",
                 "HierarchicalTypeMappingId",
                 "ComplexHierarchicalTypeMappingId"));
@@ -61,9 +59,9 @@ class PostgresMappingsApiV1IT {
     @Order(2)
     void getMappingDefinition() {
         PostgresMappingDefinition response = given().contentType(ContentType.TEXT).when().get("/mappings/BasicTypeMappingId").prettyPeek().as(PostgresMappingDefinition.class);
-        assertNotNull(response);
-        assertEquals("BasicTypeMappingId", response.getMappingId());
-        assertEquals(2, response.getFieldMappings().size());
+        assertThat(response).isNotNull();
+        assertThat(response.getMappingId()).isEqualTo("BasicTypeMappingId");
+        assertThat(response.getFieldMappings().size()).isEqualTo(2);
     }
 
     @Test
@@ -79,17 +77,17 @@ class PostgresMappingsApiV1IT {
                         new PostgresJsonField("field1", JsonType.STRING))));
 
         Response response = given().contentType(ContentType.JSON).body(definition).when().post("/mappings").prettyPeek();
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(200);
         assertMappingDefinitions(List.of("BasicTypeMappingId",
                 "HierarchicalTypeMappingId",
                 "ComplexHierarchicalTypeMappingId",
                 "ExampleMappingId"));
 
         PostgresMappingDefinition newMappingDefinition = given().contentType(ContentType.TEXT).when().get("/mappings/ExampleMappingId").prettyPeek().as(PostgresMappingDefinition.class);
-        assertNotNull(newMappingDefinition);
-        assertEquals("ExampleMappingId", newMappingDefinition.getMappingId());
-        assertEquals(1, newMappingDefinition.getFieldMappings().size());
+        assertThat(newMappingDefinition).isNotNull();
+        assertThat(newMappingDefinition.getMappingId()).isEqualTo("ExampleMappingId");
+        assertThat(newMappingDefinition.getFieldMappings().size()).isEqualTo(1);
     }
 
     @Test
@@ -101,8 +99,8 @@ class PostgresMappingsApiV1IT {
                 "ExampleMappingId"));
 
         Response response = given().when().delete("/mappings/ExampleMappingId").prettyPeek();
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(200);
         assertMappingDefinitions(List.of("BasicTypeMappingId",
                 "HierarchicalTypeMappingId",
                 "ComplexHierarchicalTypeMappingId"));
@@ -110,9 +108,9 @@ class PostgresMappingsApiV1IT {
 
     private void assertMappingDefinitions(final List<String> expectedMappingIds) {
         PostgresMappingDefinitions response = given().contentType(ContentType.TEXT).when().get("/mappings").prettyPeek().as(PostgresMappingDefinitions.class);
-        assertNotNull(response);
-        assertEquals(expectedMappingIds.size(), response.getMappingDefinitions().size());
-        assertTrue(response.getMappingDefinitions().stream().map(MappingDefinition::getMappingId).collect(Collectors.toList()).containsAll(expectedMappingIds));
+        assertThat(response).isNotNull();
+        assertThat(response.getMappingDefinitions().size()).isEqualTo(expectedMappingIds.size());
+        assertThat(response.getMappingDefinitions().stream().map(MappingDefinition::getMappingId).collect(Collectors.toList()).containsAll(expectedMappingIds)).isTrue();
     }
 
 }

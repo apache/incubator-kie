@@ -44,7 +44,6 @@ import static org.drools.model.DSL.on;
 import static org.drools.model.PatternDSL.rule;
 import static org.drools.model.prototype.PrototypeDSL.protoPattern;
 import static org.drools.model.prototype.PrototypeDSL.variable;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kie.api.prototype.PrototypeBuilder.prototype;
 
 public class PrototypesAllowedTest {
@@ -166,7 +165,7 @@ public class PrototypesAllowedTest {
         ksession.insert(result);
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
-        assertEquals("Mark can NOT drink", result.get("value"));
+        assertThat(result.get("value")).isEqualTo("Mark can NOT drink");
     }
 
 

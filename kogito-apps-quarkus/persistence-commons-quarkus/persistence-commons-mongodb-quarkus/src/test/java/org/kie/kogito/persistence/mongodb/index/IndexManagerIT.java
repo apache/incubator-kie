@@ -58,10 +58,8 @@ import jakarta.inject.Inject;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.kie.kogito.persistence.mongodb.index.IndexManager.DEFAULT_INDEX;
 import static org.kie.kogito.persistence.mongodb.index.IndexManager.INDEX_NAME_FIELD;
 
@@ -145,7 +143,7 @@ class IndexManagerIT {
 
         Set<String> testIndexes = StreamSupport.stream(testCollection.listIndexes().spliterator(), false)
                 .map(document -> document.getString(INDEX_NAME_FIELD)).filter(name -> !DEFAULT_INDEX.equals(name)).collect(toSet());
-        assertEquals(getTestIndexNames(), testIndexes);
+        assertThat(testIndexes).isEqualTo(getTestIndexNames());
 
         mockProcessIndexEventListener.assertFire("test", travelEntityIndexDescriptor.getName());
     }
@@ -160,7 +158,7 @@ class IndexManagerIT {
 
         Set<String> indexes = StreamSupport.stream(testCollection.listIndexes().spliterator(), false)
                 .map(document -> document.getString(INDEX_NAME_FIELD)).filter(name -> !DEFAULT_INDEX.equals(name)).collect(toSet());
-        assertEquals(getTestIndexNames(), indexes);
+        assertThat(indexes).isEqualTo(getTestIndexNames());
     }
 
     @Test
@@ -177,10 +175,10 @@ class IndexManagerIT {
 
         Set<String> indexes1 = StreamSupport.stream(testCollection1.listIndexes().spliterator(), false)
                 .map(document -> document.getString(INDEX_NAME_FIELD)).filter(name -> !DEFAULT_INDEX.equals(name)).collect(toSet());
-        assertEquals(getTestIndexNames(), indexes1);
+        assertThat(indexes1).isEqualTo(getTestIndexNames());
         Set<String> indexes2 = StreamSupport.stream(testCollection2.listIndexes().spliterator(), false)
                 .map(document -> document.getString(INDEX_NAME_FIELD)).filter(name -> !DEFAULT_INDEX.equals(name)).collect(toSet());
-        assertEquals(getTestIndexNames(), indexes2);
+        assertThat(indexes2).isEqualTo(getTestIndexNames());
     }
 
     @Test
@@ -193,7 +191,7 @@ class IndexManagerIT {
         indexManager.updateCollection(collection, travelEntityIndexDescriptor);
         Set<String> indexes = StreamSupport.stream(collection.listIndexes().spliterator(), false)
                 .map(document -> document.getString(INDEX_NAME_FIELD)).filter(name -> !DEFAULT_INDEX.equals(name)).collect(toSet());
-        assertEquals(getTestIndexNames(), indexes);
+        assertThat(indexes).isEqualTo(getTestIndexNames());
     }
 
     @Test
@@ -207,7 +205,7 @@ class IndexManagerIT {
             indexManager.updateCollection(collection, errorEntityIndexDescriptor);
             fail("Exception for creating too many indexes was not thrown");
         } catch (SchemaRegistrationException ex) {
-            assertTrue(ex.getMessage().contains("no more than 64 indexes"));
+            assertThat(ex.getMessage().contains("no more than 64 indexes")).isTrue();
         }
     }
 
@@ -215,7 +213,7 @@ class IndexManagerIT {
     void testCreateIndexForEntity() {
         List<IndexModel> indexes = indexManager.createIndexForEntity("", travelEntityIndexDescriptor);
 
-        assertTrue(equalsIndexModels(indexes, getTestIndexModels()));
+        assertThat(equalsIndexModels(indexes, getTestIndexModels())).isTrue();
     }
 
     @Test
@@ -227,7 +225,7 @@ class IndexManagerIT {
 
         Optional<IndexModel> index = indexManager.createIndex(id, parentField, prefixUUID);
 
-        assertTrue(equalsIndexModels(List.of(index.get()), List.of(new IndexModel(Indexes.ascending(fieldName), new IndexOptions().name(prefixUUID + fieldName).sparse(true)))));
+        assertThat(equalsIndexModels(List.of(index.get()), List.of(new IndexModel(Indexes.ascending(fieldName), new IndexOptions().name(prefixUUID + fieldName).sparse(true))))).isTrue();
     }
 
     @Test
@@ -239,7 +237,7 @@ class IndexManagerIT {
 
         Optional<IndexModel> index = indexManager.createIndex(id, parentField, prefixUUID);
 
-        assertFalse(index.isPresent());
+        assertThat(index.isPresent()).isFalse();
     }
 
     @Test
@@ -251,8 +249,8 @@ class IndexManagerIT {
 
         Optional<IndexModel> index = indexManager.createIndex(id, parentField, prefixUUID);
 
-        assertTrue(equalsIndexModels(List.of(index.get()),
-                List.of(new IndexModel(Indexes.ascending(indexName + ".test1", indexName + ".test2"), new IndexOptions().name(prefixUUID + indexName).sparse(true)))));
+        assertThat(equalsIndexModels(List.of(index.get()),
+                List.of(new IndexModel(Indexes.ascending(indexName + ".test1", indexName + ".test2"), new IndexOptions().name(prefixUUID + indexName).sparse(true))))).isTrue();
     }
 
     @Test
@@ -276,9 +274,9 @@ class IndexManagerIT {
         expectedIndex2Collections.add("collection4");
         expectedIndex2Collections.add("collection5");
 
-        assertEquals(expectedIndex1Collections, new HashSet<>(index1Collections));
-        assertEquals(expectedIndex2Collections, new HashSet<>(index2Collections));
-        assertTrue(index3Collections.isEmpty());
+        assertThat(new HashSet<>(index1Collections)).isEqualTo(expectedIndex1Collections);
+        assertThat(new HashSet<>(index2Collections)).isEqualTo(expectedIndex2Collections);
+        assertThat(index3Collections.isEmpty()).isTrue();
     }
 
     private List<IndexModel> getTestIndexModels() {

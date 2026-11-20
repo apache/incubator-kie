@@ -317,6 +317,10 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
         toStatefulKnowledgeSession().setFocus( focus );
     }
 
+    public void activateRuleFlowGroup(final String name) {
+        toStatefulKnowledgeSession().getAgenda().getRuleFlowGroup( name ).activate();
+    }
+
     public Object get(final Declaration declaration) {
         return declaration.getValue(reteEvaluator, tuple );
     }

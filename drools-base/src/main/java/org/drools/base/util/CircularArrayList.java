@@ -63,6 +63,15 @@ public class CircularArrayList<E> {
         }
     }
 
+    /**
+     * Nulls every slot without changing {@code head}, so {@code get()} keeps its range
+     * semantics but returns {@code null} for slots written before the clear.
+     * Note that {@link #size()} and {@link #isEmpty()} are unaffected.
+     */
+    public void clearSlots() {
+        Arrays.fill(array, null);
+    }
+
     public boolean add(E e) {
             array[head++ & mask] = e;
             return true;
@@ -81,6 +90,17 @@ public class CircularArrayList<E> {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + windowSize);
         }
 
+        return array[index & mask];
+    }
+
+    /**
+     * Like {@link #get(int)} but returns {@code null} for a slot that is outside the written
+     * range (never written, or older than the window) instead of throwing.
+     */
+    public E getOrNull(int index) {
+        if (index < 0 || index < head - windowSize || index >= head) {
+            return null;
+        }
         return array[index & mask];
     }
 

@@ -30,12 +30,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.drools.codegen.common.DroolsModelBuildContext.APPLICATION_PROPERTIES_YAML_FILE_NAME;
 import static org.drools.codegen.common.DroolsModelBuildContext.APPLICATION_PROPERTIES_YML_FILE_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class ModelBuildContextUtilsTest {
 
@@ -43,35 +41,35 @@ class ModelBuildContextUtilsTest {
     @ParameterizedTest
     void loadYmlPropertiesByFile(String fileName) {
         File ymlFile = FileUtils.getFile(fileName);
-        assertTrue(ymlFile.exists());
+        assertThat(ymlFile.exists()).isTrue();
         Properties properties = new Properties();
         ModelBuildContextUtils.loadYmlProperties(ymlFile, properties);
-        assertEquals("test", properties.getProperty("this.is.a"));
-        assertEquals("notNull", properties.getProperty("this.is.b"));
-        assertEquals("test", properties.getProperty("this.was.a"));
-        assertEquals("notNull", properties.getProperty("this.was.b"));
-        assertEquals("test", properties.getProperty("that.is.a"));
-        assertEquals("notNull", properties.getProperty("that.is.b"));
-        assertEquals("test", properties.getProperty("that.was.a"));
-        assertEquals("notNull", properties.getProperty("that.was.b"));
+        assertThat(properties.getProperty("this.is.a")).isEqualTo("test");
+        assertThat(properties.getProperty("this.is.b")).isEqualTo("notNull");
+        assertThat(properties.getProperty("this.was.a")).isEqualTo("test");
+        assertThat(properties.getProperty("this.was.b")).isEqualTo("notNull");
+        assertThat(properties.getProperty("that.is.a")).isEqualTo("test");
+        assertThat(properties.getProperty("that.is.b")).isEqualTo("notNull");
+        assertThat(properties.getProperty("that.was.a")).isEqualTo("test");
+        assertThat(properties.getProperty("that.was.b")).isEqualTo("notNull");
     }
 
     @MethodSource("testData")
     @ParameterizedTest
     void loadYmlPropertiesByInputStream(String fileName) {
         File ymlFile = FileUtils.getFile(fileName);
-        assertTrue(ymlFile.exists());
+        assertThat(ymlFile.exists()).isTrue();
         Properties properties = new Properties();
         try (InputStream ymlResourceStream = new FileInputStream(ymlFile)) {
             ModelBuildContextUtils.loadYmlProperties(ymlResourceStream, properties);
-            assertEquals("test", properties.getProperty("this.is.a"));
-            assertEquals("notNull", properties.getProperty("this.is.b"));
-            assertEquals("test", properties.getProperty("this.was.a"));
-            assertEquals("notNull", properties.getProperty("this.was.b"));
-            assertEquals("test", properties.getProperty("that.is.a"));
-            assertEquals("notNull", properties.getProperty("that.is.b"));
-            assertEquals("test", properties.getProperty("that.was.a"));
-            assertEquals("notNull", properties.getProperty("that.was.b"));
+            assertThat(properties.getProperty("this.is.a")).isEqualTo("test");
+            assertThat(properties.getProperty("this.is.b")).isEqualTo("notNull");
+            assertThat(properties.getProperty("this.was.a")).isEqualTo("test");
+            assertThat(properties.getProperty("this.was.b")).isEqualTo("notNull");
+            assertThat(properties.getProperty("that.is.a")).isEqualTo("test");
+            assertThat(properties.getProperty("that.is.b")).isEqualTo("notNull");
+            assertThat(properties.getProperty("that.was.a")).isEqualTo("test");
+            assertThat(properties.getProperty("that.was.b")).isEqualTo("notNull");
         } catch (Exception e) {
             fail("Unexpected exception while loading yml string map from file: " + fileName, e);
         }
@@ -82,10 +80,10 @@ class ModelBuildContextUtilsTest {
     @ParameterizedTest
     void loadYmlStringMap(String fileName) {
         File ymlFile = FileUtils.getFile(fileName);
-        assertTrue(ymlFile.exists());
+        assertThat(ymlFile.exists()).isTrue();
         try (InputStream ymlResourceStream = new FileInputStream(ymlFile)) {
             Map<String, String> retrieved = ModelBuildContextUtils.loadYmlStringMap(ymlResourceStream);
-            assertNotNull(retrieved);
+            assertThat(retrieved).isNotNull();
             commonCheck(retrieved);
         } catch (Exception e) {
             fail("Unexpected exception while loading yml string map from file: " + fileName, e);
@@ -96,11 +94,11 @@ class ModelBuildContextUtilsTest {
     @ParameterizedTest
     void loadYmlMap(String fileName) {
         File ymlFile = FileUtils.getFile(fileName);
-        assertTrue(ymlFile.exists());
+        assertThat(ymlFile.exists()).isTrue();
         try (InputStream ymlResourceStream = new FileInputStream(ymlFile)) {
             TreeMap<String, Object> retrieved = ModelBuildContextUtils.loadYmlMap(ymlResourceStream);
-            assertNotNull(retrieved);
-            assertTrue(retrieved.containsKey("this"));
+            assertThat(retrieved).isNotNull();
+            assertThat(retrieved.containsKey("this")).isTrue();
         } catch (Exception e) {
             fail("Unexpected exception while loading yml string map from file: " + fileName, e);
         }
@@ -111,10 +109,10 @@ class ModelBuildContextUtilsTest {
     @ParameterizedTest
     void convertYamlObjectToMap(String fileName) {
         File ymlFile = FileUtils.getFile(fileName);
-        assertTrue(ymlFile.exists());
+        assertThat(ymlFile.exists()).isTrue();
         try (InputStream ymlResourceStream = new FileInputStream(ymlFile)) {
             TreeMap<String, Object> ymlMap = ModelBuildContextUtils.loadYmlMap(ymlResourceStream);
-            assertNotNull(ymlMap);
+            assertThat(ymlMap).isNotNull();
             Map<String, String> retrieved = ModelBuildContextUtils.convertYamlObjectToMap(ymlMap);
             commonCheck(retrieved);
         } catch (Exception e) {
@@ -127,24 +125,24 @@ class ModelBuildContextUtilsTest {
     }
 
     private void commonCheck(Map<String, String> retrieved) {
-        assertNotNull(retrieved);
-        assertTrue(retrieved.containsKey("this.is.a"));
-        assertEquals("test", retrieved.get("this.is.a"));
-        assertTrue(retrieved.containsKey("this.is.b"));
-        assertEquals("notNull", retrieved.get("this.is.b"));
-        assertTrue(retrieved.containsKey("this.was.a"));
-        assertEquals("test", retrieved.get("this.was.a"));
-        assertTrue(retrieved.containsKey("this.was.b"));
-        assertEquals("notNull", retrieved.get("this.was.b"));
+        assertThat(retrieved).isNotNull();
+        assertThat(retrieved.containsKey("this.is.a")).isTrue();
+        assertThat(retrieved.get("this.is.a")).isEqualTo("test");
+        assertThat(retrieved.containsKey("this.is.b")).isTrue();
+        assertThat(retrieved.get("this.is.b")).isEqualTo("notNull");
+        assertThat(retrieved.containsKey("this.was.a")).isTrue();
+        assertThat(retrieved.get("this.was.a")).isEqualTo("test");
+        assertThat(retrieved.containsKey("this.was.b")).isTrue();
+        assertThat(retrieved.get("this.was.b")).isEqualTo("notNull");
 
-        assertTrue(retrieved.containsKey("that.is.a"));
-        assertEquals("test", retrieved.get("that.is.a"));
-        assertTrue(retrieved.containsKey("that.is.b"));
-        assertEquals("notNull", retrieved.get("that.is.b"));
-        assertTrue(retrieved.containsKey("that.was.a"));
-        assertEquals("test", retrieved.get("that.was.a"));
-        assertTrue(retrieved.containsKey("that.was.b"));
-        assertEquals("notNull", retrieved.get("that.was.b"));
+        assertThat(retrieved.containsKey("that.is.a")).isTrue();
+        assertThat(retrieved.get("that.is.a")).isEqualTo("test");
+        assertThat(retrieved.containsKey("that.is.b")).isTrue();
+        assertThat(retrieved.get("that.is.b")).isEqualTo("notNull");
+        assertThat(retrieved.containsKey("that.was.a")).isTrue();
+        assertThat(retrieved.get("that.was.a")).isEqualTo("test");
+        assertThat(retrieved.containsKey("that.was.b")).isTrue();
+        assertThat(retrieved.get("that.was.b")).isEqualTo("notNull");
     }
 
 }

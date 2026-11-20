@@ -130,11 +130,17 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
                                 "This indicates a compile-time skip-count miscalculation in KiePackagesBuilder." );
                     }
                     SequencerMemory sequencerMemory = (SequencerMemory) anchor.getContextObject();
-                    FactHandle fh = getOriginalFactHandle( (FactHandle) sequencerMemory.getData().get( seqEntry[SEQ_ENTRY_FILTER_IDX] ) );
-                    if ( useDrools && fhLookup != null ) {
-                        fhLookup.put( fh.getObject(), fh );
+                    FactHandle slot = (FactHandle) sequencerMemory.getData().getOrNull( seqEntry[SEQ_ENTRY_FILTER_IDX] );
+                    if ( slot == null ) {
+                        // The step's pattern did not match in this attempt (e.g. the other branch of an or()).
+                        objects[index++] = null;
+                    } else {
+                        FactHandle fh = getOriginalFactHandle( slot );
+                        if ( useDrools && fhLookup != null ) {
+                            fhLookup.put( fh.getObject(), fh );
+                        }
+                        objects[index++] = fh.getObject();
                     }
-                    objects[index++] = fh.getObject();
                     declrCounter++; // consume the declaration slot (which is null for sequence vars)
                 } else {
                     Declaration declaration = declarations[declrCounter++];
@@ -403,7 +409,13 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
                         "). This indicates a compile-time skip-count miscalculation in KiePackagesBuilder.");
             }
             SequencerMemory sequencerMemory = (SequencerMemory) anchor.getContextObject();
-            FactHandle fh = getOriginalFactHandle( (FactHandle) sequencerMemory.getData().get(filterIndex) );
+            FactHandle slot = (FactHandle) sequencerMemory.getData().getOrNull(filterIndex);
+            if ( slot == null ) {
+                // The step's pattern did not match in this attempt (e.g. the other branch of an or()).
+                facts[supplierIndex] = null;
+                return;
+            }
+            FactHandle fh = getOriginalFactHandle( slot );
             if ( useDrools && fhLookup != null ) {
                 fhLookup.put( fh.getObject(), fh );
             }

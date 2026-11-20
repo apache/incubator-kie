@@ -31,7 +31,7 @@ import org.kie.kogito.event.cloudevents.utils.CloudEventUtils;
 import io.cloudevents.CloudEvent;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,14 +50,14 @@ public class QuarkusModelEventEmitterTest {
         subscriber.assertNotTerminated();
 
         List<String> items = subscriber.getItems();
-        assertEquals(2, items.size());
+        assertThat(items).hasSize(2);
         final String rawCloudEvent1 = items.get(0);
         final String rawCloudEvent2 = items.get(1);
         final CloudEvent cloudEvent1 = CloudEventUtils.decode(rawCloudEvent1).orElseThrow(IllegalStateException::new);
         final CloudEvent cloudEvent2 = CloudEventUtils.decode(rawCloudEvent2).orElseThrow(IllegalStateException::new);
 
-        assertEquals("id", cloudEvent1.getId());
-        assertEquals("id", cloudEvent2.getId());
+        assertThat(cloudEvent1.getId()).isEqualTo("id");
+        assertThat(cloudEvent2.getId()).isEqualTo("id");
     }
 
     private DecisionModelResource makeModel() {

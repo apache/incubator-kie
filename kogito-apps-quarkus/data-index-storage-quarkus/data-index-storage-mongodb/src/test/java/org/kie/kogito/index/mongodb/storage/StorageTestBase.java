@@ -20,27 +20,24 @@ package org.kie.kogito.index.mongodb.storage;
 
 import org.kie.kogito.persistence.api.Storage;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class StorageTestBase<K, V> {
 
     void testStorage(Storage<K, V> storage, K key, V value1, V value2) {
-        assertNull(storage.get(key));
-        assertFalse(storage.containsKey(key));
+        assertThat(storage.get(key)).isNull();
+        assertThat(storage.containsKey(key)).isFalse();
 
         storage.put(key, value1);
-        assertEquals(value1, storage.get(key));
-        assertTrue(storage.containsKey(key));
+        assertThat(storage.get(key)).isEqualTo(value1);
+        assertThat(storage.containsKey(key)).isTrue();
 
         storage.put(key, value2);
-        assertEquals(value2, storage.get(key));
-        assertTrue(storage.containsKey(key));
+        assertThat(storage.get(key)).isEqualTo(value2);
+        assertThat(storage.containsKey(key)).isTrue();
 
         storage.remove(key);
-        assertNull(storage.get(key));
-        assertFalse(storage.containsKey(key));
+        assertThat(storage.get(key)).isNull();
+        assertThat(storage.containsKey(key)).isFalse();
     }
 }

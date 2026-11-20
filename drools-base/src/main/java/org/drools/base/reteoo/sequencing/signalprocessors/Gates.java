@@ -23,4 +23,14 @@ public class Gates {
 
     public static boolean or(long a, long b)  {return (a & b) != 0;}
 
+    public static boolean xor(long a, long b) {
+        long v = a & b;
+        return v != 0L && (v & (v - 1)) == 0L;
+    }
+
+    public static boolean xnor(long a, long b) {
+        long v = a & b;
+        return v == 0L || v == b;
+    }
+
 }
