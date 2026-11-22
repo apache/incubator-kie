@@ -36,7 +36,6 @@ import java.util.stream.StreamSupport;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.jbpm.flow.serialization.ProcessInstanceMarshallerService;
@@ -218,13 +217,13 @@ public class KafkaProcessInstances<T extends Model> implements MutableProcessIns
     @Override
     public Stream<ProcessInstance<T>> waitingForEventType(String eventType, ProcessInstanceReadMode mode) {
 
-        KeyValueIterator<String, byte[]> iterator = getStore().prefixScan("events-" + getProcess().id(), Serdes.String().serializer());
-        if (!iterator.hasNext()) {
-            return Collections.<ProcessInstance<T>> emptyList().stream();
+        byte[] eventData;
+        try (KeyValueIterator<String, byte[]> iterator = getStore().prefixScan("events-" + getProcess().id(), Serdes.String().serializer())) {
+            if (!iterator.hasNext()) {
+                return Collections.<ProcessInstance<T>> emptyList().stream();
+            }
+            eventData = iterator.next().value;
         }
-        KeyValue<String, byte[]> entry = iterator.next();
-
-        byte[] eventData = entry.value;
         if (eventData == null) {
             return Collections.<ProcessInstance<T>> emptyList().stream();
         }
@@ -250,13 +249,13 @@ public class KafkaProcessInstances<T extends Model> implements MutableProcessIns
     }
 
     private Set<String> clearEventTypes(String processInstanceId) throws RocksDBException {
-        KeyValueIterator<String, byte[]> iterator = getStore().prefixScan("events-" + getProcess().id(), Serdes.String().serializer());
-        if (!iterator.hasNext()) {
-            return new HashSet<>();
+        byte[] eventData;
+        try (KeyValueIterator<String, byte[]> iterator = getStore().prefixScan("events-" + getProcess().id(), Serdes.String().serializer())) {
+            if (!iterator.hasNext()) {
+                return new HashSet<>();
+            }
+            eventData = iterator.next().value;
         }
-        KeyValue<String, byte[]> entry = iterator.next();
-
-        byte[] eventData = entry.value;
         String list = eventData != null ? new String(eventData) : new String();
         return Stream.of(list.split(",")).filter(e -> !e.endsWith(EVENT_SEPARATOR + processInstanceId)).collect(toCollection(HashSet::new));
     }
