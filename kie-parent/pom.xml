@@ -2748,9 +2748,6 @@
             <argLine>-Xmx1024m -Dfile.encoding=UTF-8</argLine>
             <systemPropertyVariables>
               <apple.awt.UIElement>true</apple.awt.UIElement>
-              <org.uberfire.nio.git.daemon.enabled>false</org.uberfire.nio.git.daemon.enabled>
-              <org.uberfire.nio.git.ssh.enabled>false</org.uberfire.nio.git.ssh.enabled>
-              <org.uberfire.sys.repo.monitor.disabled>true</org.uberfire.sys.repo.monitor.disabled>
             </systemPropertyVariables>
           </configuration>
         </plugin>

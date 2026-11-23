@@ -50,7 +50,7 @@ public class ChainedProperties
 
     private static final String[] PROPERTIES_ALLOWED_PREFIX = new String[] {
             "java.", "jdk.", "sun.", "user.", "os.", "jboss.",
-            "drools.", "jbpm.", "org.uberfire.", "file.", "path.", "line."
+            "drools.", "jbpm.", "file.", "path.", "line."
     };
 
     protected static transient Logger logger = LoggerFactory.getLogger(ChainedProperties.class);

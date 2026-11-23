@@ -129,8 +129,6 @@ public class SingleRangeCheck extends CheckBase {
         if (errors.isEmpty() && dimensions.size() >= 2) {
             for (int i = 0; i < dimensions.size() - 1; i++) {
                 for (int j = i + 1; j < dimensions.size(); j++) {
-                    //AF-2542: the new version of JDT used by GWT has a hard time to resolve some generics.
-                    //         the unnecessary cast is required because of that.
                     if (!checkBidimensionalRanges(dimensions.get(i), dimensions.get(j))) {
                         errors.add(new RangeError(partition.getValue(), partition.getKey(), null));
                     }

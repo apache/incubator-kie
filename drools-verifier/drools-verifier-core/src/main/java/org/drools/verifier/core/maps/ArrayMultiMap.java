@@ -21,10 +21,6 @@ package org.drools.verifier.core.maps;
 import java.util.ArrayList;
 import java.util.SortedMap;
 
-//import org.jboss.errai.common.client.api.annotations.MapsTo;
-//import org.jboss.errai.common.client.api.annotations.Portable;
-
-//@Portable
 public class ArrayMultiMap<Key extends Comparable, Value>
         extends RawMultiMap<Key, Value, ArrayList<Value>>
         implements MultiMap<Key, Value, ArrayList<Value>> {
@@ -34,7 +30,6 @@ public class ArrayMultiMap<Key extends Comparable, Value>
     }
 
     protected ArrayMultiMap(
-//            @MapsTo("map")
             final SortedMap<Key, ArrayList<Value>> map) {
         super(map,
               new ArrayListSubMapProvider<>());
