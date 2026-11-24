@@ -415,6 +415,7 @@ public class PhreakExistsNode {
             rightTuple = next;
         }
         constraints.resetFactHandle(contextEntry);
+        constraints.resetTuple(contextEntry);
     }
 
     public void doLeftDeletes(BetaMemory bm,
@@ -508,6 +509,7 @@ public class PhreakExistsNode {
             rightTuple.clearStaged();
             rightTuple = next;
         }
+        constraints.resetTuple(contextEntry);
     }
 
     private static void insertChildLeftTuple(LeftTupleSink sink, TupleSets trgLeftTuples, TupleImpl leftTuple, PropagationContext pctx, boolean useLeftMemory ) {

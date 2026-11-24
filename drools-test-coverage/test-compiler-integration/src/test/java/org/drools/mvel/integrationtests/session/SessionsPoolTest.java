@@ -18,6 +18,7 @@
  */
 package org.drools.mvel.integrationtests.session;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import org.drools.core.common.EventSupport;
@@ -54,6 +56,7 @@ import org.kie.api.runtime.KieContainerSessionsPool;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionsPool;
 import org.kie.api.runtime.StatelessKieSession;
+import org.kie.api.runtime.rule.FactHandle;
 import org.kie.internal.command.CommandFactory;
 import org.kie.internal.event.rule.RuleEventListener;
 import org.kie.internal.event.rule.RuleEventManager;
@@ -492,5 +495,114 @@ public class SessionsPoolTest {
         } finally {
             ksession.dispose();
         }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPooledSessionDoesNotRetainTuplesAfterRightDeleteOnExists(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        String drl =
+                "rule R1 when\n" +
+                "  $s : String()\n" +
+                "  exists Number( intValue == $s.length() )\n" +
+                "then\n" +
+                "end\n";
+
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
+        final KieContainerSessionsPool pool = KieServices.get().newKieContainer(kieModule.getReleaseId()).newKieSessionsPool( 1 );
+
+        try {
+            WeakReference<Object> leftFact = useAndReleasePooledSession(pool, (ksession, blocker) -> ksession.delete(blocker));
+
+            for (int i = 0; i < 20 && leftFact.get() != null; i++) {
+                System.gc();
+                Thread.sleep(50);
+            }
+
+            assertThat(leftFact.get())
+                    .as("a session returned to the pool must not keep the left tuple (and its fact) reachable through a BetaMemory context")
+                    .isNull();
+        } finally {
+            pool.shutdown();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPooledSessionDoesNotRetainTuplesAfterRightUpdateOnExists(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        String drl =
+                "rule R1 when\n" +
+                "  $s : String()\n" +
+                "  exists Number( intValue == $s.length() )\n" +
+                "then\n" +
+                "end\n";
+
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
+        final KieContainerSessionsPool pool = KieServices.get().newKieContainer(kieModule.getReleaseId()).newKieSessionsPool( 1 );
+
+        try {
+            WeakReference<Object> leftFact = useAndReleasePooledSession(pool, (ksession, blocker) -> ksession.update(blocker, ksession.getObject(blocker)));
+
+            for (int i = 0; i < 20 && leftFact.get() != null; i++) {
+                System.gc();
+                Thread.sleep(50);
+            }
+
+            assertThat(leftFact.get())
+                    .as("a session returned to the pool must not keep the left tuple (and its fact) reachable through a BetaMemory context")
+                    .isNull();
+        } finally {
+            pool.shutdown();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPooledSessionDoesNotRetainTuplesAfterRightUpdateRemovesLastMatchOnExists(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        String drl =
+                "rule R1 when\n" +
+                "  $s : String()\n" +
+                "  exists Number( intValue == $s.length() )\n" +
+                "then\n" +
+                "end\n";
+
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
+        final KieContainerSessionsPool pool = KieServices.get().newKieContainer(kieModule.getReleaseId()).newKieSessionsPool( 1 );
+
+        try {
+            WeakReference<Object> leftFact = useAndReleasePooledSession(pool, (ksession, blocker) -> {
+                // the Long is the only other match: deleting it and changing the Integer leaves the String without any match
+                ksession.getFactHandles(o -> o instanceof Long).forEach(ksession::delete);
+                ksession.update(blocker, Integer.valueOf(4));
+            });
+
+            for (int i = 0; i < 20 && leftFact.get() != null; i++) {
+                System.gc();
+                Thread.sleep(50);
+            }
+
+            assertThat(leftFact.get())
+                    .as("a session returned to the pool must not keep the left tuple (and its fact) reachable through a BetaMemory context")
+                    .isNull();
+        } finally {
+            pool.shutdown();
+        }
+    }
+
+    private WeakReference<Object> useAndReleasePooledSession(KieContainerSessionsPool pool, BiConsumer<KieSession, FactHandle> operation) {
+        KieSession ksession = pool.newKieSession();
+        String left = new String("abc");
+        try {
+            ksession.insert(left);
+            ksession.insert(3L);
+            FactHandle blocker = ksession.insert(Integer.valueOf(3));
+            ksession.fireAllRules();
+
+            // changing the blocker re-evaluates the blocked left tuple against the remaining right tuples
+            operation.accept(ksession, blocker);
+            ksession.fireAllRules();
+        } finally {
+            ksession.dispose();
+        }
+        return new WeakReference<>(left);
     }
 }
