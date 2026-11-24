@@ -112,10 +112,6 @@ public class KafkaProcessInstancesTest {
     public void testProcessInstancesRemove() {
         doReturn(mock(Future.class)).when(producer).send(any());
 
-        KeyValueIterator<String, byte[]> iterator = mock(KeyValueIterator.class);
-        when(store.prefixScan(contains("events"), any())).thenReturn(iterator);
-        when(iterator.hasNext()).thenReturn(false);
-
         instances.remove(id);
 
         ArgumentCaptor<ProducerRecord> captor = ArgumentCaptor.forClass(ProducerRecord.class);
@@ -205,9 +201,6 @@ public class KafkaProcessInstancesTest {
         doReturn(new byte[] {}).when(marshaller).marshallProcessInstance(instance);
         when(instance.status()).thenReturn(ProcessInstance.STATE_ACTIVE);
 
-        KeyValueIterator<String, byte[]> iterator = mock(KeyValueIterator.class);
-        when(store.prefixScan(contains("events"), any())).thenReturn(iterator);
-        when(iterator.hasNext()).thenReturn(false);
         WorkflowProcessInstance processInstance = mock(WorkflowProcessInstance.class);
         when(processInstance.getEventTypes()).thenReturn(new String[0]);
         when(instance.internalGetProcessInstance()).thenReturn(processInstance);
@@ -249,9 +242,6 @@ public class KafkaProcessInstancesTest {
         AbstractProcessInstance instance = mock(AbstractProcessInstance.class);
         doReturn(new byte[] {}).when(marshaller).marshallProcessInstance(instance);
         when(instance.status()).thenReturn(ProcessInstance.STATE_ACTIVE);
-        KeyValueIterator<String, byte[]> iterator = mock(KeyValueIterator.class);
-        when(store.prefixScan(contains("events"), any())).thenReturn(iterator);
-        when(iterator.hasNext()).thenReturn(false);
         WorkflowProcessInstance processInstance = mock(WorkflowProcessInstance.class);
         when(processInstance.getEventTypes()).thenReturn(new String[0]);
         when(instance.internalGetProcessInstance()).thenReturn(processInstance);
