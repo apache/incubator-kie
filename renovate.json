@@ -1,0 +1,76 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "group:recommended", "group:monorepos"],
+
+  "forkProcessing": "enabled",
+  "baseBranchPatterns": ["main"],
+  "rebaseWhen": "behind-base-branch",
+
+  "timezone": "Asia/Kolkata",
+  "schedule": ["before 6am"],
+
+  "dependencyDashboard": {
+    "enabled": true,
+    "title": "Dependency Updates Dashboard",
+    "osvVulnerabilitySummary": "all"
+  },
+  "dependencyDashboardApproval": false,
+
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 0,
+  "separateMajorMinor": true,
+  "separateMinorPatch": false,
+  "separateMultipleMajor": true,
+
+  "automerge": false,
+  "platformAutomerge": false,
+  "labels": ["dependencies"],
+  "addLabels": ["kie-core"],
+  "prBodyNotes": [
+    "Related repos: incubator-kie, incubator-kie-tools, incubator-kie-kogito-examples. Check whether the same dependency needs the same update in the other two."
+  ],
+
+  "packageRules": [
+    {
+      "description": "One combined daily PR for all minor and patch updates",
+      "matchPackageNames": ["*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-non-major"
+    },
+    {
+      "description": "Major updates get their own PRs",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major-update"]
+    },
+    {
+      "description": "Quarkus family moves together on major upgrades",
+      "matchPackageNames": ["io.quarkus:**", "io.quarkus.platform:**", "io.quarkiverse:**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Quarkus major",
+      "groupSlug": "quarkus-major"
+    },
+    {
+      "description": "Spring Boot and Spring Framework move together on major upgrades",
+      "matchPackageNames": ["org.springframework.boot:**", "org.springframework:**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Spring major",
+      "groupSlug": "spring-major"
+    },
+    {
+      "description": "Modules built inside this repo share one version, so Renovate must not bump them",
+      "matchPackageNames": ["org.kie:**", "org.kie.kogito:**", "org.drools:**", "org.jbpm:**", "org.optaplanner:**"],
+      "enabled": false
+    },
+    {
+      "description": "Archetype templates contain placeholders, not real dependencies",
+      "matchFileNames": ["**/archetype-resources/**"],
+      "enabled": false
+    }
+  ],
+
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "automerge": false
+  }
+}
