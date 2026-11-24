@@ -42,7 +42,9 @@ public interface ProcessInstances<T> {
     }
 
     default Optional<ProcessInstance<T>> findByBusinessKey(String id, ProcessInstanceReadMode mode) {
-        return stream(mode).filter(pi -> id.equals(pi.businessKey())).findAny();
+        try (Stream<ProcessInstance<T>> instances = stream(mode)) {
+            return instances.filter(pi -> id.equals(pi.businessKey())).findAny();
+        }
     }
 
     Stream<ProcessInstance<T>> stream(ProcessInstanceReadMode mode);
