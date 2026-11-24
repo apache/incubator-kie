@@ -44,7 +44,6 @@ bin/
 # modules that don't exist in this branch
 /jbpm-human-task-war/
 /jbpm-bam/
-/jbpm-gwt/
 
 # files used for external db testing
 jdbc_driver.jar

@@ -106,7 +106,7 @@ public class XStreamUtils {
     private static XStream internalCreateXStream( XStream xstream ) {
         setupDefaultSecurity(xstream);
         xstream.addPermission( new WildcardTypePermission( new String[] {
-                "java.**", "javax.**", "org.kie.**", "org.drools.**", "org.jbpm.**", "org.optaplanner.**", "org.appformer.**"
+                "java.**", "javax.**", "org.kie.**", "org.drools.**", "org.jbpm.**", "org.optaplanner.**"
         } ) );
         return xstream;
     }
