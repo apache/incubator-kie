@@ -275,7 +275,7 @@
     <version.org.jboss.logmanager.embedded>1.2.0.Final</version.org.jboss.logmanager.embedded>
     <version.org.jboss.narayana.tomcat>7.2.2.Final</version.org.jboss.narayana.tomcat>
     <version.org.jboss.resteasy>6.2.12.Final</version.org.jboss.resteasy>
-    <version.org.jboss.transaction.spi>8.0.0.Final</version.org.jboss.transaction.spi>
+    <version.org.jboss.transaction.spi>9.0.0.Final</version.org.jboss.transaction.spi>
     <version.org.jboss.weld.weld>3.1.6.Final</version.org.jboss.weld.weld>
     <version.org.jpmml.model>1.6.4</version.org.jpmml.model>
     <version.org.json-unit-assertj>2.9.0</version.org.json-unit-assertj>
