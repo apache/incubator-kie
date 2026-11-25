@@ -69,7 +69,7 @@ script/ci/tests/scenarios-summary/03-pr-with-failures/root/a1/target/surefire-re
 script/ci/tests/scenarios-summary/03-pr-with-failures/root/u/target/surefire-reports/TEST-com.example.UTest.xml
 script/ci/tests/scenarios-summary/03-pr-with-failures/root/u/target/surefire-reports/TS-com.example.UTest.xml
 .rat-reports
-DISCLAIMER-WIP
+DISCLAIMER
 drools-core/src/test/resources/manners128.dat
 drools-core/src/test/resources/manners16.dat
 drools-core/src/test/resources/manners32.dat
@@ -255,7 +255,7 @@ kie-pmml-trusty/kie-pmml-models/kie-pmml-models-tree/kie-pmml-models-tree-compil
 # --- merged from optaplanner .rat-excludes ---
 .rat-excludes
 .rat-reports
-DISCLAIMER-WIP
+DISCLAIMER
 optaplanner-build/optaplanner-ide-config/src/main/resources/eclipse.importorder
 optaplanner-core/optaplanner-core-impl/src/main/resources/solver.xsd
 optaplanner-core/optaplanner-core-impl/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker
@@ -2514,7 +2514,7 @@ kogito-apps-springboot/data-index-springboot/kogito-addons-springboot-data-index
 kogito-apps-springboot/data-index-springboot/kogito-addons-springboot-data-index/kogito-addons-springboot-data-index-jpa-parent/integration-tests-process/src/main/resources/META-INF/processSVG/hello.svg
 kogito-apps-springboot/data-index-springboot/kogito-addons-springboot-data-index-persistence/kogito-addons-springboot-data-index-persistence-jpa-parent/integration-tests-process/src/main/resources/hello.bpmn
 kogito-apps-springboot/data-index-springboot/kogito-addons-springboot-data-index-persistence/kogito-addons-springboot-data-index-persistence-jpa-parent/integration-tests-process/src/main/resources/META-INF/processSVG/hello.svg
-DISCLAIMER-WIP
+DISCLAIMER
 kogito-explainability/explainability-service/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker
 kogito-jitexecutor/jitexecutor-bpmn/src/test/resources/MultipleInvalidModel.bpmn2
 kogito-jitexecutor/jitexecutor-bpmn/src/test/resources/MultipleProcess.bpmn2
