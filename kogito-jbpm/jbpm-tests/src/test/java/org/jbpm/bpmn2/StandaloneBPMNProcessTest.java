@@ -33,6 +33,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.jbpm.bpmn2.activity.ScriptTaskModel;
 import org.jbpm.bpmn2.activity.ScriptTaskProcess;
+import org.jbpm.bpmn2.adhoc.AdHocSubProcessAutoCompleteEmptyStageModel;
+import org.jbpm.bpmn2.adhoc.AdHocSubProcessAutoCompleteEmptyStageProcess;
 import org.jbpm.bpmn2.adhoc.AdHocSubProcessAutoCompleteExpressionModel;
 import org.jbpm.bpmn2.adhoc.AdHocSubProcessAutoCompleteExpressionProcess;
 import org.jbpm.bpmn2.adhoc.AdHocSubProcessAutoCompleteModel;
@@ -614,6 +616,30 @@ public class StandaloneBPMNProcessTest extends JbpmBpmn2TestCase {
         assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_ACTIVE);
 
         // adhoc we need to trigger the human task
+        instance.triggerNode("_2-1");
+        ProcessTestHelper.completeWorkItem(instance, Collections.emptyMap(), "john");
+
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_COMPLETED);
+    }
+
+    @Test
+    public void testAdHocSubProcessAutoCompleteStaysOpenWhileEmpty() throws Exception {
+        // an autocomplete ad hoc subprocess that has no active child must not complete just because
+        // some unrelated event (e.g. a variable change) happens; it completes only when a child finishes
+        Application app = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(app, "Human Task", new TestUserTaskWorkItemHandler());
+        org.kie.kogito.process.Process<AdHocSubProcessAutoCompleteEmptyStageModel> definition = AdHocSubProcessAutoCompleteEmptyStageProcess.newProcess(app);
+
+        org.kie.kogito.process.ProcessInstance<AdHocSubProcessAutoCompleteEmptyStageModel> instance = definition.createInstance(definition.createModel());
+        instance.start();
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_ACTIVE);
+
+        AdHocSubProcessAutoCompleteEmptyStageModel update = definition.createModel();
+        update.setCounter(1);
+        instance.updateVariablesPartially(update);
+        assertThat(instance.status()).isEqualTo(KogitoProcessInstance.STATE_ACTIVE);
+
+        // the node can still be triggered later and completing it completes the subprocess and the process
         instance.triggerNode("_2-1");
         ProcessTestHelper.completeWorkItem(instance, Collections.emptyMap(), "john");
 
