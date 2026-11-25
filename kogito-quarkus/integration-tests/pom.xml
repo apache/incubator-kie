@@ -53,6 +53,7 @@
     <module>integration-tests-quarkus-usertask-listeners-rollback</module>
     <module>integration-tests-quarkus-wshumantasks</module>
     <module>integration-tests-quarkus-source-files</module>
+    <module>integration-tests-quarkus-monitoring-grpc</module>
   </modules>
 
 </project>
