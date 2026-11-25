@@ -20,12 +20,14 @@ package org.drools.mvel.integrationtests;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import org.drools.mvel.compiler.Person;
+import org.drools.mvel.compiler.Primitives;
 import org.drools.mvel.integrationtests.facts.AnEnum;
 import org.drools.mvel.integrationtests.facts.FactWithEnum;
 import org.drools.mvel.integrationtests.facts.FactWithMap;
@@ -549,6 +551,40 @@ public class JittingTest {
         try {
             ksession.insert("hel");
             assertThat(ksession.fireAllRules()).isEqualTo(2);
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    void jittedCharConstraintWithNonAsciiLiteral(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        String drl =
+                "package test;\n" +
+                "import " + Primitives.class.getCanonicalName() + ";\n" +
+                "global java.util.List list;\n" +
+                "rule R when\n" +
+                "    Primitives( charPrimitive == 'ä' )\n" +
+                "then\n" +
+                "    list.add( \"matched\" );\n" +
+                "end\n";
+
+        final KieModule kieModule = KieUtil.getKieModuleFromDrls("test", kieBaseTestConfiguration, drl);
+        final KieBase kieBase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(
+                kieModule, kieBaseTestConfiguration, ConstraintJittingThresholdOption.get(0));
+        final KieSession ksession = kieBase.newKieSession();
+        try {
+            List<String> list = new ArrayList<>();
+            ksession.setGlobal("list", list);
+
+            Primitives p = new Primitives();
+            p.setCharPrimitive('ä');
+            ksession.insert(p);
+            ksession.fireAllRules();
+
+            assertThat(list)
+                    .as("JITted constraint comparing char with literal > 127 ('ä') must match")
+                    .containsExactly("matched");
         } finally {
             ksession.dispose();
         }
