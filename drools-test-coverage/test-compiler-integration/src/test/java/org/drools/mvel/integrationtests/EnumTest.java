@@ -18,8 +18,11 @@
  */
 package org.drools.mvel.integrationtests;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
@@ -30,6 +33,7 @@ import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieBuilder;
@@ -79,6 +83,40 @@ public class EnumTest {
         assertThat(list.contains(true)).isTrue();
         assertThat(list.contains("MONDAY")).isTrue();
 
+        ksession.dispose();
+    }
+
+    public static Stream<Arguments> parametersWithLiteralCounts() {
+        return parameters().flatMap(config -> Stream.of(Arguments.of(config, 128), Arguments.of(config, 300)));
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}, literals={1}")
+    @MethodSource("parametersWithLiteralCounts")
+    public void testEnumWithMoreLiteralsThanFitInASignedByte(KieBaseTestConfiguration kieBaseTestConfiguration, int literalCount) {
+        final String literals = IntStream.range(0, literalCount).mapToObj(i -> "V" + i).collect(Collectors.joining(", "));
+        final String lastLiteral = "V" + (literalCount - 1);
+        final String drl =
+                "package org.test;\n" +
+                "global java.util.List list;\n" +
+                "declare enum Big\n" +
+                "    " + literals + ";\n" +
+                "end\n" +
+                "rule R when\n" +
+                "then\n" +
+                "    java.util.List<Big> all = java.util.Arrays.asList( Big.values() );\n" +
+                "    list.add( all.size() );\n" +
+                "    list.add( Big." + lastLiteral + ".ordinal() );\n" +
+                "    list.add( all.get( " + (literalCount - 1) + " ).name() );\n" +
+                "end\n";
+
+        KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+        final List<Object> list = new ArrayList<>();
+        ksession.setGlobal("list", list);
+
+        ksession.fireAllRules();
+
+        assertThat(list).containsExactly(literalCount, literalCount - 1, lastLiteral);
         ksession.dispose();
     }
 
