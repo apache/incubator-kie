@@ -1046,7 +1046,7 @@ public abstract class WorkflowProcessInstanceImpl extends ProcessInstanceImpl im
                     properties.put("AttachedToName", attachedToNodeInstance.getNodeName());
                     String eventType = EVENT_TYPE_SIGNAL;
                     String eventName = boundaryEventNode.getType();
-                    Map<String, String> timerProperties = attachedToNodeInstance.extractTimerEventInformation();
+                    Map<String, String> timerProperties = eventName != null && eventName.startsWith("Timer-") ? attachedToNodeInstance.extractTimerEventInformation() : null;
                     if (timerProperties != null) {
                         properties.putAll(timerProperties);
                         eventType = "timer";

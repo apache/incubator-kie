@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jbpm.bpmn2.activity.BoundarySignalEventOnTaskWithTransformationModel;
 import org.jbpm.bpmn2.activity.BoundarySignalEventOnTaskWithTransformationProcess;
+import org.jbpm.bpmn2.event.BoundarySignalAndTimerOnUserTaskModel;
+import org.jbpm.bpmn2.event.BoundarySignalAndTimerOnUserTaskProcess;
 import org.jbpm.bpmn2.event.BoundarySignalWithNameEventOnTaskModel;
 import org.jbpm.bpmn2.event.BoundarySignalWithNameEventOnTaskProcess;
 import org.jbpm.bpmn2.event.BoundaryTimerCycleCronModel;
@@ -3040,6 +3042,83 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
         assertThat(instance.status())
                 .as("Process must complete after the matching correlation key")
                 .isEqualTo(ProcessInstance.STATE_COMPLETED);
+    }
+
+    @Test
+    public void testSignalAndTimerBoundaryEventsOnUserTaskEvents() {
+        Application app = ProcessTestHelper.newApplication();
+        ProcessTestHelper.registerHandler(app, "Human Task", new TestWorkItemHandler());
+
+        org.kie.kogito.process.Process<BoundarySignalAndTimerOnUserTaskModel> definition = BoundarySignalAndTimerOnUserTaskProcess
+                .newProcess(app);
+        ProcessInstance<BoundarySignalAndTimerOnUserTaskModel> instance = definition
+                .createInstance(definition.createModel());
+        instance.start();
+
+        Set<EventDescription<?>> eventDescriptions = instance.events();
+        assertThat(eventDescriptions).filteredOn("eventType", "signal").hasSize(1).extracting("event")
+                .containsExactly("MySignal");
+        assertThat(eventDescriptions).filteredOn("eventType", "timer").hasSize(1).extracting("event")
+                .containsExactly(TIMER_TRIGGERED_EVENT);
+        assertThat(eventDescriptions).filteredOn("eventType", "timer").extracting("properties", Map.class)
+                .anyMatch(m -> m.containsKey("TimerID") && m.containsKey("Delay"));
+        assertThat(eventDescriptions).filteredOn("eventType", "signal").extracting("properties", Map.class)
+                .noneMatch(m -> m.containsKey("TimerID"));
+    }
+
+    @Test
+    public void testSignalBoundaryEventOnUserTaskWithTimerBoundaryEvent() {
+        Application app = ProcessTestHelper.newApplication();
+        NodeLeftCountDownProcessEventListener signalListener = new NodeLeftCountDownProcessEventListener(
+                "Signal received", 1);
+        ProcessTestHelper.registerProcessEventListener(app, signalListener);
+        ProcessTestHelper.registerHandler(app, "Human Task", new TestWorkItemHandler());
+
+        org.kie.kogito.process.Process<BoundarySignalAndTimerOnUserTaskModel> definition = BoundarySignalAndTimerOnUserTaskProcess
+                .newProcess(app);
+        ProcessInstance<BoundarySignalAndTimerOnUserTaskModel> instance = definition
+                .createInstance(definition.createModel());
+        instance.start();
+
+        instance.send(SignalFactory.of("MySignal", "value"));
+        signalListener.waitTillCompleted();
+        assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
+    }
+
+    @Test
+    public void testTimerBoundaryEventOnUserTaskWithSignalBoundaryEventStillFires() {
+        Application app = ProcessTestHelper.newApplication();
+        ProcessCompletedCountDownProcessEventListener countDownListener = new ProcessCompletedCountDownProcessEventListener(
+                1);
+        ProcessTestHelper.registerProcessEventListener(app, countDownListener);
+        ProcessTestHelper.registerHandler(app, "Human Task", new TestWorkItemHandler());
+
+        org.kie.kogito.process.Process<BoundarySignalAndTimerOnUserTaskModel> definition = BoundarySignalAndTimerOnUserTaskProcess
+                .newProcess(app);
+        ProcessInstance<BoundarySignalAndTimerOnUserTaskModel> instance = definition
+                .createInstance(definition.createModel());
+        instance.start();
+
+        countDownListener.waitTillCompleted();
+        assertThat(ProcessTestHelper.findRemovedInstance(app, instance.id()))
+                .isPresent().get().extracting(WorkflowProcessInstance::getState)
+                .isEqualTo(ProcessInstance.STATE_COMPLETED);
+    }
+
+    @Test
+    public void testUserTaskWithSignalAndTimerBoundaryEventsCanBeCompleted() {
+        Application app = ProcessTestHelper.newApplication();
+        TestWorkItemHandler handler = new TestWorkItemHandler();
+        ProcessTestHelper.registerHandler(app, "Human Task", handler);
+
+        org.kie.kogito.process.Process<BoundarySignalAndTimerOnUserTaskModel> definition = BoundarySignalAndTimerOnUserTaskProcess
+                .newProcess(app);
+        ProcessInstance<BoundarySignalAndTimerOnUserTaskModel> instance = definition
+                .createInstance(definition.createModel());
+        instance.start();
+
+        instance.completeWorkItem(handler.getWorkItem().getStringId(), null);
+        assertThat(instance.status()).isEqualTo(ProcessInstance.STATE_COMPLETED);
     }
 
 }
