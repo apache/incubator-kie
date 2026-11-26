@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-build-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
     <relativePath>../kogito-build/kogito-build-parent/pom.xml</relativePath>
   </parent>
 

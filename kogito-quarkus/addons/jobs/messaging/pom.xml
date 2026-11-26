@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kogito-addons-quarkus-jobs-parent</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>kogito-addons-quarkus-jobs-messaging-parent</artifactId>

@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>efesto-core</artifactId>
-    <version>10.3.999-SNAPSHOT</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>efesto-common-core</artifactId>
