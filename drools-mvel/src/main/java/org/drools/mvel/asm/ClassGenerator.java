@@ -53,7 +53,6 @@ import static org.mvel2.asm.Opcodes.ACONST_NULL;
 import static org.mvel2.asm.Opcodes.ALOAD;
 import static org.mvel2.asm.Opcodes.ANEWARRAY;
 import static org.mvel2.asm.Opcodes.ARETURN;
-import static org.mvel2.asm.Opcodes.BIPUSH;
 import static org.mvel2.asm.Opcodes.CHECKCAST;
 import static org.mvel2.asm.Opcodes.D2F;
 import static org.mvel2.asm.Opcodes.D2I;
@@ -594,7 +593,7 @@ public class ClassGenerator {
             if (type == String.class || type == Object.class) {
                 mv.visitLdcInsn(obj);
             } else if (type == char.class) {
-                mv.visitIntInsn(BIPUSH, ((Character) obj).charValue());
+                AsmUtil.pushInt(mv, ((Character) obj).charValue());
             } else if (type.isPrimitive()) {
                 if (obj instanceof String) {
                     obj = coerceStringToPrimitive(type, (String) obj);

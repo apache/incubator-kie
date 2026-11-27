@@ -20,6 +20,8 @@ package org.drools.mvel.compiler.rule.builder.dialect.asm;
 
 import org.drools.mvel.asm.ClassGenerator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mvel2.asm.MethodVisitor;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +30,7 @@ import static org.mvel2.asm.Opcodes.ACC_PRIVATE;
 import static org.mvel2.asm.Opcodes.ACC_PUBLIC;
 import static org.mvel2.asm.Opcodes.ALOAD;
 import static org.mvel2.asm.Opcodes.ARETURN;
+import static org.mvel2.asm.Opcodes.IRETURN;
 import static org.mvel2.asm.Opcodes.RETURN;
 
 public class ClassGeneratorTest {
@@ -78,5 +81,31 @@ public class ClassGeneratorTest {
 
         Object instance = generator.newInstance(String.class, MY_NAME);
         assertThat(instance.toString()).isEqualTo(MY_NAME);
+    }
+
+    public interface CharSupplier {
+        char getChar();
+    }
+
+    @ParameterizedTest(name = "char={0}")
+    @ValueSource(chars = { 'a', (char) 127, (char) 128, 'ä', '€', (char) 65535 })
+    public void pushCharConstantPreservesUnsignedValue(char expectedChar) throws Exception {
+        ClassGenerator generator = new ClassGenerator("pkg.CharProbe" + (int) expectedChar, getClass().getClassLoader())
+                .setInterfaces(CharSupplier.class);
+
+        generator.addDefaultConstructor();
+
+        generator.addMethod(ACC_PUBLIC, "getChar", generator.methodDescr(char.class), new ClassGenerator.MethodBody() {
+            @Override
+            public void body(MethodVisitor mv) {
+                push(expectedChar, char.class);
+                mv.visitInsn(IRETURN);
+            }
+        });
+
+        CharSupplier supplier = (CharSupplier) generator.newInstance();
+        assertThat(supplier.getChar())
+                .as("Character constant 0x%04X ('%c') must not be sign-extended or truncated", (int) expectedChar, expectedChar)
+                .isEqualTo(expectedChar);
     }
 }
