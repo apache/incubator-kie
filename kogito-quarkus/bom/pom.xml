@@ -47,8 +47,11 @@
     <version.io.quarkiverse.embedded.postgresql>0.8.0</version.io.quarkiverse.embedded.postgresql>
     <version.io.quarkus.camel>3.33.2</version.io.quarkus.camel>
     <!-- Quarkus-platform-aligned pins. These live here, not in kie-parent, so that the Quarkus upgrade does not
-         change what the Spring Boot side resolves. -->
+         change what the Spring Boot side resolves. Each pin must match the version managed by quarkus-bom.
+         The pins are needed because kie-parent manages protobuf and grpc itself, for the Spring Boot side, and a
+         parent's own management takes precedence over the imported quarkus-bom. -->
     <version.io.grpc>1.81.0</version.io.grpc>
+    <version.com.google.protobuf>4.33.2</version.com.google.protobuf>
     <version.io.smallrye.reactive.messaging.in.memory>4.33.0</version.io.smallrye.reactive.messaging.in.memory>
     <version.io.smallrye.mutiny>3.1.1</version.io.smallrye.mutiny>
     <version.org.hibernate>7.2.19.Final</version.org.hibernate>
