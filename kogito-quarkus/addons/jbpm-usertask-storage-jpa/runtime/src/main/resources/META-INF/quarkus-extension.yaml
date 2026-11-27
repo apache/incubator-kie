@@ -27,7 +27,7 @@ metadata:
     - JPA
   guide: https://quarkus.io/guides/kie
   categories:
-    - "business-automation"
+    - "automation"
     - "cloud"
     - "jBPM"
     - "persistence"

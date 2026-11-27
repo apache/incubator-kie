@@ -25,5 +25,5 @@ metadata:
     - "tweaking"
   guide: "https://quarkus.io/guides/optaplanner"
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"

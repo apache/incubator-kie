@@ -27,5 +27,5 @@ metadata:
     - Kafka
   guide: https://quarkus.io/guides/kie-drl
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"

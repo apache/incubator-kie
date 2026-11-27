@@ -29,7 +29,7 @@ metadata:
     - workflows
   guide: https://quarkus.io/guides/kie
   categories:
-    - "business-automation"
+    - "automation"
     - "cloud"
   status: "stable"
   config:

@@ -27,7 +27,7 @@ metadata:
     - tracing
   guide: https://quarkus.io/guides/kie-dmn
   categories:
-    - "business-automation"
+    - "automation"
   status: "stable"
   config:
     - "kogito.addon.tracing.decision."
