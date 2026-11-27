@@ -21,7 +21,6 @@ package org.drools.xml.support;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import org.drools.base.base.XMLSupport;
-import org.drools.commands.runtime.BatchExecutionCommandImpl;
 import org.drools.xml.support.converters.KieModuleMarshaller;
 
 import static org.kie.utll.xml.XStreamUtils.createNonTrustingXStream;
@@ -64,9 +63,5 @@ public class XMLSupportImpl implements XMLSupport {
 
     public KieModuleMarshaller kieModuleMarshaller() {
         return KieModuleMarshaller.MARSHALLER;
-    }
-
-    public BatchExecutionCommandImpl createBatchExecutionCommand() {
-        return new BatchExecutionCommandImpl();
     }
 }
