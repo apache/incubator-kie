@@ -31,25 +31,30 @@ import org.kie.internal.io.ResourceFactory;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class DMNEvaluator {
 
     private final DMNModel dmnModel;
     private final DMNRuntime dmnRuntime;
 
-    public static DMNEvaluator fromXML(String modelXML) {
-        Resource modelResource = ResourceFactory.newReaderResource(new StringReader(modelXML), "UTF-8");
+    public static DMNEvaluator fromXML(String modelXML, List<String> importedModelSources) {
+        List<Resource> modelResources =
+                Stream.concat(Stream.of(modelXML), importedModelSources.stream()).map(source -> ResourceFactory.newReaderResource(new StringReader(modelXML), "UTF-8")).toList();
+
         DMNRuntime dmnRuntime = DMNRuntimeBuilder.fromDefaults().buildConfiguration()
-                .fromResources(Collections.singletonList(modelResource)).getOrElseThrow(RuntimeException::new);
+                .fromResources(modelResources).getOrElseThrow(RuntimeException::new);
         DMNModel dmnModel = dmnRuntime.getModels().get(0);
         return new DMNEvaluator(dmnModel, dmnRuntime);
     }
 
-    public static DMNEvaluator fromDMNModel(DMNModel dmnModel) {
+    public static DMNEvaluator fromDMNModel(DMNModel dmnModel, Collection<DMNModel> additionalModels) {
+
         DMNRuntime dmnRuntime = DMNRuntimeBuilder.fromDefaults().buildConfiguration()
-                .fromResources(Collections.emptyList())
-                .getOrElseThrow(RuntimeException::new);
+                .withModels(additionalModels);
+
         return new DMNEvaluator(dmnModel, dmnRuntime);
     }
 
