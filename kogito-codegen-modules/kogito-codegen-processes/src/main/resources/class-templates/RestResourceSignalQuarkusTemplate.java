@@ -53,9 +53,19 @@ public class $Type$Resource {
     @Path("/{id}/$signalPath$")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public $Type$Output signalInstance(@PathParam("id") final String id, final $signalType$ data) {
-        return processService.signalProcessInstance(process, id, data, "$signalName$")
-                .orElseThrow(() -> new ClientErrorException(String.format("Process instance %s is not currently accepting signal '%s'", id, "$signalName$"), Response.Status.PRECONDITION_FAILED));
+    @org.eclipse.microprofile.openapi.annotations.parameters.RequestBody(content = @org.eclipse.microprofile.openapi.annotations.media.Content(schema = @org.eclipse.microprofile.openapi.annotations.media.Schema(type = org.eclipse.microprofile.openapi.annotations.enums.SchemaType.OBJECT)))
+    public $Type$Output signalInstance(
+                    @PathParam("id") final String id,
+                    final com.fasterxml.jackson.databind.JsonNode data) {
+
+            return processService.signalProcessInstance(
+                            process,
+                            id,
+                            data != null ? org.kie.kogito.jackson.utils.JsonObjectUtils.toJavaValue(data) : null, "$signalName$")
+                            .orElseThrow(() -> new ClientErrorException(
+                                            String.format("Process instance %s is not currently accepting signal '%s'",
+                                                            id, "$signalName$"),
+                                            Response.Status.PRECONDITION_FAILED));
     }
 
     @POST
