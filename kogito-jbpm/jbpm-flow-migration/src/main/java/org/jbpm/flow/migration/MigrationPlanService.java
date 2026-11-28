@@ -27,6 +27,7 @@ import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
 import org.jbpm.workflow.instance.impl.NodeInstanceImpl;
 import org.kie.kogito.Model;
 import org.kie.kogito.internal.process.runtime.KogitoNodeInstance;
+import org.kie.kogito.internal.process.runtime.KogitoProcessRuntime;
 import org.kie.kogito.internal.process.runtime.KogitoWorkflowProcessInstance;
 import org.kie.kogito.process.Processes;
 import org.slf4j.Logger;
@@ -57,6 +58,13 @@ public class MigrationPlanService {
     }
 
     public void migrateProcessElement(Processes processes, KogitoWorkflowProcessInstance processInstance) {
+        migrateProcessElement(null, processes, processInstance);
+    }
+
+    /**
+     * @param runtime runtime used to fire variable changed events for migrated variables; when {@code null} no events are fired
+     */
+    public void migrateProcessElement(KogitoProcessRuntime runtime, Processes processes, KogitoWorkflowProcessInstance processInstance) {
         MigrationPlan plan = getMigrationPlan(processes, processInstance);
         if (plan != null) {
             // the process will have to do nothing as it is done by the engine itself
@@ -69,6 +77,7 @@ public class MigrationPlanService {
             RuleFlowProcessInstance ruleFlowProcessInstance = (RuleFlowProcessInstance) processInstance;
             ruleFlowProcessInstance.setProcessId(plan.getProcessMigrationPlan().getTargetProcessDefinition().getProcessId());
             ruleFlowProcessInstance.setProcessVersion(plan.getProcessMigrationPlan().getTargetProcessDefinition().getProcessVersion());
+            VariableMigrator.migrate(runtime, ruleFlowProcessInstance, plan.getProcessMigrationPlan().getVariableMigrationPlan());
         } else {
             LOGGER.debug("Process instance {} won't be migrated", processInstance);
         }

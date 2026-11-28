@@ -24,6 +24,7 @@ import java.io.InputStream;
 import org.jbpm.flow.migration.MigrationPlanFileFormatException;
 import org.jbpm.flow.migration.MigrationPlanFileReader;
 import org.jbpm.flow.migration.model.MigrationPlan;
+import org.jbpm.flow.migration.model.VariableMigrationPlan;
 import org.kie.api.definition.process.WorkflowElementIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,14 @@ public class JsonMigrationPlanFileReader implements MigrationPlanFileReader {
 
             MigrationPlan migrationPlan = objectMapper.readValue(is, MigrationPlan.class);
             LOGGER.trace("Read migration plan {} in json format", migrationPlan);
+            if (migrationPlan.getProcessMigrationPlan() != null) {
+                migrationPlan.getProcessMigrationPlan().getVariableMigrationPlan().forEach(VariableMigrationPlan::validate);
+            }
             return migrationPlan;
         } catch (IOException e) {
             throw new MigrationPlanFileFormatException("Error during marshalling", e);
+        } catch (IllegalArgumentException e) {
+            throw new MigrationPlanFileFormatException("Invalid variable migration plan: " + e.getMessage(), e);
         }
     }
 
